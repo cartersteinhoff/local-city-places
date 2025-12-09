@@ -8,6 +8,11 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
@@ -40,7 +45,18 @@ export function LoginModal({ type, open, onOpenChange }: LoginModalProps) {
         <DialogHeader>
           <DialogTitle>{titles[type]}</DialogTitle>
           <DialogDescription>
-            Enter your email to receive a magic login link.
+            Enter your email to receive a{" "}
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span className="underline decoration-dotted cursor-help">
+                  magic link
+                </span>
+              </TooltipTrigger>
+              <TooltipContent side="top" sideOffset={4}>
+                A secure, password-free login link sent to your email. Just click it to sign in!
+              </TooltipContent>
+            </Tooltip>
+            .
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
