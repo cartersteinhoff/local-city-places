@@ -16,6 +16,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
+import { Loader2, CheckCircle, AlertCircle } from "lucide-react"
 
 type LoginType = "member" | "merchant"
 
@@ -30,17 +31,50 @@ const titles: Record<LoginType, string> = {
   merchant: "Merchant Login",
 }
 
+type Status = "idle" | "loading" | "success" | "error"
+
 export function LoginModal({ type, open, onOpenChange }: LoginModalProps) {
   const [email, setEmail] = useState("")
+  const [status, setStatus] = useState<Status>("idle")
+  const [errorMessage, setErrorMessage] = useState("")
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    // TODO: Wire up magic link auth
-    console.log(`Sending magic link to ${email} for ${type} login`)
+    setStatus("loading")
+    setErrorMessage("")
+
+    try {
+      const response = await fetch("/api/auth/magic-link", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to send magic link")
+      }
+
+      setStatus("success")
+    } catch (error) {
+      setStatus("error")
+      setErrorMessage(error instanceof Error ? error.message : "Something went wrong")
+    }
+  }
+
+  const handleOpenChange = (open: boolean) => {
+    if (!open) {
+      // Reset state when closing
+      setEmail("")
+      setStatus("idle")
+      setErrorMessage("")
+    }
+    onOpenChange(open)
   }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>{titles[type]}</DialogTitle>
@@ -59,22 +93,49 @@ export function LoginModal({ type, open, onOpenChange }: LoginModalProps) {
             .
           </DialogDescription>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
-            <Input
-              id="email"
-              type="email"
-              placeholder="you@example.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            />
+
+        {status === "success" ? (
+          <div className="flex flex-col items-center py-6 text-center">
+            <CheckCircle className="w-12 h-12 text-success mb-4" />
+            <h3 className="font-semibold text-lg mb-2">Check your email!</h3>
+            <p className="text-muted-foreground text-sm">
+              We sent a sign-in link to <strong>{email}</strong>
+            </p>
           </div>
-          <Button type="submit" className="w-full">
-            Send Magic Link
-          </Button>
-        </form>
+        ) : (
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="email">Email</Label>
+              <Input
+                id="email"
+                type="email"
+                placeholder="you@example.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                disabled={status === "loading"}
+              />
+            </div>
+
+            {status === "error" && (
+              <div className="flex items-center gap-2 text-destructive text-sm">
+                <AlertCircle className="w-4 h-4" />
+                <span>{errorMessage}</span>
+              </div>
+            )}
+
+            <Button type="submit" className="w-full" disabled={status === "loading"}>
+              {status === "loading" ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Sending...
+                </>
+              ) : (
+                "Send Magic Link"
+              )}
+            </Button>
+          </form>
+        )}
       </DialogContent>
     </Dialog>
   )
