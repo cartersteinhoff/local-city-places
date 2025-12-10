@@ -18,22 +18,14 @@ import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { Loader2, CheckCircle, AlertCircle } from "lucide-react"
 
-type LoginType = "member" | "merchant"
-
 interface LoginModalProps {
-  type: LoginType
   open: boolean
   onOpenChange: (open: boolean) => void
 }
 
-const titles: Record<LoginType, string> = {
-  member: "GRC Member Login",
-  merchant: "Merchant Login",
-}
-
 type Status = "idle" | "loading" | "success" | "error"
 
-export function LoginModal({ type, open, onOpenChange }: LoginModalProps) {
+export function LoginModal({ open, onOpenChange }: LoginModalProps) {
   const [email, setEmail] = useState("")
   const [status, setStatus] = useState<Status>("idle")
   const [errorMessage, setErrorMessage] = useState("")
@@ -77,7 +69,7 @@ export function LoginModal({ type, open, onOpenChange }: LoginModalProps) {
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>{titles[type]}</DialogTitle>
+          <DialogTitle>Login</DialogTitle>
           <DialogDescription>
             Enter your email to receive a{" "}
             <Tooltip>

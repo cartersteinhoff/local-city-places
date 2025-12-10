@@ -7,17 +7,8 @@ import { LoginModal } from "@/components/login-modal"
 import { Footer } from "@/components/footer"
 import { AnimatedFoodBackground } from "@/components/animated-food-background"
 
-type LoginType = "member" | "merchant"
-
 export default function Home() {
-  const [loginModal, setLoginModal] = useState<{
-    open: boolean
-    type: LoginType
-  }>({ open: false, type: "member" })
-
-  const openLogin = (type: LoginType) => {
-    setLoginModal({ open: true, type })
-  }
+  const [loginOpen, setLoginOpen] = useState(false)
 
   return (
     <div className="relative flex min-h-screen flex-col">
@@ -38,17 +29,9 @@ export default function Home() {
             <Button
               size="lg"
               className="w-full"
-              onClick={() => openLogin("member")}
+              onClick={() => setLoginOpen(true)}
             >
-              GRC Member Login
-            </Button>
-            <Button
-              size="lg"
-              variant="outline"
-              className="w-full bg-white/80 hover:bg-white"
-              onClick={() => openLogin("merchant")}
-            >
-              Merchant Login
+              Login
             </Button>
           </div>
         </div>
@@ -57,9 +40,8 @@ export default function Home() {
       <Footer className="relative z-10" />
 
       <LoginModal
-        type={loginModal.type}
-        open={loginModal.open}
-        onOpenChange={(open) => setLoginModal((prev) => ({ ...prev, open }))}
+        open={loginOpen}
+        onOpenChange={setLoginOpen}
       />
     </div>
   )
