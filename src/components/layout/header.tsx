@@ -1,16 +1,33 @@
 "use client";
 
 import Link from "next/link";
-import { LogOut } from "lucide-react";
+import { usePathname } from "next/navigation";
+import { LogOut, ChevronDown, Shield, Store, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/theme-toggle";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface HeaderProps {
   userEmail?: string;
   userName?: string;
+  userRole?: "admin" | "merchant" | "member";
 }
 
-export function Header({ userEmail, userName }: HeaderProps) {
+const roleConfig = {
+  admin: { label: "Admin", icon: Shield, href: "/admin", color: "text-primary" },
+  merchant: { label: "Merchant", icon: Store, href: "/merchant", color: "text-blue-500" },
+  member: { label: "Member", icon: User, href: "/member", color: "text-green-500" },
+};
+
+export function Header({ userEmail, userName, userRole }: HeaderProps) {
+  const pathname = usePathname();
   const displayName = userName || userEmail?.split("@")[0] || "User";
   const initials = displayName
     .split(" ")
@@ -18,6 +35,18 @@ export function Header({ userEmail, userName }: HeaderProps) {
     .join("")
     .toUpperCase()
     .slice(0, 2);
+
+  // Determine current view based on pathname
+  const currentView = pathname.startsWith("/admin")
+    ? "admin"
+    : pathname.startsWith("/merchant")
+    ? "merchant"
+    : pathname.startsWith("/member")
+    ? "member"
+    : "admin";
+
+  const CurrentIcon = roleConfig[currentView].icon;
+  const isAdmin = userRole === "admin";
 
   return (
     <header className="h-16 bg-card border-b border-border flex items-center justify-between px-4 md:px-6 sticky top-0 z-40">
@@ -38,6 +67,36 @@ export function Header({ userEmail, userName }: HeaderProps) {
 
       {/* User menu */}
       <div className="flex items-center gap-3">
+        {/* Role Switcher (Admin only) */}
+        {isAdmin && (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm" className="gap-2">
+                <CurrentIcon className={`w-4 h-4 ${roleConfig[currentView].color}`} />
+                <span className="hidden sm:inline">{roleConfig[currentView].label}</span>
+                <ChevronDown className="w-4 h-4 text-muted-foreground" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuLabel>Switch View</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              {Object.entries(roleConfig).map(([key, config]) => {
+                const Icon = config.icon;
+                const isActive = currentView === key;
+                return (
+                  <DropdownMenuItem key={key} asChild disabled={isActive}>
+                    <Link href={config.href} className="flex items-center gap-2">
+                      <Icon className={`w-4 h-4 ${config.color}`} />
+                      {config.label}
+                      {isActive && <span className="ml-auto text-xs text-muted-foreground">Current</span>}
+                    </Link>
+                  </DropdownMenuItem>
+                );
+              })}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )}
+
         <div className="hidden sm:block text-right">
           <p className="text-sm font-medium text-foreground">{displayName}</p>
           {userName && userEmail && (

@@ -10,6 +10,7 @@ export function DashboardLayout({
   navItems,
   userEmail,
   userName,
+  userRole,
 }: DashboardLayoutProps) {
   return (
     <div className="min-h-screen bg-background">
@@ -20,7 +21,7 @@ export function DashboardLayout({
         {/* Main content area */}
         <div className="flex-1 flex flex-col min-h-screen">
           {/* Header */}
-          <Header userEmail={userEmail} userName={userName} />
+          <Header userEmail={userEmail} userName={userName} userRole={userRole} />
 
           {/* Main content */}
           <main className="flex-1 p-4 md:p-6 pb-20 md:pb-6">

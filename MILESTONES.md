@@ -6,7 +6,8 @@
 |-----------|--------|--------|
 | 1. Design System Shell | ✅ Complete | `8b64b50` |
 | 2. Database & Auth | ✅ Complete | `32e5e50` |
-| 2.5. Dark Mode | ✅ Complete | - |
+| 2.5. Dark Mode | ✅ Complete | `50ccf9a` |
+| 2.6. Admin Role Switching | ✅ Complete | `9b455a7` |
 | 3. Member Registration Flow | 🔲 Not Started | - |
 | 4. Member Dashboard | 🔲 Not Started | - |
 | 5. Merchant Dashboard | 🔲 Not Started | - |
@@ -73,6 +74,28 @@
 5. Check network tab for token in response (dev mode)
 6. Visit `/api/auth/verify?token=YOUR_TOKEN`
 7. Redirected to `/admin`
+
+---
+
+## Milestone 2.6: Admin Role Switching ✅
+
+**Status:** Complete
+
+**What was built:**
+- Role switcher dropdown in header (Admin only)
+- Admins can switch between Admin/Merchant/Member views
+- Member dashboard page (`/member`) - allows admins
+- Merchant dashboard page (`/merchant`) - allows admins
+- Both dashboards show appropriate nav items and stats
+
+**Files created/modified:**
+- `src/components/ui/dropdown-menu.tsx` - shadcn component
+- `src/components/layout/header.tsx` - Role switcher dropdown
+- `src/components/layout/types.ts` - Added userRole prop
+- `src/components/layout/dashboard-layout.tsx` - Pass userRole to header
+- `src/app/member/page.tsx` - Member dashboard (admins allowed)
+- `src/app/merchant/page.tsx` - Merchant dashboard (admins allowed)
+- `src/app/admin/page.tsx` - Added userRole prop
 
 ---
 

@@ -64,6 +64,7 @@ export default function AdminDashboard() {
       navItems={adminNavItems}
       userEmail={user?.email}
       userName="Admin"
+      userRole="admin"
     >
       <PageHeader
         title="Admin Dashboard"
