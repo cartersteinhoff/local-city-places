@@ -6,7 +6,10 @@ import postgres from "postgres";
 import { users, categories } from "./schema";
 import { eq } from "drizzle-orm";
 
-const ADMIN_EMAIL = "cartersteinhoff@gmail.com";
+const ADMIN_EMAILS = [
+  "cartersteinhoff@gmail.com",
+  "troy@localcityplaces.com",
+];
 
 // Create db connection for seed script
 const connectionString = process.env.DATABASE_URL;
@@ -30,29 +33,31 @@ const STARTER_CATEGORIES = [
 async function seed() {
   console.log("Starting seed...");
 
-  // Create admin user
-  const [existingAdmin] = await db
-    .select()
-    .from(users)
-    .where(eq(users.email, ADMIN_EMAIL))
-    .limit(1);
+  // Create admin users
+  for (const adminEmail of ADMIN_EMAILS) {
+    const [existingAdmin] = await db
+      .select()
+      .from(users)
+      .where(eq(users.email, adminEmail))
+      .limit(1);
 
-  if (existingAdmin) {
-    if (existingAdmin.role !== "admin") {
-      await db
-        .update(users)
-        .set({ role: "admin" })
-        .where(eq(users.id, existingAdmin.id));
-      console.log(`Updated ${ADMIN_EMAIL} to admin role`);
+    if (existingAdmin) {
+      if (existingAdmin.role !== "admin") {
+        await db
+          .update(users)
+          .set({ role: "admin" })
+          .where(eq(users.id, existingAdmin.id));
+        console.log(`Updated ${adminEmail} to admin role`);
+      } else {
+        console.log(`Admin ${adminEmail} already exists`);
+      }
     } else {
-      console.log(`Admin ${ADMIN_EMAIL} already exists`);
+      await db.insert(users).values({
+        email: adminEmail,
+        role: "admin",
+      });
+      console.log(`Created admin user: ${adminEmail}`);
     }
-  } else {
-    await db.insert(users).values({
-      email: ADMIN_EMAIL,
-      role: "admin",
-    });
-    console.log(`Created admin user: ${ADMIN_EMAIL}`);
   }
 
   // Create starter categories

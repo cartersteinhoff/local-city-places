@@ -1,4 +1,7 @@
-import { requireRole } from "@/lib/auth";
+"use client";
+
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { DashboardLayout } from "@/components/layout";
 import { PageHeader } from "@/components/ui/page-header";
 import { StatCard } from "@/components/ui/stat-card";
@@ -23,13 +26,43 @@ const adminNavItems = [
   { label: "Analytics", href: "/admin/analytics", icon: BarChart3 },
 ];
 
-export default async function AdminDashboard() {
-  const session = await requireRole("admin");
+export default function AdminDashboard() {
+  const router = useRouter();
+  const [user, setUser] = useState<{ email: string } | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch("/api/auth/me")
+      .then((res) => {
+        if (!res.ok) {
+          router.push("/");
+          return null;
+        }
+        return res.json();
+      })
+      .then((data) => {
+        if (data?.user?.role !== "admin") {
+          router.push("/");
+          return;
+        }
+        setUser(data.user);
+        setLoading(false);
+      })
+      .catch(() => router.push("/"));
+  }, [router]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-pulse text-muted-foreground">Loading...</div>
+      </div>
+    );
+  }
 
   return (
     <DashboardLayout
       navItems={adminNavItems}
-      userEmail={session.user.email}
+      userEmail={user?.email}
       userName="Admin"
     >
       <PageHeader

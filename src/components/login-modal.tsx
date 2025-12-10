@@ -29,11 +29,13 @@ export function LoginModal({ open, onOpenChange }: LoginModalProps) {
   const [email, setEmail] = useState("")
   const [status, setStatus] = useState<Status>("idle")
   const [errorMessage, setErrorMessage] = useState("")
+  const [devToken, setDevToken] = useState<string | null>(null)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setStatus("loading")
     setErrorMessage("")
+    setDevToken(null)
 
     try {
       const response = await fetch("/api/auth/magic-link", {
@@ -46,6 +48,11 @@ export function LoginModal({ open, onOpenChange }: LoginModalProps) {
 
       if (!response.ok) {
         throw new Error(data.error || "Failed to send magic link")
+      }
+
+      // In dev mode, the API returns the token directly
+      if (data.token) {
+        setDevToken(data.token)
       }
 
       setStatus("success")
@@ -61,6 +68,7 @@ export function LoginModal({ open, onOpenChange }: LoginModalProps) {
       setEmail("")
       setStatus("idle")
       setErrorMessage("")
+      setDevToken(null)
     }
     onOpenChange(open)
   }
@@ -89,10 +97,25 @@ export function LoginModal({ open, onOpenChange }: LoginModalProps) {
         {status === "success" ? (
           <div className="flex flex-col items-center py-6 text-center">
             <CheckCircle className="w-12 h-12 text-success mb-4" />
-            <h3 className="font-semibold text-lg mb-2">Check your email!</h3>
-            <p className="text-muted-foreground text-sm">
-              We sent a sign-in link to <strong>{email}</strong>
+            <h3 className="font-semibold text-lg mb-2">
+              {devToken ? "Click to sign in" : "Check your email!"}
+            </h3>
+            <p className="text-muted-foreground text-sm mb-4">
+              {devToken
+                ? "Dev mode - click the button below to complete sign in"
+                : <>We sent a sign-in link to <strong>{email}</strong></>
+              }
             </p>
+            {devToken && (
+              <Button
+                asChild
+                className="bg-primary-gradient hover:opacity-90"
+              >
+                <a href={`/api/auth/verify?token=${devToken}`}>
+                  Sign In Now
+                </a>
+              </Button>
+            )}
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-4">
