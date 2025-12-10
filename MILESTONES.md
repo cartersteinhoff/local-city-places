@@ -6,6 +6,7 @@
 |-----------|--------|--------|
 | 1. Design System Shell | ✅ Complete | `8b64b50` |
 | 2. Database & Auth | ✅ Complete | `32e5e50` |
+| 2.5. Dark Mode | ✅ Complete | - |
 | 3. Member Registration Flow | 🔲 Not Started | - |
 | 4. Member Dashboard | 🔲 Not Started | - |
 | 5. Merchant Dashboard | 🔲 Not Started | - |

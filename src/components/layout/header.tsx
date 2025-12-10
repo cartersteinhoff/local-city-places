@@ -1,8 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { User, LogOut } from "lucide-react";
+import { LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 interface HeaderProps {
   userEmail?: string;
@@ -51,6 +52,9 @@ export function Header({ userEmail, userName }: HeaderProps) {
               {initials}
             </span>
           </div>
+
+          {/* Theme toggle */}
+          <ThemeToggle />
 
           {/* Logout button */}
           <Button
