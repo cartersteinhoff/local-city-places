@@ -7,8 +7,8 @@
 | 1. Design System Shell | ✅ Complete | `8b64b50` |
 | 2. Database & Auth | ✅ Complete | `32e5e50` |
 | 2.5. Dark Mode | ✅ Complete | `50ccf9a` |
-| 2.6. Admin Role Switching | ✅ Complete | `9b455a7` |
-| 3. Member Registration Flow | 🔲 Not Started | - |
+| 2.6. Admin Role Switching | ✅ Complete | `be52709` |
+| 3. Member Registration Flow | ✅ Complete | - |
 | 4. Member Dashboard | 🔲 Not Started | - |
 | 5. Merchant Dashboard | 🔲 Not Started | - |
 | 6. Admin Dashboard | 🔲 Not Started | - |
@@ -99,31 +99,51 @@
 
 ---
 
-## Milestone 3: Member Registration Flow 🔲
+## Milestone 3: Member Registration Flow ✅
 
-**Status:** Not Started
+**Status:** Complete
 
-**What to build:**
-- `/claim/[grcId]` - GRC claim entry point
-- `/member/register` - 7-step registration wizard:
-  1. Confirm Email (magic link already sent)
+**What was built:**
+- `/claim/[grcId]` - GRC claim entry point with auth detection
+- `/member/register` - 6-step registration wizard:
+  1. Confirm Email (shows logged-in email)
   2. Personal Info (name, address, city, state, zip)
   3. Grocery Store (Google Places autocomplete)
-  4. Survey (merchant's survey questions)
+  4. Survey (merchant's survey questions, if any)
   5. Review Offer (50 words min for +1 month bonus)
   6. Start Date Selection (this month or next)
-  7. Dashboard redirect
-- `/member/grc-onboarding/[grcId]` - Returning member flow (4 steps)
-- Google Places autocomplete component
-- Survey component (text + multiple choice)
+- `/member/grc-onboarding/[grcId]` - Returning member flow (3 steps: store, survey, start date)
+- Google Places autocomplete component with US grocery store filtering
+- Survey component (text, single choice, multiple choice)
 - Form validation with Zod
+- Wizard progress indicator (mobile + desktop views)
 
-**API routes needed:**
-- `POST /api/member/register` - Create member profile
-- `POST /api/member/register-grc` - Register GRC to member
-- `GET /api/grc/[grcId]` - Get GRC details for claim
-- `POST /api/survey/respond` - Submit survey response
-- `POST /api/review/create` - Submit review for bonus
+**Files created:**
+- `src/app/claim/[grcId]/page.tsx`
+- `src/app/member/register/page.tsx`
+- `src/app/member/grc-onboarding/[grcId]/page.tsx`
+- `src/app/api/grc/[grcId]/route.ts`
+- `src/app/api/member/register/route.ts`
+- `src/app/api/member/register-grc/route.ts`
+- `src/app/api/survey/respond/route.ts`
+- `src/app/api/review/create/route.ts`
+- `src/components/registration/wizard-container.tsx`
+- `src/components/registration/wizard-progress.tsx`
+- `src/components/registration/steps/confirm-email-step.tsx`
+- `src/components/registration/steps/personal-info-step.tsx`
+- `src/components/registration/steps/grocery-store-step.tsx`
+- `src/components/registration/steps/survey-step.tsx`
+- `src/components/registration/steps/review-offer-step.tsx`
+- `src/components/registration/steps/start-date-step.tsx`
+- `src/components/ui/google-places-autocomplete.tsx`
+- `src/lib/validations/member.ts`
+
+**How to test:**
+1. Create a test GRC in the database (requires merchant)
+2. Visit `/claim/[grcId]`
+3. Enter email and complete magic link flow
+4. Complete the 6-step registration wizard
+5. Verify redirect to `/member` dashboard
 
 ---
 

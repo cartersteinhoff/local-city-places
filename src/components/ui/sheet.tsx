@@ -52,9 +52,11 @@ function SheetContent({
   className,
   children,
   showCloseButton = true,
+  title = "Menu",
   ...props
 }: React.ComponentProps<typeof DialogPrimitive.Content> & {
   showCloseButton?: boolean;
+  title?: string;
 }) {
   return (
     <SheetPortal>
@@ -73,6 +75,8 @@ function SheetContent({
         )}
         {...props}
       >
+        {/* Visually hidden title for accessibility */}
+        <DialogPrimitive.Title className="sr-only">{title}</DialogPrimitive.Title>
         {/* Drag handle */}
         <div className="flex justify-center pt-3 pb-2">
           <div className="h-1.5 w-12 rounded-full bg-muted-foreground/30" />

@@ -12,4 +12,5 @@ export interface DashboardLayoutProps {
   userEmail?: string;
   userName?: string;
   userRole?: "admin" | "merchant" | "member";
+  profilePhotoUrl?: string | null;
 }

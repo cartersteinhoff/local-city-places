@@ -9,6 +9,7 @@ import {
   varchar,
   decimal,
   pgEnum,
+  uniqueIndex,
 } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 
@@ -32,6 +33,12 @@ export const users = pgTable("users", {
   email: varchar("email", { length: 255 }).notNull().unique(),
   phone: varchar("phone", { length: 20 }),
   role: userRoleEnum("role").notNull().default("member"),
+  profilePhotoUrl: text("profile_photo_url"),
+  notificationPrefs: jsonb("notification_prefs").$type<{
+    emailReceipts?: boolean;
+    emailReminders?: boolean;
+    emailMarketing?: boolean;
+  }>(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
@@ -68,6 +75,10 @@ export const merchants = pgTable("merchants", {
   businessName: varchar("business_name", { length: 255 }).notNull(),
   categoryId: uuid("category_id").references(() => categories.id),
   city: varchar("city", { length: 100 }),
+  logoUrl: text("logo_url"),
+  description: text("description"),
+  phone: varchar("phone", { length: 20 }),
+  website: varchar("website", { length: 255 }),
   verified: boolean("verified").default(false).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
@@ -117,6 +128,21 @@ export const grcs = pgTable("grcs", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+// Member GRC queue - tracks preferred order for pending GRCs
+export const memberGrcQueue = pgTable("member_grc_queue", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  memberId: uuid("member_id")
+    .notNull()
+    .references(() => members.id, { onDelete: "cascade" }),
+  grcId: uuid("grc_id")
+    .notNull()
+    .references(() => grcs.id, { onDelete: "cascade" }),
+  sortOrder: integer("sort_order").notNull().default(0),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => [
+  uniqueIndex("member_grc_queue_unique_idx").on(table.memberId, table.grcId),
+]);
+
 // GRC purchases table
 export const grcPurchases = pgTable("grc_purchases", {
   id: uuid("id").primaryKey().defaultRandom(),
@@ -148,6 +174,8 @@ export const receipts = pgTable("receipts", {
   receiptDate: timestamp("receipt_date"),
   extractedStoreName: varchar("extracted_store_name", { length: 255 }),
   storeMismatch: boolean("store_mismatch").default(false),
+  dateMismatch: boolean("date_mismatch").default(false),
+  memberOverride: boolean("member_override").default(false),
   veryfiResponse: jsonb("veryfi_response"),
   submittedAt: timestamp("submitted_at").defaultNow().notNull(),
   status: receiptStatusEnum("status").notNull().default("pending"),

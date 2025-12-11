@@ -38,7 +38,11 @@ export function Sidebar({ navItems, isCollapsed = false }: SidebarProps) {
       {/* Navigation */}
       <nav className="flex-1 py-4 px-2 space-y-1">
         {navItems.map((item) => {
-          const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`);
+          // Only use startsWith for paths with more than 1 segment (e.g., /member/grcs)
+          // Dashboard paths (/member, /merchant, /admin) should only match exactly
+          const hrefSegments = item.href.split('/').filter(Boolean).length;
+          const isActive = pathname === item.href ||
+            (hrefSegments > 1 && pathname.startsWith(`${item.href}/`));
           const Icon = item.icon;
 
           return (

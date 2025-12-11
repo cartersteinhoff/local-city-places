@@ -26,9 +26,14 @@ const adminNavItems = [
   { label: "Analytics", href: "/admin/analytics", icon: BarChart3 },
 ];
 
+interface AuthData {
+  user: { email: string; role: string; profilePhotoUrl?: string | null };
+  member?: { firstName: string; lastName: string };
+}
+
 export default function AdminDashboard() {
   const router = useRouter();
-  const [user, setUser] = useState<{ email: string } | null>(null);
+  const [authData, setAuthData] = useState<AuthData | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -45,28 +50,31 @@ export default function AdminDashboard() {
           router.push("/");
           return;
         }
-        setUser(data.user);
+        setAuthData(data);
         setLoading(false);
       })
       .catch(() => router.push("/"));
   }, [router]);
 
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-pulse text-muted-foreground">Loading...</div>
-      </div>
-    );
-  }
+  const userName = authData?.member
+    ? `${authData.member.firstName} ${authData.member.lastName}`
+    : undefined;
 
   return (
     <DashboardLayout
       navItems={adminNavItems}
-      userEmail={user?.email}
-      userName="Admin"
+      userEmail={authData?.user.email}
+      userName={userName}
       userRole="admin"
+      profilePhotoUrl={authData?.user.profilePhotoUrl}
     >
-      <PageHeader
+      {loading ? (
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="animate-pulse text-muted-foreground">Loading...</div>
+        </div>
+      ) : (
+        <>
+        <PageHeader
         title="Admin Dashboard"
         description="Manage members, merchants, and platform operations"
       />
@@ -131,6 +139,8 @@ export default function AdminDashboard() {
           </a>
         </div>
       </div>
+        </>
+      )}
     </DashboardLayout>
   );
 }

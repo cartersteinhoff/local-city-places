@@ -150,25 +150,18 @@ export async function getSession(): Promise<{
     return null;
   }
 
-  // Get member or merchant profile if exists
-  let member;
-  let merchant;
+  // Get member and merchant profiles if they exist (admins may have both)
+  const [member] = await db
+    .select()
+    .from(members)
+    .where(eq(members.userId, user.id))
+    .limit(1);
 
-  if (user.role === "member") {
-    const [memberProfile] = await db
-      .select()
-      .from(members)
-      .where(eq(members.userId, user.id))
-      .limit(1);
-    member = memberProfile;
-  } else if (user.role === "merchant") {
-    const [merchantProfile] = await db
-      .select()
-      .from(merchants)
-      .where(eq(merchants.userId, user.id))
-      .limit(1);
-    merchant = merchantProfile;
-  }
+  const [merchant] = await db
+    .select()
+    .from(merchants)
+    .where(eq(merchants.userId, user.id))
+    .limit(1);
 
   return { user, member, merchant };
 }

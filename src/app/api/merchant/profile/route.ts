@@ -1,0 +1,196 @@
+import { NextRequest, NextResponse } from "next/server";
+import { db } from "@/db";
+import { users, merchants, categories } from "@/db/schema";
+import { eq } from "drizzle-orm";
+import { getSession } from "@/lib/auth";
+import { uploadProfilePhoto, uploadMerchantLogo, validateImageFormat, validateImageSize } from "@/lib/storage";
+
+export async function GET() {
+  try {
+    const session = await getSession();
+    if (!session) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    // Get user
+    const [user] = await db
+      .select()
+      .from(users)
+      .where(eq(users.id, session.user.id))
+      .limit(1);
+
+    // Get merchant profile with category
+    const merchantResult = await db
+      .select({
+        id: merchants.id,
+        businessName: merchants.businessName,
+        categoryId: merchants.categoryId,
+        city: merchants.city,
+        logoUrl: merchants.logoUrl,
+        description: merchants.description,
+        phone: merchants.phone,
+        website: merchants.website,
+        verified: merchants.verified,
+        categoryName: categories.name,
+      })
+      .from(merchants)
+      .leftJoin(categories, eq(merchants.categoryId, categories.id))
+      .where(eq(merchants.userId, session.user.id))
+      .limit(1);
+
+    const merchant = merchantResult[0];
+
+    if (!merchant) {
+      return NextResponse.json(
+        { error: "Merchant profile not found" },
+        { status: 400 }
+      );
+    }
+
+    // Get all categories for the dropdown
+    const allCategories = await db.select().from(categories);
+
+    return NextResponse.json({
+      profile: {
+        email: user.email,
+        profilePhotoUrl: user.profilePhotoUrl,
+        notificationPrefs: user.notificationPrefs || {
+          emailReceipts: true,
+          emailReminders: true,
+          emailMarketing: false,
+        },
+        businessName: merchant.businessName,
+        categoryId: merchant.categoryId,
+        categoryName: merchant.categoryName,
+        city: merchant.city,
+        logoUrl: merchant.logoUrl,
+        description: merchant.description,
+        phone: merchant.phone,
+        website: merchant.website,
+        verified: merchant.verified,
+      },
+      categories: allCategories,
+    });
+  } catch (error) {
+    console.error("Error fetching merchant profile:", error);
+    return NextResponse.json(
+      { error: "Failed to fetch profile" },
+      { status: 500 }
+    );
+  }
+}
+
+export async function PATCH(request: NextRequest) {
+  try {
+    const session = await getSession();
+    if (!session) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const body = await request.json();
+    const {
+      businessName,
+      categoryId,
+      city,
+      description,
+      phone,
+      website,
+      notificationPrefs,
+      profilePhoto, // Base64 for personal photo
+      logo, // Base64 for business logo
+    } = body;
+
+    // Get merchant
+    const [merchant] = await db
+      .select()
+      .from(merchants)
+      .where(eq(merchants.userId, session.user.id))
+      .limit(1);
+
+    if (!merchant) {
+      return NextResponse.json(
+        { error: "Merchant profile not found" },
+        { status: 400 }
+      );
+    }
+
+    // Handle profile photo upload
+    let profilePhotoUrl: string | null | undefined;
+    if (profilePhoto) {
+      const formatValidation = validateImageFormat(profilePhoto);
+      if (!formatValidation.valid) {
+        return NextResponse.json(
+          { error: formatValidation.error },
+          { status: 400 }
+        );
+      }
+
+      const sizeValidation = validateImageSize(profilePhoto, 5 * 1024 * 1024);
+      if (!sizeValidation.valid) {
+        return NextResponse.json({ error: sizeValidation.error }, { status: 413 });
+      }
+
+      profilePhotoUrl = await uploadProfilePhoto(
+        profilePhoto,
+        `merchant-${merchant.id}.jpg`
+      );
+    }
+
+    // Handle logo upload
+    let logoUrl: string | null | undefined;
+    if (logo) {
+      const formatValidation = validateImageFormat(logo);
+      if (!formatValidation.valid) {
+        return NextResponse.json(
+          { error: formatValidation.error },
+          { status: 400 }
+        );
+      }
+
+      const sizeValidation = validateImageSize(logo, 5 * 1024 * 1024);
+      if (!sizeValidation.valid) {
+        return NextResponse.json({ error: sizeValidation.error }, { status: 413 });
+      }
+
+      logoUrl = await uploadMerchantLogo(logo, `logo-${merchant.id}.jpg`);
+    }
+
+    // Update user table (notification prefs, profile photo)
+    const userUpdates: Record<string, unknown> = {};
+    if (notificationPrefs !== undefined) userUpdates.notificationPrefs = notificationPrefs;
+    if (profilePhotoUrl) userUpdates.profilePhotoUrl = profilePhotoUrl;
+
+    if (Object.keys(userUpdates).length > 0) {
+      await db
+        .update(users)
+        .set({ ...userUpdates, updatedAt: new Date() })
+        .where(eq(users.id, session.user.id));
+    }
+
+    // Update merchant table
+    const merchantUpdates: Record<string, unknown> = {};
+    if (businessName !== undefined) merchantUpdates.businessName = businessName;
+    if (categoryId !== undefined) merchantUpdates.categoryId = categoryId;
+    if (city !== undefined) merchantUpdates.city = city;
+    if (description !== undefined) merchantUpdates.description = description;
+    if (phone !== undefined) merchantUpdates.phone = phone;
+    if (website !== undefined) merchantUpdates.website = website;
+    if (logoUrl) merchantUpdates.logoUrl = logoUrl;
+
+    if (Object.keys(merchantUpdates).length > 0) {
+      await db
+        .update(merchants)
+        .set(merchantUpdates)
+        .where(eq(merchants.id, merchant.id));
+    }
+
+    return NextResponse.json({ success: true, profilePhotoUrl, logoUrl });
+  } catch (error) {
+    console.error("Error updating merchant profile:", error);
+    const message = error instanceof Error ? error.message : "Failed to update profile";
+    return NextResponse.json(
+      { error: message },
+      { status: 500 }
+    );
+  }
+}

@@ -13,6 +13,7 @@ export async function GET() {
       id: session.user.id,
       email: session.user.email,
       role: session.user.role,
+      profilePhotoUrl: session.user.profilePhotoUrl,
     },
     member: session.member
       ? {

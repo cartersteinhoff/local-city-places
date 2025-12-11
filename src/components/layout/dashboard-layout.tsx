@@ -11,6 +11,7 @@ export function DashboardLayout({
   userEmail,
   userName,
   userRole,
+  profilePhotoUrl,
 }: DashboardLayoutProps) {
   return (
     <div className="min-h-screen bg-background">
@@ -21,7 +22,7 @@ export function DashboardLayout({
         {/* Main content area */}
         <div className="flex-1 flex flex-col min-h-screen">
           {/* Header */}
-          <Header userEmail={userEmail} userName={userName} userRole={userRole} />
+          <Header userEmail={userEmail} userName={userName} userRole={userRole} profilePhotoUrl={profilePhotoUrl} />
 
           {/* Main content */}
           <main className="flex-1 p-4 md:p-6 pb-20 md:pb-6">

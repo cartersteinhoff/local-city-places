@@ -6,29 +6,23 @@ import { DashboardLayout } from "@/components/layout";
 import { PageHeader } from "@/components/ui/page-header";
 import { StatCard } from "@/components/ui/stat-card";
 import {
-  LayoutDashboard,
   Send,
-  FileText,
   ClipboardList,
   Star,
-  Settings,
   Users,
   Gift,
   TrendingUp,
 } from "lucide-react";
+import { merchantNavItems } from "./nav";
 
-const merchantNavItems = [
-  { label: "Dashboard", href: "/merchant", icon: LayoutDashboard },
-  { label: "Issue GRC", href: "/merchant/issue", icon: Send },
-  { label: "My GRCs", href: "/merchant/grcs", icon: FileText },
-  { label: "Surveys", href: "/merchant/surveys", icon: ClipboardList },
-  { label: "Reviews", href: "/merchant/reviews", icon: Star },
-  { label: "Settings", href: "/merchant/settings", icon: Settings },
-];
+interface AuthData {
+  user: { email: string; role: string; profilePhotoUrl?: string | null };
+  member?: { firstName: string; lastName: string };
+}
 
 export default function MerchantDashboard() {
   const router = useRouter();
-  const [user, setUser] = useState<{ email: string; role: string } | null>(null);
+  const [authData, setAuthData] = useState<AuthData | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -46,28 +40,31 @@ export default function MerchantDashboard() {
           router.push("/");
           return;
         }
-        setUser(data.user);
+        setAuthData(data);
         setLoading(false);
       })
       .catch(() => router.push("/"));
   }, [router]);
 
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-pulse text-muted-foreground">Loading...</div>
-      </div>
-    );
-  }
+  const userName = authData?.member
+    ? `${authData.member.firstName} ${authData.member.lastName}`
+    : undefined;
 
   return (
     <DashboardLayout
       navItems={merchantNavItems}
-      userEmail={user?.email}
-      userName="Merchant"
-      userRole={user?.role as "admin" | "merchant" | "member"}
+      userEmail={authData?.user.email}
+      userName={userName}
+      userRole={(authData?.user.role as "admin" | "merchant" | "member") ?? "merchant"}
+      profilePhotoUrl={authData?.user.profilePhotoUrl}
     >
-      <PageHeader
+      {loading ? (
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="animate-pulse text-muted-foreground">Loading...</div>
+        </div>
+      ) : (
+        <>
+        <PageHeader
         title="Merchant Dashboard"
         description="Manage your GRCs and track customer engagement"
       />
@@ -141,6 +138,8 @@ export default function MerchantDashboard() {
           <p className="text-sm mt-1">Issue GRCs to get started</p>
         </div>
       </div>
+        </>
+      )}
     </DashboardLayout>
   );
 }

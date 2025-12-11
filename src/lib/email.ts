@@ -1,25 +1,29 @@
-// Email service - placeholder for Postmark integration
-// TODO: Replace with actual Postmark implementation
+import * as postmark from "postmark";
 
-const FROM_EMAIL = "hello@localcityplaces.com";
+const FROM_EMAIL = process.env.POSTMARK_FROM_EMAIL || "team@localcityplaces.com";
+const FROM_NAME = process.env.POSTMARK_FROM_NAME || "Local City Places";
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+
+const client = process.env.POSTMARK_API_KEY
+  ? new postmark.ServerClient(process.env.POSTMARK_API_KEY)
+  : null;
 
 interface SendEmailOptions {
   to: string;
   subject: string;
   html: string;
   text?: string;
+  messageStream?: string;
 }
 
-export async function sendEmail({ to, subject, html, text }: SendEmailOptions): Promise<boolean> {
-  // TODO: Integrate with Postmark
-  // For now, log to console in development
-  if (process.env.NODE_ENV === "development") {
+export async function sendEmail({ to, subject, html, text, messageStream }: SendEmailOptions): Promise<boolean> {
+  // In development without API key, log to console
+  if (!client) {
     console.log("=".repeat(50));
-    console.log("EMAIL SENT (dev mode - not actually sent)");
+    console.log("EMAIL (Postmark not configured - logging only)");
     console.log("=".repeat(50));
     console.log(`To: ${to}`);
-    console.log(`From: ${FROM_EMAIL}`);
+    console.log(`From: ${FROM_NAME} <${FROM_EMAIL}>`);
     console.log(`Subject: ${subject}`);
     console.log("-".repeat(50));
     console.log(text || html);
@@ -27,12 +31,21 @@ export async function sendEmail({ to, subject, html, text }: SendEmailOptions): 
     return true;
   }
 
-  // Production: Would use Postmark here
-  // const client = new postmark.ServerClient(process.env.POSTMARK_API_KEY!);
-  // await client.sendEmail({ From: FROM_EMAIL, To: to, Subject: subject, HtmlBody: html, TextBody: text });
-
-  console.warn("Email sending not configured for production");
-  return false;
+  try {
+    await client.sendEmail({
+      From: `${FROM_NAME} <${FROM_EMAIL}>`,
+      To: to,
+      Subject: subject,
+      HtmlBody: html,
+      TextBody: text || html.replace(/<[^>]*>/g, ""),
+      MessageStream: messageStream || process.env.POSTMARK_MESSAGE_STREAM || "outbound",
+    });
+    console.log(`Email sent successfully to ${to}`);
+    return true;
+  } catch (error) {
+    console.error("Failed to send email:", error);
+    return false;
+  }
 }
 
 export async function sendMagicLinkEmail(email: string, token: string): Promise<boolean> {
