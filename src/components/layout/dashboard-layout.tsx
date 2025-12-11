@@ -31,7 +31,12 @@ export function DashboardLayout({
       </div>
 
       {/* Mobile bottom nav */}
-      <MobileNav navItems={navItems} />
+      <MobileNav
+        navItems={navItems}
+        userEmail={userEmail}
+        userName={userName}
+        userRole={userRole}
+      />
     </div>
   );
 }
