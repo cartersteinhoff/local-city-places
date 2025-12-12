@@ -24,7 +24,7 @@ export const qualificationStatusEnum = pgEnum("qualification_status", [
   "pending_review",
   "forfeited",
 ]);
-export const paymentMethodEnum = pgEnum("payment_method", ["bank_account", "zelle"]);
+export const paymentMethodEnum = pgEnum("payment_method", ["bank_account", "zelle", "business_check"]);
 export const paymentStatusEnum = pgEnum("payment_status", ["pending", "confirmed", "failed"]);
 
 // Users table
@@ -80,10 +80,6 @@ export const merchants = pgTable("merchants", {
   phone: varchar("phone", { length: 20 }),
   website: varchar("website", { length: 255 }),
   verified: boolean("verified").default(false).notNull(),
-  // Payment preferences
-  zelleEmail: varchar("zelle_email", { length: 255 }),
-  zellePhone: varchar("zelle_phone", { length: 20 }),
-  preferredPaymentMethod: varchar("preferred_payment_method", { length: 20 }), // 'zelle' or 'bank_account'
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
@@ -93,10 +89,12 @@ export const merchantBankAccounts = pgTable("merchant_bank_accounts", {
   merchantId: uuid("merchant_id")
     .notNull()
     .references(() => merchants.id, { onDelete: "cascade" }),
+  bankName: varchar("bank_name", { length: 255 }), // Name of the bank
   routingNumberEncrypted: text("routing_number_encrypted").notNull(),
   accountNumberEncrypted: text("account_number_encrypted").notNull(),
   accountType: varchar("account_type", { length: 20 }).notNull(), // checking or savings
   accountHolderName: varchar("account_holder_name", { length: 255 }).notNull(),
+  checkImageUrl: text("check_image_url"), // Photo of check for verification
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
@@ -158,6 +156,11 @@ export const grcPurchases = pgTable("grc_purchases", {
   totalCost: decimal("total_cost", { precision: 10, scale: 2 }).notNull(),
   paymentMethod: paymentMethodEnum("payment_method").notNull(),
   paymentStatus: paymentStatusEnum("payment_status").notNull().default("pending"),
+  // Zelle payment info
+  zelleAccountName: varchar("zelle_account_name", { length: 255 }), // Name on bank sending Zelle
+  // Admin fields
+  paymentNotes: text("payment_notes"),
+  rejectionReason: varchar("rejection_reason", { length: 255 }),
   paymentConfirmedAt: timestamp("payment_confirmed_at"),
   paymentConfirmedBy: uuid("payment_confirmed_by").references(() => users.id),
   createdAt: timestamp("created_at").defaultNow().notNull(),

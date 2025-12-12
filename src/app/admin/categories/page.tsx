@@ -36,12 +36,14 @@ import {
   Trash2,
   Loader2,
   RefreshCw,
+  Receipt,
 } from "lucide-react";
 import { useUser } from "@/hooks/use-user";
 
 const adminNavItems = [
   { label: "Dashboard", href: "/admin", icon: LayoutDashboard },
   { label: "Moderation", href: "/admin/moderation", icon: ClipboardCheck },
+  { label: "Orders", href: "/admin/orders", icon: Receipt },
   { label: "Gift Cards", href: "/admin/gift-cards", icon: CreditCard },
   { label: "Users", href: "/admin/users", icon: Users },
   { label: "Categories", href: "/admin/categories", icon: FolderOpen },

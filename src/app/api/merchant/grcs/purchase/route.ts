@@ -14,7 +14,7 @@ const GRC_PRICING: Record<number, number> = {
 // Available denominations
 export const DENOMINATIONS = Object.keys(GRC_PRICING).map(Number);
 
-export async function GET(request: Request) {
+export async function GET() {
   try {
     const session = await getSession();
 
@@ -42,17 +42,12 @@ export async function GET(request: Request) {
           .limit(1);
 
         savedPaymentInfo = {
-          preferredPaymentMethod: merchant.preferredPaymentMethod,
-          zelle: {
-            email: merchant.zelleEmail || "",
-            phone: merchant.zellePhone || "",
-          },
           bankAccount: bankAccount ? {
+            bankName: bankAccount.bankName || "",
             accountHolderName: bankAccount.accountHolderName,
-            // Return masked versions for display (last 4 digits)
-            routingNumberLast4: "****",
-            accountNumberLast4: "****",
-            hasAccount: true,
+            routingLast4: bankAccount.routingNumberEncrypted?.slice(-4) || "",
+            accountLast4: bankAccount.accountNumberEncrypted?.slice(-4) || "",
+            hasCheckImage: !!bankAccount.checkImageUrl,
           } : null,
         };
       }
@@ -76,7 +71,7 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const { denomination, quantity, paymentMethod, paymentInfo, savePaymentInfo } = body;
+    const { denomination, quantity, paymentMethod, paymentInfo, saveBankInfo } = body;
 
     // Validate denomination
     if (!DENOMINATIONS.includes(denomination)) {
@@ -95,7 +90,7 @@ export async function POST(request: Request) {
     }
 
     // Validate payment method
-    if (!["bank_account", "zelle"].includes(paymentMethod)) {
+    if (!["business_check", "zelle"].includes(paymentMethod)) {
       return NextResponse.json(
         { error: "Invalid payment method" },
         { status: 400 }
@@ -113,50 +108,85 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Merchant not found" }, { status: 404 });
     }
 
-    // Save payment info if requested
-    if (savePaymentInfo && paymentInfo) {
-      if (paymentMethod === "zelle") {
-        await db
-          .update(merchants)
-          .set({
-            zelleEmail: paymentInfo.email || null,
-            zellePhone: paymentInfo.phone || null,
-            preferredPaymentMethod: "zelle",
-          })
-          .where(eq(merchants.id, merchant.id));
-      } else if (paymentMethod === "bank_account") {
-        // Update merchant's preferred method
-        await db
-          .update(merchants)
-          .set({ preferredPaymentMethod: "bank_account" })
-          .where(eq(merchants.id, merchant.id));
+    // Handle Zelle payment
+    let zelleAccountName: string | null = null;
+    if (paymentMethod === "zelle") {
+      if (!paymentInfo?.zelleAccountName) {
+        return NextResponse.json(
+          { error: "Zelle account name is required" },
+          { status: 400 }
+        );
+      }
+      zelleAccountName = paymentInfo.zelleAccountName;
+    }
 
-        // Check if bank account exists
+    // Handle business check payment
+    if (paymentMethod === "business_check") {
+      if (paymentInfo?.useSavedBank) {
+        // Using saved bank account - verify it exists
         const [existingBankAccount] = await db
           .select()
           .from(merchantBankAccounts)
           .where(eq(merchantBankAccounts.merchantId, merchant.id))
           .limit(1);
 
-        if (existingBankAccount) {
-          // Update existing
+        if (!existingBankAccount) {
+          return NextResponse.json(
+            { error: "No saved bank account found" },
+            { status: 400 }
+          );
+        }
+
+        // Update check image if provided
+        if (paymentInfo.checkImageUrl && !existingBankAccount.checkImageUrl) {
           await db
             .update(merchantBankAccounts)
-            .set({
-              accountHolderName: paymentInfo.accountName,
+            .set({ checkImageUrl: paymentInfo.checkImageUrl })
+            .where(eq(merchantBankAccounts.id, existingBankAccount.id));
+        }
+      } else {
+        // New bank account details
+        if (!paymentInfo?.bankName || !paymentInfo?.routingNumber ||
+            !paymentInfo?.accountNumber || !paymentInfo?.accountHolderName) {
+          return NextResponse.json(
+            { error: "Complete bank account details are required" },
+            { status: 400 }
+          );
+        }
+
+        // Save bank info if requested
+        if (saveBankInfo) {
+          // Check if bank account exists
+          const [existingBankAccount] = await db
+            .select()
+            .from(merchantBankAccounts)
+            .where(eq(merchantBankAccounts.merchantId, merchant.id))
+            .limit(1);
+
+          if (existingBankAccount) {
+            // Update existing
+            await db
+              .update(merchantBankAccounts)
+              .set({
+                bankName: paymentInfo.bankName,
+                accountHolderName: paymentInfo.accountHolderName,
+                routingNumberEncrypted: paymentInfo.routingNumber, // TODO: encrypt
+                accountNumberEncrypted: paymentInfo.accountNumber, // TODO: encrypt
+                checkImageUrl: paymentInfo.checkImageUrl || null,
+              })
+              .where(eq(merchantBankAccounts.id, existingBankAccount.id));
+          } else {
+            // Create new
+            await db.insert(merchantBankAccounts).values({
+              merchantId: merchant.id,
+              bankName: paymentInfo.bankName,
+              accountHolderName: paymentInfo.accountHolderName,
               routingNumberEncrypted: paymentInfo.routingNumber, // TODO: encrypt
               accountNumberEncrypted: paymentInfo.accountNumber, // TODO: encrypt
-            })
-            .where(eq(merchantBankAccounts.id, existingBankAccount.id));
-        } else {
-          // Create new
-          await db.insert(merchantBankAccounts).values({
-            merchantId: merchant.id,
-            accountHolderName: paymentInfo.accountName,
-            routingNumberEncrypted: paymentInfo.routingNumber, // TODO: encrypt
-            accountNumberEncrypted: paymentInfo.accountNumber, // TODO: encrypt
-            accountType: "checking",
-          });
+              accountType: "checking",
+              checkImageUrl: paymentInfo.checkImageUrl || null,
+            });
+          }
         }
       }
     }
@@ -175,6 +205,7 @@ export async function POST(request: Request) {
         totalCost,
         paymentMethod,
         paymentStatus: "pending",
+        zelleAccountName,
       })
       .returning();
 

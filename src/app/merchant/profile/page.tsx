@@ -19,7 +19,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Camera, Loader2, Save, Building2, CheckCircle, CreditCard, Lock } from "lucide-react";
+import { Camera, Loader2, Save, Building2, CheckCircle, CreditCard, Lock, Upload, FileCheck, X } from "lucide-react";
 import { merchantNavItems } from "../nav";
 import { useUser } from "@/hooks/use-user";
 
@@ -45,12 +45,12 @@ interface ProfileData {
   phone: string | null;
   website: string | null;
   verified: boolean;
-  // Payment info
-  zelleEmail: string | null;
-  zellePhone: string | null;
-  preferredPaymentMethod: string | null;
   bankAccount: {
+    bankName: string | null;
     accountHolderName: string;
+    routingLast4: string;
+    accountLast4: string;
+    hasCheckImage: boolean;
     hasAccount: boolean;
   } | null;
 }
@@ -68,10 +68,15 @@ export default function MerchantProfilePage() {
   const [pendingPhoto, setPendingPhoto] = useState<string | null>(null);
   const [pendingLogo, setPendingLogo] = useState<string | null>(null);
   // Payment info state (for bank account details that need separate input)
+  const [bankName, setBankName] = useState("");
   const [bankAccountName, setBankAccountName] = useState("");
   const [bankRouting, setBankRouting] = useState("");
   const [bankAccount, setBankAccount] = useState("");
   const [isEditingBankAccount, setIsEditingBankAccount] = useState(false);
+  const checkImageInputRef = useRef<HTMLInputElement>(null);
+  const [checkImagePreview, setCheckImagePreview] = useState<string | null>(null);
+  const [checkImageUrl, setCheckImageUrl] = useState<string | null>(null);
+  const [isUploadingCheck, setIsUploadingCheck] = useState(false);
 
   // Redirect if not authenticated
   useEffect(() => {
@@ -93,9 +98,10 @@ export default function MerchantProfilePage() {
       const data = await response.json();
       setProfile(data.profile);
       setCategories(data.categories);
-      // Initialize bank account name if exists
-      if (data.profile.bankAccount?.accountHolderName) {
-        setBankAccountName(data.profile.bankAccount.accountHolderName);
+      // Initialize bank account fields if exists
+      if (data.profile.bankAccount) {
+        setBankAccountName(data.profile.bankAccount.accountHolderName || "");
+        setBankName(data.profile.bankAccount.bankName || "");
       }
     } catch (error) {
       console.error("Error fetching profile:", error);
@@ -120,18 +126,21 @@ export default function MerchantProfilePage() {
         phone: profile.phone,
         website: profile.website,
         notificationPrefs: profile.notificationPrefs,
-        // Payment info
-        zelleEmail: profile.zelleEmail,
-        zellePhone: profile.zellePhone,
-        preferredPaymentMethod: profile.preferredPaymentMethod,
       };
 
       // Include bank account if editing with new details
       if (bankRouting && bankAccount) {
         payload.bankAccount = {
+          bankName: bankName,
           accountHolderName: bankAccountName,
           routingNumber: bankRouting,
           accountNumber: bankAccount,
+          checkImageUrl: checkImageUrl || undefined,
+        };
+      } else if (checkImageUrl && profile?.bankAccount?.hasAccount) {
+        // Just updating check image for existing account
+        payload.bankAccount = {
+          checkImageUrl: checkImageUrl,
         };
       }
 
@@ -171,12 +180,36 @@ export default function MerchantProfilePage() {
       // Reset bank account editing state
       if (bankRouting && bankAccount) {
         setProfile((prev) =>
-          prev ? { ...prev, bankAccount: { accountHolderName: bankAccountName, hasAccount: true } } : null
+          prev ? {
+            ...prev,
+            bankAccount: {
+              bankName,
+              accountHolderName: bankAccountName,
+              routingLast4: bankRouting.slice(-4),
+              accountLast4: bankAccount.slice(-4),
+              hasCheckImage: !!checkImageUrl || prev.bankAccount?.hasCheckImage || false,
+              hasAccount: true,
+            }
+          } : null
         );
         setBankRouting("");
         setBankAccount("");
         setIsEditingBankAccount(false);
+      } else if (checkImageUrl && profile?.bankAccount?.hasAccount) {
+        // Just updated check image
+        setProfile((prev) =>
+          prev && prev.bankAccount ? {
+            ...prev,
+            bankAccount: {
+              ...prev.bankAccount,
+              hasCheckImage: true,
+            }
+          } : prev
+        );
       }
+      // Clear check image state
+      setCheckImagePreview(null);
+      setCheckImageUrl(null);
       setMessage({ type: "success", text: "Profile saved successfully" });
     } catch (error) {
       console.error("Error saving profile:", error);
@@ -205,6 +238,40 @@ export default function MerchantProfilePage() {
     const reader = new FileReader();
     reader.onload = () => setPendingLogo(reader.result as string);
     reader.readAsDataURL(file);
+  }
+
+  async function handleCheckImageSelect(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Show preview immediately
+    const reader = new FileReader();
+    reader.onload = () => setCheckImagePreview(reader.result as string);
+    reader.readAsDataURL(file);
+
+    // Upload to server
+    setIsUploadingCheck(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("type", "check");
+
+      const res = await fetch("/api/upload", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!res.ok) throw new Error("Upload failed");
+
+      const data = await res.json();
+      setCheckImageUrl(data.url);
+    } catch (error) {
+      console.error("Check upload error:", error);
+      setMessage({ type: "error", text: "Failed to upload check image" });
+      setCheckImagePreview(null);
+    } finally {
+      setIsUploadingCheck(false);
+    }
   }
 
   function updateField<K extends keyof ProfileData>(field: K, value: ProfileData[K]) {
@@ -507,123 +574,240 @@ export default function MerchantProfilePage() {
             <CardHeader>
               <CardTitle>Payment Information</CardTitle>
               <CardDescription>
-                Your payment details for GRC purchases
+                Bank account details for Business Check payments
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-              {/* Zelle Section */}
-              <div className="space-y-4">
-                <div className="flex items-center gap-2">
-                  <CreditCard className="w-4 h-4 text-muted-foreground" />
-                  <h4 className="font-medium">Zelle</h4>
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="zelleEmail">Zelle Email</Label>
-                    <Input
-                      id="zelleEmail"
-                      type="email"
-                      value={profile?.zelleEmail || ""}
-                      onChange={(e) => updateField("zelleEmail", e.target.value)}
-                      placeholder="your@email.com"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="zellePhone">Zelle Phone</Label>
-                    <Input
-                      id="zellePhone"
-                      type="tel"
-                      value={profile?.zellePhone || ""}
-                      onChange={(e) => updateField("zellePhone", e.target.value)}
-                      placeholder="(555) 123-4567"
-                    />
-                  </div>
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  Enter one or both Zelle contact methods
-                </p>
-              </div>
-
-              <Separator />
-
               {/* Bank Account Section */}
               <div className="space-y-4">
                 <div className="flex items-center gap-2">
                   <Building2 className="w-4 h-4 text-muted-foreground" />
-                  <h4 className="font-medium">Bank Account</h4>
+                  <h4 className="font-medium">Bank Account for Business Check</h4>
                 </div>
 
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="bankAccountName">Account Holder Name</Label>
-                    <Input
-                      id="bankAccountName"
-                      value={bankAccountName}
-                      onChange={(e) => setBankAccountName(e.target.value)}
-                      placeholder="Business or Your Name"
-                    />
-                  </div>
-
-                  {profile?.bankAccount?.hasAccount && !isEditingBankAccount ? (
-                    <div className="p-4 rounded-lg bg-muted/50">
-                      <p className="text-sm text-muted-foreground">
-                        Bank account on file
-                      </p>
+                {profile?.bankAccount?.hasAccount && !isEditingBankAccount ? (
+                  <div className="space-y-4">
+                    <div className="p-4 rounded-lg bg-muted/50 space-y-2">
+                      <div className="flex items-start justify-between">
+                        <div>
+                          <p className="font-medium">{profile.bankAccount.accountHolderName}</p>
+                          {profile.bankAccount.bankName && (
+                            <p className="text-sm text-muted-foreground">{profile.bankAccount.bankName}</p>
+                          )}
+                          <p className="text-sm text-muted-foreground font-mono">
+                            Routing: ****{profile.bankAccount.routingLast4} | Account: ****{profile.bankAccount.accountLast4}
+                          </p>
+                        </div>
+                        <CheckCircle className="w-5 h-5 text-green-600" />
+                      </div>
                       <button
                         type="button"
                         onClick={() => setIsEditingBankAccount(true)}
-                        className="text-sm text-primary hover:underline mt-1"
+                        className="text-sm text-primary hover:underline"
                       >
                         Update bank account details
                       </button>
                     </div>
-                  ) : (
-                    <>
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                          <Label htmlFor="bankRouting">Routing Number</Label>
-                          <Input
-                            id="bankRouting"
-                            value={bankRouting}
-                            onChange={(e) => setBankRouting(e.target.value.replace(/\D/g, "").slice(0, 9))}
-                            placeholder="123456789"
-                            className="font-mono"
-                            maxLength={9}
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <Label htmlFor="bankAccountNumber">Account Number</Label>
-                          <Input
-                            id="bankAccountNumber"
-                            value={bankAccount}
-                            onChange={(e) => setBankAccount(e.target.value.replace(/\D/g, "").slice(0, 17))}
-                            placeholder="••••••••1234"
-                            className="font-mono"
-                            maxLength={17}
-                          />
-                        </div>
-                      </div>
-                      {profile?.bankAccount?.hasAccount && isEditingBankAccount && (
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setIsEditingBankAccount(false);
-                            setBankRouting("");
-                            setBankAccount("");
-                          }}
-                          className="text-sm text-muted-foreground hover:text-foreground"
-                        >
-                          Cancel
-                        </button>
-                      )}
-                    </>
-                  )}
 
-                  <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                    <Lock className="w-3 h-3" />
-                    <span>Bank details are encrypted and secure</span>
+                    {/* Check Image Section */}
+                    <div className="p-4 rounded-lg border space-y-3">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <FileCheck className="w-4 h-4 text-muted-foreground" />
+                          <span className="font-medium text-sm">Check Image</span>
+                        </div>
+                        {profile.bankAccount.hasCheckImage && !checkImagePreview && (
+                          <Badge variant="secondary" className="text-green-600 bg-green-50">
+                            <CheckCircle className="w-3 h-3 mr-1" />
+                            On file
+                          </Badge>
+                        )}
+                      </div>
+
+                      {checkImagePreview ? (
+                        <div className="relative">
+                          <img
+                            src={checkImagePreview}
+                            alt="Check preview"
+                            className="w-full max-w-sm rounded-lg border"
+                          />
+                          {isUploadingCheck && (
+                            <div className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-lg">
+                              <Loader2 className="w-6 h-6 animate-spin text-white" />
+                            </div>
+                          )}
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setCheckImagePreview(null);
+                              setCheckImageUrl(null);
+                            }}
+                            className="absolute -top-2 -right-2 p-1 bg-destructive text-destructive-foreground rounded-full hover:bg-destructive/90"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                          {checkImageUrl && (
+                            <p className="text-xs text-muted-foreground mt-2">
+                              New check image ready - save to apply
+                            </p>
+                          )}
+                        </div>
+                      ) : (
+                        <div>
+                          <input
+                            ref={checkImageInputRef}
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            onChange={handleCheckImageSelect}
+                          />
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => checkImageInputRef.current?.click()}
+                            disabled={isUploadingCheck}
+                          >
+                            <Upload className="w-4 h-4 mr-2" />
+                            {profile.bankAccount.hasCheckImage ? "Replace Check Image" : "Upload Check Image"}
+                          </Button>
+                          <p className="text-xs text-muted-foreground mt-2">
+                            Upload a voided check or bank document showing your account info
+                          </p>
+                        </div>
+                      )}
+                    </div>
                   </div>
+                ) : (
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="bankName">Bank Name</Label>
+                      <Input
+                        id="bankName"
+                        value={bankName}
+                        onChange={(e) => setBankName(e.target.value)}
+                        placeholder="Chase, Bank of America, etc."
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="bankAccountName">Account Holder Name</Label>
+                      <Input
+                        id="bankAccountName"
+                        value={bankAccountName}
+                        onChange={(e) => setBankAccountName(e.target.value)}
+                        placeholder="Business or Your Name"
+                      />
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="bankRouting">Routing Number</Label>
+                        <Input
+                          id="bankRouting"
+                          value={bankRouting}
+                          onChange={(e) => setBankRouting(e.target.value.replace(/\D/g, "").slice(0, 9))}
+                          placeholder="123456789"
+                          className="font-mono"
+                          maxLength={9}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="bankAccountNumber">Account Number</Label>
+                        <Input
+                          id="bankAccountNumber"
+                          value={bankAccount}
+                          onChange={(e) => setBankAccount(e.target.value.replace(/\D/g, "").slice(0, 17))}
+                          placeholder="••••••••1234"
+                          className="font-mono"
+                          maxLength={17}
+                        />
+                      </div>
+                    </div>
+                    {/* Check Image Upload in Edit Mode */}
+                    <div className="space-y-2">
+                      <Label>Check Image (optional)</Label>
+                      {checkImagePreview ? (
+                        <div className="relative inline-block">
+                          <img
+                            src={checkImagePreview}
+                            alt="Check preview"
+                            className="w-full max-w-xs rounded-lg border"
+                          />
+                          {isUploadingCheck && (
+                            <div className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-lg">
+                              <Loader2 className="w-6 h-6 animate-spin text-white" />
+                            </div>
+                          )}
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setCheckImagePreview(null);
+                              setCheckImageUrl(null);
+                            }}
+                            className="absolute -top-2 -right-2 p-1 bg-destructive text-destructive-foreground rounded-full hover:bg-destructive/90"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        </div>
+                      ) : (
+                        <div>
+                          <input
+                            ref={checkImageInputRef}
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            onChange={handleCheckImageSelect}
+                          />
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            type="button"
+                            onClick={() => checkImageInputRef.current?.click()}
+                            disabled={isUploadingCheck}
+                          >
+                            <Upload className="w-4 h-4 mr-2" />
+                            Upload Check Image
+                          </Button>
+                        </div>
+                      )}
+                      <p className="text-xs text-muted-foreground">
+                        Upload a voided check or bank document
+                      </p>
+                    </div>
+                    {profile?.bankAccount?.hasAccount && isEditingBankAccount && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsEditingBankAccount(false);
+                          setBankRouting("");
+                          setBankAccount("");
+                          setCheckImagePreview(null);
+                          setCheckImageUrl(null);
+                        }}
+                        className="text-sm text-muted-foreground hover:text-foreground"
+                      >
+                        Cancel
+                      </button>
+                    )}
+                  </div>
+                )}
+
+                <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                  <Lock className="w-3 h-3" />
+                  <span>Bank details are encrypted and secure</span>
                 </div>
+              </div>
+
+              <Separator />
+
+              {/* Zelle Info */}
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <CreditCard className="w-4 h-4 text-muted-foreground" />
+                  <h4 className="font-medium">Pay via Zelle</h4>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  When purchasing GRCs with Zelle, send payment to:{" "}
+                  <code className="px-1 py-0.5 bg-muted rounded text-foreground">troywarren@localcityplaces.com</code>
+                </p>
               </div>
             </CardContent>
           </Card>
