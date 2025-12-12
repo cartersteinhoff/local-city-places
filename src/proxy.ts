@@ -11,7 +11,7 @@ const roleRoutes: Record<string, string[]> = {
   admin: ["/admin"],
 };
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const sessionToken = request.cookies.get("session_token")?.value;
 

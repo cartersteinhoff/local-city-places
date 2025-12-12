@@ -10,7 +10,7 @@ interface StatCardProps {
     label: string;
   };
   className?: string;
-  isLoading?: boolean;
+  isLoading?: boolean; // kept for backwards compatibility, not used
 }
 
 export function StatCard({
@@ -19,27 +19,7 @@ export function StatCard({
   icon: Icon,
   trend,
   className,
-  isLoading = false,
 }: StatCardProps) {
-  if (isLoading) {
-    return (
-      <div className={cn("p-4 md:p-6 bg-card rounded-xl border border-border", className)}>
-        <div className="flex items-start justify-between">
-          <div className="space-y-2">
-            <div className="h-4 w-24 bg-muted animate-pulse rounded" />
-            <div className="h-8 w-20 bg-muted animate-pulse rounded" />
-          </div>
-          {Icon && (
-            <div className="w-10 h-10 bg-muted animate-pulse rounded-lg" />
-          )}
-        </div>
-        {trend && (
-          <div className="mt-3 h-4 w-32 bg-muted animate-pulse rounded" />
-        )}
-      </div>
-    );
-  }
-
   return (
     <div className={cn("p-4 md:p-6 bg-card rounded-xl border border-border", className)}>
       <div className="flex items-start justify-between">

@@ -224,11 +224,7 @@ export default function BulkIssuePage() {
 
   return (
     <DashboardLayout navItems={merchantNavItems}>
-      {loading ? (
-        <div className="flex items-center justify-center min-h-[400px]">
-          <div className="animate-pulse text-muted-foreground">Loading...</div>
-        </div>
-      ) : (
+      {loading ? null : (
         <>
           <PageHeader
             title="Bulk Issue GRCs"

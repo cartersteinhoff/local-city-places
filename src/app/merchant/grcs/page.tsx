@@ -128,11 +128,7 @@ export default function MyGrcsPage() {
 
   return (
     <DashboardLayout navItems={merchantNavItems}>
-      {loading ? (
-        <div className="flex items-center justify-center min-h-[400px]">
-          <div className="animate-pulse text-muted-foreground">Loading...</div>
-        </div>
-      ) : (
+      {loading ? null : (
         <>
           <PageHeader
             title="My GRCs"
@@ -179,11 +175,7 @@ export default function MyGrcsPage() {
 
           {/* Table */}
           <div className="bg-card rounded-xl border border-border overflow-hidden">
-            {dataLoading ? (
-              <div className="p-8 text-center text-muted-foreground">
-                <div className="animate-pulse">Loading GRCs...</div>
-              </div>
-            ) : !data || data.grcs.length === 0 ? (
+            {!data || data.grcs.length === 0 ? (
               <div className="p-8 text-center text-muted-foreground">
                 <p>No GRCs found</p>
                 <p className="text-sm mt-1">

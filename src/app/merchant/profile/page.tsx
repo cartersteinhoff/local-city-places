@@ -19,7 +19,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Camera, Loader2, Save, Building2, CheckCircle } from "lucide-react";
+import { Camera, Loader2, Save, Building2, CheckCircle, CreditCard, Lock } from "lucide-react";
 import { merchantNavItems } from "../nav";
 import { useUser } from "@/hooks/use-user";
 
@@ -45,6 +45,14 @@ interface ProfileData {
   phone: string | null;
   website: string | null;
   verified: boolean;
+  // Payment info
+  zelleEmail: string | null;
+  zellePhone: string | null;
+  preferredPaymentMethod: string | null;
+  bankAccount: {
+    accountHolderName: string;
+    hasAccount: boolean;
+  } | null;
 }
 
 export default function MerchantProfilePage() {
@@ -59,6 +67,11 @@ export default function MerchantProfilePage() {
   const logoInputRef = useRef<HTMLInputElement>(null);
   const [pendingPhoto, setPendingPhoto] = useState<string | null>(null);
   const [pendingLogo, setPendingLogo] = useState<string | null>(null);
+  // Payment info state (for bank account details that need separate input)
+  const [bankAccountName, setBankAccountName] = useState("");
+  const [bankRouting, setBankRouting] = useState("");
+  const [bankAccount, setBankAccount] = useState("");
+  const [isEditingBankAccount, setIsEditingBankAccount] = useState(false);
 
   // Redirect if not authenticated
   useEffect(() => {
@@ -80,6 +93,10 @@ export default function MerchantProfilePage() {
       const data = await response.json();
       setProfile(data.profile);
       setCategories(data.categories);
+      // Initialize bank account name if exists
+      if (data.profile.bankAccount?.accountHolderName) {
+        setBankAccountName(data.profile.bankAccount.accountHolderName);
+      }
     } catch (error) {
       console.error("Error fetching profile:", error);
       setMessage({ type: "error", text: "Failed to load profile" });
@@ -103,7 +120,20 @@ export default function MerchantProfilePage() {
         phone: profile.phone,
         website: profile.website,
         notificationPrefs: profile.notificationPrefs,
+        // Payment info
+        zelleEmail: profile.zelleEmail,
+        zellePhone: profile.zellePhone,
+        preferredPaymentMethod: profile.preferredPaymentMethod,
       };
+
+      // Include bank account if editing with new details
+      if (bankRouting && bankAccount) {
+        payload.bankAccount = {
+          accountHolderName: bankAccountName,
+          routingNumber: bankRouting,
+          accountNumber: bankAccount,
+        };
+      }
 
       if (pendingPhoto) {
         payload.profilePhoto = pendingPhoto;
@@ -138,6 +168,15 @@ export default function MerchantProfilePage() {
       }
       setPendingPhoto(null);
       setPendingLogo(null);
+      // Reset bank account editing state
+      if (bankRouting && bankAccount) {
+        setProfile((prev) =>
+          prev ? { ...prev, bankAccount: { accountHolderName: bankAccountName, hasAccount: true } } : null
+        );
+        setBankRouting("");
+        setBankAccount("");
+        setIsEditingBankAccount(false);
+      }
       setMessage({ type: "success", text: "Profile saved successfully" });
     } catch (error) {
       console.error("Error saving profile:", error);
@@ -201,20 +240,7 @@ export default function MerchantProfilePage() {
 
   return (
     <DashboardLayout navItems={merchantNavItems}>
-      {authLoading || isLoading ? (
-        <div className="flex items-center justify-center min-h-[400px]">
-          <Loader2 className="w-8 h-8 animate-spin text-primary" />
-        </div>
-      ) : !profile ? (
-        <Card className="max-w-2xl">
-          <CardContent className="py-12 text-center">
-            <p className="text-muted-foreground">Failed to load profile</p>
-            <Button onClick={fetchProfile} className="mt-4">
-              Try Again
-            </Button>
-          </CardContent>
-        </Card>
-      ) : (
+      {authLoading ? null : (
         <div className="max-w-2xl space-y-6">
           <div className="flex items-center justify-between">
             <div>
@@ -223,7 +249,7 @@ export default function MerchantProfilePage() {
                 Manage your business information and preferences
               </p>
             </div>
-            {profile.verified && (
+            {profile?.verified && (
               <Badge variant="secondary" className="gap-1">
                 <CheckCircle className="w-3 h-3" />
                 Verified
@@ -338,7 +364,7 @@ export default function MerchantProfilePage() {
                 <Label htmlFor="businessName">Business Name</Label>
                 <Input
                   id="businessName"
-                  value={profile.businessName}
+                  value={profile?.businessName || ""}
                   onChange={(e) => updateField("businessName", e.target.value)}
                 />
               </div>
@@ -347,7 +373,7 @@ export default function MerchantProfilePage() {
                 <div className="space-y-2">
                   <Label htmlFor="category">Category</Label>
                   <Select
-                    value={profile.categoryId || undefined}
+                    value={profile?.categoryId || undefined}
                     onValueChange={(value) => updateField("categoryId", value)}
                   >
                     <SelectTrigger>
@@ -366,7 +392,7 @@ export default function MerchantProfilePage() {
                   <Label htmlFor="city">City</Label>
                   <Input
                     id="city"
-                    value={profile.city || ""}
+                    value={profile?.city || ""}
                     onChange={(e) => updateField("city", e.target.value)}
                   />
                 </div>
@@ -377,7 +403,7 @@ export default function MerchantProfilePage() {
                 <Textarea
                   id="description"
                   rows={3}
-                  value={profile.description || ""}
+                  value={profile?.description || ""}
                   onChange={(e) => updateField("description", e.target.value)}
                   placeholder="Tell members about your business..."
                 />
@@ -389,7 +415,7 @@ export default function MerchantProfilePage() {
                   <Input
                     id="phone"
                     type="tel"
-                    value={profile.phone || ""}
+                    value={profile?.phone || ""}
                     onChange={(e) => updateField("phone", e.target.value)}
                     placeholder="(555) 123-4567"
                   />
@@ -399,7 +425,7 @@ export default function MerchantProfilePage() {
                   <Input
                     id="website"
                     type="url"
-                    value={profile.website || ""}
+                    value={profile?.website || ""}
                     onChange={(e) => updateField("website", e.target.value)}
                     placeholder="https://example.com"
                   />
@@ -408,7 +434,7 @@ export default function MerchantProfilePage() {
 
               <div className="space-y-2">
                 <Label htmlFor="email">Account Email</Label>
-                <Input id="email" value={profile.email} disabled />
+                <Input id="email" value={profile?.email || ""} disabled />
                 <p className="text-xs text-muted-foreground">
                   Email cannot be changed
                 </p>
@@ -433,7 +459,7 @@ export default function MerchantProfilePage() {
                   </p>
                 </div>
                 <Switch
-                  checked={profile.notificationPrefs.emailReceipts}
+                  checked={profile?.notificationPrefs?.emailReceipts ?? false}
                   onCheckedChange={(checked) =>
                     updateNotificationPref("emailReceipts", checked)
                   }
@@ -450,7 +476,7 @@ export default function MerchantProfilePage() {
                   </p>
                 </div>
                 <Switch
-                  checked={profile.notificationPrefs.emailReminders}
+                  checked={profile?.notificationPrefs?.emailReminders ?? false}
                   onCheckedChange={(checked) =>
                     updateNotificationPref("emailReminders", checked)
                   }
@@ -467,11 +493,137 @@ export default function MerchantProfilePage() {
                   </p>
                 </div>
                 <Switch
-                  checked={profile.notificationPrefs.emailMarketing}
+                  checked={profile?.notificationPrefs?.emailMarketing ?? false}
                   onCheckedChange={(checked) =>
                     updateNotificationPref("emailMarketing", checked)
                   }
                 />
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Payment Information */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Payment Information</CardTitle>
+              <CardDescription>
+                Your payment details for GRC purchases
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {/* Zelle Section */}
+              <div className="space-y-4">
+                <div className="flex items-center gap-2">
+                  <CreditCard className="w-4 h-4 text-muted-foreground" />
+                  <h4 className="font-medium">Zelle</h4>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="zelleEmail">Zelle Email</Label>
+                    <Input
+                      id="zelleEmail"
+                      type="email"
+                      value={profile?.zelleEmail || ""}
+                      onChange={(e) => updateField("zelleEmail", e.target.value)}
+                      placeholder="your@email.com"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="zellePhone">Zelle Phone</Label>
+                    <Input
+                      id="zellePhone"
+                      type="tel"
+                      value={profile?.zellePhone || ""}
+                      onChange={(e) => updateField("zellePhone", e.target.value)}
+                      placeholder="(555) 123-4567"
+                    />
+                  </div>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Enter one or both Zelle contact methods
+                </p>
+              </div>
+
+              <Separator />
+
+              {/* Bank Account Section */}
+              <div className="space-y-4">
+                <div className="flex items-center gap-2">
+                  <Building2 className="w-4 h-4 text-muted-foreground" />
+                  <h4 className="font-medium">Bank Account</h4>
+                </div>
+
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="bankAccountName">Account Holder Name</Label>
+                    <Input
+                      id="bankAccountName"
+                      value={bankAccountName}
+                      onChange={(e) => setBankAccountName(e.target.value)}
+                      placeholder="Business or Your Name"
+                    />
+                  </div>
+
+                  {profile?.bankAccount?.hasAccount && !isEditingBankAccount ? (
+                    <div className="p-4 rounded-lg bg-muted/50">
+                      <p className="text-sm text-muted-foreground">
+                        Bank account on file
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() => setIsEditingBankAccount(true)}
+                        className="text-sm text-primary hover:underline mt-1"
+                      >
+                        Update bank account details
+                      </button>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="bankRouting">Routing Number</Label>
+                          <Input
+                            id="bankRouting"
+                            value={bankRouting}
+                            onChange={(e) => setBankRouting(e.target.value.replace(/\D/g, "").slice(0, 9))}
+                            placeholder="123456789"
+                            className="font-mono"
+                            maxLength={9}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="bankAccountNumber">Account Number</Label>
+                          <Input
+                            id="bankAccountNumber"
+                            value={bankAccount}
+                            onChange={(e) => setBankAccount(e.target.value.replace(/\D/g, "").slice(0, 17))}
+                            placeholder="••••••••1234"
+                            className="font-mono"
+                            maxLength={17}
+                          />
+                        </div>
+                      </div>
+                      {profile?.bankAccount?.hasAccount && isEditingBankAccount && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setIsEditingBankAccount(false);
+                            setBankRouting("");
+                            setBankAccount("");
+                          }}
+                          className="text-sm text-muted-foreground hover:text-foreground"
+                        >
+                          Cancel
+                        </button>
+                      )}
+                    </>
+                  )}
+
+                  <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                    <Lock className="w-3 h-3" />
+                    <span>Bank details are encrypted and secure</span>
+                  </div>
+                </div>
               </div>
             </CardContent>
           </Card>

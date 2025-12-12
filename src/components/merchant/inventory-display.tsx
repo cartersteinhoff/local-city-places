@@ -11,32 +11,10 @@ interface InventoryItem {
 
 interface InventoryDisplayProps {
   inventory: InventoryItem[];
-  isLoading?: boolean;
+  isLoading?: boolean; // kept for backwards compatibility, not used
 }
 
-export function InventoryDisplay({ inventory, isLoading }: InventoryDisplayProps) {
-  if (isLoading) {
-    return (
-      <div className="bg-card rounded-xl border border-border p-6">
-        <div className="flex items-center gap-2 mb-4">
-          <div className="w-5 h-5 bg-muted animate-pulse rounded" />
-          <div className="h-5 w-32 bg-muted animate-pulse rounded" />
-        </div>
-        <div className="space-y-4">
-          {[1, 2, 3].map((i) => (
-            <div key={i} className="space-y-2">
-              <div className="flex justify-between">
-                <div className="h-4 w-16 bg-muted animate-pulse rounded" />
-                <div className="h-4 w-24 bg-muted animate-pulse rounded" />
-              </div>
-              <div className="h-2 w-full bg-muted animate-pulse rounded" />
-            </div>
-          ))}
-        </div>
-      </div>
-    );
-  }
-
+export function InventoryDisplay({ inventory }: InventoryDisplayProps) {
   if (inventory.length === 0) {
     return (
       <div className="bg-card rounded-xl border border-border p-6">

@@ -15,7 +15,6 @@ import {
   Gift,
   TrendingUp,
   FileText,
-  ShoppingCart,
 } from "lucide-react";
 import { merchantNavItems } from "./nav";
 import { useUser } from "@/hooks/use-user";
@@ -73,32 +72,9 @@ export default function MerchantDashboard() {
     }
   }, [loading, isAuthenticated]);
 
-  const hasNoGrcs = !dataLoading && dashboardData && dashboardData.stats.totalGrcs === 0;
-
   return (
     <DashboardLayout navItems={merchantNavItems}>
-      {loading || dataLoading ? (
-        <div className="flex items-center justify-center min-h-[400px]">
-          <div className="animate-pulse text-muted-foreground">Loading...</div>
-        </div>
-      ) : hasNoGrcs ? (
-        <div className="flex flex-col items-center justify-center min-h-[60vh] text-center px-4">
-          <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center mb-6">
-            <Gift className="w-10 h-10 text-primary" />
-          </div>
-          <h1 className="text-2xl font-bold mb-2">Get Started with GRCs</h1>
-          <p className="text-muted-foreground mb-8 max-w-md">
-            Purchase GRCs to start rewarding your customers and growing your business with Local City Places.
-          </p>
-          <a
-            href="/merchant/purchase"
-            className="inline-flex items-center gap-2 px-6 py-3 bg-primary text-primary-foreground rounded-lg font-medium hover:bg-primary/90 transition-colors"
-          >
-            <ShoppingCart className="w-5 h-5" />
-            Purchase GRCs
-          </a>
-        </div>
-      ) : (
+      {loading ? null : (
         <>
           <PageHeader
             title="Merchant Dashboard"
@@ -111,25 +87,21 @@ export default function MerchantDashboard() {
               label="Active GRCs"
               value={dashboardData?.stats.activeGrcs ?? 0}
               icon={Gift}
-              isLoading={dataLoading}
             />
             <StatCard
               label="Completed"
               value={dashboardData?.stats.completedGrcs ?? 0}
               icon={TrendingUp}
-              isLoading={dataLoading}
             />
             <StatCard
               label="Active Members"
               value={dashboardData?.stats.activeMembers ?? 0}
               icon={Users}
-              isLoading={dataLoading}
             />
             <StatCard
               label="Reviews"
               value={dashboardData?.stats.totalReviews ?? 0}
               icon={Star}
-              isLoading={dataLoading}
             />
           </div>
 
@@ -209,7 +181,6 @@ export default function MerchantDashboard() {
             <div className="lg:col-span-1">
               <InventoryDisplay
                 inventory={dashboardData?.inventory ?? []}
-                isLoading={dataLoading}
               />
             </div>
           </div>
@@ -217,7 +188,6 @@ export default function MerchantDashboard() {
           {/* Activity Feed */}
           <ActivityFeed
             activities={dashboardData?.recentActivity ?? []}
-            isLoading={dataLoading}
           />
         </>
       )}

@@ -76,11 +76,7 @@ export default function ReviewsPage() {
 
   return (
     <DashboardLayout navItems={merchantNavItems}>
-      {loading ? (
-        <div className="flex items-center justify-center min-h-[400px]">
-          <div className="animate-pulse text-muted-foreground">Loading...</div>
-        </div>
-      ) : (
+      {loading ? null : (
         <>
           <PageHeader
             title="Reviews"
@@ -93,36 +89,21 @@ export default function ReviewsPage() {
               label="Total Reviews"
               value={data?.stats.totalReviews ?? 0}
               icon={MessageSquare}
-              isLoading={dataLoading}
             />
             <StatCard
               label="Avg. Word Count"
               value={data?.stats.avgWordCount ?? 0}
               icon={Star}
-              isLoading={dataLoading}
             />
             <StatCard
               label="Detailed Reviews"
               value={`${data?.stats.detailedPercent ?? 0}%`}
               icon={TrendingUp}
-              isLoading={dataLoading}
             />
           </div>
 
           {/* Reviews List */}
-          {dataLoading ? (
-            <div className="space-y-4">
-              {[1, 2, 3].map((i) => (
-                <div key={i} className="bg-card rounded-xl border border-border p-6">
-                  <div className="h-4 w-32 bg-muted animate-pulse rounded mb-3" />
-                  <div className="space-y-2">
-                    <div className="h-4 w-full bg-muted animate-pulse rounded" />
-                    <div className="h-4 w-3/4 bg-muted animate-pulse rounded" />
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : !data || data.reviews.length === 0 ? (
+          {!data || data.reviews.length === 0 ? (
             <EmptyState
               icon={Star}
               title="No reviews yet"

@@ -80,6 +80,10 @@ export const merchants = pgTable("merchants", {
   phone: varchar("phone", { length: 20 }),
   website: varchar("website", { length: 255 }),
   verified: boolean("verified").default(false).notNull(),
+  // Payment preferences
+  zelleEmail: varchar("zelle_email", { length: 255 }),
+  zellePhone: varchar("zelle_phone", { length: 20 }),
+  preferredPaymentMethod: varchar("preferred_payment_method", { length: 20 }), // 'zelle' or 'bank_account'
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 

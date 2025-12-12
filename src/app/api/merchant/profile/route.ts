@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/db";
-import { users, merchants, categories } from "@/db/schema";
+import { users, merchants, categories, merchantBankAccounts } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { getSession } from "@/lib/auth";
 import { uploadProfilePhoto, uploadMerchantLogo, validateImageFormat, validateImageSize } from "@/lib/storage";
@@ -32,6 +32,9 @@ export async function GET() {
         website: merchants.website,
         verified: merchants.verified,
         categoryName: categories.name,
+        zelleEmail: merchants.zelleEmail,
+        zellePhone: merchants.zellePhone,
+        preferredPaymentMethod: merchants.preferredPaymentMethod,
       })
       .from(merchants)
       .leftJoin(categories, eq(merchants.categoryId, categories.id))
@@ -49,6 +52,13 @@ export async function GET() {
 
     // Get all categories for the dropdown
     const allCategories = await db.select().from(categories);
+
+    // Get bank account if exists
+    const [bankAccount] = await db
+      .select()
+      .from(merchantBankAccounts)
+      .where(eq(merchantBankAccounts.merchantId, merchant.id))
+      .limit(1);
 
     return NextResponse.json({
       profile: {
@@ -68,6 +78,14 @@ export async function GET() {
         phone: merchant.phone,
         website: merchant.website,
         verified: merchant.verified,
+        // Payment info
+        zelleEmail: merchant.zelleEmail,
+        zellePhone: merchant.zellePhone,
+        preferredPaymentMethod: merchant.preferredPaymentMethod,
+        bankAccount: bankAccount ? {
+          accountHolderName: bankAccount.accountHolderName,
+          hasAccount: true,
+        } : null,
       },
       categories: allCategories,
     });
@@ -98,6 +116,11 @@ export async function PATCH(request: NextRequest) {
       notificationPrefs,
       profilePhoto, // Base64 for personal photo
       logo, // Base64 for business logo
+      // Payment info
+      zelleEmail,
+      zellePhone,
+      preferredPaymentMethod,
+      bankAccount, // { accountHolderName, routingNumber, accountNumber }
     } = body;
 
     // Get merchant
@@ -176,12 +199,44 @@ export async function PATCH(request: NextRequest) {
     if (phone !== undefined) merchantUpdates.phone = phone;
     if (website !== undefined) merchantUpdates.website = website;
     if (logoUrl) merchantUpdates.logoUrl = logoUrl;
+    // Payment fields
+    if (zelleEmail !== undefined) merchantUpdates.zelleEmail = zelleEmail || null;
+    if (zellePhone !== undefined) merchantUpdates.zellePhone = zellePhone || null;
+    if (preferredPaymentMethod !== undefined) merchantUpdates.preferredPaymentMethod = preferredPaymentMethod;
 
     if (Object.keys(merchantUpdates).length > 0) {
       await db
         .update(merchants)
         .set(merchantUpdates)
         .where(eq(merchants.id, merchant.id));
+    }
+
+    // Update bank account if provided
+    if (bankAccount && bankAccount.routingNumber && bankAccount.accountNumber) {
+      const [existingBankAccount] = await db
+        .select()
+        .from(merchantBankAccounts)
+        .where(eq(merchantBankAccounts.merchantId, merchant.id))
+        .limit(1);
+
+      if (existingBankAccount) {
+        await db
+          .update(merchantBankAccounts)
+          .set({
+            accountHolderName: bankAccount.accountHolderName,
+            routingNumberEncrypted: bankAccount.routingNumber, // TODO: encrypt
+            accountNumberEncrypted: bankAccount.accountNumber, // TODO: encrypt
+          })
+          .where(eq(merchantBankAccounts.id, existingBankAccount.id));
+      } else {
+        await db.insert(merchantBankAccounts).values({
+          merchantId: merchant.id,
+          accountHolderName: bankAccount.accountHolderName,
+          routingNumberEncrypted: bankAccount.routingNumber, // TODO: encrypt
+          accountNumberEncrypted: bankAccount.accountNumber, // TODO: encrypt
+          accountType: "checking",
+        });
+      }
     }
 
     return NextResponse.json({ success: true, profilePhotoUrl, logoUrl });

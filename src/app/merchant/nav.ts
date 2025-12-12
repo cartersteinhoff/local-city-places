@@ -1,5 +1,6 @@
 import {
   LayoutDashboard,
+  ShoppingCart,
   Send,
   FileText,
   ClipboardList,
@@ -9,6 +10,7 @@ import {
 
 export const merchantNavItems = [
   { label: "Dashboard", href: "/merchant", icon: LayoutDashboard },
+  { label: "Purchase GRCs", href: "/merchant/purchase", icon: ShoppingCart },
   { label: "Issue GRC", href: "/merchant/issue", icon: Send },
   { label: "My GRCs", href: "/merchant/grcs", icon: FileText },
   { label: "Surveys", href: "/merchant/surveys", icon: ClipboardList },

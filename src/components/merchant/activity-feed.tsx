@@ -13,29 +13,10 @@ interface ActivityItem {
 
 interface ActivityFeedProps {
   activities: ActivityItem[];
-  isLoading?: boolean;
+  isLoading?: boolean; // kept for backwards compatibility, not used
 }
 
-export function ActivityFeed({ activities, isLoading }: ActivityFeedProps) {
-  if (isLoading) {
-    return (
-      <div className="bg-card rounded-xl border border-border p-6">
-        <div className="h-5 w-32 bg-muted animate-pulse rounded mb-4" />
-        <div className="space-y-4">
-          {[1, 2, 3].map((i) => (
-            <div key={i} className="flex items-start gap-3">
-              <div className="w-8 h-8 bg-muted animate-pulse rounded-full" />
-              <div className="flex-1 space-y-2">
-                <div className="h-4 w-3/4 bg-muted animate-pulse rounded" />
-                <div className="h-3 w-20 bg-muted animate-pulse rounded" />
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-    );
-  }
-
+export function ActivityFeed({ activities }: ActivityFeedProps) {
   if (activities.length === 0) {
     return (
       <div className="bg-card rounded-xl border border-border p-6">

@@ -101,11 +101,7 @@ export default function SurveyResponsesPage({ params }: { params: Promise<{ id: 
 
   return (
     <DashboardLayout navItems={merchantNavItems}>
-      {loading || dataLoading ? (
-        <div className="flex items-center justify-center min-h-[400px]">
-          <div className="animate-pulse text-muted-foreground">Loading...</div>
-        </div>
-      ) : !data ? (
+      {loading || dataLoading ? null : !data ? (
         <div className="flex items-center justify-center min-h-[400px]">
           <p className="text-muted-foreground">Survey not found</p>
         </div>

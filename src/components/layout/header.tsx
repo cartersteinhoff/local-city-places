@@ -77,7 +77,7 @@ export function Header() {
         {/* Dark Mode Toggle */}
         <button
           onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-          className="relative p-2 rounded-lg hover:bg-muted transition-colors"
+          className="relative p-2 rounded-lg hover:bg-muted transition-colors cursor-pointer"
           aria-label="Toggle theme"
         >
           <Sun className="w-5 h-5 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
@@ -87,7 +87,7 @@ export function Header() {
         {/* Unified User Menu */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <button className="flex items-center gap-3 rounded-lg px-3 py-2 hover:bg-muted transition-colors">
+          <button className="flex items-center gap-3 rounded-lg px-3 py-2 hover:bg-muted transition-colors cursor-pointer">
             {/* Avatar */}
             <Avatar className="w-9 h-9 border-2 border-primary/20">
               {user?.profilePhotoUrl && (

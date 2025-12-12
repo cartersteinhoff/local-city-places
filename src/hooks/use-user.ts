@@ -11,9 +11,15 @@ interface Member {
   lastName: string;
 }
 
+interface Merchant {
+  id: string;
+  businessName: string;
+}
+
 interface AuthData {
   user: User;
   member?: Member;
+  merchant?: Merchant;
 }
 
 const fetcher = async (url: string): Promise<AuthData | null> => {
@@ -35,11 +41,12 @@ export function useUser() {
 
   const userName = data?.member
     ? `${data.member.firstName} ${data.member.lastName}`
-    : undefined;
+    : data?.merchant?.businessName || undefined;
 
   return {
     user: data?.user,
     member: data?.member,
+    merchant: data?.merchant,
     userName,
     isLoading,
     isAuthenticated: !!data?.user,
