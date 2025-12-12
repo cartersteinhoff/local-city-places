@@ -12,12 +12,10 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import type { NavItem } from "./types";
+import { useUser } from "@/hooks/use-user";
 
 interface MobileNavProps {
   navItems: NavItem[];
-  userEmail?: string;
-  userName?: string;
-  userRole?: "admin" | "merchant" | "member";
 }
 
 const roleConfig = {
@@ -26,15 +24,16 @@ const roleConfig = {
   member: { label: "Member", icon: User, href: "/member", color: "text-green-500" },
 };
 
-export function MobileNav({ navItems, userEmail, userName, userRole }: MobileNavProps) {
+export function MobileNav({ navItems }: MobileNavProps) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
+  const { user, userName } = useUser();
 
   // Show first 4 items in bottom nav, rest go in "More" menu
   const visibleItems = navItems.slice(0, 4);
   const moreItems = navItems.slice(4);
 
-  const displayName = userName || userEmail?.split("@")[0] || "User";
+  const displayName = userName || user?.email?.split("@")[0] || "User";
   const initials = displayName
     .split(" ")
     .map((n) => n[0])
@@ -49,7 +48,7 @@ export function MobileNav({ navItems, userEmail, userName, userRole }: MobileNav
     ? "merchant"
     : "member";
 
-  const isAdmin = userRole === "admin";
+  const isAdmin = user?.role === "admin";
 
   return (
     <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-card border-t border-border z-50">
@@ -104,8 +103,8 @@ export function MobileNav({ navItems, userEmail, userName, userRole }: MobileNav
               </div>
               <div className="flex-1 min-w-0">
                 <p className="font-medium text-foreground truncate">{displayName}</p>
-                {userEmail && (
-                  <p className="text-sm text-muted-foreground truncate">{userEmail}</p>
+                {user?.email && (
+                  <p className="text-sm text-muted-foreground truncate">{user.email}</p>
                 )}
               </div>
             </div>

@@ -146,13 +146,7 @@ export default function ReceiptsPage() {
   };
 
   return (
-    <DashboardLayout
-      navItems={memberNavItems}
-      userEmail={user?.email}
-      userName={userName}
-      userRole={user?.role ?? "member"}
-      profilePhotoUrl={user?.profilePhotoUrl}
-    >
+    <DashboardLayout navItems={memberNavItems}>
       {authLoading || isLoading ? (
         <div className="flex items-center justify-center min-h-[400px]">
           <Loader2 className="w-8 h-8 animate-spin text-primary" />

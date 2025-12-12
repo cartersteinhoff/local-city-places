@@ -9,8 +9,4 @@ export interface NavItem {
 export interface DashboardLayoutProps {
   children: React.ReactNode;
   navItems: NavItem[];
-  userEmail?: string;
-  userName?: string;
-  userRole?: "admin" | "merchant" | "member";
-  profilePhotoUrl?: string | null;
 }

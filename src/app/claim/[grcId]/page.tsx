@@ -45,7 +45,7 @@ export default function ClaimGRCPage({ params }: { params: Promise<{ grcId: stri
         setGrcDetails(grcData);
 
         // Check auth status
-        const authRes = await fetch("/api/auth/me");
+        const authRes = await fetch("/api/auth/me", { cache: "no-store" });
         if (authRes.ok) {
           const authData = await authRes.json();
           setAuthStatus("logged_in");

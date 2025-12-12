@@ -81,7 +81,7 @@ function MemberRegisterContent() {
     async function fetchData() {
       try {
         // Fetch user
-        const userRes = await fetch("/api/auth/me");
+        const userRes = await fetch("/api/auth/me", { cache: "no-store" });
         if (!userRes.ok) {
           router.push("/");
           return;

@@ -38,13 +38,7 @@ export default function AdminDashboard() {
   }, [loading, isAuthenticated, user?.role, router]);
 
   return (
-    <DashboardLayout
-      navItems={adminNavItems}
-      userEmail={user?.email}
-      userName={userName}
-      userRole="admin"
-      profilePhotoUrl={user?.profilePhotoUrl}
-    >
+    <DashboardLayout navItems={adminNavItems}>
       {loading ? (
         <div className="flex items-center justify-center min-h-[400px]">
           <div className="animate-pulse text-muted-foreground">Loading...</div>

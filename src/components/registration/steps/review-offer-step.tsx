@@ -8,11 +8,12 @@ import { countWords, REVIEW_BONUS_MIN_WORDS } from "@/lib/validations/member";
 
 interface ReviewOfferStepProps {
   merchantName: string;
+  monthlyRebate?: number;
   onNext: (reviewContent: string | undefined) => void;
   isLoading?: boolean;
 }
 
-export function ReviewOfferStep({ merchantName, onNext, isLoading }: ReviewOfferStepProps) {
+export function ReviewOfferStep({ merchantName, monthlyRebate = 25, onNext, isLoading }: ReviewOfferStepProps) {
   const [content, setContent] = useState("");
   const wordCount = countWords(content);
   const hasEnoughWords = wordCount >= REVIEW_BONUS_MIN_WORDS;
@@ -37,7 +38,7 @@ export function ReviewOfferStep({ merchantName, onNext, isLoading }: ReviewOffer
       <div className="text-center space-y-2">
         <h2 className="text-xl font-semibold">Earn a Bonus Month!</h2>
         <p className="text-muted-foreground">
-          Write a {REVIEW_BONUS_MIN_WORDS}+ word review about {merchantName} and get an extra month of rebates.
+          Write a {REVIEW_BONUS_MIN_WORDS}+ word review about {merchantName} and earn an extra <span className="font-semibold text-green-600 dark:text-green-400">${monthlyRebate}</span> in rebates.
         </p>
       </div>
 
@@ -46,11 +47,11 @@ export function ReviewOfferStep({ merchantName, onNext, isLoading }: ReviewOffer
           <Star className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" />
           <div>
             <p className="font-medium text-amber-900 dark:text-amber-100">
-              One-time bonus offer
+              One-time bonus worth ${monthlyRebate}
             </p>
             <p className="text-sm text-amber-700 dark:text-amber-300 mt-1">
-              This offer is only available during your first registration.
-              Write a thoughtful review to unlock +1 bonus month of rebates!
+              This offer is only available when claiming your GRC.
+              Write a thoughtful review to unlock +1 bonus month!
             </p>
           </div>
         </div>

@@ -1,4 +1,5 @@
 import { cn } from "@/lib/utils";
+import type { ReactNode } from "react";
 
 type StatusVariant =
   | "default"
@@ -9,30 +10,42 @@ type StatusVariant =
   | "pending";
 
 interface StatusBadgeProps {
-  status: StatusVariant;
-  label: string;
+  variant?: StatusVariant;
+  status?: StatusVariant; // alias for variant
+  label?: string;
+  children?: ReactNode;
+  size?: "sm" | "md";
   className?: string;
 }
 
 const variantStyles: Record<StatusVariant, string> = {
   default: "bg-muted text-muted-foreground",
-  success: "bg-success/15 text-success",
-  warning: "bg-warning/15 text-warning-foreground",
-  error: "bg-destructive/15 text-destructive",
-  info: "bg-primary/15 text-primary",
-  pending: "bg-warning/15 text-warning-foreground",
+  success: "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400",
+  warning: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400",
+  error: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400",
+  info: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400",
+  pending: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400",
 };
 
-export function StatusBadge({ status, label, className }: StatusBadgeProps) {
+const sizeStyles = {
+  sm: "px-2 py-0.5 text-xs",
+  md: "px-2.5 py-0.5 text-xs",
+};
+
+export function StatusBadge({ variant, status, label, children, size = "md", className }: StatusBadgeProps) {
+  const effectiveVariant = variant || status || "default";
+  const content = children || label;
+
   return (
     <span
       className={cn(
-        "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium",
-        variantStyles[status],
+        "inline-flex items-center rounded-full font-medium",
+        variantStyles[effectiveVariant],
+        sizeStyles[size],
         className
       )}
     >
-      {label}
+      {content}
     </span>
   );
 }

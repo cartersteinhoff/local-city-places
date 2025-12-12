@@ -1,11 +1,7 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { logout } from "@/lib/auth";
 
-export async function GET(request: NextRequest) {
-  await logout();
-  return NextResponse.redirect(new URL("/", request.url));
-}
-
+// Only allow POST for logout to prevent prefetch/CSRF issues
 export async function POST() {
   await logout();
   return NextResponse.json({ success: true });

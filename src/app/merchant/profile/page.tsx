@@ -200,13 +200,7 @@ export default function MerchantProfilePage() {
   const displayLogo = pendingLogo || profile?.logoUrl;
 
   return (
-    <DashboardLayout
-      navItems={merchantNavItems}
-      userEmail={user?.email}
-      userName={userName}
-      userRole={user?.role ?? "merchant"}
-      profilePhotoUrl={user?.profilePhotoUrl}
-    >
+    <DashboardLayout navItems={merchantNavItems}>
       {authLoading || isLoading ? (
         <div className="flex items-center justify-center min-h-[400px]">
           <Loader2 className="w-8 h-8 animate-spin text-primary" />

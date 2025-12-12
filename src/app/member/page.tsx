@@ -246,13 +246,7 @@ function MemberDashboardContent() {
     // Loading GRC details
     if (grcLoading) {
       return (
-        <DashboardLayout
-          navItems={memberNavItems}
-          userEmail={user?.email}
-          userName={userName}
-          userRole={user?.role}
-          profilePhotoUrl={user?.profilePhotoUrl}
-        >
+        <DashboardLayout navItems={memberNavItems}>
           <div className="flex items-center justify-center min-h-[400px]">
             <Loader2 className="w-8 h-8 animate-spin text-primary" />
           </div>
@@ -263,13 +257,7 @@ function MemberDashboardContent() {
     // GRC error
     if (grcError) {
       return (
-        <DashboardLayout
-          navItems={memberNavItems}
-          userEmail={user?.email}
-          userName={userName}
-          userRole={user?.role}
-          profilePhotoUrl={user?.profilePhotoUrl}
-        >
+        <DashboardLayout navItems={memberNavItems}>
           <div className="max-w-md mx-auto text-center space-y-6 py-12">
             <div className="w-16 h-16 rounded-full bg-destructive/10 flex items-center justify-center mx-auto">
               <Gift className="w-8 h-8 text-destructive" />
@@ -297,13 +285,7 @@ function MemberDashboardContent() {
       const currentStepIndex = steps.findIndex((s) => s.id === onboardingStep);
 
       return (
-        <DashboardLayout
-          navItems={memberNavItems}
-          userEmail={user?.email}
-          userName={userName}
-          userRole={user?.role}
-          profilePhotoUrl={user?.profilePhotoUrl}
-        >
+        <DashboardLayout navItems={memberNavItems}>
           <div className="max-w-2xl mx-auto">
             {/* GRC Header Card */}
             <div className="bg-gradient-to-r from-orange-500 to-orange-600 rounded-xl p-6 text-white mb-8">
@@ -430,13 +412,7 @@ function MemberDashboardContent() {
 
   // Normal dashboard view
   return (
-    <DashboardLayout
-      navItems={memberNavItems}
-      userEmail={user?.email}
-      userName={userName}
-      userRole={(user?.role) ?? "member"}
-      profilePhotoUrl={user?.profilePhotoUrl}
-    >
+    <DashboardLayout navItems={memberNavItems}>
       {loading ? (
         <div className="flex items-center justify-center min-h-[400px]">
           <Loader2 className="w-8 h-8 animate-spin text-primary" />

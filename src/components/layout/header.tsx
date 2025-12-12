@@ -17,13 +17,7 @@ import {
   DropdownMenuPortal,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-
-interface HeaderProps {
-  userEmail?: string;
-  userName?: string;
-  userRole?: "admin" | "merchant" | "member";
-  profilePhotoUrl?: string | null;
-}
+import { useUser } from "@/hooks/use-user";
 
 const roleConfig = {
   admin: { label: "Admin", icon: Shield, href: "/admin", color: "text-primary" },
@@ -31,10 +25,12 @@ const roleConfig = {
   member: { label: "Member", icon: User, href: "/member", color: "text-green-500" },
 };
 
-export function Header({ userEmail, userName, userRole, profilePhotoUrl }: HeaderProps) {
+export function Header() {
   const pathname = usePathname();
   const { theme, setTheme } = useTheme();
-  const fullName = userName || userEmail?.split("@")[0] || "User";
+  const { user, userName } = useUser();
+
+  const fullName = userName || user?.email?.split("@")[0] || "User";
   // Format as "First L." if multiple names
   const nameParts = fullName.split(" ");
   const displayName = nameParts.length > 1
@@ -57,7 +53,7 @@ export function Header({ userEmail, userName, userRole, profilePhotoUrl }: Heade
     : "admin";
 
   const CurrentIcon = roleConfig[currentView].icon;
-  const isAdmin = userRole === "admin";
+  const isAdmin = user?.role === "admin";
 
   return (
     <header className="h-16 bg-card border-b border-border flex items-center justify-between px-4 md:px-6 sticky top-0 z-40">
@@ -94,8 +90,8 @@ export function Header({ userEmail, userName, userRole, profilePhotoUrl }: Heade
           <button className="flex items-center gap-3 rounded-lg px-3 py-2 hover:bg-muted transition-colors">
             {/* Avatar */}
             <Avatar className="w-9 h-9 border-2 border-primary/20">
-              {profilePhotoUrl && (
-                <AvatarImage src={profilePhotoUrl} alt={displayName} />
+              {user?.profilePhotoUrl && (
+                <AvatarImage src={user.profilePhotoUrl} alt={displayName} />
               )}
               <AvatarFallback className="bg-primary/10 text-sm font-semibold text-primary">
                 {initials}
@@ -115,7 +111,7 @@ export function Header({ userEmail, userName, userRole, profilePhotoUrl }: Heade
           {/* User Info Header */}
           <div className="px-3 py-2">
             <p className="text-sm font-medium">{displayName}</p>
-            <p className="text-xs text-muted-foreground truncate">{userEmail}</p>
+            <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
           </div>
           <DropdownMenuSeparator />
 
@@ -173,11 +169,17 @@ export function Header({ userEmail, userName, userRole, profilePhotoUrl }: Heade
           <DropdownMenuSeparator />
 
           {/* Logout */}
-          <DropdownMenuItem asChild className="text-destructive focus:text-destructive">
-            <Link href="/api/auth/logout">
-              <LogOut className="w-4 h-4 mr-2" />
-              Log out
-            </Link>
+          <DropdownMenuItem
+            className="text-destructive focus:text-destructive cursor-pointer"
+            onClick={() => {
+              fetch("/api/auth/logout", { method: "POST" })
+                .then(() => {
+                  window.location.href = "/";
+                });
+            }}
+          >
+            <LogOut className="w-4 h-4 mr-2" />
+            Log out
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>

@@ -29,7 +29,7 @@ export function useUser() {
     {
       revalidateOnFocus: false,
       revalidateOnReconnect: false,
-      dedupingInterval: 60000, // Dedupe requests within 60s
+      dedupingInterval: 60000,
     }
   );
 

@@ -4,7 +4,7 @@ import { db, users, sessions, magicLinkTokens, members, merchants } from "@/db";
 import { eq, and, gt } from "drizzle-orm";
 import { randomBytes, createHash } from "crypto";
 
-const SESSION_COOKIE_NAME = "session_token";
+export const SESSION_COOKIE_NAME = "session_token";
 const SESSION_EXPIRY_DAYS = 7;
 const MAGIC_LINK_EXPIRY_MINUTES = 15;
 
@@ -38,6 +38,8 @@ export async function verifyMagicLinkToken(token: string): Promise<{
   success: boolean;
   userId?: string;
   role?: string;
+  sessionToken?: string;
+  sessionExpiresAt?: Date;
   error?: string;
 }> {
   const hashedToken = hashToken(token);
@@ -95,17 +97,14 @@ export async function verifyMagicLinkToken(token: string): Promise<{
     expiresAt: sessionExpiresAt,
   });
 
-  // Set session cookie
-  const cookieStore = await cookies();
-  cookieStore.set(SESSION_COOKIE_NAME, sessionToken, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
-    expires: sessionExpiresAt,
-    path: "/",
-  });
-
-  return { success: true, userId: user.id, role: user.role };
+  // Return session token for the caller to set as cookie
+  return {
+    success: true,
+    userId: user.id,
+    role: user.role,
+    sessionToken,
+    sessionExpiresAt,
+  };
 }
 
 // Get current session

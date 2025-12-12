@@ -73,8 +73,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       message: "Check your email for the sign-in link",
-      // In dev mode, include token for testing
-      ...(process.env.NODE_ENV === "development" && { token }),
     });
   } catch (error) {
     console.error("Magic link error:", error);

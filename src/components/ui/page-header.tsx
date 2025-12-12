@@ -10,6 +10,7 @@ interface PageHeaderProps {
   description?: string;
   breadcrumbs?: BreadcrumbItem[];
   actions?: React.ReactNode;
+  action?: React.ReactNode; // alias for actions
   className?: string;
 }
 
@@ -18,8 +19,10 @@ export function PageHeader({
   description,
   breadcrumbs,
   actions,
+  action,
   className,
 }: PageHeaderProps) {
+  const actionsContent = actions || action;
   return (
     <div className={cn("mb-6 md:mb-8", className)}>
       {/* Breadcrumbs */}
@@ -55,7 +58,7 @@ export function PageHeader({
             <p className="text-muted-foreground mt-1">{description}</p>
           )}
         </div>
-        {actions && <div className="flex items-center gap-3">{actions}</div>}
+        {actionsContent && <div className="flex items-center gap-3">{actionsContent}</div>}
       </div>
     </div>
   );

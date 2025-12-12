@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { verifyMagicLinkToken, getRedirectPath } from "@/lib/auth";
+import { verifyMagicLinkToken, getRedirectPath, SESSION_COOKIE_NAME } from "@/lib/auth";
 import { db, members, merchants } from "@/db";
 import { eq } from "drizzle-orm";
 
@@ -42,7 +42,20 @@ export async function GET(request: NextRequest) {
     }
 
     const redirectPath = getRedirectPath(result.role!, hasProfile);
-    return NextResponse.redirect(new URL(redirectPath, request.url));
+    const response = NextResponse.redirect(new URL(redirectPath, request.url));
+
+    // Set the session cookie on the redirect response
+    if (result.sessionToken && result.sessionExpiresAt) {
+      response.cookies.set(SESSION_COOKIE_NAME, result.sessionToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax",
+        expires: result.sessionExpiresAt,
+        path: "/",
+      });
+    }
+
+    return response;
   } catch (error) {
     console.error("Verification error:", error);
     return NextResponse.redirect(new URL("/?error=verification_failed", request.url));
