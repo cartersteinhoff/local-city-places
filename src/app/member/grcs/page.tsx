@@ -15,11 +15,7 @@ import {
   GripVertical,
 } from "lucide-react";
 import { memberNavItems } from "../nav";
-
-interface AuthData {
-  user: { email: string; role: string };
-  member?: { firstName: string; lastName: string };
-}
+import { useUser } from "@/hooks/use-user";
 
 interface PendingGRC {
   id: string;
@@ -55,7 +51,7 @@ const MONTH_NAMES = [
 
 export default function MemberGRCsPage() {
   const router = useRouter();
-  const [authData, setAuthData] = useState<AuthData | null>(null);
+  const { user, userName, isLoading: authLoading, isAuthenticated } = useUser();
   const [grcsData, setGrcsData] = useState<GRCsData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -66,23 +62,19 @@ export default function MemberGRCsPage() {
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
   const dragNodeRef = useRef<HTMLDivElement | null>(null);
 
+  // Redirect if not authenticated
   useEffect(() => {
-    async function fetchData() {
-      try {
-        // Fetch auth
-        const authRes = await fetch("/api/auth/me");
-        if (!authRes.ok) {
-          router.push("/");
-          return;
-        }
-        const auth = await authRes.json();
-        if (auth?.user?.role !== "member" && auth?.user?.role !== "admin") {
-          router.push("/");
-          return;
-        }
-        setAuthData(auth);
+    if (!authLoading && (!isAuthenticated || (user?.role !== "member" && user?.role !== "admin"))) {
+      router.push("/");
+    }
+  }, [authLoading, isAuthenticated, user?.role, router]);
 
-        // Fetch GRCs
+  // Fetch GRCs
+  useEffect(() => {
+    if (authLoading || !isAuthenticated) return;
+
+    async function fetchGRCs() {
+      try {
         const grcsRes = await fetch("/api/member/grcs");
         if (!grcsRes.ok) {
           throw new Error("Failed to fetch GRCs");
@@ -98,8 +90,8 @@ export default function MemberGRCsPage() {
       }
     }
 
-    fetchData();
-  }, [router]);
+    fetchGRCs();
+  }, [authLoading, isAuthenticated]);
 
   const handleActivateGRC = (grcId: string) => {
     router.push(`/member?grc=${grcId}`);
@@ -187,16 +179,12 @@ export default function MemberGRCsPage() {
     dragNodeRef.current = null;
   };
 
-  const userName = authData?.member
-    ? `${authData.member.firstName} ${authData.member.lastName}`
-    : undefined;
-
   return (
     <DashboardLayout
       navItems={memberNavItems}
-      userEmail={authData?.user.email}
+      userEmail={user?.email}
       userName={userName}
-      userRole={(authData?.user.role as "admin" | "merchant" | "member") ?? "member"}
+      userRole={user?.role ?? "member"}
     >
       {loading ? (
         <div className="flex items-center justify-center min-h-[400px]">

@@ -21,11 +21,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Camera, Loader2, Save, Building2, CheckCircle } from "lucide-react";
 import { merchantNavItems } from "../nav";
-
-interface AuthData {
-  user: { email: string; role: string; profilePhotoUrl?: string | null };
-  merchant?: { businessName: string };
-}
+import { useUser } from "@/hooks/use-user";
 
 interface Category {
   id: string;
@@ -53,8 +49,7 @@ interface ProfileData {
 
 export default function MerchantProfilePage() {
   const router = useRouter();
-  const [authData, setAuthData] = useState<AuthData | null>(null);
-  const [authLoading, setAuthLoading] = useState(true);
+  const { user, isLoading: authLoading, isAuthenticated, mutate } = useUser();
   const [profile, setProfile] = useState<ProfileData | null>(null);
   const [categories, setCategories] = useState<Category[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -65,32 +60,18 @@ export default function MerchantProfilePage() {
   const [pendingPhoto, setPendingPhoto] = useState<string | null>(null);
   const [pendingLogo, setPendingLogo] = useState<string | null>(null);
 
-  // Fetch auth data
+  // Redirect if not authenticated
   useEffect(() => {
-    fetch("/api/auth/me")
-      .then((res) => {
-        if (!res.ok) {
-          router.push("/");
-          return null;
-        }
-        return res.json();
-      })
-      .then((data) => {
-        if (data?.user?.role !== "merchant" && data?.user?.role !== "admin") {
-          router.push("/");
-          return;
-        }
-        setAuthData(data);
-        setAuthLoading(false);
-      })
-      .catch(() => router.push("/"));
-  }, [router]);
+    if (!authLoading && (!isAuthenticated || (user?.role !== "merchant" && user?.role !== "admin"))) {
+      router.push("/");
+    }
+  }, [authLoading, isAuthenticated, user?.role, router]);
 
   useEffect(() => {
-    if (!authLoading) {
+    if (!authLoading && isAuthenticated) {
       fetchProfile();
     }
-  }, [authLoading]);
+  }, [authLoading, isAuthenticated]);
 
   async function fetchProfile() {
     try {
@@ -147,10 +128,8 @@ export default function MerchantProfilePage() {
         setProfile((prev) =>
           prev ? { ...prev, profilePhotoUrl: data.profilePhotoUrl } : null
         );
-        // Update auth data to reflect new photo in header
-        setAuthData((prev) =>
-          prev ? { ...prev, user: { ...prev.user, profilePhotoUrl: data.profilePhotoUrl } } : null
-        );
+        // Revalidate user data to update header
+        mutate();
       }
       if (data.logoUrl) {
         setProfile((prev) =>
@@ -207,7 +186,7 @@ export default function MerchantProfilePage() {
     );
   }
 
-  const userName = authData?.merchant?.businessName;
+  const userName = profile?.businessName;
 
   const initials = profile
     ? profile.businessName
@@ -223,10 +202,10 @@ export default function MerchantProfilePage() {
   return (
     <DashboardLayout
       navItems={merchantNavItems}
-      userEmail={authData?.user.email}
+      userEmail={user?.email}
       userName={userName}
-      userRole={(authData?.user.role as "admin" | "merchant" | "member") ?? "merchant"}
-      profilePhotoUrl={authData?.user.profilePhotoUrl}
+      userRole={user?.role ?? "merchant"}
+      profilePhotoUrl={user?.profilePhotoUrl}
     >
       {authLoading || isLoading ? (
         <div className="flex items-center justify-center min-h-[400px]">

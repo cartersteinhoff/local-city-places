@@ -26,6 +26,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { memberNavItems } from "../nav";
+import { useUser } from "@/hooks/use-user";
 
 interface ReceiptData {
   id: string;
@@ -51,46 +52,26 @@ interface ReceiptData {
   };
 }
 
-interface AuthData {
-  user: { email: string; role: string; profilePhotoUrl?: string | null };
-  member?: { firstName: string; lastName: string };
-}
-
 export default function ReceiptsPage() {
   const router = useRouter();
-  const [authData, setAuthData] = useState<AuthData | null>(null);
-  const [authLoading, setAuthLoading] = useState(true);
+  const { user, userName, isLoading: authLoading, isAuthenticated } = useUser();
   const [receipts, setReceipts] = useState<ReceiptData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [selectedReceipt, setSelectedReceipt] = useState<ReceiptData | null>(null);
 
-  // Fetch auth data
+  // Redirect if not authenticated
   useEffect(() => {
-    fetch("/api/auth/me")
-      .then((res) => {
-        if (!res.ok) {
-          router.push("/");
-          return null;
-        }
-        return res.json();
-      })
-      .then((data) => {
-        if (data?.user?.role !== "member" && data?.user?.role !== "admin") {
-          router.push("/");
-          return;
-        }
-        setAuthData(data);
-        setAuthLoading(false);
-      })
-      .catch(() => router.push("/"));
-  }, [router]);
+    if (!authLoading && (!isAuthenticated || (user?.role !== "member" && user?.role !== "admin"))) {
+      router.push("/");
+    }
+  }, [authLoading, isAuthenticated, user?.role, router]);
 
   useEffect(() => {
-    if (!authLoading) {
+    if (!authLoading && isAuthenticated) {
       fetchReceipts();
     }
-  }, [authLoading, statusFilter]);
+  }, [authLoading, isAuthenticated, statusFilter]);
 
   async function fetchReceipts() {
     setIsLoading(true);
@@ -164,17 +145,13 @@ export default function ReceiptsPage() {
       .reduce((sum, r) => sum + parseFloat(r.amount || "0"), 0),
   };
 
-  const userName = authData?.member
-    ? `${authData.member.firstName} ${authData.member.lastName}`
-    : undefined;
-
   return (
     <DashboardLayout
       navItems={memberNavItems}
-      userEmail={authData?.user.email}
+      userEmail={user?.email}
       userName={userName}
-      userRole={(authData?.user.role as "admin" | "merchant" | "member") ?? "member"}
-      profilePhotoUrl={authData?.user.profilePhotoUrl}
+      userRole={user?.role ?? "member"}
+      profilePhotoUrl={user?.profilePhotoUrl}
     >
       {authLoading || isLoading ? (
         <div className="flex items-center justify-center min-h-[400px]">

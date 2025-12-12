@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { DashboardLayout } from "@/components/layout";
 import { PageHeader } from "@/components/ui/page-header";
@@ -16,6 +16,7 @@ import {
   Gift,
   UserCircle,
 } from "lucide-react";
+import { useUser } from "@/hooks/use-user";
 
 const adminNavItems = [
   { label: "Dashboard", href: "/admin", icon: LayoutDashboard },
@@ -26,47 +27,23 @@ const adminNavItems = [
   { label: "Analytics", href: "/admin/analytics", icon: BarChart3 },
 ];
 
-interface AuthData {
-  user: { email: string; role: string; profilePhotoUrl?: string | null };
-  member?: { firstName: string; lastName: string };
-}
-
 export default function AdminDashboard() {
   const router = useRouter();
-  const [authData, setAuthData] = useState<AuthData | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { user, userName, isLoading: loading, isAuthenticated } = useUser();
 
   useEffect(() => {
-    fetch("/api/auth/me")
-      .then((res) => {
-        if (!res.ok) {
-          router.push("/");
-          return null;
-        }
-        return res.json();
-      })
-      .then((data) => {
-        if (data?.user?.role !== "admin") {
-          router.push("/");
-          return;
-        }
-        setAuthData(data);
-        setLoading(false);
-      })
-      .catch(() => router.push("/"));
-  }, [router]);
-
-  const userName = authData?.member
-    ? `${authData.member.firstName} ${authData.member.lastName}`
-    : undefined;
+    if (!loading && (!isAuthenticated || user?.role !== "admin")) {
+      router.push("/");
+    }
+  }, [loading, isAuthenticated, user?.role, router]);
 
   return (
     <DashboardLayout
       navItems={adminNavItems}
-      userEmail={authData?.user.email}
+      userEmail={user?.email}
       userName={userName}
       userRole="admin"
-      profilePhotoUrl={authData?.user.profilePhotoUrl}
+      profilePhotoUrl={user?.profilePhotoUrl}
     >
       {loading ? (
         <div className="flex items-center justify-center min-h-[400px]">

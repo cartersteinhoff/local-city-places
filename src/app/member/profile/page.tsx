@@ -12,11 +12,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 import { Camera, Loader2, Save, User } from "lucide-react";
 import { memberNavItems } from "../nav";
-
-interface AuthData {
-  user: { email: string; role: string; profilePhotoUrl?: string | null };
-  member?: { firstName: string; lastName: string };
-}
+import { useUser } from "@/hooks/use-user";
 
 interface ProfileData {
   email: string;
@@ -37,8 +33,7 @@ interface ProfileData {
 
 export default function MemberProfilePage() {
   const router = useRouter();
-  const [authData, setAuthData] = useState<AuthData | null>(null);
-  const [authLoading, setAuthLoading] = useState(true);
+  const { user, userName, isLoading: authLoading, isAuthenticated, mutate } = useUser();
   const [profile, setProfile] = useState<ProfileData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -46,32 +41,18 @@ export default function MemberProfilePage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [pendingPhoto, setPendingPhoto] = useState<string | null>(null);
 
-  // Fetch auth data
+  // Redirect if not authenticated
   useEffect(() => {
-    fetch("/api/auth/me")
-      .then((res) => {
-        if (!res.ok) {
-          router.push("/");
-          return null;
-        }
-        return res.json();
-      })
-      .then((data) => {
-        if (data?.user?.role !== "member" && data?.user?.role !== "admin") {
-          router.push("/");
-          return;
-        }
-        setAuthData(data);
-        setAuthLoading(false);
-      })
-      .catch(() => router.push("/"));
-  }, [router]);
+    if (!authLoading && (!isAuthenticated || (user?.role !== "member" && user?.role !== "admin"))) {
+      router.push("/");
+    }
+  }, [authLoading, isAuthenticated, user?.role, router]);
 
   useEffect(() => {
-    if (!authLoading) {
+    if (!authLoading && isAuthenticated) {
       fetchProfile();
     }
-  }, [authLoading]);
+  }, [authLoading, isAuthenticated]);
 
   async function fetchProfile() {
     try {
@@ -125,10 +106,8 @@ export default function MemberProfilePage() {
         setProfile((prev) =>
           prev ? { ...prev, profilePhotoUrl: data.profilePhotoUrl } : null
         );
-        // Update auth data to reflect new photo in header
-        setAuthData((prev) =>
-          prev ? { ...prev, user: { ...prev.user, profilePhotoUrl: data.profilePhotoUrl } } : null
-        );
+        // Revalidate user data to update header
+        mutate();
       }
       setPendingPhoto(null);
       setMessage({ type: "success", text: "Profile saved successfully" });
@@ -172,10 +151,6 @@ export default function MemberProfilePage() {
     );
   }
 
-  const userName = authData?.member
-    ? `${authData.member.firstName} ${authData.member.lastName}`
-    : undefined;
-
   const initials = profile
     ? `${profile.firstName.charAt(0)}${profile.lastName.charAt(0)}`.toUpperCase()
     : "";
@@ -184,10 +159,10 @@ export default function MemberProfilePage() {
   return (
     <DashboardLayout
       navItems={memberNavItems}
-      userEmail={authData?.user.email}
+      userEmail={user?.email}
       userName={userName}
-      userRole={(authData?.user.role as "admin" | "merchant" | "member") ?? "member"}
-      profilePhotoUrl={authData?.user.profilePhotoUrl}
+      userRole={user?.role ?? "member"}
+      profilePhotoUrl={user?.profilePhotoUrl}
     >
       {authLoading || isLoading ? (
         <div className="flex items-center justify-center min-h-[400px]">

@@ -8,6 +8,7 @@ import { StatCard } from "@/components/ui/stat-card";
 import { Button } from "@/components/ui/button";
 import { GroceryStoreStep } from "@/components/registration/steps/grocery-store-step";
 import { SurveyStep } from "@/components/registration/steps/survey-step";
+import { ReviewOfferStep } from "@/components/registration/steps/review-offer-step";
 import { StartDateStep } from "@/components/registration/steps/start-date-step";
 import type { GroceryStore, SurveyAnswers, StartDate } from "@/lib/validations/member";
 import {
@@ -23,11 +24,7 @@ import {
   ClipboardList,
 } from "lucide-react";
 import { memberNavItems } from "./nav";
-
-interface AuthData {
-  user: { email: string; role: string; profilePhotoUrl?: string | null };
-  member?: { firstName: string; lastName: string };
-}
+import { useUser } from "@/hooks/use-user";
 
 interface GRCDetails {
   id: string;
@@ -69,44 +66,31 @@ function MemberDashboardContent() {
   const searchParams = useSearchParams();
   const grcId = searchParams.get("grc");
 
-  const [authData, setAuthData] = useState<AuthData | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { user, userName, isLoading: loading, isAuthenticated } = useUser();
 
   // GRC onboarding state
   const [grcDetails, setGrcDetails] = useState<GRCDetails | null>(null);
   const [grcLoading, setGrcLoading] = useState(false);
   const [grcError, setGrcError] = useState<string | null>(null);
-  const [onboardingStep, setOnboardingStep] = useState<"store" | "survey" | "start">("store");
+  const [onboardingStep, setOnboardingStep] = useState<"store" | "survey" | "review" | "start">("store");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Onboarding form data
   const [groceryData, setGroceryData] = useState<GroceryStore | null>(null);
   const [surveyData, setSurveyData] = useState<SurveyAnswers>({});
+  const [reviewContent, setReviewContent] = useState<string | undefined>(undefined);
+  const [bonusMonth, setBonusMonth] = useState(false);
 
   // Dashboard data
   const [activeGrc, setActiveGrc] = useState<ActiveGRC | null>(null);
   const [pendingGrcCount, setPendingGrcCount] = useState(0);
 
-  // Fetch auth data
+  // Redirect if not authenticated or wrong role
   useEffect(() => {
-    fetch("/api/auth/me")
-      .then((res) => {
-        if (!res.ok) {
-          router.push("/");
-          return null;
-        }
-        return res.json();
-      })
-      .then((data) => {
-        if (data?.user?.role !== "member" && data?.user?.role !== "admin") {
-          router.push("/");
-          return;
-        }
-        setAuthData(data);
-        setLoading(false);
-      })
-      .catch(() => router.push("/"));
-  }, [router]);
+    if (!loading && (!isAuthenticated || (user?.role !== "member" && user?.role !== "admin"))) {
+      router.push("/");
+    }
+  }, [loading, isAuthenticated, user?.role, router]);
 
   // Fetch GRC details if grcId is present
   useEffect(() => {
@@ -163,12 +147,18 @@ function MemberDashboardContent() {
     if (grcDetails?.survey && grcDetails.survey.questions.length > 0) {
       setOnboardingStep("survey");
     } else {
-      setOnboardingStep("start");
+      setOnboardingStep("review");
     }
   };
 
   const handleSurveyNext = (data: SurveyAnswers) => {
     setSurveyData(data);
+    setOnboardingStep("review");
+  };
+
+  const handleReviewNext = (content: string | undefined) => {
+    setReviewContent(content);
+    setBonusMonth(!!content);
     setOnboardingStep("start");
   };
 
@@ -187,6 +177,19 @@ function MemberDashboardContent() {
             surveyId: grcDetails.survey.id,
             grcId: grcDetails.id,
             answers: surveyData,
+          }),
+        });
+      }
+
+      // Submit review if provided
+      if (reviewContent) {
+        await fetch("/api/review/create", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            merchantId: grcDetails.merchantId,
+            grcId: grcDetails.id,
+            content: reviewContent,
           }),
         });
       }
@@ -223,22 +226,20 @@ function MemberDashboardContent() {
   const handleBackStep = () => {
     if (onboardingStep === "survey") {
       setOnboardingStep("store");
-    } else if (onboardingStep === "start") {
+    } else if (onboardingStep === "review") {
       if (grcDetails?.survey && grcDetails.survey.questions.length > 0) {
         setOnboardingStep("survey");
       } else {
         setOnboardingStep("store");
       }
+    } else if (onboardingStep === "start") {
+      setOnboardingStep("review");
     }
   };
 
   const handleCancelOnboarding = () => {
     router.push("/member");
   };
-
-  const userName = authData?.member
-    ? `${authData.member.firstName} ${authData.member.lastName}`
-    : undefined;
 
   // Show GRC onboarding flow if grcId is present
   if (grcId && !loading) {
@@ -247,10 +248,10 @@ function MemberDashboardContent() {
       return (
         <DashboardLayout
           navItems={memberNavItems}
-          userEmail={authData?.user.email}
+          userEmail={user?.email}
           userName={userName}
-          userRole={authData?.user.role as "admin" | "merchant" | "member"}
-          profilePhotoUrl={authData?.user.profilePhotoUrl}
+          userRole={user?.role}
+          profilePhotoUrl={user?.profilePhotoUrl}
         >
           <div className="flex items-center justify-center min-h-[400px]">
             <Loader2 className="w-8 h-8 animate-spin text-primary" />
@@ -264,10 +265,10 @@ function MemberDashboardContent() {
       return (
         <DashboardLayout
           navItems={memberNavItems}
-          userEmail={authData?.user.email}
+          userEmail={user?.email}
           userName={userName}
-          userRole={authData?.user.role as "admin" | "merchant" | "member"}
-          profilePhotoUrl={authData?.user.profilePhotoUrl}
+          userRole={user?.role}
+          profilePhotoUrl={user?.profilePhotoUrl}
         >
           <div className="max-w-md mx-auto text-center space-y-6 py-12">
             <div className="w-16 h-16 rounded-full bg-destructive/10 flex items-center justify-center mx-auto">
@@ -290,6 +291,7 @@ function MemberDashboardContent() {
       const steps = [
         { id: "store", label: "Grocery Store" },
         ...(grcDetails.survey?.questions?.length ? [{ id: "survey", label: "Survey" }] : []),
+        { id: "review", label: "Review" },
         { id: "start", label: "Start Date" },
       ];
       const currentStepIndex = steps.findIndex((s) => s.id === onboardingStep);
@@ -297,10 +299,10 @@ function MemberDashboardContent() {
       return (
         <DashboardLayout
           navItems={memberNavItems}
-          userEmail={authData?.user.email}
+          userEmail={user?.email}
           userName={userName}
-          userRole={authData?.user.role as "admin" | "merchant" | "member"}
-          profilePhotoUrl={authData?.user.profilePhotoUrl}
+          userRole={user?.role}
+          profilePhotoUrl={user?.profilePhotoUrl}
         >
           <div className="max-w-2xl mx-auto">
             {/* GRC Header Card */}
@@ -392,11 +394,19 @@ function MemberDashboardContent() {
                 />
               )}
 
+              {onboardingStep === "review" && (
+                <ReviewOfferStep
+                  merchantName={grcDetails.merchantName}
+                  onNext={handleReviewNext}
+                  isLoading={isSubmitting}
+                />
+              )}
+
               {onboardingStep === "start" && (
                 <StartDateStep
                   denomination={grcDetails.denomination}
                   monthsRemaining={grcDetails.monthsRemaining}
-                  bonusMonth={false}
+                  bonusMonth={bonusMonth}
                   onNext={handleStartDateNext}
                   isLoading={isSubmitting}
                 />
@@ -422,10 +432,10 @@ function MemberDashboardContent() {
   return (
     <DashboardLayout
       navItems={memberNavItems}
-      userEmail={authData?.user.email}
+      userEmail={user?.email}
       userName={userName}
-      userRole={(authData?.user.role as "admin" | "merchant" | "member") ?? "member"}
-      profilePhotoUrl={authData?.user.profilePhotoUrl}
+      userRole={(user?.role) ?? "member"}
+      profilePhotoUrl={user?.profilePhotoUrl}
     >
       {loading ? (
         <div className="flex items-center justify-center min-h-[400px]">

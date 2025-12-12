@@ -30,13 +30,9 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { memberNavItems } from "../nav";
+import { useUser } from "@/hooks/use-user";
 
 type UploadStage = "idle" | "uploading" | "analyzing" | "complete" | "error";
-
-interface AuthData {
-  user: { email: string; role: string };
-  member?: { firstName: string; lastName: string };
-}
 
 interface ActiveGRC {
   id: string;
@@ -88,7 +84,7 @@ interface PendingValidation {
 
 export default function UploadReceiptPage() {
   const router = useRouter();
-  const [authData, setAuthData] = useState<AuthData | null>(null);
+  const { user, userName, isLoading: authLoading, isAuthenticated } = useUser();
   const [activeGrc, setActiveGrc] = useState<ActiveGRC | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -117,23 +113,19 @@ export default function UploadReceiptPage() {
   const streamRef = useRef<MediaStream | null>(null);
   const dropZoneRef = useRef<HTMLDivElement>(null);
 
-  // Fetch auth and active GRC
+  // Redirect if not authenticated
   useEffect(() => {
-    async function fetchData() {
-      try {
-        const authRes = await fetch("/api/auth/me");
-        if (!authRes.ok) {
-          router.push("/");
-          return;
-        }
-        const auth = await authRes.json();
-        if (auth?.user?.role !== "member" && auth?.user?.role !== "admin") {
-          router.push("/");
-          return;
-        }
-        setAuthData(auth);
+    if (!authLoading && (!isAuthenticated || (user?.role !== "member" && user?.role !== "admin"))) {
+      router.push("/");
+    }
+  }, [authLoading, isAuthenticated, user?.role, router]);
 
-        // Fetch active GRC
+  // Fetch active GRC
+  useEffect(() => {
+    if (authLoading || !isAuthenticated) return;
+
+    async function fetchGRCs() {
+      try {
         const grcsRes = await fetch("/api/member/grcs");
         if (grcsRes.ok) {
           const grcs = await grcsRes.json();
@@ -142,14 +134,14 @@ export default function UploadReceiptPage() {
           }
         }
       } catch {
-        router.push("/");
+        console.error("Failed to fetch GRCs");
       } finally {
         setLoading(false);
       }
     }
 
-    fetchData();
-  }, [router]);
+    fetchGRCs();
+  }, [authLoading, isAuthenticated]);
 
   // Cleanup camera stream on unmount
   useEffect(() => {
@@ -365,18 +357,14 @@ export default function UploadReceiptPage() {
 
   const isProcessing = uploadStage === "uploading" || uploadStage === "analyzing";
 
-  const userName = authData?.member
-    ? `${authData.member.firstName} ${authData.member.lastName}`
-    : undefined;
-
   // Loading or No active GRC
   if (loading || !activeGrc) {
     return (
       <DashboardLayout
         navItems={memberNavItems}
-        userEmail={authData?.user.email}
+        userEmail={user?.email}
         userName={userName}
-        userRole={(authData?.user.role as "admin" | "merchant" | "member") ?? "member"}
+        userRole={user?.role ?? "member"}
       >
         {loading ? (
           <div className="flex items-center justify-center min-h-[400px]">
@@ -410,9 +398,9 @@ export default function UploadReceiptPage() {
   return (
     <DashboardLayout
       navItems={memberNavItems}
-      userEmail={authData?.user.email}
+      userEmail={user?.email}
       userName={userName}
-      userRole={(authData?.user.role as "admin" | "merchant" | "member") ?? "member"}
+      userRole={user?.role ?? "member"}
     >
       <PageHeader
         title="Upload Receipt"
