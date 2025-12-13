@@ -94,8 +94,25 @@ export async function processReceipt(
   });
 
   if (!response.ok) {
-    const errorText = await response.text();
+    let errorText = "";
+    let errorJson: { error?: string; message?: string; is_duplicate?: boolean } | null = null;
+
+    try {
+      errorText = await response.text();
+      errorJson = JSON.parse(errorText);
+    } catch {
+      // Not JSON, keep as text
+    }
+
     console.error("Veryfi API error:", response.status, errorText);
+
+    // Check if this is a duplicate error from Veryfi
+    if (errorJson?.is_duplicate ||
+        errorText.toLowerCase().includes("duplicate") ||
+        errorJson?.error?.toLowerCase().includes("duplicate") ||
+        errorJson?.message?.toLowerCase().includes("duplicate")) {
+      throw new Error("This receipt has already been uploaded (duplicate detected)");
+    }
 
     if (response.status === 401 || response.status === 403) {
       throw new Error("Veryfi authentication failed");
@@ -127,6 +144,36 @@ export async function processReceipt(
     tempImageUrl: data.img_url,
     rawResponse: data,
   };
+}
+
+/**
+ * Delete a document from Veryfi by ID
+ */
+export async function deleteDocument(documentId: number): Promise<boolean> {
+  const clientId = process.env.VERYFI_CLIENT_ID;
+  const username = process.env.VERYFI_USERNAME;
+  const apiKey = process.env.VERYFI_API_KEY;
+
+  if (!clientId || !username || !apiKey) {
+    console.error("Veryfi API credentials not configured");
+    return false;
+  }
+
+  try {
+    const response = await fetch(`${VERYFI_API_URL}/${documentId}`, {
+      method: "DELETE",
+      headers: {
+        Accept: "application/json",
+        "Client-Id": clientId,
+        Authorization: `apikey ${username}:${apiKey}`,
+      },
+    });
+
+    return response.ok;
+  } catch (error) {
+    console.error("Failed to delete Veryfi document:", error);
+    return false;
+  }
 }
 
 /**

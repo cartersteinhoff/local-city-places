@@ -13,13 +13,14 @@ import {
   Loader2,
   CheckCircle,
   AlertCircle,
-  RotateCcw,
   Image as ImageIcon,
   Store,
   DollarSign,
   Calendar,
   Receipt,
   AlertTriangle,
+  Trash2,
+  Plus,
 } from "lucide-react";
 import {
   Dialog,
@@ -32,7 +33,29 @@ import {
 import { memberNavItems } from "../nav";
 import { useUser } from "@/hooks/use-user";
 
-type UploadStage = "idle" | "uploading" | "analyzing" | "complete" | "error";
+type UploadStatus = "pending" | "uploading" | "analyzing" | "complete" | "error" | "warning";
+
+interface ImageItem {
+  id: string;
+  dataUrl: string;
+  status: UploadStatus;
+  result?: {
+    receiptId?: string;
+    amount?: number | null;
+    extractedStoreName?: string | null;
+    storeMismatch?: boolean;
+    dateMismatch?: boolean;
+    receiptDate?: string | null;
+  };
+  error?: string;
+  warnings?: string[];
+  pendingValidation?: {
+    skippedReceiptId: string; // ID from skipped_receipts table
+    validationResult: ValidationResult;
+    warnings: string[];
+    imageUrl: string;
+  };
+}
 
 interface ActiveGRC {
   id: string;
@@ -48,26 +71,6 @@ interface MonthlyProgress {
   receiptsThisMonth: number;
 }
 
-interface RecentReceipt {
-  id: string;
-  amount: number | null;
-  status: "pending" | "approved" | "rejected";
-  submittedAt: string;
-}
-
-interface UploadResult {
-  success: boolean;
-  receipt?: {
-    id: string;
-    amount: number | null;
-    extractedStoreName: string | null;
-    storeMismatch: boolean;
-    dateMismatch: boolean;
-    receiptDate: string | null;
-  };
-  error?: string;
-}
-
 interface ValidationResult {
   amount: number | null;
   receiptDate: string | null;
@@ -76,34 +79,24 @@ interface ValidationResult {
   dateMismatch: boolean;
 }
 
-interface PendingValidation {
-  validationResult: ValidationResult;
-  warnings: string[];
-  imageUrl: string;
-}
-
 export default function UploadReceiptPage() {
   const router = useRouter();
-  const { user, userName, isLoading: authLoading, isAuthenticated } = useUser();
+  const { user, isLoading: authLoading, isAuthenticated } = useUser();
   const [activeGrc, setActiveGrc] = useState<ActiveGRC | null>(null);
   const [loading, setLoading] = useState(true);
 
   // Monthly progress state
   const [monthlyProgress, setMonthlyProgress] = useState<MonthlyProgress | null>(null);
-  const [recentReceipts, setRecentReceipts] = useState<RecentReceipt[]>([]);
 
-  // Image capture state
-  const [imageData, setImageData] = useState<string | null>(null);
+  // Image queue state
+  const [images, setImages] = useState<ImageItem[]>([]);
   const [isCapturing, setIsCapturing] = useState(false);
   const [cameraError, setCameraError] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
-
-  // Upload state
-  const [uploadStage, setUploadStage] = useState<UploadStage>("idle");
-  const [uploadResult, setUploadResult] = useState<UploadResult | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
 
   // Warning dialog state
-  const [pendingValidation, setPendingValidation] = useState<PendingValidation | null>(null);
+  const [warningImageId, setWarningImageId] = useState<string | null>(null);
   const [showWarningDialog, setShowWarningDialog] = useState(false);
 
   // Refs
@@ -152,6 +145,29 @@ export default function UploadReceiptPage() {
     };
   }, []);
 
+  const generateId = () => Math.random().toString(36).substring(2, 9);
+
+  const addImages = useCallback((dataUrls: string[]) => {
+    const newImages: ImageItem[] = dataUrls.map((dataUrl) => ({
+      id: generateId(),
+      dataUrl,
+      status: "pending" as UploadStatus,
+    }));
+    setImages((prev) => [...prev, ...newImages]);
+    setCameraError(null);
+  }, []);
+
+  const removeImage = useCallback((id: string) => {
+    setImages((prev) => prev.filter((img) => img.id !== id));
+  }, []);
+
+  const clearAllImages = useCallback(() => {
+    setImages([]);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  }, []);
+
   const startCamera = useCallback(async () => {
     setCameraError(null);
     setIsCapturing(true);
@@ -159,7 +175,7 @@ export default function UploadReceiptPage() {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
         video: {
-          facingMode: "environment", // Prefer back camera on mobile
+          facingMode: "environment",
           width: { ideal: 1920 },
           height: { ideal: 1080 },
         },
@@ -200,55 +216,64 @@ export default function UploadReceiptPage() {
     const video = videoRef.current;
     const canvas = canvasRef.current;
 
-    // Set canvas size to match video
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
 
-    // Draw video frame to canvas
     const ctx = canvas.getContext("2d");
     if (ctx) {
       ctx.drawImage(video, 0, 0);
       const dataUrl = canvas.toDataURL("image/jpeg", 0.9);
-      setImageData(dataUrl);
+      addImages([dataUrl]);
       stopCamera();
     }
-  }, [stopCamera]);
+  }, [stopCamera, addImages]);
 
   const handleFileSelect = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+    const files = Array.from(e.target.files || []);
+    if (files.length === 0) return;
 
-    // Validate file type
-    if (!file.type.startsWith("image/")) {
-      setCameraError("Please select an image file.");
+    const validFiles = files.filter((file) => {
+      if (!file.type.startsWith("image/")) {
+        return false;
+      }
+      if (file.size > 20 * 1024 * 1024) {
+        return false;
+      }
+      return true;
+    });
+
+    if (validFiles.length === 0) {
+      setCameraError("No valid images selected. Images must be under 20MB.");
       return;
     }
 
-    // Validate file size (20MB max)
-    if (file.size > 20 * 1024 * 1024) {
-      setCameraError("Image too large. Maximum size is 20MB.");
-      return;
+    if (validFiles.length < files.length) {
+      setCameraError(`${files.length - validFiles.length} file(s) skipped (invalid format or too large).`);
     }
 
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      setImageData(event.target?.result as string);
-      setCameraError(null);
-    };
-    reader.onerror = () => {
-      setCameraError("Failed to read file.");
-    };
-    reader.readAsDataURL(file);
-  }, []);
+    const readPromises = validFiles.map(
+      (file) =>
+        new Promise<string>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = (event) => resolve(event.target?.result as string);
+          reader.onerror = () => reject(new Error("Failed to read file"));
+          reader.readAsDataURL(file);
+        })
+    );
 
-  const clearImage = useCallback(() => {
-    setImageData(null);
-    setUploadResult(null);
-    setCameraError(null);
-    if (fileInputRef.current) {
-      fileInputRef.current.value = "";
+    Promise.all(readPromises)
+      .then((dataUrls) => {
+        addImages(dataUrls);
+      })
+      .catch(() => {
+        setCameraError("Failed to read some files.");
+      });
+
+    // Reset input to allow selecting the same files again
+    if (e.target) {
+      e.target.value = "";
     }
-  }, []);
+  }, [addImages]);
 
   // Drag and drop handlers
   const handleDragOver = useCallback((e: React.DragEvent) => {
@@ -265,44 +290,59 @@ export default function UploadReceiptPage() {
     e.preventDefault();
     setIsDragging(false);
 
-    const file = e.dataTransfer.files?.[0];
-    if (!file) return;
+    const files = Array.from(e.dataTransfer.files);
+    const validFiles = files.filter(
+      (file) => file.type.startsWith("image/") && file.size <= 20 * 1024 * 1024
+    );
 
-    if (!file.type.startsWith("image/")) {
-      setCameraError("Please drop an image file.");
+    if (validFiles.length === 0) {
+      setCameraError("No valid images dropped. Images must be under 20MB.");
       return;
     }
 
-    if (file.size > 20 * 1024 * 1024) {
-      setCameraError("Image too large. Maximum size is 20MB.");
-      return;
-    }
+    const readPromises = validFiles.map(
+      (file) =>
+        new Promise<string>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = (event) => resolve(event.target?.result as string);
+          reader.onerror = () => reject(new Error("Failed to read file"));
+          reader.readAsDataURL(file);
+        })
+    );
 
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      setImageData(event.target?.result as string);
-      setCameraError(null);
-    };
-    reader.readAsDataURL(file);
-  }, []);
+    Promise.all(readPromises).then((dataUrls) => {
+      addImages(dataUrls);
+    });
+  }, [addImages]);
 
-  const handleUpload = async (acknowledgeWarnings = false) => {
-    if (!imageData || !activeGrc) return;
+  const uploadSingleImage = async (imageId: string, acknowledgeWarnings = false) => {
+    if (!activeGrc) return;
 
-    setUploadStage("uploading");
-    setUploadResult(null);
+    const image = images.find((img) => img.id === imageId);
+    if (!image) return;
+
+    setImages((prev) =>
+      prev.map((img) =>
+        img.id === imageId ? { ...img, status: "uploading" as UploadStatus } : img
+      )
+    );
 
     try {
-      // Simulate upload stage (actual upload happens in one request)
-      await new Promise((resolve) => setTimeout(resolve, 500));
-      setUploadStage("analyzing");
+      // Brief delay for UX
+      await new Promise((resolve) => setTimeout(resolve, 300));
+
+      setImages((prev) =>
+        prev.map((img) =>
+          img.id === imageId ? { ...img, status: "analyzing" as UploadStatus } : img
+        )
+      );
 
       const res = await fetch("/api/member/receipts/upload", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           grcId: activeGrc.id,
-          image: imageData,
+          image: image.dataUrl,
           acknowledgeWarnings,
         }),
       });
@@ -310,52 +350,199 @@ export default function UploadReceiptPage() {
       const data = await res.json();
 
       if (!res.ok) {
-        setUploadStage("error");
-        setUploadResult({
-          success: false,
-          error: data.error || "Upload failed",
-        });
+        setImages((prev) =>
+          prev.map((img) =>
+            img.id === imageId
+              ? { ...img, status: "error" as UploadStatus, error: data.error || "Upload failed" }
+              : img
+          )
+        );
         return;
       }
 
       // Check if validation warnings require confirmation
       if (data.requiresConfirmation) {
-        setUploadStage("idle");
-        setPendingValidation({
-          validationResult: data.validationResult,
-          warnings: data.warnings,
-          imageUrl: data.imageUrl,
-        });
+        setImages((prev) =>
+          prev.map((img) =>
+            img.id === imageId
+              ? {
+                  ...img,
+                  status: "warning" as UploadStatus,
+                  pendingValidation: {
+                    skippedReceiptId: data.skippedReceiptId,
+                    validationResult: data.validationResult,
+                    warnings: data.warnings,
+                    imageUrl: data.validationResult.imageUrl,
+                  },
+                  warnings: data.warnings,
+                }
+              : img
+          )
+        );
+        setWarningImageId(imageId);
         setShowWarningDialog(true);
         return;
       }
 
-      setUploadStage("complete");
-      setUploadResult({
-        success: true,
-        receipt: data.receipt,
-      });
+      setImages((prev) =>
+        prev.map((img) =>
+          img.id === imageId
+            ? {
+                ...img,
+                status: "complete" as UploadStatus,
+                result: {
+                  receiptId: data.receipt.id,
+                  amount: data.receipt.amount,
+                  extractedStoreName: data.receipt.extractedStoreName,
+                  storeMismatch: data.receipt.storeMismatch,
+                  dateMismatch: data.receipt.dateMismatch,
+                  receiptDate: data.receipt.receiptDate,
+                },
+              }
+            : img
+        )
+      );
     } catch (err) {
       console.error("Upload error:", err);
-      setUploadStage("error");
-      setUploadResult({
-        success: false,
-        error: "Network error. Please try again.",
-      });
+      setImages((prev) =>
+        prev.map((img) =>
+          img.id === imageId
+            ? { ...img, status: "error" as UploadStatus, error: "Network error. Please try again." }
+            : img
+        )
+      );
     }
   };
 
-  const handleConfirmSubmit = async () => {
-    setShowWarningDialog(false);
-    await handleUpload(true);
+  const handleUploadAll = async () => {
+    const pendingImages = images.filter((img) => img.status === "pending");
+    if (pendingImages.length === 0 || !activeGrc) return;
+
+    setIsUploading(true);
+
+    for (const image of pendingImages) {
+      await uploadSingleImage(image.id);
+      // Check if we hit a warning dialog and need to pause
+      const currentImage = images.find((img) => img.id === image.id);
+      if (currentImage?.status === "warning") {
+        break;
+      }
+    }
+
+    setIsUploading(false);
   };
 
-  const handleCancelWarning = () => {
+  const handleConfirmWarning = async () => {
+    if (!warningImageId || !activeGrc) return;
+
+    const image = images.find((img) => img.id === warningImageId);
+    if (!image?.pendingValidation?.skippedReceiptId) return;
+
     setShowWarningDialog(false);
-    setPendingValidation(null);
+
+    // Update status to show we're processing
+    setImages((prev) =>
+      prev.map((img) =>
+        img.id === warningImageId ? { ...img, status: "uploading" as UploadStatus } : img
+      )
+    );
+
+    try {
+      // Confirm the skipped receipt using its ID
+      const res = await fetch("/api/member/receipts/upload", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          grcId: activeGrc.id,
+          acknowledgeWarnings: true,
+          skippedReceiptId: image.pendingValidation.skippedReceiptId,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setImages((prev) =>
+          prev.map((img) =>
+            img.id === warningImageId
+              ? { ...img, status: "error" as UploadStatus, error: data.error || "Upload failed" }
+              : img
+          )
+        );
+      } else {
+        setImages((prev) =>
+          prev.map((img) =>
+            img.id === warningImageId
+              ? {
+                  ...img,
+                  status: "complete" as UploadStatus,
+                  result: {
+                    receiptId: data.receipt.id,
+                    amount: data.receipt.amount,
+                    extractedStoreName: data.receipt.extractedStoreName,
+                    storeMismatch: data.receipt.storeMismatch,
+                    dateMismatch: data.receipt.dateMismatch,
+                    receiptDate: data.receipt.receiptDate,
+                  },
+                }
+              : img
+          )
+        );
+      }
+    } catch (err) {
+      console.error("Confirm upload error:", err);
+      setImages((prev) =>
+        prev.map((img) =>
+          img.id === warningImageId
+            ? { ...img, status: "error" as UploadStatus, error: "Network error" }
+            : img
+        )
+      );
+    }
+
+    setWarningImageId(null);
+
+    // Continue with remaining uploads
+    const remainingImages = images.filter(
+      (img) => img.status === "pending" && img.id !== warningImageId
+    );
+    if (remainingImages.length > 0) {
+      setIsUploading(true);
+      for (const remainingImage of remainingImages) {
+        await uploadSingleImage(remainingImage.id);
+      }
+      setIsUploading(false);
+    }
   };
 
-  const isProcessing = uploadStage === "uploading" || uploadStage === "analyzing";
+  const handleSkipWarning = async () => {
+    if (!warningImageId) return;
+
+    setShowWarningDialog(false);
+
+    // Remove the image from the queue - the skipped_receipts record stays in DB
+    // so user can re-upload the same receipt later (will be detected and allowed)
+    setImages((prev) => prev.filter((img) => img.id !== warningImageId));
+    setWarningImageId(null);
+
+    // Continue with remaining uploads
+    const remainingImages = images.filter(
+      (img) => img.status === "pending" && img.id !== warningImageId
+    );
+    if (remainingImages.length > 0) {
+      setIsUploading(true);
+      for (const remainingImage of remainingImages) {
+        await uploadSingleImage(remainingImage.id);
+      }
+      setIsUploading(false);
+    }
+  };
+
+  const pendingCount = images.filter((img) => img.status === "pending").length;
+  const completedCount = images.filter((img) => img.status === "complete").length;
+  const errorCount = images.filter((img) => img.status === "error").length;
+  const processingCount = images.filter((img) => img.status === "uploading" || img.status === "analyzing").length;
+  const warningImage = warningImageId ? images.find((img) => img.id === warningImageId) : null;
 
   // Loading or No active GRC
   if (loading || !activeGrc) {
@@ -367,23 +554,16 @@ export default function UploadReceiptPage() {
           </div>
         ) : (
           <>
-            <PageHeader
-          title="Upload Receipt"
-          description="Submit your grocery receipts"
-        />
+            <PageHeader title="Upload Receipt" description="Submit your grocery receipts" />
 
-        <div className="bg-card rounded-xl border p-8 text-center">
-          <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mx-auto mb-4">
-            <AlertCircle className="w-8 h-8 text-muted-foreground" />
-          </div>
-          <h2 className="text-xl font-semibold mb-2">No Active GRC</h2>
-          <p className="text-muted-foreground mb-6">
-            You need an active GRC to upload receipts.
-          </p>
-          <Button onClick={() => router.push("/member/grcs")}>
-            View My GRCs
-          </Button>
-        </div>
+            <div className="bg-card rounded-xl border p-8 text-center">
+              <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mx-auto mb-4">
+                <AlertCircle className="w-8 h-8 text-muted-foreground" />
+              </div>
+              <h2 className="text-xl font-semibold mb-2">No Active GRC</h2>
+              <p className="text-muted-foreground mb-6">You need an active GRC to upload receipts.</p>
+              <Button onClick={() => router.push("/member/grcs")}>View My GRCs</Button>
+            </div>
           </>
         )}
       </DashboardLayout>
@@ -393,7 +573,7 @@ export default function UploadReceiptPage() {
   return (
     <DashboardLayout navItems={memberNavItems}>
       <PageHeader
-        title="Upload Receipt"
+        title="Upload Receipts"
         description={`Submit receipts from ${activeGrc.groceryStore || "your grocery store"}`}
       />
 
@@ -419,106 +599,45 @@ export default function UploadReceiptPage() {
         </div>
       )}
 
-      {/* Success State */}
-      {uploadResult?.success && (
-        <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-xl p-6 mb-6">
-          <div className="flex items-start gap-4">
-            <div className="w-10 h-10 rounded-full bg-green-100 dark:bg-green-900/40 flex items-center justify-center flex-shrink-0">
-              <CheckCircle className="w-5 h-5 text-green-600 dark:text-green-400" />
-            </div>
-            <div className="flex-1">
-              <h3 className="font-semibold text-green-900 dark:text-green-100 mb-2">
-                Receipt Uploaded Successfully
-              </h3>
-
-              {/* Extracted details */}
-              <div className="flex flex-wrap gap-4 text-sm text-green-700 dark:text-green-300 mb-3">
-                {uploadResult.receipt?.amount && (
-                  <div className="flex items-center gap-1.5">
-                    <DollarSign className="w-4 h-4" />
-                    <span className="font-medium">${uploadResult.receipt.amount.toFixed(2)}</span>
-                  </div>
-                )}
-                {uploadResult.receipt?.extractedStoreName && (
-                  <div className="flex items-center gap-1.5">
-                    <Store className="w-4 h-4" />
-                    <span>{uploadResult.receipt.extractedStoreName}</span>
-                  </div>
-                )}
-                {uploadResult.receipt?.receiptDate && (
-                  <div className="flex items-center gap-1.5">
-                    <Calendar className="w-4 h-4" />
-                    <span>{new Date(uploadResult.receipt.receiptDate).toLocaleDateString()}</span>
-                  </div>
-                )}
-              </div>
-
-              {(uploadResult.receipt?.storeMismatch || uploadResult.receipt?.dateMismatch) && (
-                <div className="bg-yellow-100 dark:bg-yellow-900/30 rounded-lg px-3 py-2 mb-3 space-y-1">
-                  {uploadResult.receipt?.storeMismatch && (
-                    <p className="text-sm text-yellow-700 dark:text-yellow-300">
-                      <AlertCircle className="w-4 h-4 inline mr-1.5" />
-                      Store name doesn't match your registered grocery store.
-                    </p>
-                  )}
-                  {uploadResult.receipt?.dateMismatch && (
-                    <p className="text-sm text-yellow-700 dark:text-yellow-300">
-                      <AlertCircle className="w-4 h-4 inline mr-1.5" />
-                      Receipt date is not from the current month.
-                    </p>
-                  )}
-                  <p className="text-xs text-yellow-600 dark:text-yellow-400 mt-1">
-                    This receipt has been flagged for admin review.
-                  </p>
-                </div>
+      {/* Upload Summary */}
+      {images.length > 0 && (
+        <div className="bg-card rounded-xl border p-4 mb-6">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4 text-sm">
+              <span className="font-medium">{images.length} receipt{images.length !== 1 ? "s" : ""}</span>
+              {pendingCount > 0 && (
+                <span className="text-muted-foreground">{pendingCount} pending</span>
               )}
-
-              {!uploadResult.receipt?.amount && (
-                <p className="text-sm text-green-600 dark:text-green-400 mb-3">
-                  We couldn't automatically read the total. An admin will review this receipt.
-                </p>
+              {processingCount > 0 && (
+                <span className="text-blue-600">{processingCount} processing</span>
               )}
-
-              <div className="flex flex-wrap gap-3">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    clearImage();
-                    setUploadStage("idle");
-                  }}
-                  className="border-green-300 text-green-700 hover:bg-green-100 dark:border-green-700 dark:text-green-300"
-                >
-                  <Receipt className="w-4 h-4 mr-2" />
-                  Upload Another
-                </Button>
-                <Button
-                  size="sm"
-                  onClick={() => router.push("/member")}
-                  className="bg-green-600 hover:bg-green-700"
-                >
-                  View Dashboard
-                </Button>
-              </div>
+              {completedCount > 0 && (
+                <span className="text-green-600">{completedCount} complete</span>
+              )}
+              {errorCount > 0 && (
+                <span className="text-red-600">{errorCount} failed</span>
+              )}
             </div>
-          </div>
-        </div>
-      )}
-
-      {/* Error State */}
-      {uploadResult && !uploadResult.success && (
-        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-6 mb-6">
-          <div className="flex items-start gap-4">
-            <div className="w-10 h-10 rounded-full bg-red-100 dark:bg-red-900/40 flex items-center justify-center flex-shrink-0">
-              <AlertCircle className="w-5 h-5 text-red-600 dark:text-red-400" />
-            </div>
-            <div className="flex-1">
-              <h3 className="font-semibold text-red-900 dark:text-red-100 mb-1">
-                Upload Failed
-              </h3>
-              <p className="text-sm text-red-700 dark:text-red-300">
-                {uploadResult.error}
-              </p>
+            <div className="flex items-center gap-2">
+              <Button variant="ghost" size="sm" onClick={clearAllImages} disabled={isUploading}>
+                <Trash2 className="w-4 h-4 mr-1" />
+                Clear All
+              </Button>
+              {pendingCount > 0 && (
+                <Button size="sm" onClick={handleUploadAll} disabled={isUploading}>
+                  {isUploading ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Submitting...
+                    </>
+                  ) : (
+                    <>
+                      <Upload className="w-4 h-4 mr-2" />
+                      Submit for Review ({pendingCount})
+                    </>
+                  )}
+                </Button>
+              )}
             </div>
           </div>
         </div>
@@ -557,68 +676,120 @@ export default function UploadReceiptPage() {
           </div>
         )}
 
-        {/* Image Preview */}
-        {imageData && !isCapturing && !uploadResult?.success && (
+        {/* Image Grid Preview */}
+        {images.length > 0 && !isCapturing && (
           <div className="space-y-4">
-            <div className="relative aspect-[4/3] bg-muted rounded-lg overflow-hidden">
-              <img
-                src={imageData}
-                alt="Receipt preview"
-                className="w-full h-full object-contain"
-              />
-              {/* Processing overlay */}
-              {isProcessing && (
-                <div className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center">
-                  <Loader2 className="w-10 h-10 animate-spin text-white mb-3" />
-                  <p className="text-white font-medium">
-                    {uploadStage === "uploading" ? "Uploading..." : "Analyzing receipt..."}
-                  </p>
-                  <p className="text-white/70 text-sm mt-1">
-                    {uploadStage === "uploading"
-                      ? "Sending your image"
-                      : "Reading receipt details"}
-                  </p>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+              {images.map((image) => (
+                <div
+                  key={image.id}
+                  className="relative aspect-[3/4] bg-muted rounded-lg overflow-hidden group"
+                >
+                  <img
+                    src={image.dataUrl}
+                    alt="Receipt"
+                    className="w-full h-full object-cover"
+                  />
+
+                  {/* Status overlay */}
+                  {image.status === "uploading" && (
+                    <div className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center">
+                      <Loader2 className="w-6 h-6 animate-spin text-white mb-1" />
+                      <span className="text-xs text-white">Uploading...</span>
+                    </div>
+                  )}
+                  {image.status === "analyzing" && (
+                    <div className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center">
+                      <Loader2 className="w-6 h-6 animate-spin text-white mb-1" />
+                      <span className="text-xs text-white">Analyzing...</span>
+                    </div>
+                  )}
+                  {image.status === "complete" && (
+                    <div className="absolute inset-0 bg-green-600/80 flex flex-col items-center justify-center">
+                      <CheckCircle className="w-6 h-6 text-white mb-1" />
+                      <span className="text-xs text-white font-medium">
+                        {image.result?.amount ? `$${image.result.amount.toFixed(2)}` : "Done"}
+                      </span>
+                    </div>
+                  )}
+                  {image.status === "error" && (
+                    <div className="absolute inset-0 bg-red-600/80 flex flex-col items-center justify-center p-2">
+                      <AlertCircle className="w-6 h-6 text-white mb-1" />
+                      <span className="text-xs text-white text-center">{image.error || "Failed"}</span>
+                    </div>
+                  )}
+                  {image.status === "warning" && (
+                    <div className="absolute inset-0 bg-yellow-600/80 flex flex-col items-center justify-center">
+                      <AlertTriangle className="w-6 h-6 text-white mb-1" />
+                      <span className="text-xs text-white">Needs Review</span>
+                    </div>
+                  )}
+
+                  {/* Remove button (only for pending) */}
+                  {image.status === "pending" && (
+                    <button
+                      onClick={() => removeImage(image.id)}
+                      className="absolute top-1 right-1 w-6 h-6 bg-black/60 hover:bg-black/80 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      <X className="w-4 h-4 text-white" />
+                    </button>
+                  )}
+
+                  {/* Pending indicator */}
+                  {image.status === "pending" && (
+                    <div className="absolute bottom-0 left-0 right-0 bg-black/40 py-1 px-2">
+                      <span className="text-xs text-white">Ready</span>
+                    </div>
+                  )}
                 </div>
-              )}
+              ))}
+
+              {/* Add more button */}
+              <label className="aspect-[3/4] bg-muted rounded-lg border-2 border-dashed border-muted-foreground/25 hover:border-primary/50 hover:bg-muted/80 transition-colors cursor-pointer flex flex-col items-center justify-center">
+                <Plus className="w-8 h-8 text-muted-foreground mb-1" />
+                <span className="text-xs text-muted-foreground">Add More</span>
+                <input
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  onChange={handleFileSelect}
+                  className="hidden"
+                />
+              </label>
             </div>
+
+            {/* Action buttons */}
             <div className="flex justify-center gap-3">
-              <Button variant="outline" onClick={clearImage} disabled={isProcessing}>
-                <RotateCcw className="w-4 h-4 mr-2" />
-                Retake
+              <Button variant="outline" onClick={startCamera}>
+                <Camera className="w-4 h-4 mr-2" />
+                Take Photo
               </Button>
-              <Button onClick={() => handleUpload()} disabled={isProcessing}>
-                {isProcessing ? (
-                  <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    {uploadStage === "uploading" ? "Uploading..." : "Analyzing..."}
-                  </>
-                ) : (
-                  <>
-                    <Upload className="w-4 h-4 mr-2" />
-                    Submit Receipt
-                  </>
-                )}
-              </Button>
+              {completedCount === images.length && images.length > 0 && (
+                <Button onClick={() => router.push("/member/receipts")}>
+                  <Receipt className="w-4 h-4 mr-2" />
+                  View Receipts
+                </Button>
+              )}
             </div>
           </div>
         )}
 
         {/* Initial State - Capture Options */}
-        {!isCapturing && !imageData && (
+        {!isCapturing && images.length === 0 && (
           <div
             ref={dropZoneRef}
             onDragOver={handleDragOver}
             onDragLeave={handleDragLeave}
             onDrop={handleDrop}
-            className="space-y-6"
+            className="space-y-6 relative"
           >
             <div className="text-center">
               <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mx-auto mb-4">
                 <ImageIcon className="w-8 h-8 text-muted-foreground" />
               </div>
-              <h2 className="text-lg font-semibold mb-1">Add Your Receipt</h2>
+              <h2 className="text-lg font-semibold mb-1">Add Your Receipts</h2>
               <p className="text-sm text-muted-foreground">
-                Take a photo, upload, or drag and drop an image
+                Take photos or upload multiple images at once
               </p>
             </div>
 
@@ -638,12 +809,13 @@ export default function UploadReceiptPage() {
 
               <label className="flex flex-col items-center justify-center p-6 rounded-xl border-2 border-dashed border-muted-foreground/25 hover:border-primary/50 hover:bg-muted/50 transition-colors cursor-pointer">
                 <Upload className="w-10 h-10 text-muted-foreground mb-3" />
-                <span className="font-medium">Upload Photo</span>
-                <span className="text-sm text-muted-foreground">Or drag & drop</span>
+                <span className="font-medium">Upload Photos</span>
+                <span className="text-sm text-muted-foreground">Select multiple or drag & drop</span>
                 <input
                   ref={fileInputRef}
                   type="file"
                   accept="image/*"
+                  multiple
                   onChange={handleFileSelect}
                   className="hidden"
                 />
@@ -655,14 +827,14 @@ export default function UploadReceiptPage() {
               <div className="absolute inset-0 bg-primary/10 border-2 border-dashed border-primary rounded-xl flex items-center justify-center">
                 <div className="text-center">
                   <Upload className="w-12 h-12 text-primary mx-auto mb-2" />
-                  <p className="font-medium text-primary">Drop your receipt here</p>
+                  <p className="font-medium text-primary">Drop your receipts here</p>
                 </div>
               </div>
             )}
 
             {/* Tips */}
             <div className="bg-muted/50 rounded-lg p-4">
-              <h3 className="font-medium mb-2">Tips for a good receipt photo:</h3>
+              <h3 className="font-medium mb-2">Tips for good receipt photos:</h3>
               <ul className="text-sm text-muted-foreground space-y-1">
                 <li>- Make sure the entire receipt is visible</li>
                 <li>- Ensure good lighting and avoid shadows</li>
@@ -681,23 +853,23 @@ export default function UploadReceiptPage() {
       <Dialog open={showWarningDialog} onOpenChange={setShowWarningDialog}>
         <DialogContent showCloseButton={false}>
           <DialogHeader>
-            <div className="w-12 h-12 rounded-full bg-yellow-100 dark:bg-yellow-900/40 flex items-center justify-center mx-auto mb-2">
-              <AlertTriangle className="w-6 h-6 text-yellow-600 dark:text-yellow-400" />
+            <div className="w-14 h-14 rounded-full bg-yellow-100 dark:bg-yellow-900/40 flex items-center justify-center mx-auto mb-3">
+              <AlertTriangle className="w-7 h-7 text-yellow-600 dark:text-yellow-400" />
             </div>
-            <DialogTitle className="text-center">Receipt Needs Review</DialogTitle>
-            <DialogDescription className="text-center">
+            <DialogTitle className="text-center text-xl">Receipt Needs Review</DialogTitle>
+            <DialogDescription className="text-center text-base">
               We found some issues with this receipt. You can still submit it, but it will be flagged for admin review.
             </DialogDescription>
           </DialogHeader>
 
-          {pendingValidation && (
+          {warningImage?.pendingValidation && (
             <div className="space-y-4">
               {/* Warnings */}
-              <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-3">
+              <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
                 <ul className="space-y-2">
-                  {pendingValidation.warnings.map((warning, index) => (
-                    <li key={index} className="flex items-start gap-2 text-sm text-yellow-700 dark:text-yellow-300">
-                      <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                  {warningImage.pendingValidation.warnings.map((warning, index) => (
+                    <li key={index} className="flex items-start gap-2 text-base text-yellow-700 dark:text-yellow-300">
+                      <AlertCircle className="w-5 h-5 mt-0.5 flex-shrink-0" />
                       <span>{warning}</span>
                     </li>
                   ))}
@@ -705,25 +877,32 @@ export default function UploadReceiptPage() {
               </div>
 
               {/* Detected Receipt Info */}
-              <div className="bg-muted/50 rounded-lg p-3">
-                <p className="text-xs text-muted-foreground mb-2">Detected Receipt Info:</p>
-                <div className="grid grid-cols-2 gap-2 text-sm">
-                  {pendingValidation.validationResult.amount && (
-                    <div className="flex items-center gap-1.5">
-                      <DollarSign className="w-4 h-4 text-muted-foreground" />
-                      <span className="font-medium">${pendingValidation.validationResult.amount.toFixed(2)}</span>
+              <div className="bg-muted/50 rounded-lg p-4">
+                <p className="text-sm text-muted-foreground mb-2">Detected Receipt Info:</p>
+                <div className="grid grid-cols-2 gap-3 text-base">
+                  {warningImage.pendingValidation.validationResult.amount && (
+                    <div className="flex items-center gap-2">
+                      <DollarSign className="w-5 h-5 text-muted-foreground" />
+                      <span className="font-medium">
+                        ${warningImage.pendingValidation.validationResult.amount.toFixed(2)}
+                      </span>
                     </div>
                   )}
-                  {pendingValidation.validationResult.extractedStoreName && (
-                    <div className="flex items-center gap-1.5">
-                      <Store className="w-4 h-4 text-muted-foreground" />
-                      <span>{pendingValidation.validationResult.extractedStoreName}</span>
+                  {warningImage.pendingValidation.validationResult.extractedStoreName && (
+                    <div className="flex items-center gap-2">
+                      <Store className="w-5 h-5 text-muted-foreground" />
+                      <span>{warningImage.pendingValidation.validationResult.extractedStoreName}</span>
                     </div>
                   )}
-                  {pendingValidation.validationResult.receiptDate && (
-                    <div className="flex items-center gap-1.5 col-span-2">
-                      <Calendar className="w-4 h-4 text-muted-foreground" />
-                      <span>{new Date(pendingValidation.validationResult.receiptDate).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}</span>
+                  {warningImage.pendingValidation.validationResult.receiptDate && (
+                    <div className="flex items-center gap-2 col-span-2">
+                      <Calendar className="w-5 h-5 text-muted-foreground" />
+                      <span>
+                        {new Date(warningImage.pendingValidation.validationResult.receiptDate).toLocaleDateString(
+                          "en-US",
+                          { month: "long", day: "numeric", year: "numeric" }
+                        )}
+                      </span>
                     </div>
                   )}
                 </div>
@@ -732,11 +911,11 @@ export default function UploadReceiptPage() {
           )}
 
           <DialogFooter className="sm:justify-center gap-2">
-            <Button variant="outline" onClick={handleCancelWarning}>
-              <RotateCcw className="w-4 h-4 mr-2" />
-              Cancel & Retake
+            <Button variant="outline" onClick={handleSkipWarning}>
+              <X className="w-4 h-4 mr-2" />
+              Skip This Receipt
             </Button>
-            <Button onClick={handleConfirmSubmit} className="bg-yellow-600 hover:bg-yellow-700 text-white">
+            <Button onClick={handleConfirmWarning} className="bg-yellow-600 hover:bg-yellow-700 text-white">
               <Upload className="w-4 h-4 mr-2" />
               Submit Anyway
             </Button>

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/db";
-import { receipts, grcs, members } from "@/db/schema";
+import { receipts, grcs, members, skippedReceipts } from "@/db/schema";
 import { eq, and } from "drizzle-orm";
 import { getSession } from "@/lib/auth";
 import { processReceipt } from "@/lib/veryfi";
@@ -100,35 +100,22 @@ export async function POST(request: NextRequest) {
 
     // 3. Parse request body
     const body = await request.json();
-    const { image, grcId, fileName, acknowledgeWarnings } = body as {
-      image: string;
+    const { image, grcId, fileName, acknowledgeWarnings, skippedReceiptId } = body as {
+      image?: string;
       grcId: string;
       fileName?: string;
       acknowledgeWarnings?: boolean;
+      skippedReceiptId?: string; // ID from skipped_receipts table
     };
 
-    if (!image || !grcId) {
+    if (!grcId) {
       return NextResponse.json(
-        { error: "Missing required fields: image and grcId" },
+        { error: "Missing required field: grcId" },
         { status: 400 }
       );
     }
 
-    // 4. Validate image format and size
-    const formatValidation = validateImageFormat(image);
-    if (!formatValidation.valid) {
-      return NextResponse.json(
-        { error: formatValidation.error },
-        { status: 400 }
-      );
-    }
-
-    const sizeValidation = validateImageSize(image);
-    if (!sizeValidation.valid) {
-      return NextResponse.json({ error: sizeValidation.error }, { status: 413 });
-    }
-
-    // 5. Validate GRC belongs to member and is active
+    // Validate GRC belongs to member and is active
     const [grc] = await db
       .select()
       .from(grcs)
@@ -149,17 +136,176 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 6. Upload image to permanent storage
+    // FLOW A: User is confirming a skipped receipt (acknowledging warnings)
+    if (acknowledgeWarnings && skippedReceiptId) {
+      // Get the skipped receipt
+      const [skipped] = await db
+        .select()
+        .from(skippedReceipts)
+        .where(
+          and(
+            eq(skippedReceipts.id, skippedReceiptId),
+            eq(skippedReceipts.memberId, member.id)
+          )
+        )
+        .limit(1);
+
+      if (!skipped) {
+        return NextResponse.json(
+          { error: "Skipped receipt not found. Please upload again." },
+          { status: 400 }
+        );
+      }
+
+      // Insert into receipts
+      const [receipt] = await db
+        .insert(receipts)
+        .values({
+          memberId: member.id,
+          grcId: grc.id,
+          imageUrl: skipped.imageUrl,
+          amount: skipped.amount,
+          receiptDate: skipped.receiptDate,
+          extractedStoreName: skipped.extractedStoreName,
+          storeMismatch: skipped.storeMismatch ?? false,
+          dateMismatch: skipped.dateMismatch ?? false,
+          memberOverride: true, // User acknowledged warnings
+          veryfiResponse: skipped.veryfiResponse,
+          status: "pending",
+        })
+        .returning();
+
+      // Delete from skipped_receipts
+      await db
+        .delete(skippedReceipts)
+        .where(eq(skippedReceipts.id, skippedReceiptId));
+
+      return NextResponse.json({
+        success: true,
+        receipt: {
+          id: receipt.id,
+          amount: skipped.amount ? parseFloat(skipped.amount) : null,
+          receiptDate: skipped.receiptDate?.toISOString() || null,
+          extractedStoreName: skipped.extractedStoreName,
+          storeMismatch: skipped.storeMismatch,
+          dateMismatch: skipped.dateMismatch,
+          status: "pending",
+        },
+      });
+    }
+
+    // FLOW B: Fresh upload - requires image
+    if (!image) {
+      return NextResponse.json(
+        { error: "Missing required field: image" },
+        { status: 400 }
+      );
+    }
+
+    // Validate image format and size
+    const formatValidation = validateImageFormat(image);
+    if (!formatValidation.valid) {
+      return NextResponse.json(
+        { error: formatValidation.error },
+        { status: 400 }
+      );
+    }
+
+    const sizeValidation = validateImageSize(image);
+    if (!sizeValidation.valid) {
+      return NextResponse.json({ error: sizeValidation.error }, { status: 413 });
+    }
+
+    // Upload image to permanent storage
     const imageUrl = await uploadReceiptImage(
       image,
       fileName || `receipt-${Date.now()}.jpg`
     );
 
-    // 7. Process receipt with Veryfi OCR
+    // Process receipt with Veryfi OCR
     const veryfiResult = await processReceipt(image, fileName);
 
-    // 8. Check for duplicate (Veryfi handles this)
-    if (veryfiResult.isDuplicate) {
+    // Check for duplicate - but allow if it's a retry from skipped_receipts
+    if (veryfiResult.isDuplicate && veryfiResult.duplicateOf) {
+      // Check if the duplicate_of document is in this member's skipped_receipts
+      const [skipped] = await db
+        .select()
+        .from(skippedReceipts)
+        .where(
+          and(
+            eq(skippedReceipts.veryfiDocumentId, veryfiResult.duplicateOf),
+            eq(skippedReceipts.memberId, member.id)
+          )
+        )
+        .limit(1);
+
+      if (skipped) {
+        // This is a retry! Use the cached data and return for confirmation
+        const hasWarnings = skipped.storeMismatch || skipped.dateMismatch;
+
+        if (hasWarnings) {
+          // Return for confirmation (user needs to acknowledge warnings again)
+          const warnings = buildWarningMessages(
+            skipped.storeMismatch ?? false,
+            skipped.dateMismatch ?? false,
+            grc.groceryStore,
+            skipped.extractedStoreName,
+            skipped.receiptDate
+          );
+
+          return NextResponse.json({
+            requiresConfirmation: true,
+            skippedReceiptId: skipped.id, // Pass ID for confirmation
+            validationResult: {
+              imageUrl: skipped.imageUrl,
+              amount: skipped.amount ? parseFloat(skipped.amount) : null,
+              receiptDate: skipped.receiptDate?.toISOString() || null,
+              extractedStoreName: skipped.extractedStoreName,
+              storeMismatch: skipped.storeMismatch,
+              dateMismatch: skipped.dateMismatch,
+            },
+            warnings,
+          });
+        } else {
+          // No warnings - just submit directly using cached data
+          const [receipt] = await db
+            .insert(receipts)
+            .values({
+              memberId: member.id,
+              grcId: grc.id,
+              imageUrl: skipped.imageUrl,
+              amount: skipped.amount,
+              receiptDate: skipped.receiptDate,
+              extractedStoreName: skipped.extractedStoreName,
+              storeMismatch: false,
+              dateMismatch: false,
+              memberOverride: false,
+              veryfiResponse: skipped.veryfiResponse,
+              status: "pending",
+            })
+            .returning();
+
+          // Delete from skipped_receipts
+          await db
+            .delete(skippedReceipts)
+            .where(eq(skippedReceipts.id, skipped.id));
+
+          return NextResponse.json({
+            success: true,
+            receipt: {
+              id: receipt.id,
+              amount: skipped.amount ? parseFloat(skipped.amount) : null,
+              receiptDate: skipped.receiptDate?.toISOString() || null,
+              extractedStoreName: skipped.extractedStoreName,
+              storeMismatch: false,
+              dateMismatch: false,
+              status: "pending",
+            },
+          });
+        }
+      }
+
+      // Not in skipped_receipts - real duplicate
       return NextResponse.json(
         {
           error: "This receipt has already been uploaded",
@@ -169,19 +315,19 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 9. Compare store names
+    // Compare store names
     const storeMatch = compareStoreNames(
       veryfiResult.vendorName,
       grc.groceryStore || ""
     );
     const storeMismatch = !storeMatch.isMatch;
 
-    // 10. Check for date mismatch (receipt not in current month)
+    // Check for date mismatch (receipt not in current month)
     const dateMismatch = checkDateMismatch(veryfiResult.date);
 
-    // 11. If there are warnings and user hasn't acknowledged, return validation response
+    // If there are warnings, save to skipped_receipts and return for confirmation
     const hasWarnings = storeMismatch || dateMismatch;
-    if (hasWarnings && !acknowledgeWarnings) {
+    if (hasWarnings) {
       const warnings = buildWarningMessages(
         storeMismatch,
         dateMismatch,
@@ -190,9 +336,28 @@ export async function POST(request: NextRequest) {
         veryfiResult.date
       );
 
+      // Save to skipped_receipts so user can retry or confirm later
+      const [skipped] = await db
+        .insert(skippedReceipts)
+        .values({
+          memberId: member.id,
+          grcId: grc.id,
+          veryfiDocumentId: veryfiResult.veryfiId,
+          imageUrl,
+          amount: veryfiResult.total?.toString() || null,
+          receiptDate: veryfiResult.date,
+          extractedStoreName: veryfiResult.vendorName,
+          storeMismatch,
+          dateMismatch,
+          veryfiResponse: veryfiResult.rawResponse,
+        })
+        .returning();
+
       return NextResponse.json({
         requiresConfirmation: true,
+        skippedReceiptId: skipped.id, // Pass ID for confirmation
         validationResult: {
+          imageUrl,
           amount: veryfiResult.total,
           receiptDate: veryfiResult.date?.toISOString() || null,
           extractedStoreName: veryfiResult.vendorName,
@@ -200,11 +365,10 @@ export async function POST(request: NextRequest) {
           dateMismatch,
         },
         warnings,
-        imageUrl, // Return so frontend doesn't need to re-upload
       });
     }
 
-    // 12. Insert receipt record
+    // No warnings - insert directly into receipts
     const [receipt] = await db
       .insert(receipts)
       .values({
@@ -214,15 +378,14 @@ export async function POST(request: NextRequest) {
         amount: veryfiResult.total?.toString(),
         receiptDate: veryfiResult.date,
         extractedStoreName: veryfiResult.vendorName,
-        storeMismatch,
-        dateMismatch,
-        memberOverride: hasWarnings, // True if warnings were acknowledged
+        storeMismatch: false,
+        dateMismatch: false,
+        memberOverride: false,
         veryfiResponse: veryfiResult.rawResponse,
         status: "pending",
       })
       .returning();
 
-    // 13. Return success response
     return NextResponse.json({
       success: true,
       receipt: {
@@ -230,15 +393,15 @@ export async function POST(request: NextRequest) {
         amount: veryfiResult.total,
         receiptDate: veryfiResult.date?.toISOString() || null,
         extractedStoreName: veryfiResult.vendorName,
-        storeMismatch,
-        dateMismatch,
+        storeMismatch: false,
+        dateMismatch: false,
         status: "pending",
       },
     });
   } catch (error) {
     console.error("Receipt upload error:", error);
 
-    // Handle specific Veryfi errors
+    // Handle specific errors
     if (error instanceof Error) {
       if (error.message.includes("authentication")) {
         return NextResponse.json(
@@ -252,6 +415,17 @@ export async function POST(request: NextRequest) {
       if (error.message.includes("Rate limit")) {
         return NextResponse.json({ error: error.message }, { status: 429 });
       }
+      if (error.message.includes("duplicate") || error.message.includes("already")) {
+        return NextResponse.json(
+          { error: "This receipt has already been uploaded" },
+          { status: 400 }
+        );
+      }
+      // Return the actual error message for debugging
+      return NextResponse.json(
+        { error: error.message || "Failed to process receipt" },
+        { status: 500 }
+      );
     }
 
     return NextResponse.json(

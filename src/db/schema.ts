@@ -294,6 +294,29 @@ export const sessions = pgTable("sessions", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+// Skipped receipts table - tracks Veryfi documents that were analyzed but not submitted
+// Used to handle "retry" scenarios where user uploads same receipt again
+// When duplicate detected, check if duplicate_of matches a skipped receipt for same member
+export const skippedReceipts = pgTable("skipped_receipts", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  memberId: uuid("member_id")
+    .notNull()
+    .references(() => members.id, { onDelete: "cascade" }),
+  grcId: uuid("grc_id")
+    .notNull()
+    .references(() => grcs.id, { onDelete: "cascade" }),
+  veryfiDocumentId: integer("veryfi_document_id").notNull(),
+  imageUrl: text("image_url").notNull(), // Blob URL for cleanup
+  // Cached Veryfi analysis results
+  amount: decimal("amount", { precision: 10, scale: 2 }),
+  receiptDate: timestamp("receipt_date"),
+  extractedStoreName: varchar("extracted_store_name", { length: 255 }),
+  storeMismatch: boolean("store_mismatch").default(false),
+  dateMismatch: boolean("date_mismatch").default(false),
+  veryfiResponse: jsonb("veryfi_response"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
 // Merchant invites table (for merchant onboarding)
 export const merchantInvites = pgTable("merchant_invites", {
   id: uuid("id").primaryKey().defaultRandom(),
