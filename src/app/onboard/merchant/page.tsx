@@ -29,6 +29,7 @@ import {
 } from "lucide-react";
 import { GooglePlacesAutocomplete, PlaceDetails } from "@/components/ui/google-places-autocomplete";
 import { formatPhoneNumber, stripPhoneNumber } from "@/lib/utils";
+import { AnimatedFoodBackground } from "@/components/animated-food-background";
 
 interface Category {
   id: string;
@@ -207,8 +208,9 @@ function MerchantOnboardingContent() {
   // Validating state
   if (step === "validating") {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-orange-50 to-white dark:from-background dark:to-background flex items-center justify-center p-4">
-        <div className="text-center">
+      <div className="relative min-h-screen flex items-center justify-center p-4">
+        <AnimatedFoodBackground />
+        <div className="relative z-10 text-center bg-white/90 dark:bg-card/95 backdrop-blur-sm rounded-2xl shadow-xl dark:border p-8">
           <Loader2 className="w-12 h-12 text-primary animate-spin mx-auto mb-4" />
           <h2 className="text-xl font-semibold">Validating your invitation...</h2>
         </div>
@@ -219,8 +221,9 @@ function MerchantOnboardingContent() {
   // Invalid token state
   if (step === "invalid") {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-orange-50 to-white dark:from-background dark:to-background flex items-center justify-center p-4">
-        <div className="max-w-md w-full bg-white dark:bg-card rounded-2xl shadow-lg dark:border p-8 text-center">
+      <div className="relative min-h-screen flex items-center justify-center p-4">
+        <AnimatedFoodBackground />
+        <div className="relative z-10 max-w-md w-full bg-white/90 dark:bg-card/95 backdrop-blur-sm rounded-2xl shadow-xl dark:border p-8 text-center">
           <div className="w-16 h-16 bg-red-100 dark:bg-red-900 rounded-full flex items-center justify-center mx-auto mb-4">
             <XCircle className="w-8 h-8 text-red-600 dark:text-red-400" />
           </div>
@@ -237,8 +240,9 @@ function MerchantOnboardingContent() {
   // Success state
   if (step === "success") {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-green-50 to-white dark:from-background dark:to-background flex items-center justify-center p-4">
-        <div className="max-w-md w-full bg-white dark:bg-card rounded-2xl shadow-lg dark:border p-8 text-center">
+      <div className="relative min-h-screen flex items-center justify-center p-4">
+        <AnimatedFoodBackground />
+        <div className="relative z-10 max-w-md w-full bg-white/90 dark:bg-card/95 backdrop-blur-sm rounded-2xl shadow-xl dark:border p-8 text-center">
           <div className="w-16 h-16 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center mx-auto mb-4">
             <CheckCircle2 className="w-8 h-8 text-green-600 dark:text-green-400" />
           </div>
@@ -268,8 +272,9 @@ function MerchantOnboardingContent() {
 
   // Form state
   return (
-    <div className="min-h-screen bg-gradient-to-b from-orange-50 to-white dark:from-background dark:to-background py-8 px-4">
-      <div className="max-w-xl mx-auto">
+    <div className="relative min-h-screen py-8 px-4">
+      <AnimatedFoodBackground />
+      <div className="relative z-10 max-w-xl mx-auto">
         {/* Header */}
         <div className="text-center mb-8">
           <Image
@@ -280,11 +285,11 @@ function MerchantOnboardingContent() {
             priority
             className="mx-auto mb-4"
           />
-          <h2 className="text-xl font-semibold">Become a Merchant Partner</h2>
+          <h2 className="text-xl font-semibold text-white dark:text-foreground">Become a Merchant Partner</h2>
         </div>
 
         {/* Trial GRCs Banner */}
-        <div className="bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 rounded-xl p-4 mb-6">
+        <div className="bg-green-50/95 dark:bg-green-950/95 backdrop-blur-sm border border-green-200 dark:border-green-800 rounded-xl p-4 mb-6">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center shrink-0">
               <Gift className="w-5 h-5 text-green-600 dark:text-green-400" />
@@ -299,7 +304,7 @@ function MerchantOnboardingContent() {
         </div>
 
         {/* Form */}
-        <div className="bg-white dark:bg-card rounded-2xl shadow-lg dark:border p-6 sm:p-8">
+        <div className="bg-white/90 dark:bg-card/95 backdrop-blur-sm rounded-2xl shadow-xl dark:border p-6 sm:p-8">
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Google Places Search */}
             <div>
@@ -478,8 +483,9 @@ export default function MerchantOnboardingPage() {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen bg-gradient-to-b from-orange-50 to-white dark:from-background dark:to-background flex items-center justify-center p-4">
-          <div className="text-center">
+        <div className="relative min-h-screen flex items-center justify-center p-4">
+          <AnimatedFoodBackground />
+          <div className="relative z-10 text-center bg-white/90 dark:bg-card/95 backdrop-blur-sm rounded-2xl shadow-xl dark:border p-8">
             <Loader2 className="w-12 h-12 text-primary animate-spin mx-auto mb-4" />
             <h2 className="text-xl font-semibold">Loading...</h2>
           </div>

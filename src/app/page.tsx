@@ -15,7 +15,7 @@ export default function Home() {
       <AnimatedFoodBackground />
 
       <main className="relative z-10 flex flex-1 flex-col items-center justify-center px-4">
-        <div className="rounded-2xl bg-white/90 backdrop-blur-sm p-8 md:p-12 shadow-xl">
+        <div className="rounded-2xl bg-white/90 dark:bg-card/95 backdrop-blur-sm p-8 md:p-12 shadow-xl dark:border">
           <Image
             src="/images/logo-horizontal.png"
             alt="Local City Places"
