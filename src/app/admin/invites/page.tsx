@@ -314,9 +314,9 @@ export default function AdminInvitesPage() {
                       <span
                         className={cn(
                           "text-xs px-2.5 py-1 rounded-full font-medium shrink-0",
-                          invite.status === "pending" && "bg-yellow-100 text-yellow-800",
-                          invite.status === "used" && "bg-green-100 text-green-800",
-                          invite.status === "expired" && "bg-gray-100 text-gray-800"
+                          invite.status === "pending" && "bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200",
+                          invite.status === "used" && "bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200",
+                          invite.status === "expired" && "bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200"
                         )}
                       >
                         {invite.status}
@@ -325,7 +325,7 @@ export default function AdminInvitesPage() {
                     <div className="text-sm text-muted-foreground mb-2">
                       <p>Created: {formatDate(invite.createdAt)}</p>
                       {invite.status === "pending" && (
-                        <p className="text-orange-600">{getExpiryText(invite.expiresAt)}</p>
+                        <p className="text-orange-600 dark:text-orange-400">{getExpiryText(invite.expiresAt)}</p>
                       )}
                       {invite.usedAt && <p>Used: {formatDate(invite.usedAt)}</p>}
                     </div>
@@ -407,7 +407,7 @@ export default function AdminInvitesPage() {
                       </td>
                       <td className="px-4 py-3 text-sm">
                         {invite.status === "pending" ? (
-                          <span className="text-orange-600">{getExpiryText(invite.expiresAt)}</span>
+                          <span className="text-orange-600 dark:text-orange-400">{getExpiryText(invite.expiresAt)}</span>
                         ) : invite.usedAt ? (
                           <span className="text-muted-foreground">
                             Used {formatDate(invite.usedAt)}
@@ -422,9 +422,9 @@ export default function AdminInvitesPage() {
                         <span
                           className={cn(
                             "text-xs px-2 py-1 rounded-full font-medium",
-                            invite.status === "pending" && "bg-yellow-100 text-yellow-800",
-                            invite.status === "used" && "bg-green-100 text-green-800",
-                            invite.status === "expired" && "bg-gray-100 text-gray-800"
+                            invite.status === "pending" && "bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200",
+                            invite.status === "used" && "bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200",
+                            invite.status === "expired" && "bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200"
                           )}
                         >
                           {invite.status}

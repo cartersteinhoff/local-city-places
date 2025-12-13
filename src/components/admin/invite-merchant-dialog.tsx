@@ -22,6 +22,8 @@ import {
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Link as LinkIcon, UserPlus, Copy, Check, Mail, Loader2 } from "lucide-react";
+import { GooglePlacesAutocomplete, PlaceDetails } from "@/components/ui/google-places-autocomplete";
+import { formatPhoneNumber, stripPhoneNumber } from "@/lib/utils";
 
 interface Category {
   id: string;
@@ -53,11 +55,13 @@ export function InviteMerchantDialog({
   // Create Directly tab state
   const [directEmail, setDirectEmail] = useState("");
   const [businessName, setBusinessName] = useState("");
-  const [city, setCity] = useState("");
+  const [cityState, setCityState] = useState(""); // Combined "City, ST"
   const [categoryId, setCategoryId] = useState("");
   const [phone, setPhone] = useState("");
   const [website, setWebsite] = useState("");
   const [description, setDescription] = useState("");
+  const [googlePlaceId, setGooglePlaceId] = useState("");
+  const [googlePlaceName, setGooglePlaceName] = useState("");
   const [sendWelcomeEmail, setSendWelcomeEmail] = useState(true);
   const [isCreating, setIsCreating] = useState(false);
   const [createError, setCreateError] = useState("");
@@ -79,11 +83,13 @@ export function InviteMerchantDialog({
 
       setDirectEmail("");
       setBusinessName("");
-      setCity("");
+      setCityState("");
       setCategoryId("");
       setPhone("");
       setWebsite("");
       setDescription("");
+      setGooglePlaceId("");
+      setGooglePlaceName("");
       setSendWelcomeEmail(true);
       setCreateError("");
       setCreateSuccess(false);
@@ -150,12 +156,42 @@ export function InviteMerchantDialog({
     setTimeout(() => setLinkCopied(false), 2000);
   };
 
+  // Parse cityState into separate city and state values
+  const parseCityState = (value: string): { city: string; state: string } => {
+    const parts = value.split(",").map(p => p.trim());
+    if (parts.length >= 2) {
+      const state = parts[parts.length - 1].toUpperCase().slice(0, 2);
+      const city = parts.slice(0, -1).join(", ");
+      return { city, state };
+    }
+    return { city: value.trim(), state: "" };
+  };
+
+  const handleGooglePlaceSelect = (name: string, placeId: string, details?: PlaceDetails) => {
+    setGooglePlaceName(name);
+    setGooglePlaceId(placeId);
+
+    if (details) {
+      if (details.name) setBusinessName(details.name);
+      if (details.city || details.state) {
+        const parts = [details.city, details.state].filter(Boolean);
+        setCityState(parts.join(", "));
+      }
+      if (details.phone) setPhone(formatPhoneNumber(details.phone));
+      if (details.website) setWebsite(details.website);
+    } else if (name && !businessName) {
+      const mainName = name.split(",")[0];
+      setBusinessName(mainName);
+    }
+  };
+
   const handleCreateDirectly = async () => {
     setIsCreating(true);
     setCreateError("");
     setCreateSuccess(false);
 
     try {
+      const { city, state } = parseCityState(cityState);
       const res = await fetch("/api/admin/merchants", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -163,10 +199,12 @@ export function InviteMerchantDialog({
           email: directEmail,
           businessName,
           city: city || undefined,
+          state: state || undefined,
           categoryId: categoryId || undefined,
-          phone: phone || undefined,
+          phone: stripPhoneNumber(phone) || undefined,
           website: website || undefined,
           description: description || undefined,
+          googlePlaceId: googlePlaceId || undefined,
           sendWelcomeEmail,
         }),
       });
@@ -262,7 +300,7 @@ export function InviteMerchantDialog({
                 )}
 
                 {linkError && (
-                  <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-red-700 text-sm">
+                  <div className="bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800 rounded-lg p-3 text-red-700 dark:text-red-300 text-sm">
                     {linkError}
                   </div>
                 )}
@@ -288,12 +326,12 @@ export function InviteMerchantDialog({
               </>
             ) : (
               <>
-                <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                  <div className="flex items-center gap-2 text-green-800 font-medium mb-2">
+                <div className="bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 rounded-lg p-4">
+                  <div className="flex items-center gap-2 text-green-800 dark:text-green-200 font-medium mb-2">
                     <Check className="w-5 h-5" />
                     Invite link generated!
                   </div>
-                  <div className="bg-white border rounded-md p-3 font-mono text-sm break-all">
+                  <div className="bg-white dark:bg-muted border rounded-md p-3 font-mono text-sm break-all">
                     {generatedLink}
                   </div>
                 </div>
@@ -322,12 +360,12 @@ export function InviteMerchantDialog({
 
           <TabsContent value="direct" className="space-y-4 mt-4">
             {createSuccess ? (
-              <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                <div className="flex items-center gap-2 text-green-800 font-medium">
+              <div className="bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 rounded-lg p-4">
+                <div className="flex items-center gap-2 text-green-800 dark:text-green-200 font-medium">
                   <Check className="w-5 h-5" />
                   Merchant created successfully!
                 </div>
-                <p className="text-green-700 text-sm mt-1">
+                <p className="text-green-700 dark:text-green-300 text-sm mt-1">
                   {sendWelcomeEmail
                     ? "A welcome email with login instructions has been sent."
                     : "The merchant can log in using their email."}
@@ -335,79 +373,96 @@ export function InviteMerchantDialog({
               </div>
             ) : (
               <>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="col-span-2">
-                    <Label htmlFor="direct-email">Email *</Label>
-                    <Input
-                      id="direct-email"
-                      type="email"
-                      placeholder="merchant@example.com"
-                      value={directEmail}
-                      onChange={(e) => setDirectEmail(e.target.value)}
-                      required
+                <div className="space-y-4">
+                  {/* Google Places Search */}
+                  <div>
+                    <Label>Search Business (optional)</Label>
+                    <GooglePlacesAutocomplete
+                      value={googlePlaceName}
+                      onChange={handleGooglePlaceSelect}
+                      placeholder="Search by business name..."
+                      types={["establishment"]}
+                      fetchDetails={true}
                     />
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Auto-fills details from Google
+                    </p>
                   </div>
 
-                  <div className="col-span-2">
-                    <Label htmlFor="business-name">Business Name *</Label>
-                    <Input
-                      id="business-name"
-                      placeholder="Acme Coffee Shop"
-                      value={businessName}
-                      onChange={(e) => setBusinessName(e.target.value)}
-                      required
-                    />
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="col-span-2">
+                      <Label htmlFor="direct-email">Email *</Label>
+                      <Input
+                        id="direct-email"
+                        type="email"
+                        placeholder="merchant@example.com"
+                        value={directEmail}
+                        onChange={(e) => setDirectEmail(e.target.value)}
+                        required
+                      />
+                    </div>
+
+                    <div className="col-span-2">
+                      <Label htmlFor="business-name">Business Name *</Label>
+                      <Input
+                        id="business-name"
+                        placeholder="Acme Coffee Shop"
+                        value={businessName}
+                        onChange={(e) => setBusinessName(e.target.value)}
+                        required
+                      />
+                    </div>
+
+                    <div>
+                      <Label htmlFor="cityState">City, State</Label>
+                      <Input
+                        id="cityState"
+                        placeholder="City, State"
+                        value={cityState}
+                        onChange={(e) => setCityState(e.target.value)}
+                      />
+                    </div>
+
+                    <div>
+                      <Label htmlFor="category">Category</Label>
+                      <Select value={categoryId} onValueChange={setCategoryId}>
+                        <SelectTrigger id="category" className="w-full">
+                          <SelectValue placeholder="Select category" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {categories.map((cat) => (
+                            <SelectItem key={cat.id} value={cat.id}>
+                              {cat.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div>
+                      <Label htmlFor="phone">Phone</Label>
+                      <Input
+                        id="phone"
+                        type="tel"
+                        placeholder="(425) 451-8599"
+                        value={phone}
+                        onChange={(e) => setPhone(formatPhoneNumber(e.target.value))}
+                      />
+                    </div>
+
+                    <div>
+                      <Label htmlFor="website">Website</Label>
+                      <Input
+                        id="website"
+                        type="url"
+                        placeholder="https://..."
+                        value={website}
+                        onChange={(e) => setWebsite(e.target.value)}
+                      />
+                    </div>
                   </div>
 
                   <div>
-                    <Label htmlFor="city">City</Label>
-                    <Input
-                      id="city"
-                      placeholder="Denver"
-                      value={city}
-                      onChange={(e) => setCity(e.target.value)}
-                    />
-                  </div>
-
-                  <div>
-                    <Label htmlFor="category">Category</Label>
-                    <Select value={categoryId} onValueChange={setCategoryId}>
-                      <SelectTrigger id="category">
-                        <SelectValue placeholder="Select category" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {categories.map((cat) => (
-                          <SelectItem key={cat.id} value={cat.id}>
-                            {cat.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div>
-                    <Label htmlFor="phone">Phone</Label>
-                    <Input
-                      id="phone"
-                      type="tel"
-                      placeholder="(555) 123-4567"
-                      value={phone}
-                      onChange={(e) => setPhone(e.target.value)}
-                    />
-                  </div>
-
-                  <div>
-                    <Label htmlFor="website">Website</Label>
-                    <Input
-                      id="website"
-                      type="url"
-                      placeholder="https://..."
-                      value={website}
-                      onChange={(e) => setWebsite(e.target.value)}
-                    />
-                  </div>
-
-                  <div className="col-span-2">
                     <Label htmlFor="description">Description</Label>
                     <Textarea
                       id="description"
@@ -433,7 +488,7 @@ export function InviteMerchantDialog({
                 </div>
 
                 {createError && (
-                  <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-red-700 text-sm">
+                  <div className="bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800 rounded-lg p-3 text-red-700 dark:text-red-300 text-sm">
                     {createError}
                   </div>
                 )}

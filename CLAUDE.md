@@ -63,6 +63,85 @@ Use `space-y-4` on the form or parent container for consistent vertical spacing 
 ### Required Fields
 Mark required fields with `*` in the label text, not with a separate indicator.
 
+### City/State Fields
+
+**Always combine city and state into a single UI field** displayed as "City, State" (e.g., "Denver, CO").
+
+- **UI**: Single input with label "City, State" and placeholder "City, State"
+- **Database**: Store separately as `city` (varchar 100) and `state` (varchar 2, uppercase state code)
+- **Google Places**: Auto-fills combined field when business selected
+
+```tsx
+// State
+const [cityState, setCityState] = useState("");
+
+// Parse helper
+function parseCityState(value: string): { city: string; state: string } {
+  const parts = value.split(",").map(p => p.trim());
+  if (parts.length >= 2) {
+    const state = parts[parts.length - 1].toUpperCase().slice(0, 2);
+    const city = parts.slice(0, -1).join(", ");
+    return { city, state };
+  }
+  return { city: value.trim(), state: "" };
+}
+
+// On submit
+const { city, state } = parseCityState(cityState);
+
+// Google Places callback - combine city + state
+if (details.city || details.state) {
+  setCityState([details.city, details.state].filter(Boolean).join(", "));
+}
+
+// Loading from API - combine for display
+const parts = [data.city, data.state].filter(Boolean);
+setCityState(parts.join(", "));
+```
+
+```tsx
+// UI Component
+<div>
+  <Label htmlFor="cityState">City, State</Label>
+  <Input
+    id="cityState"
+    placeholder="City, State"
+    value={cityState}
+    onChange={(e) => setCityState(e.target.value)}
+  />
+</div>
+```
+
+### Phone Number Fields
+
+**Always format phone numbers as `(XXX) XXX-XXXX` in the UI** but store as digits only (`XXXXXXXXXX`) in the database.
+
+- **UI Format**: `(425) 451-8599`
+- **Database Storage**: `4254518599`
+- **Placeholder**: `(425) 451-8599`
+
+```tsx
+import { formatPhoneNumber, stripPhoneNumber } from "@/lib/utils";
+
+// On input change - format for display
+<Input
+  type="tel"
+  value={phone}
+  onChange={(e) => setPhone(formatPhoneNumber(e.target.value))}
+  placeholder="(425) 451-8599"
+/>
+
+// Loading from API - format for display
+setPhone(formatPhoneNumber(data.phone || ""));
+
+// On submit - strip to digits for database
+phone: stripPhoneNumber(phone) || null
+```
+
+The utilities in `/src/lib/utils.ts`:
+- `formatPhoneNumber(value)` - Formats as `(XXX) XXX-XXXX`, handles partial input
+- `stripPhoneNumber(value)` - Returns digits only, max 10 chars
+
 ---
 
 ## Preventing Layout Shift (CLS)

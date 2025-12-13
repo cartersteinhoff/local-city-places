@@ -22,11 +22,13 @@ export async function POST(request: NextRequest) {
       email,
       businessName,
       city,
+      state,
       categoryId,
       phone,
       website,
       description,
       logoUrl,
+      googlePlaceId,
       sendWelcomeEmail = true,
     } = body;
 
@@ -52,11 +54,13 @@ export async function POST(request: NextRequest) {
       email,
       businessName,
       city,
+      state,
       categoryId,
       phone,
       website,
       description,
       logoUrl,
+      googlePlaceId,
       createdBy: session.user.id,
     });
 

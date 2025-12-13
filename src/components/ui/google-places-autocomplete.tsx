@@ -5,12 +5,23 @@ import { Search, MapPin, Loader2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 
+export interface PlaceDetails {
+  name: string;
+  placeId: string;
+  formattedAddress?: string;
+  city?: string;
+  state?: string;
+  phone?: string;
+  website?: string;
+}
+
 interface GooglePlacesAutocompleteProps {
   value: string;
-  onChange: (name: string, placeId: string) => void;
+  onChange: (name: string, placeId: string, details?: PlaceDetails) => void;
   placeholder?: string;
   error?: string;
   types?: string[];
+  fetchDetails?: boolean;
 }
 
 interface PlacePrediction {
@@ -36,6 +47,7 @@ export function GooglePlacesAutocomplete({
   placeholder = "Search for a store...",
   error,
   types = ["grocery_or_supermarket", "supermarket"],
+  fetchDetails = false,
 }: GooglePlacesAutocompleteProps) {
   const [inputValue, setInputValue] = useState(value);
   const [predictions, setPredictions] = useState<PlacePrediction[]>([]);
@@ -43,7 +55,9 @@ export function GooglePlacesAutocomplete({
   const [isLoading, setIsLoading] = useState(false);
   const [isScriptLoaded, setIsScriptLoaded] = useState(false);
   const autocompleteService = useRef<any>(null);
+  const placesService = useRef<any>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const dummyDiv = useRef<HTMLDivElement | null>(null);
   const debounceRef = useRef<NodeJS.Timeout | null>(null);
 
   // Load Google Places script
@@ -54,27 +68,33 @@ export function GooglePlacesAutocomplete({
       return;
     }
 
-    // Check if already loaded
-    if (window.google?.maps?.places) {
+    // Create dummy div for PlacesService (required by Google API)
+    if (!dummyDiv.current) {
+      dummyDiv.current = document.createElement("div");
+    }
+
+    const initServices = () => {
       setIsScriptLoaded(true);
       autocompleteService.current = new window.google.maps.places.AutocompleteService();
+      if (dummyDiv.current) {
+        placesService.current = new window.google.maps.places.PlacesService(dummyDiv.current);
+      }
+    };
+
+    // Check if already loaded
+    if (window.google?.maps?.places) {
+      initServices();
       return;
     }
 
     // Check if script is already being loaded
     if (document.querySelector('script[src*="maps.googleapis.com"]')) {
-      window.initGooglePlaces = () => {
-        setIsScriptLoaded(true);
-        autocompleteService.current = new window.google.maps.places.AutocompleteService();
-      };
+      window.initGooglePlaces = initServices;
       return;
     }
 
     // Load script
-    window.initGooglePlaces = () => {
-      setIsScriptLoaded(true);
-      autocompleteService.current = new window.google.maps.places.AutocompleteService();
-    };
+    window.initGooglePlaces = initServices;
 
     const script = document.createElement("script");
     script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places&callback=initGooglePlaces`;
@@ -154,9 +174,51 @@ export function GooglePlacesAutocomplete({
 
   const handleSelect = (prediction: PlacePrediction) => {
     setInputValue(prediction.structured_formatting.main_text);
-    onChange(prediction.description, prediction.place_id);
     setIsOpen(false);
     setPredictions([]);
+
+    if (fetchDetails && placesService.current) {
+      setIsLoading(true);
+      placesService.current.getDetails(
+        {
+          placeId: prediction.place_id,
+          fields: ["name", "formatted_address", "address_components", "formatted_phone_number", "website"],
+        },
+        (place: any, status: string) => {
+          setIsLoading(false);
+          if (status === "OK" && place) {
+            // Extract city and state from address components
+            let city = "";
+            let state = "";
+            if (place.address_components) {
+              for (const component of place.address_components) {
+                if (component.types.includes("locality")) {
+                  city = component.long_name;
+                }
+                if (component.types.includes("administrative_area_level_1")) {
+                  state = component.short_name;
+                }
+              }
+            }
+
+            const details: PlaceDetails = {
+              name: place.name || prediction.structured_formatting.main_text,
+              placeId: prediction.place_id,
+              formattedAddress: place.formatted_address,
+              city,
+              state,
+              phone: place.formatted_phone_number,
+              website: place.website,
+            };
+            onChange(prediction.description, prediction.place_id, details);
+          } else {
+            onChange(prediction.description, prediction.place_id);
+          }
+        }
+      );
+    } else {
+      onChange(prediction.description, prediction.place_id);
+    }
   };
 
   return (

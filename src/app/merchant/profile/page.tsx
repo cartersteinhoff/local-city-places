@@ -22,6 +22,8 @@ import { Badge } from "@/components/ui/badge";
 import { Camera, Loader2, Save, Building2, CheckCircle, CreditCard, Lock, Upload, FileCheck, X } from "lucide-react";
 import { merchantNavItems } from "../nav";
 import { useUser } from "@/hooks/use-user";
+import { GooglePlacesAutocomplete, PlaceDetails } from "@/components/ui/google-places-autocomplete";
+import { formatPhoneNumber, stripPhoneNumber } from "@/lib/utils";
 
 interface Category {
   id: string;
@@ -40,10 +42,12 @@ interface ProfileData {
   categoryId: string | null;
   categoryName: string | null;
   city: string | null;
+  state: string | null;
   logoUrl: string | null;
   description: string | null;
   phone: string | null;
   website: string | null;
+  googlePlaceId: string | null;
   verified: boolean;
   bankAccount: {
     bankName: string | null;
@@ -77,6 +81,8 @@ export default function MerchantProfilePage() {
   const [checkImagePreview, setCheckImagePreview] = useState<string | null>(null);
   const [checkImageUrl, setCheckImageUrl] = useState<string | null>(null);
   const [isUploadingCheck, setIsUploadingCheck] = useState(false);
+  const [googlePlaceName, setGooglePlaceName] = useState("");
+  const [cityState, setCityState] = useState("");
 
   // Redirect if not authenticated
   useEffect(() => {
@@ -96,8 +102,15 @@ export default function MerchantProfilePage() {
       const response = await fetch("/api/merchant/profile");
       if (!response.ok) throw new Error("Failed to fetch profile");
       const data = await response.json();
+      // Format phone for display
+      if (data.profile.phone) {
+        data.profile.phone = formatPhoneNumber(data.profile.phone);
+      }
       setProfile(data.profile);
       setCategories(data.categories);
+      // Initialize cityState from profile
+      const parts = [data.profile.city, data.profile.state].filter(Boolean);
+      setCityState(parts.join(", "));
       // Initialize bank account fields if exists
       if (data.profile.bankAccount) {
         setBankAccountName(data.profile.bankAccount.accountHolderName || "");
@@ -111,6 +124,17 @@ export default function MerchantProfilePage() {
     }
   }
 
+  // Parse cityState into separate city and state values
+  function parseCityState(value: string): { city: string; state: string } {
+    const parts = value.split(",").map(p => p.trim());
+    if (parts.length >= 2) {
+      const state = parts[parts.length - 1].toUpperCase().slice(0, 2);
+      const city = parts.slice(0, -1).join(", ");
+      return { city, state };
+    }
+    return { city: value.trim(), state: "" };
+  }
+
   async function handleSave() {
     if (!profile) return;
 
@@ -118,13 +142,16 @@ export default function MerchantProfilePage() {
     setMessage(null);
 
     try {
+      const { city, state } = parseCityState(cityState);
       const payload: Record<string, unknown> = {
         businessName: profile.businessName,
         categoryId: profile.categoryId,
-        city: profile.city,
+        city,
+        state,
         description: profile.description,
-        phone: profile.phone,
+        phone: stripPhoneNumber(profile.phone || ""),
         website: profile.website,
+        googlePlaceId: profile.googlePlaceId,
         notificationPrefs: profile.notificationPrefs,
       };
 
@@ -238,6 +265,24 @@ export default function MerchantProfilePage() {
     const reader = new FileReader();
     reader.onload = () => setPendingLogo(reader.result as string);
     reader.readAsDataURL(file);
+  }
+
+  function handleGooglePlaceSelect(name: string, placeId: string, details?: PlaceDetails) {
+    setGooglePlaceName(name);
+    if (details) {
+      // Update cityState combined field
+      if (details.city || details.state) {
+        const parts = [details.city, details.state].filter(Boolean);
+        setCityState(parts.join(", "));
+      }
+      setProfile((prev) => prev ? {
+        ...prev,
+        businessName: details.name || prev.businessName,
+        phone: details.phone ? formatPhoneNumber(details.phone) : prev.phone,
+        website: details.website || prev.website,
+        googlePlaceId: placeId || prev.googlePlaceId,
+      } : null);
+    }
   }
 
   async function handleCheckImageSelect(e: React.ChangeEvent<HTMLInputElement>) {
@@ -427,6 +472,21 @@ export default function MerchantProfilePage() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
+              {/* Google Places Search */}
+              <div className="space-y-2">
+                <Label>Update from Google (optional)</Label>
+                <GooglePlacesAutocomplete
+                  value={googlePlaceName}
+                  onChange={handleGooglePlaceSelect}
+                  placeholder="Search to auto-fill business details..."
+                  types={["establishment"]}
+                  fetchDetails={true}
+                />
+                <p className="text-xs text-muted-foreground">
+                  Search to auto-fill details from Google
+                </p>
+              </div>
+
               <div className="space-y-2">
                 <Label htmlFor="businessName">Business Name</Label>
                 <Input
@@ -437,6 +497,15 @@ export default function MerchantProfilePage() {
               </div>
 
               <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="cityState">City, State</Label>
+                  <Input
+                    id="cityState"
+                    value={cityState}
+                    onChange={(e) => setCityState(e.target.value)}
+                    placeholder="City, State"
+                  />
+                </div>
                 <div className="space-y-2">
                   <Label htmlFor="category">Category</Label>
                   <Select
@@ -454,14 +523,6 @@ export default function MerchantProfilePage() {
                       ))}
                     </SelectContent>
                   </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="city">City</Label>
-                  <Input
-                    id="city"
-                    value={profile?.city || ""}
-                    onChange={(e) => updateField("city", e.target.value)}
-                  />
                 </div>
               </div>
 
@@ -483,8 +544,8 @@ export default function MerchantProfilePage() {
                     id="phone"
                     type="tel"
                     value={profile?.phone || ""}
-                    onChange={(e) => updateField("phone", e.target.value)}
-                    placeholder="(555) 123-4567"
+                    onChange={(e) => updateField("phone", formatPhoneNumber(e.target.value))}
+                    placeholder="(425) 451-8599"
                   />
                 </div>
                 <div className="space-y-2">

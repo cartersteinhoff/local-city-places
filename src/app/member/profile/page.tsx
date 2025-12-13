@@ -13,6 +13,7 @@ import { Separator } from "@/components/ui/separator";
 import { Camera, Loader2, Save, User } from "lucide-react";
 import { memberNavItems } from "../nav";
 import { useUser } from "@/hooks/use-user";
+import { formatPhoneNumber, stripPhoneNumber } from "@/lib/utils";
 
 interface ProfileData {
   email: string;
@@ -59,6 +60,10 @@ export default function MemberProfilePage() {
       const response = await fetch("/api/member/profile");
       if (!response.ok) throw new Error("Failed to fetch profile");
       const data = await response.json();
+      // Format phone number for display
+      if (data.profile.phone) {
+        data.profile.phone = formatPhoneNumber(data.profile.phone);
+      }
       setProfile(data.profile);
     } catch (error) {
       console.error("Error fetching profile:", error);
@@ -78,7 +83,7 @@ export default function MemberProfilePage() {
       const payload: Record<string, unknown> = {
         firstName: profile.firstName,
         lastName: profile.lastName,
-        phone: profile.phone,
+        phone: stripPhoneNumber(profile.phone || ""),
         address: profile.address,
         city: profile.city,
         state: profile.state,
@@ -275,8 +280,8 @@ export default function MemberProfilePage() {
                   id="phone"
                   type="tel"
                   value={profile.phone || ""}
-                  onChange={(e) => updateField("phone", e.target.value)}
-                  placeholder="(555) 123-4567"
+                  onChange={(e) => updateField("phone", formatPhoneNumber(e.target.value))}
+                  placeholder="(425) 451-8599"
                 />
               </div>
             </CardContent>

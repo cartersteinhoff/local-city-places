@@ -8,6 +8,7 @@ export interface CreateMerchantOptions {
   email: string;
   businessName: string;
   city?: string;
+  state?: string;
   categoryId?: string;
   phone?: string;
   website?: string;
@@ -105,11 +106,13 @@ export async function createMerchantWithTrialGrcs(
       userId: newUser.id,
       businessName: options.businessName,
       city: options.city,
+      state: options.state,
       categoryId: options.categoryId,
       phone: options.phone,
       website: options.website,
       description: options.description,
       logoUrl: options.logoUrl,
+      googlePlaceId: options.googlePlaceId,
       verified: false,
     })
     .returning();

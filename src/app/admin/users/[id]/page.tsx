@@ -31,6 +31,7 @@ import {
   Mail,
 } from "lucide-react";
 import { useUser } from "@/hooks/use-user";
+import { formatPhoneNumber, stripPhoneNumber } from "@/lib/utils";
 
 const adminNavItems = [
   { label: "Dashboard", href: "/admin", icon: LayoutDashboard },
@@ -136,10 +137,10 @@ export default function AdminUserEditPage() {
       setMember(data.member || null);
       setMerchant(data.merchant || null);
 
-      // Initialize form data
+      // Initialize form data (format phone numbers for display)
       setFormData({
         email: data.user.email || "",
-        phone: data.user.phone || "",
+        phone: formatPhoneNumber(data.user.phone || ""),
         role: data.user.role || "member",
         firstName: data.member?.firstName || "",
         lastName: data.member?.lastName || "",
@@ -150,7 +151,7 @@ export default function AdminUserEditPage() {
         homeCity: data.member?.homeCity || "",
         businessName: data.merchant?.businessName || "",
         merchantCity: data.merchant?.city || "",
-        merchantPhone: data.merchant?.phone || "",
+        merchantPhone: formatPhoneNumber(data.merchant?.phone || ""),
         website: data.merchant?.website || "",
         description: data.merchant?.description || "",
         verified: data.merchant?.verified || false,
@@ -175,7 +176,7 @@ export default function AdminUserEditPage() {
         body: JSON.stringify({
           user: {
             email: formData.email,
-            phone: formData.phone || null,
+            phone: stripPhoneNumber(formData.phone) || null,
             role: formData.role,
           },
           member: member ? {
@@ -190,7 +191,7 @@ export default function AdminUserEditPage() {
           merchant: merchant ? {
             businessName: formData.businessName,
             city: formData.merchantCity || null,
-            phone: formData.merchantPhone || null,
+            phone: stripPhoneNumber(formData.merchantPhone) || null,
             website: formData.website || null,
             description: formData.description || null,
             verified: formData.verified,
@@ -291,8 +292,8 @@ export default function AdminUserEditPage() {
                       id="phone"
                       type="tel"
                       value={formData.phone}
-                      onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                      placeholder="(555) 555-5555"
+                      onChange={(e) => setFormData({ ...formData, phone: formatPhoneNumber(e.target.value) })}
+                      placeholder="(425) 451-8599"
                     />
                   </div>
                 </div>
@@ -434,7 +435,8 @@ export default function AdminUserEditPage() {
                         id="merchantPhone"
                         type="tel"
                         value={formData.merchantPhone}
-                        onChange={(e) => setFormData({ ...formData, merchantPhone: e.target.value })}
+                        onChange={(e) => setFormData({ ...formData, merchantPhone: formatPhoneNumber(e.target.value) })}
+                        placeholder="(425) 451-8599"
                       />
                     </div>
                     <div className="space-y-2">

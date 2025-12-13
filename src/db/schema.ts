@@ -75,10 +75,12 @@ export const merchants = pgTable("merchants", {
   businessName: varchar("business_name", { length: 255 }).notNull(),
   categoryId: uuid("category_id").references(() => categories.id),
   city: varchar("city", { length: 100 }),
+  state: varchar("state", { length: 2 }), // 2-letter state code (e.g., "CO", "CA")
   logoUrl: text("logo_url"),
   description: text("description"),
   phone: varchar("phone", { length: 20 }),
   website: varchar("website", { length: 255 }),
+  googlePlaceId: varchar("google_place_id", { length: 255 }), // For Google Places integration
   verified: boolean("verified").default(false).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });

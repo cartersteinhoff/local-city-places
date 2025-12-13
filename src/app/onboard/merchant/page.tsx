@@ -2,6 +2,7 @@
 
 import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -26,7 +27,8 @@ import {
   ArrowRight,
   Gift,
 } from "lucide-react";
-import { GooglePlacesAutocomplete } from "@/components/ui/google-places-autocomplete";
+import { GooglePlacesAutocomplete, PlaceDetails } from "@/components/ui/google-places-autocomplete";
+import { formatPhoneNumber, stripPhoneNumber } from "@/lib/utils";
 
 interface Category {
   id: string;
@@ -50,7 +52,7 @@ function MerchantOnboardingContent() {
   // Form state
   const [email, setEmail] = useState("");
   const [businessName, setBusinessName] = useState("");
-  const [city, setCity] = useState("");
+  const [cityState, setCityState] = useState(""); // Combined "City, ST" field
   const [categoryId, setCategoryId] = useState("");
   const [phone, setPhone] = useState("");
   const [website, setWebsite] = useState("");
@@ -103,7 +105,7 @@ function MerchantOnboardingContent() {
 
   const fetchCategories = async () => {
     try {
-      const res = await fetch("/api/admin/categories");
+      const res = await fetch("/api/categories");
       if (res.ok) {
         const data = await res.json();
         setCategories(data.categories);
@@ -113,15 +115,44 @@ function MerchantOnboardingContent() {
     }
   };
 
-  const handleGooglePlaceSelect = (name: string, placeId: string) => {
+  const handleGooglePlaceSelect = (name: string, placeId: string, details?: PlaceDetails) => {
     setGooglePlaceName(name);
     setGooglePlaceId(placeId);
-    // Try to extract business name from the place
-    if (name && !businessName) {
-      // Get the main part of the name (before the address)
+
+    if (details) {
+      // Auto-populate form fields from place details
+      if (details.name) {
+        setBusinessName(details.name);
+      }
+      // Combine city and state into single field
+      if (details.city || details.state) {
+        const parts = [details.city, details.state].filter(Boolean);
+        setCityState(parts.join(", "));
+      }
+      if (details.phone) {
+        setPhone(formatPhoneNumber(details.phone));
+      }
+      if (details.website) {
+        setWebsite(details.website);
+      }
+    } else if (name && !businessName) {
+      // Fallback: extract business name from the place description
       const mainName = name.split(",")[0];
       setBusinessName(mainName);
     }
+  };
+
+  // Parse cityState into separate city and state values
+  const parseCityState = (value: string): { city: string; state: string } => {
+    const parts = value.split(",").map(p => p.trim());
+    if (parts.length >= 2) {
+      // Last part is state, rest is city
+      const state = parts[parts.length - 1].toUpperCase().slice(0, 2);
+      const city = parts.slice(0, -1).join(", ");
+      return { city, state };
+    }
+    // No comma - treat whole thing as city
+    return { city: value.trim(), state: "" };
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -135,6 +166,7 @@ function MerchantOnboardingContent() {
     setError("");
 
     try {
+      const { city, state } = parseCityState(cityState);
       const res = await fetch("/api/onboard/complete", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -143,8 +175,9 @@ function MerchantOnboardingContent() {
           email,
           businessName,
           city: city || undefined,
+          state: state || undefined,
           categoryId: categoryId || undefined,
-          phone: phone || undefined,
+          phone: stripPhoneNumber(phone) || undefined,
           website: website || undefined,
           description: description || undefined,
           googlePlaceId: googlePlaceId || undefined,
@@ -174,7 +207,7 @@ function MerchantOnboardingContent() {
   // Validating state
   if (step === "validating") {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-orange-50 to-white flex items-center justify-center p-4">
+      <div className="min-h-screen bg-gradient-to-b from-orange-50 to-white dark:from-background dark:to-background flex items-center justify-center p-4">
         <div className="text-center">
           <Loader2 className="w-12 h-12 text-primary animate-spin mx-auto mb-4" />
           <h2 className="text-xl font-semibold">Validating your invitation...</h2>
@@ -186,10 +219,10 @@ function MerchantOnboardingContent() {
   // Invalid token state
   if (step === "invalid") {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-orange-50 to-white flex items-center justify-center p-4">
-        <div className="max-w-md w-full bg-white rounded-2xl shadow-lg p-8 text-center">
-          <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <XCircle className="w-8 h-8 text-red-600" />
+      <div className="min-h-screen bg-gradient-to-b from-orange-50 to-white dark:from-background dark:to-background flex items-center justify-center p-4">
+        <div className="max-w-md w-full bg-white dark:bg-card rounded-2xl shadow-lg dark:border p-8 text-center">
+          <div className="w-16 h-16 bg-red-100 dark:bg-red-900 rounded-full flex items-center justify-center mx-auto mb-4">
+            <XCircle className="w-8 h-8 text-red-600 dark:text-red-400" />
           </div>
           <h1 className="text-2xl font-bold mb-2">Invalid Invitation</h1>
           <p className="text-muted-foreground mb-6">{error}</p>
@@ -204,22 +237,22 @@ function MerchantOnboardingContent() {
   // Success state
   if (step === "success") {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-green-50 to-white flex items-center justify-center p-4">
-        <div className="max-w-md w-full bg-white rounded-2xl shadow-lg p-8 text-center">
-          <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <CheckCircle2 className="w-8 h-8 text-green-600" />
+      <div className="min-h-screen bg-gradient-to-b from-green-50 to-white dark:from-background dark:to-background flex items-center justify-center p-4">
+        <div className="max-w-md w-full bg-white dark:bg-card rounded-2xl shadow-lg dark:border p-8 text-center">
+          <div className="w-16 h-16 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center mx-auto mb-4">
+            <CheckCircle2 className="w-8 h-8 text-green-600 dark:text-green-400" />
           </div>
           <h1 className="text-2xl font-bold mb-2">Welcome to Local City Places!</h1>
           <p className="text-muted-foreground mb-6">
             Your merchant account has been created and you have 10 free trial GRCs ready to issue!
           </p>
 
-          <div className="bg-green-50 border border-green-200 rounded-xl p-4 mb-6">
-            <div className="flex items-center justify-center gap-2 text-green-800 font-medium mb-1">
+          <div className="bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 rounded-xl p-4 mb-6">
+            <div className="flex items-center justify-center gap-2 text-green-800 dark:text-green-200 font-medium mb-1">
               <Gift className="w-5 h-5" />
               10 Trial GRCs
             </div>
-            <p className="text-green-700 text-sm">
+            <p className="text-green-700 dark:text-green-300 text-sm">
               Each worth $100 - that's $1,000 in value for your customers!
             </p>
           </div>
@@ -235,26 +268,30 @@ function MerchantOnboardingContent() {
 
   // Form state
   return (
-    <div className="min-h-screen bg-gradient-to-b from-orange-50 to-white py-8 px-4">
+    <div className="min-h-screen bg-gradient-to-b from-orange-50 to-white dark:from-background dark:to-background py-8 px-4">
       <div className="max-w-xl mx-auto">
         {/* Header */}
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-primary mb-2">Local City Places</h1>
-          <h2 className="text-xl font-semibold mb-2">Become a Merchant Partner</h2>
-          <p className="text-muted-foreground">
-            Complete your registration to receive 10 free trial GRCs ($1,000 value)
-          </p>
+          <Image
+            src="/images/logo-horizontal.png"
+            alt="Local City Places"
+            width={220}
+            height={55}
+            priority
+            className="mx-auto mb-4"
+          />
+          <h2 className="text-xl font-semibold">Become a Merchant Partner</h2>
         </div>
 
         {/* Trial GRCs Banner */}
-        <div className="bg-green-50 border border-green-200 rounded-xl p-4 mb-6">
+        <div className="bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 rounded-xl p-4 mb-6">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center shrink-0">
-              <Gift className="w-5 h-5 text-green-600" />
+            <div className="w-10 h-10 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center shrink-0">
+              <Gift className="w-5 h-5 text-green-600 dark:text-green-400" />
             </div>
             <div>
-              <p className="font-medium text-green-800">Your trial includes:</p>
-              <p className="text-sm text-green-700">
+              <p className="font-medium text-green-800 dark:text-green-200">Your trial includes:</p>
+              <p className="text-sm text-green-700 dark:text-green-300">
                 10 Grocery Rebate Certificates at $100 each - give them to your customers!
               </p>
             </div>
@@ -262,7 +299,7 @@ function MerchantOnboardingContent() {
         </div>
 
         {/* Form */}
-        <div className="bg-white rounded-2xl shadow-lg p-6 sm:p-8">
+        <div className="bg-white dark:bg-card rounded-2xl shadow-lg dark:border p-6 sm:p-8">
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Google Places Search */}
             <div>
@@ -272,6 +309,7 @@ function MerchantOnboardingContent() {
                 onChange={handleGooglePlaceSelect}
                 placeholder="Search by business name..."
                 types={["establishment"]}
+                fetchDetails={true}
               />
               <p className="text-xs text-muted-foreground mt-1">
                 Find your business to auto-fill details, or enter manually below
@@ -319,25 +357,25 @@ function MerchantOnboardingContent() {
                   />
                 </div>
 
-                {/* City & Category Row */}
+                {/* City/State & Category Row */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <Label htmlFor="city">
+                    <Label htmlFor="cityState">
                       <MapPin className="w-4 h-4 inline mr-2" />
-                      City
+                      City, State
                     </Label>
                     <Input
-                      id="city"
-                      placeholder="Denver"
-                      value={city}
-                      onChange={(e) => setCity(e.target.value)}
+                      id="cityState"
+                      placeholder="City, State"
+                      value={cityState}
+                      onChange={(e) => setCityState(e.target.value)}
                     />
                   </div>
 
                   <div>
                     <Label htmlFor="category">Category</Label>
                     <Select value={categoryId} onValueChange={setCategoryId}>
-                      <SelectTrigger id="category">
+                      <SelectTrigger id="category" className="w-full">
                         <SelectValue placeholder="Select category" />
                       </SelectTrigger>
                       <SelectContent>
@@ -361,9 +399,9 @@ function MerchantOnboardingContent() {
                     <Input
                       id="phone"
                       type="tel"
-                      placeholder="(555) 123-4567"
+                      placeholder="(425) 451-8599"
                       value={phone}
-                      onChange={(e) => setPhone(e.target.value)}
+                      onChange={(e) => setPhone(formatPhoneNumber(e.target.value))}
                     />
                   </div>
 
@@ -401,7 +439,7 @@ function MerchantOnboardingContent() {
 
             {/* Error Message */}
             {error && (
-              <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-red-700 text-sm">
+              <div className="bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800 rounded-lg p-3 text-red-700 dark:text-red-300 text-sm">
                 {error}
               </div>
             )}
@@ -440,7 +478,7 @@ export default function MerchantOnboardingPage() {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen bg-gradient-to-b from-orange-50 to-white flex items-center justify-center p-4">
+        <div className="min-h-screen bg-gradient-to-b from-orange-50 to-white dark:from-background dark:to-background flex items-center justify-center p-4">
           <div className="text-center">
             <Loader2 className="w-12 h-12 text-primary animate-spin mx-auto mb-4" />
             <h2 className="text-xl font-semibold">Loading...</h2>

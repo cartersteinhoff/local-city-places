@@ -26,10 +26,12 @@ export async function GET() {
         businessName: merchants.businessName,
         categoryId: merchants.categoryId,
         city: merchants.city,
+        state: merchants.state,
         logoUrl: merchants.logoUrl,
         description: merchants.description,
         phone: merchants.phone,
         website: merchants.website,
+        googlePlaceId: merchants.googlePlaceId,
         verified: merchants.verified,
         categoryName: categories.name,
       })
@@ -70,10 +72,12 @@ export async function GET() {
         categoryId: merchant.categoryId,
         categoryName: merchant.categoryName,
         city: merchant.city,
+        state: merchant.state,
         logoUrl: merchant.logoUrl,
         description: merchant.description,
         phone: merchant.phone,
         website: merchant.website,
+        googlePlaceId: merchant.googlePlaceId,
         verified: merchant.verified,
         bankAccount: bankAccount ? {
           bankName: bankAccount.bankName,
@@ -107,9 +111,11 @@ export async function PATCH(request: NextRequest) {
       businessName,
       categoryId,
       city,
+      state,
       description,
       phone,
       website,
+      googlePlaceId,
       notificationPrefs,
       profilePhoto, // Base64 for personal photo
       logo, // Base64 for business logo
@@ -188,9 +194,11 @@ export async function PATCH(request: NextRequest) {
     if (businessName !== undefined) merchantUpdates.businessName = businessName;
     if (categoryId !== undefined) merchantUpdates.categoryId = categoryId;
     if (city !== undefined) merchantUpdates.city = city;
+    if (state !== undefined) merchantUpdates.state = state;
     if (description !== undefined) merchantUpdates.description = description;
     if (phone !== undefined) merchantUpdates.phone = phone;
     if (website !== undefined) merchantUpdates.website = website;
+    if (googlePlaceId !== undefined) merchantUpdates.googlePlaceId = googlePlaceId;
     if (logoUrl) merchantUpdates.logoUrl = logoUrl;
 
     if (Object.keys(merchantUpdates).length > 0) {
