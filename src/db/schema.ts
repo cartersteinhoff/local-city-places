@@ -294,6 +294,20 @@ export const sessions = pgTable("sessions", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+// Merchant invites table (for merchant onboarding)
+export const merchantInvites = pgTable("merchant_invites", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  token: varchar("token", { length: 64 }).notNull().unique(),
+  email: varchar("email", { length: 255 }), // Optional - can pre-fill email on onboarding form
+  expiresAt: timestamp("expires_at").notNull(),
+  usedAt: timestamp("used_at"),
+  usedByUserId: uuid("used_by_user_id").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  createdBy: uuid("created_by")
+    .notNull()
+    .references(() => users.id),
+});
+
 // Relations
 export const usersRelations = relations(users, ({ one, many }) => ({
   member: one(members, {
@@ -401,6 +415,17 @@ export const monthlyQualificationsRelations = relations(monthlyQualifications, (
 export const sessionsRelations = relations(sessions, ({ one }) => ({
   user: one(users, {
     fields: [sessions.userId],
+    references: [users.id],
+  }),
+}));
+
+export const merchantInvitesRelations = relations(merchantInvites, ({ one }) => ({
+  createdByUser: one(users, {
+    fields: [merchantInvites.createdBy],
+    references: [users.id],
+  }),
+  usedByUser: one(users, {
+    fields: [merchantInvites.usedByUserId],
     references: [users.id],
   }),
 }));

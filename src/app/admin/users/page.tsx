@@ -33,10 +33,13 @@ import {
   Loader2,
   CheckCircle,
   Receipt,
+  Mail,
+  UserPlus,
 } from "lucide-react";
 import { useUser } from "@/hooks/use-user";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
+import { InviteMerchantDialog } from "@/components/admin/invite-merchant-dialog";
 
 const adminNavItems = [
   { label: "Dashboard", href: "/admin", icon: LayoutDashboard },
@@ -44,6 +47,7 @@ const adminNavItems = [
   { label: "Orders", href: "/admin/orders", icon: Receipt },
   { label: "Gift Cards", href: "/admin/gift-cards", icon: CreditCard },
   { label: "Users", href: "/admin/users", icon: Users },
+  { label: "Invites", href: "/admin/invites", icon: Mail },
   { label: "Categories", href: "/admin/categories", icon: FolderOpen },
   { label: "Analytics", href: "/admin/analytics", icon: BarChart3 },
 ];
@@ -104,6 +108,9 @@ export default function AdminUsersPage() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deletingUser, setDeletingUser] = useState<UserData | null>(null);
   const [deleting, setDeleting] = useState(false);
+
+  // Invite dialog
+  const [showInviteDialog, setShowInviteDialog] = useState(false);
 
   useEffect(() => {
     if (!loading && (!isAuthenticated || user?.role !== "admin")) {
@@ -232,6 +239,12 @@ export default function AdminUsersPage() {
           <PageHeader
             title="Users"
             description="View and manage all user accounts"
+            actions={
+              <Button onClick={() => setShowInviteDialog(true)}>
+                <UserPlus className="w-4 h-4 mr-2" />
+                Invite Merchant
+              </Button>
+            }
           />
 
           {/* Stats Cards */}
@@ -513,6 +526,13 @@ export default function AdminUsersPage() {
               </DialogFooter>
             </DialogContent>
           </Dialog>
+
+          {/* Invite Merchant Dialog */}
+          <InviteMerchantDialog
+            open={showInviteDialog}
+            onOpenChange={setShowInviteDialog}
+            onSuccess={fetchUsers}
+          />
         </>
       )}
     </DashboardLayout>

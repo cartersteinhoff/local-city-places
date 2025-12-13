@@ -28,6 +28,7 @@ import {
   Gift,
   Store,
   ShoppingCart,
+  Mail,
 } from "lucide-react";
 import { useUser } from "@/hooks/use-user";
 
@@ -37,6 +38,7 @@ const adminNavItems = [
   { label: "Orders", href: "/admin/orders", icon: Receipt },
   { label: "Gift Cards", href: "/admin/gift-cards", icon: CreditCard },
   { label: "Users", href: "/admin/users", icon: Users },
+  { label: "Invites", href: "/admin/invites", icon: Mail },
   { label: "Categories", href: "/admin/categories", icon: FolderOpen },
   { label: "Analytics", href: "/admin/analytics", icon: BarChart3 },
 ];
