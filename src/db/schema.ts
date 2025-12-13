@@ -110,7 +110,10 @@ export const surveys = pgTable("surveys", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
-// GRCs table
+// GRCs table - ISSUED certificates only
+// A GRC record is created ONLY when a merchant issues it to a customer.
+// Do NOT pre-create GRC records for inventory - that's tracked in grcPurchases.
+// See CLAUDE.md "GRC Data Model" for full explanation.
 export const grcs = pgTable("grcs", {
   id: uuid("id").primaryKey().defaultRandom(),
   merchantId: uuid("merchant_id")
@@ -145,7 +148,10 @@ export const memberGrcQueue = pgTable("member_grc_queue", {
   uniqueIndex("member_grc_queue_unique_idx").on(table.memberId, table.grcId),
 ]);
 
-// GRC purchases table
+// GRC purchases table - INVENTORY tracking
+// This tracks what merchants have purchased (their issuable inventory).
+// Inventory = sum(quantity where paymentStatus='confirmed') - count(grcs for this merchant)
+// When admin approves, only update paymentStatus - do NOT create grcs records.
 export const grcPurchases = pgTable("grc_purchases", {
   id: uuid("id").primaryKey().defaultRandom(),
   merchantId: uuid("merchant_id")
@@ -156,6 +162,7 @@ export const grcPurchases = pgTable("grc_purchases", {
   totalCost: decimal("total_cost", { precision: 10, scale: 2 }).notNull(),
   paymentMethod: paymentMethodEnum("payment_method").notNull(),
   paymentStatus: paymentStatusEnum("payment_status").notNull().default("pending"),
+  isTrial: boolean("is_trial").default(false).notNull(), // True for free trial GRCs
   // Zelle payment info
   zelleAccountName: varchar("zelle_account_name", { length: 255 }), // Name on bank sending Zelle
   // Admin fields

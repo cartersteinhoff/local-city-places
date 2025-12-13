@@ -1,5 +1,94 @@
 # Claude Code Context
 
+## GRC Data Model
+
+**Critical**: Understand this flow before modifying GRC-related code.
+
+### Tables
+
+| Table | Purpose | Created When |
+|-------|---------|--------------|
+| `grcPurchases` | Tracks merchant inventory purchases | Merchant submits purchase order |
+| `grcs` | Individual certificates issued to customers | Merchant issues GRC to a customer |
+
+### Flow
+
+```
+1. Merchant purchases GRCs
+   └─> Creates grcPurchases record (paymentStatus: "pending")
+
+2. Admin approves payment
+   └─> Updates grcPurchases.paymentStatus to "confirmed"
+   └─> Does NOT create any grcs records
+
+3. Merchant issues GRC to customer
+   └─> Creates grcs record (linked to customer)
+   └─> Inventory decreases
+```
+
+### Inventory Calculation
+
+```typescript
+available = sum(grcPurchases.quantity where confirmed) - count(grcs)
+```
+
+**Important**: The `grcs` table should ONLY contain certificates that have been issued to customers. Never pre-create GRC records - they are created on-demand when a merchant issues to a customer.
+
+### Why This Matters
+
+If GRC records are created at approval time, the inventory calculation breaks:
+- Purchased: 5 (from grcPurchases)
+- "Issued": 5 (from grcs - but actually just placeholders)
+- Available: 0 ← WRONG
+
+---
+
+## Form Field Guidelines
+
+### Label Spacing
+Labels have `mb-2` bottom margin (built into the Label component). This creates proper visual separation between label text and input fields.
+
+### Form Field Structure
+```tsx
+<div>
+  <Label htmlFor="email">Email *</Label>
+  <Input id="email" type="email" placeholder="..." />
+  <p className="text-xs text-muted-foreground mt-1">Helper text</p>
+</div>
+```
+
+### Spacing Between Fields
+Use `space-y-4` on the form or parent container for consistent vertical spacing between form groups.
+
+### Required Fields
+Mark required fields with `*` in the label text, not with a separate indicator.
+
+---
+
+## Preventing Layout Shift (CLS)
+
+When content loads asynchronously, prevent Cumulative Layout Shift by reserving space:
+
+```tsx
+// BAD - height changes when data loads
+<div className="flex gap-2">
+  {isLoading ? "Loading..." : items.map(...)}
+</div>
+
+// GOOD - fixed min-height prevents shift
+<div className="flex gap-2 min-h-[32px] items-center">
+  {isLoading ? "Loading..." : items.map(...)}
+</div>
+```
+
+Common patterns:
+- Inventory chips: `min-h-[32px]`
+- Table rows: Use `table-fixed` with `<colgroup>` for fixed column widths
+- Stats cards: Fixed grid with consistent card heights
+- Images: Always set `width` and `height` attributes
+
+---
+
 ## Vercel Environment Variables
 
 When adding environment variables to Vercel via CLI, use `printf` instead of `echo` to avoid adding a trailing newline (`\n`) that corrupts API keys and other values.

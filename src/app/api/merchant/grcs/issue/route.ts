@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
-import { db, grcs, grcPurchases, merchants, users } from "@/db";
+import { db, grcs, grcPurchases, merchants } from "@/db";
 import { eq, and, sql } from "drizzle-orm";
 import { z } from "zod";
+import { sendGrcIssuedEmail } from "@/lib/email";
 
 const issueGrcSchema = z.object({
   email: z.string().email("Invalid email address"),
@@ -124,7 +125,7 @@ export async function POST(request: NextRequest) {
 
     // Create GRC
     const costPerCert = GRC_PRICING[denomination].toString();
-    const monthsRemaining = getTotalMonths(denomination);
+    const totalMonths = getTotalMonths(denomination);
 
     const [newGrc] = await db
       .insert(grcs)
@@ -132,7 +133,7 @@ export async function POST(request: NextRequest) {
         merchantId: merchant.id,
         denomination,
         costPerCert,
-        monthsRemaining,
+        monthsRemaining: totalMonths,
         status: "pending",
         issuedAt: new Date(),
       })
@@ -142,8 +143,16 @@ export async function POST(request: NextRequest) {
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
     const claimUrl = `${baseUrl}/claim/${newGrc.id}`;
 
-    // TODO: Send email to recipient with claim link
-    // For now, just return the claim URL
+    // Send email to recipient
+    await sendGrcIssuedEmail({
+      recipientEmail: email,
+      recipientName: recipientName,
+      merchantName: merchant.businessName,
+      denomination,
+      totalMonths,
+      claimUrl,
+    });
+
     console.log(`GRC issued to ${email}: ${claimUrl}`);
 
     return NextResponse.json({

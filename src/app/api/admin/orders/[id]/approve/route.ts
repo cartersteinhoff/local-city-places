@@ -1,16 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import { db } from "@/db";
-import { grcPurchases, grcs } from "@/db/schema";
+import { grcPurchases } from "@/db/schema";
 import { eq } from "drizzle-orm";
-
-// GRC pricing tiers (cost per certificate)
-const GRC_PRICING: Record<number, number> = {
-  50: 1.25, 75: 1.50, 100: 1.75, 125: 2.00, 150: 2.25,
-  175: 2.50, 200: 2.75, 225: 3.00, 250: 3.25, 275: 3.50,
-  300: 3.75, 325: 4.00, 350: 4.25, 375: 4.50, 400: 4.75,
-  425: 5.00, 450: 5.25, 475: 5.50, 500: 5.75,
-};
 
 export async function POST(
   request: NextRequest,
@@ -44,7 +36,10 @@ export async function POST(
       );
     }
 
-    // Update purchase status
+    // Update purchase status to confirmed
+    // GRCs are NOT created here - they are created when the merchant issues them
+    // The grcPurchases table tracks inventory (confirmed purchases)
+    // The grcs table tracks issued certificates (to customers)
     await db
       .update(grcPurchases)
       .set({
@@ -55,26 +50,9 @@ export async function POST(
       })
       .where(eq(grcPurchases.id, id));
 
-    // Create GRC records for the merchant
-    const costPerCert = GRC_PRICING[purchase.denomination] || 0;
-    const grcRecords = [];
-
-    for (let i = 0; i < purchase.quantity; i++) {
-      grcRecords.push({
-        merchantId: purchase.merchantId,
-        denomination: purchase.denomination,
-        costPerCert: costPerCert.toFixed(2),
-        status: "pending" as const, // Available in inventory
-        monthsRemaining: purchase.denomination >= 200 ? 12 : 6, // 12 months for $200+, 6 for others
-      });
-    }
-
-    // Insert all GRCs
-    await db.insert(grcs).values(grcRecords);
-
     return NextResponse.json({
       success: true,
-      message: `Created ${purchase.quantity} GRCs for merchant`,
+      message: `Confirmed payment for ${purchase.quantity}x $${purchase.denomination} GRCs`,
     });
   } catch (error) {
     console.error("Approve order error:", error);

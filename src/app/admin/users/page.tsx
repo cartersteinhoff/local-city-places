@@ -1,30 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { DashboardLayout } from "@/components/layout";
 import { PageHeader } from "@/components/ui/page-header";
-import { StatCard } from "@/components/ui/stat-card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { StatusBadge } from "@/components/ui/status-badge";
-import { EmptyState } from "@/components/ui/empty-state";
+import { Pagination } from "@/components/ui/pagination";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import {
   Dialog,
   DialogContent,
@@ -52,6 +35,8 @@ import {
   Receipt,
 } from "lucide-react";
 import { useUser } from "@/hooks/use-user";
+import { format } from "date-fns";
+import { cn } from "@/lib/utils";
 
 const adminNavItems = [
   { label: "Dashboard", href: "/admin", icon: LayoutDashboard },
@@ -85,14 +70,35 @@ interface Stats {
   members: number;
 }
 
+interface UsersData {
+  users: UserData[];
+  stats: Stats;
+  pagination?: {
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  };
+}
+
 export default function AdminUsersPage() {
   const router = useRouter();
   const { user, isLoading: loading, isAuthenticated } = useUser();
+
+  // Data state
   const [users, setUsers] = useState<UserData[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [stats, setStats] = useState<Stats>({ total: 0, admins: 0, merchants: 0, members: 0 });
-  const [roleFilter, setRoleFilter] = useState("all");
+
+  // Filter state
+  const [filter, setFilter] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
-  const [refreshing, setRefreshing] = useState(false);
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+
+  // Pagination state
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [total, setTotal] = useState(0);
 
   // Delete dialog
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -105,41 +111,57 @@ export default function AdminUsersPage() {
     }
   }, [loading, isAuthenticated, user?.role, router]);
 
-  const fetchUsers = async () => {
-    setRefreshing(true);
-    try {
-      const params = new URLSearchParams();
-      if (roleFilter !== "all") params.set("role", roleFilter);
-      if (searchQuery) params.set("search", searchQuery);
+  // Debounce search
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchQuery);
+      setPage(1);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
 
-      const res = await fetch(`/api/admin/users?${params}`);
-      if (res.ok) {
-        const data = await res.json();
-        setUsers(data.users);
-        setStats(data.stats);
-      }
-    } catch (error) {
-      console.error("Error fetching users:", error);
-    } finally {
-      setRefreshing(false);
-    }
+  // Filter change resets page
+  const handleFilterChange = (newFilter: string) => {
+    setFilter(newFilter);
+    setPage(1);
   };
 
+  // Fetch data
+  const fetchUsers = useCallback(async () => {
+    setIsLoading(true);
+    const params = new URLSearchParams({
+      page: page.toString(),
+      limit: "20",
+    });
+    if (filter !== "all") params.set("role", filter);
+    if (debouncedSearch) params.set("search", debouncedSearch);
+
+    try {
+      const res = await fetch(`/api/admin/users?${params}`);
+      const data: UsersData = await res.json();
+      if (!data.users) return;
+
+      setUsers(data.users);
+      setStats(data.stats);
+      if (data.pagination) {
+        setTotalPages(data.pagination.totalPages);
+        setTotal(data.pagination.total);
+      } else {
+        setTotal(data.users.length);
+        setTotalPages(1);
+      }
+    } catch (err) {
+      console.error("Failed to load users:", err);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [page, filter, debouncedSearch]);
+
   useEffect(() => {
-    if (!loading) {
+    if (!loading && isAuthenticated) {
       fetchUsers();
     }
-  }, [loading, roleFilter]);
-
-  // Debounced search
-  useEffect(() => {
-    if (!loading) {
-      const timer = setTimeout(() => {
-        fetchUsers();
-      }, 300);
-      return () => clearTimeout(timer);
-    }
-  }, [searchQuery]);
+  }, [loading, isAuthenticated, fetchUsers]);
 
   const handleDeleteClick = (user: UserData) => {
     setDeletingUser(user);
@@ -170,143 +192,273 @@ export default function AdminUsersPage() {
     }
   };
 
-  const getUserName = (user: UserData): string => {
-    if (user.memberFirstName && user.memberLastName) {
-      return `${user.memberFirstName} ${user.memberLastName}`;
+  const getUserName = (u: UserData): string => {
+    if (u.memberFirstName && u.memberLastName) {
+      return `${u.memberFirstName} ${u.memberLastName}`;
     }
-    if (user.merchantBusinessName) {
-      return user.merchantBusinessName;
+    if (u.merchantBusinessName) {
+      return u.merchantBusinessName;
     }
-    return user.email.split("@")[0];
+    return u.email.split("@")[0];
   };
 
-  const getInitials = (user: UserData): string => {
-    if (user.memberFirstName && user.memberLastName) {
-      return `${user.memberFirstName[0]}${user.memberLastName[0]}`.toUpperCase();
+  const getInitials = (u: UserData): string => {
+    if (u.memberFirstName && u.memberLastName) {
+      return `${u.memberFirstName[0]}${u.memberLastName[0]}`.toUpperCase();
     }
-    if (user.merchantBusinessName) {
-      return user.merchantBusinessName.substring(0, 2).toUpperCase();
+    if (u.merchantBusinessName) {
+      return u.merchantBusinessName.substring(0, 2).toUpperCase();
     }
-    return user.email.substring(0, 2).toUpperCase();
+    return u.email.substring(0, 2).toUpperCase();
   };
 
   const getRoleBadge = (role: string) => {
     switch (role) {
       case "admin":
-        return <StatusBadge status="info" label="Admin" />;
+        return "bg-blue-100 text-blue-800";
       case "merchant":
-        return <StatusBadge status="warning" label="Merchant" />;
+        return "bg-yellow-100 text-yellow-800";
       case "member":
-        return <StatusBadge status="success" label="Member" />;
+        return "bg-green-100 text-green-800";
       default:
-        return <StatusBadge status="default" label={role} />;
+        return "bg-gray-100 text-gray-800";
     }
   };
 
   return (
     <DashboardLayout navItems={adminNavItems}>
-      {loading ? (
-        <div className="flex items-center justify-center min-h-[400px]">
-          <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
-        </div>
-      ) : (
+      {loading ? null : (
         <>
           <PageHeader
             title="Users"
             description="View and manage all user accounts"
           />
 
-          {/* Stats Grid */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-            <StatCard label="Total Users" value={stats.total.toString()} icon={Users} />
-            <StatCard label="Admins" value={stats.admins.toString()} icon={Shield} />
-            <StatCard label="Merchants" value={stats.merchants.toString()} icon={Store} />
-            <StatCard label="Members" value={stats.members.toString()} icon={UserCircle} />
+          {/* Stats Cards */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4 mb-6">
+            <div className="bg-card border rounded-lg p-3 sm:p-4">
+              <div className="flex items-center gap-2 text-muted-foreground mb-1">
+                <Users className="w-4 h-4" />
+                <span className="text-xs sm:text-sm">Total</span>
+              </div>
+              <div className="text-lg sm:text-2xl font-bold">{stats.total}</div>
+            </div>
+            <div className="bg-card border rounded-lg p-3 sm:p-4">
+              <div className="flex items-center gap-2 text-muted-foreground mb-1">
+                <Shield className="w-4 h-4" />
+                <span className="text-xs sm:text-sm">Admins</span>
+              </div>
+              <div className="text-lg sm:text-2xl font-bold">{stats.admins}</div>
+            </div>
+            <div className="bg-card border rounded-lg p-3 sm:p-4">
+              <div className="flex items-center gap-2 text-muted-foreground mb-1">
+                <Store className="w-4 h-4" />
+                <span className="text-xs sm:text-sm">Merchants</span>
+              </div>
+              <div className="text-lg sm:text-2xl font-bold">{stats.merchants}</div>
+            </div>
+            <div className="bg-card border rounded-lg p-3 sm:p-4">
+              <div className="flex items-center gap-2 text-muted-foreground mb-1">
+                <UserCircle className="w-4 h-4" />
+                <span className="text-xs sm:text-sm">Members</span>
+              </div>
+              <div className="text-lg sm:text-2xl font-bold">{stats.members}</div>
+            </div>
           </div>
 
-          {/* Filters */}
-          <div className="flex flex-col sm:flex-row gap-3 mb-6">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <Input
-                placeholder="Search by email or name..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-9"
-              />
-            </div>
-            <Select value={roleFilter} onValueChange={setRoleFilter}>
-              <SelectTrigger className="w-full sm:w-[160px]">
-                <SelectValue placeholder="Filter by role" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Roles</SelectItem>
-                <SelectItem value="admin">Admin</SelectItem>
-                <SelectItem value="merchant">Merchant</SelectItem>
-                <SelectItem value="member">Member</SelectItem>
-              </SelectContent>
-            </Select>
-            <Button variant="outline" size="icon" onClick={fetchUsers} disabled={refreshing}>
-              <RefreshCw className={`w-4 h-4 ${refreshing ? "animate-spin" : ""}`} />
+          {/* Search */}
+          <div className="relative mb-4">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input
+              placeholder="Search by email or name..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-9 max-w-md"
+            />
+          </div>
+
+          {/* Filter Tabs */}
+          <div className="flex flex-wrap gap-2 mb-6">
+            <Button
+              variant={filter === "all" ? "default" : "outline"}
+              size="sm"
+              onClick={() => handleFilterChange("all")}
+            >
+              All
+            </Button>
+            <Button
+              variant={filter === "admin" ? "default" : "outline"}
+              size="sm"
+              onClick={() => handleFilterChange("admin")}
+            >
+              <Shield className="w-4 h-4 mr-1" />
+              Admins
+            </Button>
+            <Button
+              variant={filter === "merchant" ? "default" : "outline"}
+              size="sm"
+              onClick={() => handleFilterChange("merchant")}
+            >
+              <Store className="w-4 h-4 mr-1" />
+              Merchants
+            </Button>
+            <Button
+              variant={filter === "member" ? "default" : "outline"}
+              size="sm"
+              onClick={() => handleFilterChange("member")}
+            >
+              <UserCircle className="w-4 h-4 mr-1" />
+              Members
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={fetchUsers}
+              disabled={isLoading}
+              className="ml-auto"
+            >
+              <RefreshCw className={cn("w-4 h-4", isLoading && "animate-spin")} />
             </Button>
           </div>
 
-          {/* Users Table */}
-          {users.length === 0 ? (
-            <EmptyState
-              icon={Users}
-              title="No users found"
-              description={searchQuery || roleFilter !== "all" ? "Try adjusting your filters" : "No users in the system yet"}
-            />
-          ) : (
-            <div className="border rounded-lg">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="w-[250px]">User</TableHead>
-                    <TableHead>Email</TableHead>
-                    <TableHead>Role</TableHead>
-                    <TableHead>Location</TableHead>
-                    <TableHead>Joined</TableHead>
-                    <TableHead className="w-[100px] text-right">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {users.map((user) => (
-                    <TableRow key={user.id} className="h-14">
-                      <TableCell>
-                        <div className="flex items-center gap-3">
-                          <Avatar className="h-8 w-8">
-                            <AvatarImage src={user.profilePhotoUrl || undefined} />
-                            <AvatarFallback className="text-xs">{getInitials(user)}</AvatarFallback>
-                          </Avatar>
+          {/* Table */}
+          <div className="bg-card rounded-xl border border-border overflow-hidden">
+            {/* Mobile Cards */}
+            <div className="md:hidden divide-y divide-border">
+              {!isLoading && users.length === 0 ? (
+                <div className="p-8 text-center text-muted-foreground">
+                  <p>No users found</p>
+                  <p className="text-sm mt-1">
+                    {searchQuery || filter !== "all" ? "Try adjusting your filters" : "No users in the system yet"}
+                  </p>
+                </div>
+              ) : (
+                users.map((u) => (
+                  <div key={u.id} className="p-4">
+                    {/* Header: User + Role */}
+                    <div className="flex items-start justify-between gap-3 mb-3">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <Avatar className="h-10 w-10 shrink-0">
+                          <AvatarImage src={u.profilePhotoUrl || undefined} />
+                          <AvatarFallback className="text-xs">{getInitials(u)}</AvatarFallback>
+                        </Avatar>
+                        <div className="min-w-0">
                           <div className="flex items-center gap-2">
-                            <span className="font-medium text-sm">{getUserName(user)}</span>
-                            {user.merchantVerified && (
-                              <CheckCircle className="w-4 h-4 text-green-500" />
+                            <h3 className="font-semibold truncate">{getUserName(u)}</h3>
+                            {u.merchantVerified && (
+                              <CheckCircle className="w-4 h-4 text-green-500 shrink-0" />
+                            )}
+                          </div>
+                          <p className="text-sm text-muted-foreground truncate">{u.email}</p>
+                        </div>
+                      </div>
+                      <span className={cn(
+                        "text-xs px-2.5 py-1 rounded-full font-medium capitalize shrink-0",
+                        getRoleBadge(u.role)
+                      )}>
+                        {u.role}
+                      </span>
+                    </div>
+
+                    {/* Meta info */}
+                    <div className="flex items-center justify-between text-sm text-muted-foreground mb-3">
+                      <span>{u.memberCity || u.merchantCity || "No location"}</span>
+                      <span>Joined {format(new Date(u.createdAt), "MMM d, yyyy")}</span>
+                    </div>
+
+                    {/* Actions */}
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="flex-1"
+                        onClick={() => router.push(`/admin/users/${u.id}`)}
+                      >
+                        <Pencil className="w-4 h-4 mr-1" />
+                        Edit
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="text-destructive hover:text-destructive"
+                        onClick={() => handleDeleteClick(u)}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+
+            {/* Desktop Table */}
+            <table className="w-full hidden md:table table-fixed">
+              <colgroup>
+                <col className="w-[28%]" />
+                <col className="w-[22%]" />
+                <col className="w-[12%]" />
+                <col className="w-[15%]" />
+                <col className="w-[13%]" />
+                <col className="w-[10%]" />
+              </colgroup>
+              <thead className="bg-muted/50 border-b">
+                <tr>
+                  <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">User</th>
+                  <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Email</th>
+                  <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Role</th>
+                  <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Location</th>
+                  <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Joined</th>
+                  <th className="px-4 py-3 text-right text-sm font-medium text-muted-foreground">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border">
+                {!isLoading && users.length === 0 ? (
+                  <tr>
+                    <td colSpan={6} className="px-4 py-8 text-center text-muted-foreground">
+                      {searchQuery || filter !== "all" ? "No users found matching your filters" : "No users in the system yet"}
+                    </td>
+                  </tr>
+                ) : (
+                  users.map((u) => (
+                    <tr key={u.id} className="hover:bg-muted/50">
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-3">
+                          <Avatar className="h-8 w-8 shrink-0">
+                            <AvatarImage src={u.profilePhotoUrl || undefined} />
+                            <AvatarFallback className="text-xs">{getInitials(u)}</AvatarFallback>
+                          </Avatar>
+                          <div className="flex items-center gap-2 min-w-0">
+                            <span className="font-medium text-sm truncate">{getUserName(u)}</span>
+                            {u.merchantVerified && (
+                              <CheckCircle className="w-4 h-4 text-green-500 shrink-0" />
                             )}
                           </div>
                         </div>
-                      </TableCell>
-                      <TableCell className="text-sm text-muted-foreground">
-                        {user.email}
-                      </TableCell>
-                      <TableCell>
-                        {getRoleBadge(user.role)}
-                      </TableCell>
-                      <TableCell className="text-sm text-muted-foreground">
-                        {user.memberCity || user.merchantCity || "—"}
-                      </TableCell>
-                      <TableCell className="text-sm text-muted-foreground">
-                        {new Date(user.createdAt).toLocaleDateString()}
-                      </TableCell>
-                      <TableCell className="text-right">
+                      </td>
+                      <td className="px-4 py-3">
+                        <span className="text-sm text-muted-foreground truncate block">{u.email}</span>
+                      </td>
+                      <td className="px-4 py-3">
+                        <span className={cn(
+                          "text-xs px-2.5 py-1 rounded-full font-medium capitalize",
+                          getRoleBadge(u.role)
+                        )}>
+                          {u.role}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-sm text-muted-foreground truncate">
+                        {u.memberCity || u.merchantCity || "—"}
+                      </td>
+                      <td className="px-4 py-3 text-sm text-muted-foreground">
+                        {format(new Date(u.createdAt), "MMM d, yyyy")}
+                      </td>
+                      <td className="px-4 py-3 text-right">
                         <div className="flex items-center justify-end gap-1">
                           <Button
                             variant="ghost"
                             size="icon"
                             className="h-8 w-8"
-                            onClick={() => router.push(`/admin/users/${user.id}`)}
+                            onClick={() => router.push(`/admin/users/${u.id}`)}
                             title="Edit user"
                           >
                             <Pencil className="w-4 h-4" />
@@ -315,19 +467,31 @@ export default function AdminUsersPage() {
                             variant="ghost"
                             size="icon"
                             className="h-8 w-8 text-destructive hover:text-destructive"
-                            onClick={() => handleDeleteClick(user)}
+                            onClick={() => handleDeleteClick(u)}
                             title="Delete user"
                           >
                             <Trash2 className="w-4 h-4" />
                           </Button>
                         </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+
+            {/* Pagination */}
+            <div className="border-t border-border px-4">
+              <Pagination
+                page={page}
+                totalPages={totalPages}
+                total={total}
+                limit={20}
+                onPageChange={setPage}
+                disabled={isLoading}
+              />
             </div>
-          )}
+          </div>
 
           {/* Delete Confirmation Dialog */}
           <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>

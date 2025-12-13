@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db, users, members, merchants } from "@/db";
 import { getSession } from "@/lib/auth";
-import { eq, ilike, or, sql, count } from "drizzle-orm";
+import { eq, ilike, or, sql, count, desc } from "drizzle-orm";
 
 export async function GET(request: NextRequest) {
   try {
@@ -16,6 +16,9 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const role = searchParams.get("role");
     const search = searchParams.get("search");
+    const page = parseInt(searchParams.get("page") || "1");
+    const limit = parseInt(searchParams.get("limit") || "20");
+    const offset = (page - 1) * limit;
 
     // Build where conditions
     const conditions = [];
@@ -33,8 +36,25 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Fetch users with their profiles
-    const userList = await db
+    const whereClause = conditions.length > 0
+      ? sql`${conditions.reduce((acc, cond, i) => i === 0 ? cond : sql`${acc} AND ${cond}`)}`
+      : undefined;
+
+    // Get total count for pagination
+    const baseQuery = db
+      .select({ id: users.id })
+      .from(users)
+      .leftJoin(members, eq(users.id, members.userId))
+      .leftJoin(merchants, eq(users.id, merchants.userId));
+
+    const allMatchingUsers = whereClause
+      ? await baseQuery.where(whereClause)
+      : await baseQuery;
+
+    const total = allMatchingUsers.length;
+
+    // Fetch users with their profiles (paginated)
+    const userListQuery = db
       .select({
         id: users.id,
         email: users.email,
@@ -52,10 +72,15 @@ export async function GET(request: NextRequest) {
       .from(users)
       .leftJoin(members, eq(users.id, members.userId))
       .leftJoin(merchants, eq(users.id, merchants.userId))
-      .where(conditions.length > 0 ? sql`${conditions.reduce((acc, cond, i) => i === 0 ? cond : sql`${acc} AND ${cond}`)}` : undefined)
-      .orderBy(users.createdAt);
+      .orderBy(desc(users.createdAt))
+      .limit(limit)
+      .offset(offset);
 
-    // Get counts by role
+    const userList = whereClause
+      ? await userListQuery.where(whereClause)
+      : await userListQuery;
+
+    // Get counts by role (always unfiltered for stats)
     const [adminCount] = await db
       .select({ count: count() })
       .from(users)
@@ -71,13 +96,23 @@ export async function GET(request: NextRequest) {
       .from(users)
       .where(eq(users.role, "member"));
 
+    const [totalCount] = await db
+      .select({ count: count() })
+      .from(users);
+
     return NextResponse.json({
       users: userList,
       stats: {
-        total: userList.length,
+        total: totalCount.count,
         admins: adminCount.count,
         merchants: merchantCount.count,
         members: memberCount.count,
+      },
+      pagination: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
       },
     });
   } catch (error) {

@@ -1,31 +1,17 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { DashboardLayout } from "@/components/layout";
 import { PageHeader } from "@/components/ui/page-header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { StatusBadge } from "@/components/ui/status-badge";
-import { Send, Search, ChevronLeft, ChevronRight } from "lucide-react";
+import { Pagination } from "@/components/ui/pagination";
+import { Send, Search, RefreshCw, Clock, CheckCircle2, Gift, XCircle } from "lucide-react";
 import { merchantNavItems } from "../nav";
 import { useUser } from "@/hooks/use-user";
 import { format } from "date-fns";
+import { cn } from "@/lib/utils";
 
 interface GrcItem {
   id: string;
@@ -40,6 +26,11 @@ interface GrcItem {
   registeredAt: string | null;
 }
 
+interface InventoryItem {
+  denomination: number;
+  available: number;
+}
+
 interface GrcsData {
   grcs: GrcItem[];
   pagination: {
@@ -48,17 +39,37 @@ interface GrcsData {
     limit: number;
     totalPages: number;
   };
+  stats?: {
+    pending: number;
+    active: number;
+    completed: number;
+    expired: number;
+  };
+  inventory?: {
+    total: number;
+    byDenomination: InventoryItem[];
+  };
 }
 
 export default function MyGrcsPage() {
   const router = useRouter();
-  const { user, userName, isLoading: loading, isAuthenticated } = useUser();
-  const [data, setData] = useState<GrcsData | null>(null);
-  const [dataLoading, setDataLoading] = useState(true);
+  const { user, isLoading: loading, isAuthenticated } = useUser();
 
-  const [search, setSearch] = useState("");
-  const [status, setStatus] = useState("all");
+  // Data state
+  const [grcs, setGrcs] = useState<GrcItem[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [stats, setStats] = useState({ pending: 0, active: 0, completed: 0, expired: 0 });
+  const [inventory, setInventory] = useState<{ total: number; byDenomination: InventoryItem[] }>({ total: 0, byDenomination: [] });
+
+  // Filter state
+  const [filter, setFilter] = useState("all");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+
+  // Pagination state
   const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [total, setTotal] = useState(0);
 
   useEffect(() => {
     if (!loading && (!isAuthenticated || (user?.role !== "merchant" && user?.role !== "admin"))) {
@@ -66,48 +77,66 @@ export default function MyGrcsPage() {
     }
   }, [loading, isAuthenticated, user?.role, router]);
 
+  // Debounce search
   useEffect(() => {
-    if (!loading && isAuthenticated) {
-      setDataLoading(true);
-      const params = new URLSearchParams({
-        page: page.toString(),
-        limit: "10",
-        status,
-        search,
-      });
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchQuery);
+      setPage(1);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
 
-      fetch(`/api/merchant/grcs?${params}`)
-        .then((res) => res.json())
-        .then((data) => {
-          if (!data.error) {
-            setData(data);
-          }
-          setDataLoading(false);
-        })
-        .catch((err) => {
-          console.error("Failed to load GRCs:", err);
-          setDataLoading(false);
-        });
-    }
-  }, [loading, isAuthenticated, page, status, search]);
-
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
+  // Filter change resets page
+  const handleFilterChange = (newFilter: string) => {
+    setFilter(newFilter);
     setPage(1);
   };
 
-  const getStatusVariant = (status: string) => {
+  // Fetch data
+  const fetchGrcs = useCallback(async () => {
+    setIsLoading(true);
+    const params = new URLSearchParams({
+      page: page.toString(),
+      limit: "20",
+    });
+    if (filter !== "all") params.set("status", filter);
+    if (debouncedSearch) params.set("search", debouncedSearch);
+
+    try {
+      const res = await fetch(`/api/merchant/grcs?${params}`);
+      const data: GrcsData = await res.json();
+      if (!data.grcs) return;
+
+      setGrcs(data.grcs);
+      setTotalPages(data.pagination.totalPages);
+      setTotal(data.pagination.total);
+      if (data.stats) setStats(data.stats);
+      if (data.inventory) setInventory(data.inventory);
+    } catch (err) {
+      console.error("Failed to load GRCs:", err);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [page, filter, debouncedSearch]);
+
+  useEffect(() => {
+    if (!loading && isAuthenticated) {
+      fetchGrcs();
+    }
+  }, [loading, isAuthenticated, fetchGrcs]);
+
+  const getStatusBadge = (status: string) => {
     switch (status) {
       case "active":
-        return "success";
+        return "bg-green-100 text-green-800";
       case "completed":
-        return "success";
+        return "bg-blue-100 text-blue-800";
       case "pending":
-        return "warning";
+        return "bg-yellow-100 text-yellow-800";
       case "expired":
-        return "error";
+        return "bg-red-100 text-red-800";
       default:
-        return "default";
+        return "bg-gray-100 text-gray-800";
     }
   };
 
@@ -143,146 +172,174 @@ export default function MyGrcsPage() {
             }
           />
 
-          {/* Filters */}
-          <div className="flex flex-col sm:flex-row gap-4 mb-6">
-            <form onSubmit={handleSearch} className="flex-1 flex gap-2">
-              <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search by email or name..."
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  className="pl-9"
-                />
+          {/* Available Inventory Banner */}
+          <div className="bg-muted/50 rounded-lg p-4 mb-6">
+            <div className="flex items-center justify-between gap-4 flex-wrap">
+              <div className="min-w-0">
+                <h3 className="text-sm font-medium mb-1">Available to Issue</h3>
+                <div className="flex flex-wrap gap-2 min-h-[28px] items-center">
+                  {inventory.total > 0 ? (
+                    inventory.byDenomination.map((item) => (
+                      <span
+                        key={item.denomination}
+                        className="inline-flex items-center gap-1.5 px-3 py-1 bg-background border rounded-full text-sm"
+                      >
+                        <span className="font-medium">${item.denomination}</span>
+                        <span className="text-muted-foreground">×{item.available}</span>
+                      </span>
+                    ))
+                  ) : (
+                    <span className="text-sm text-muted-foreground">
+                      No GRCs available
+                    </span>
+                  )}
+                </div>
               </div>
-              <Button type="submit" variant="outline">
-                Search
-              </Button>
-            </form>
-            <Select value={status} onValueChange={(v) => { setStatus(v); setPage(1); }}>
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="All Statuses" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Statuses</SelectItem>
-                <SelectItem value="pending">Pending</SelectItem>
-                <SelectItem value="active">Active</SelectItem>
-                <SelectItem value="completed">Completed</SelectItem>
-                <SelectItem value="expired">Expired</SelectItem>
-              </SelectContent>
-            </Select>
+              <a href="/merchant/purchase">
+                <Button variant="outline" size="sm">
+                  Purchase More
+                </Button>
+              </a>
+            </div>
+          </div>
+
+          {/* Stats Cards */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4 mb-6">
+            <div className="bg-card border rounded-lg p-3 sm:p-4">
+              <div className="flex items-center gap-2 text-muted-foreground mb-1">
+                <Clock className="w-4 h-4" />
+                <span className="text-xs sm:text-sm">Pending</span>
+              </div>
+              <div className="text-lg sm:text-2xl font-bold">{stats.pending}</div>
+            </div>
+            <div className="bg-card border rounded-lg p-3 sm:p-4">
+              <div className="flex items-center gap-2 text-muted-foreground mb-1">
+                <Gift className="w-4 h-4" />
+                <span className="text-xs sm:text-sm">Active</span>
+              </div>
+              <div className="text-lg sm:text-2xl font-bold">{stats.active}</div>
+            </div>
+            <div className="bg-card border rounded-lg p-3 sm:p-4">
+              <div className="flex items-center gap-2 text-muted-foreground mb-1">
+                <CheckCircle2 className="w-4 h-4" />
+                <span className="text-xs sm:text-sm">Completed</span>
+              </div>
+              <div className="text-lg sm:text-2xl font-bold">{stats.completed}</div>
+            </div>
+            <div className="bg-card border rounded-lg p-3 sm:p-4">
+              <div className="flex items-center gap-2 text-muted-foreground mb-1">
+                <XCircle className="w-4 h-4" />
+                <span className="text-xs sm:text-sm">Expired</span>
+              </div>
+              <div className="text-lg sm:text-2xl font-bold">{stats.expired}</div>
+            </div>
+          </div>
+
+          {/* Search */}
+          <div className="relative mb-4">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input
+              placeholder="Search by email or name..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-9 max-w-md"
+            />
+          </div>
+
+          {/* Filter Tabs */}
+          <div className="flex flex-wrap gap-2 mb-6">
+            <Button
+              variant={filter === "all" ? "default" : "outline"}
+              size="sm"
+              onClick={() => handleFilterChange("all")}
+            >
+              All
+            </Button>
+            <Button
+              variant={filter === "pending" ? "default" : "outline"}
+              size="sm"
+              onClick={() => handleFilterChange("pending")}
+            >
+              <Clock className="w-4 h-4 mr-1" />
+              Pending
+            </Button>
+            <Button
+              variant={filter === "active" ? "default" : "outline"}
+              size="sm"
+              onClick={() => handleFilterChange("active")}
+            >
+              <Gift className="w-4 h-4 mr-1" />
+              Active
+            </Button>
+            <Button
+              variant={filter === "completed" ? "default" : "outline"}
+              size="sm"
+              onClick={() => handleFilterChange("completed")}
+            >
+              <CheckCircle2 className="w-4 h-4 mr-1" />
+              Completed
+            </Button>
+            <Button
+              variant={filter === "expired" ? "default" : "outline"}
+              size="sm"
+              onClick={() => handleFilterChange("expired")}
+            >
+              <XCircle className="w-4 h-4 mr-1" />
+              Expired
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={fetchGrcs}
+              disabled={isLoading}
+              className="ml-auto"
+            >
+              <RefreshCw className={cn("w-4 h-4", isLoading && "animate-spin")} />
+            </Button>
           </div>
 
           {/* Table */}
           <div className="bg-card rounded-xl border border-border overflow-hidden">
-            {!data || data.grcs.length === 0 ? (
-              <div className="p-8 text-center text-muted-foreground">
-                <p>No GRCs found</p>
-                <p className="text-sm mt-1">
-                  {search || status !== "all" ? "Try adjusting your filters" : "Issue your first GRC to get started"}
-                </p>
-              </div>
-            ) : (
-              <>
-                {/* Desktop Table */}
-                <div className="hidden md:block">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Recipient</TableHead>
-                        <TableHead>Value</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead>Progress</TableHead>
-                        <TableHead>Issued</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {data.grcs.map((grc) => (
-                        <TableRow key={grc.id}>
-                          <TableCell>
-                            <div>
-                              <p className="font-medium">
-                                {grc.recipientName || "—"}
-                              </p>
-                              <p className="text-sm text-muted-foreground">
-                                {grc.email || "Not registered"}
-                              </p>
-                            </div>
-                          </TableCell>
-                          <TableCell className="font-medium">
-                            ${grc.denomination}
-                          </TableCell>
-                          <TableCell>
-                            <StatusBadge variant={getStatusVariant(grc.status)}>
-                              {getStatusLabel(grc)}
-                            </StatusBadge>
-                          </TableCell>
-                          <TableCell>
-                            {grc.status === "active" && (
-                              <div className="flex items-center gap-2">
-                                <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden max-w-[100px]">
-                                  <div
-                                    className="h-full bg-primary rounded-full"
-                                    style={{
-                                      width: `${(grc.monthsCompleted / grc.totalMonths) * 100}%`,
-                                    }}
-                                  />
-                                </div>
-                                <span className="text-sm text-muted-foreground">
-                                  {grc.monthsCompleted}/{grc.totalMonths}
-                                </span>
-                              </div>
-                            )}
-                            {grc.status === "completed" && (
-                              <span className="text-sm text-muted-foreground">
-                                {grc.totalMonths}/{grc.totalMonths} months
-                              </span>
-                            )}
-                            {grc.status === "pending" && (
-                              <span className="text-sm text-muted-foreground">
-                                Awaiting registration
-                              </span>
-                            )}
-                            {grc.status === "expired" && (
-                              <span className="text-sm text-muted-foreground">
-                                Never registered
-                              </span>
-                            )}
-                          </TableCell>
-                          <TableCell className="text-muted-foreground">
-                            {format(new Date(grc.issuedAt), "MMM d, yyyy")}
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
+            {/* Mobile Cards */}
+            <div className="md:hidden divide-y divide-border">
+              {!isLoading && grcs.length === 0 ? (
+                <div className="p-8 text-center text-muted-foreground">
+                  <p>No GRCs found</p>
+                  <p className="text-sm mt-1">
+                    {searchQuery || filter !== "all" ? "Try adjusting your filters" : "Issue your first GRC to get started"}
+                  </p>
                 </div>
-
-                {/* Mobile Cards */}
-                <div className="md:hidden divide-y divide-border">
-                  {data.grcs.map((grc) => (
-                    <div key={grc.id} className="p-4">
-                      <div className="flex items-start justify-between mb-2">
-                        <div>
-                          <p className="font-medium">
-                            {grc.recipientName || grc.email || "Not registered"}
-                          </p>
-                          {grc.recipientName && grc.email && (
-                            <p className="text-sm text-muted-foreground">{grc.email}</p>
-                          )}
-                        </div>
-                        <span className="font-semibold">${grc.denomination}</span>
+              ) : (
+                grcs.map((grc) => (
+                  <div key={grc.id} className="p-4">
+                    {/* Header: Recipient + Status */}
+                    <div className="flex items-start justify-between gap-3 mb-3">
+                      <div className="min-w-0">
+                        <h3 className="font-semibold truncate">
+                          {grc.recipientName || "Not registered"}
+                        </h3>
+                        <p className="text-sm text-muted-foreground truncate">
+                          {grc.email || "Awaiting registration"}
+                        </p>
                       </div>
-                      <div className="flex items-center justify-between">
-                        <StatusBadge variant={getStatusVariant(grc.status)} size="sm">
-                          {getStatusLabel(grc)}
-                        </StatusBadge>
+                      <span className={cn(
+                        "text-xs px-2.5 py-1 rounded-full font-medium shrink-0",
+                        getStatusBadge(grc.status)
+                      )}>
+                        {grc.status}
+                      </span>
+                    </div>
+
+                    {/* Key metric box */}
+                    <div className="bg-muted/50 rounded-lg p-3 mb-3">
+                      <div className="flex items-baseline justify-between">
+                        <span className="text-2xl font-bold">${grc.denomination}</span>
                         <span className="text-sm text-muted-foreground">
-                          {format(new Date(grc.issuedAt), "MMM d, yyyy")}
+                          {grc.totalMonths} months
                         </span>
                       </div>
                       {grc.status === "active" && (
-                        <div className="mt-3 flex items-center gap-2">
+                        <div className="mt-2 flex items-center gap-2">
                           <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
                             <div
                               className="h-full bg-primary rounded-full"
@@ -291,48 +348,123 @@ export default function MyGrcsPage() {
                               }}
                             />
                           </div>
-                          <span className="text-sm text-muted-foreground">
+                          <span className="text-xs text-muted-foreground">
                             {grc.monthsCompleted}/{grc.totalMonths}
                           </span>
                         </div>
                       )}
                     </div>
-                  ))}
-                </div>
 
-                {/* Pagination */}
-                {data.pagination.totalPages > 1 && (
-                  <div className="p-4 border-t border-border flex items-center justify-between">
-                    <p className="text-sm text-muted-foreground">
-                      Showing {(data.pagination.page - 1) * data.pagination.limit + 1}-
-                      {Math.min(data.pagination.page * data.pagination.limit, data.pagination.total)} of{" "}
-                      {data.pagination.total}
+                    {/* Meta info */}
+                    <p className="text-xs text-muted-foreground">
+                      Issued {format(new Date(grc.issuedAt), "MMM d, yyyy")}
                     </p>
-                    <div className="flex items-center gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setPage((p) => Math.max(1, p - 1))}
-                        disabled={page === 1}
-                      >
-                        <ChevronLeft className="w-4 h-4" />
-                      </Button>
-                      <span className="text-sm">
-                        Page {data.pagination.page} of {data.pagination.totalPages}
-                      </span>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setPage((p) => Math.min(data.pagination.totalPages, p + 1))}
-                        disabled={page === data.pagination.totalPages}
-                      >
-                        <ChevronRight className="w-4 h-4" />
-                      </Button>
-                    </div>
                   </div>
+                ))
+              )}
+            </div>
+
+            {/* Desktop Table */}
+            <table className="w-full hidden md:table table-fixed">
+              <colgroup>
+                <col className="w-[30%]" />
+                <col className="w-[12%]" />
+                <col className="w-[15%]" />
+                <col className="w-[25%]" />
+                <col className="w-[18%]" />
+              </colgroup>
+              <thead className="bg-muted/50 border-b">
+                <tr>
+                  <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Recipient</th>
+                  <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Value</th>
+                  <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Status</th>
+                  <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Progress</th>
+                  <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Issued</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border">
+                {!isLoading && grcs.length === 0 ? (
+                  <tr>
+                    <td colSpan={5} className="px-4 py-8 text-center text-muted-foreground">
+                      {searchQuery || filter !== "all" ? "No GRCs found matching your filters" : "No GRCs issued yet"}
+                    </td>
+                  </tr>
+                ) : (
+                  grcs.map((grc) => (
+                    <tr key={grc.id} className="hover:bg-muted/50">
+                      <td className="px-4 py-3">
+                        <div className="truncate">
+                          <p className="font-medium truncate">
+                            {grc.recipientName || "—"}
+                          </p>
+                          <p className="text-sm text-muted-foreground truncate">
+                            {grc.email || "Not registered"}
+                          </p>
+                        </div>
+                      </td>
+                      <td className="px-4 py-3 font-medium">
+                        ${grc.denomination}
+                      </td>
+                      <td className="px-4 py-3">
+                        <span className={cn(
+                          "text-xs px-2.5 py-1 rounded-full font-medium",
+                          getStatusBadge(grc.status)
+                        )}>
+                          {getStatusLabel(grc)}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3">
+                        {grc.status === "active" && (
+                          <div className="flex items-center gap-2">
+                            <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden max-w-[100px]">
+                              <div
+                                className="h-full bg-primary rounded-full"
+                                style={{
+                                  width: `${(grc.monthsCompleted / grc.totalMonths) * 100}%`,
+                                }}
+                              />
+                            </div>
+                            <span className="text-sm text-muted-foreground">
+                              {grc.monthsCompleted}/{grc.totalMonths}
+                            </span>
+                          </div>
+                        )}
+                        {grc.status === "completed" && (
+                          <span className="text-sm text-muted-foreground">
+                            {grc.totalMonths}/{grc.totalMonths} months
+                          </span>
+                        )}
+                        {grc.status === "pending" && (
+                          <span className="text-sm text-muted-foreground">
+                            Awaiting registration
+                          </span>
+                        )}
+                        {grc.status === "expired" && (
+                          <span className="text-sm text-muted-foreground">
+                            Never registered
+                          </span>
+                        )}
+                      </td>
+                      <td className="px-4 py-3 text-muted-foreground">
+                        {format(new Date(grc.issuedAt), "MMM d, yyyy")}
+                      </td>
+                    </tr>
+                  ))
                 )}
-              </>
-            )}
+              </tbody>
+            </table>
+
+            {/* Pagination */}
+            <div className="border-t border-border px-4">
+              <Pagination
+                page={page}
+                totalPages={totalPages}
+                total={total}
+                limit={20}
+                onPageChange={setPage}
+                disabled={isLoading}
+              />
+            </div>
           </div>
         </>
       )}

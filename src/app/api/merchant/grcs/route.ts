@@ -104,6 +104,53 @@ export async function GET(request: NextRequest) {
       };
     });
 
+    // Get stats (counts by status for this merchant)
+    const [statsResult] = await db
+      .select({
+        pending: sql<number>`count(*) filter (where ${grcs.status} = 'pending')`,
+        active: sql<number>`count(*) filter (where ${grcs.status} = 'active')`,
+        completed: sql<number>`count(*) filter (where ${grcs.status} = 'completed')`,
+        expired: sql<number>`count(*) filter (where ${grcs.status} = 'expired')`,
+      })
+      .from(grcs)
+      .where(eq(grcs.merchantId, merchant.id));
+
+    // Get available inventory by denomination
+    const purchasedByDenom = await db
+      .select({
+        denomination: grcPurchases.denomination,
+        quantity: sql<number>`sum(${grcPurchases.quantity})::int`,
+      })
+      .from(grcPurchases)
+      .where(
+        and(
+          eq(grcPurchases.merchantId, merchant.id),
+          eq(grcPurchases.paymentStatus, "confirmed")
+        )
+      )
+      .groupBy(grcPurchases.denomination);
+
+    const issuedByDenom = await db
+      .select({
+        denomination: grcs.denomination,
+        count: sql<number>`count(*)::int`,
+      })
+      .from(grcs)
+      .where(eq(grcs.merchantId, merchant.id))
+      .groupBy(grcs.denomination);
+
+    const issuedMap = new Map(issuedByDenom.map((r) => [r.denomination, r.count]));
+
+    const inventory = purchasedByDenom
+      .map((p) => ({
+        denomination: p.denomination,
+        available: p.quantity - (issuedMap.get(p.denomination) || 0),
+      }))
+      .filter((i) => i.available > 0)
+      .sort((a, b) => a.denomination - b.denomination);
+
+    const totalAvailable = inventory.reduce((sum, i) => sum + i.available, 0);
+
     return NextResponse.json({
       grcs: formattedGrcs,
       pagination: {
@@ -111,6 +158,16 @@ export async function GET(request: NextRequest) {
         page,
         limit,
         totalPages: Math.ceil(total / limit),
+      },
+      stats: {
+        pending: Number(statsResult?.pending) || 0,
+        active: Number(statsResult?.active) || 0,
+        completed: Number(statsResult?.completed) || 0,
+        expired: Number(statsResult?.expired) || 0,
+      },
+      inventory: {
+        total: totalAvailable,
+        byDenomination: inventory,
       },
     });
   } catch (error) {

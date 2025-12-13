@@ -3,7 +3,7 @@ config({ path: ".env.local" });
 
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
-import { users, categories, members, merchants, grcs, surveys } from "./schema";
+import { users, categories, members, merchants, grcs, surveys, grcPurchases } from "./schema";
 import { eq } from "drizzle-orm";
 
 const ADMIN_USERS = [
@@ -114,18 +114,53 @@ async function seed() {
       .where(eq(merchants.userId, userId))
       .limit(1);
 
+    let merchantId: string;
+
     if (!existingMerchant) {
       // Get the first category for test merchant
       const [category] = await db.select().from(categories).limit(1);
 
-      await db.insert(merchants).values({
+      const [newMerchant] = await db.insert(merchants).values({
         userId,
         businessName: admin.businessName,
         city: admin.city,
         categoryId: category?.id,
         verified: true,
-      });
+      }).returning();
+      merchantId = newMerchant.id;
       console.log(`Created merchant profile for ${admin.email}`);
+    } else {
+      merchantId = existingMerchant.id;
+    }
+
+    // Create confirmed GRC purchases if none exist (gives merchants inventory to issue)
+    const [existingPurchase] = await db
+      .select()
+      .from(grcPurchases)
+      .where(eq(grcPurchases.merchantId, merchantId))
+      .limit(1);
+
+    if (!existingPurchase) {
+      // Add various denominations with confirmed status
+      const testPurchases = [
+        { denomination: 50, quantity: 10 },
+        { denomination: 100, quantity: 10 },
+        { denomination: 150, quantity: 5 },
+        { denomination: 200, quantity: 5 },
+      ];
+
+      for (const purchase of testPurchases) {
+        await db.insert(grcPurchases).values({
+          merchantId,
+          denomination: purchase.denomination,
+          quantity: purchase.quantity,
+          totalCost: (purchase.denomination * purchase.quantity * 0.035).toFixed(2), // ~3.5% cost
+          paymentMethod: "zelle",
+          paymentStatus: "confirmed",
+          paymentConfirmedAt: new Date(),
+        });
+      }
+      console.log(`Created confirmed GRC purchases for ${admin.email}`);
     }
   }
 
