@@ -48,6 +48,7 @@ export function InviteMerchantDialog({
   const [generatedLink, setGeneratedLink] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
   const [linkCopied, setLinkCopied] = useState(false);
+  const [linkError, setLinkError] = useState("");
 
   // Create Directly tab state
   const [directEmail, setDirectEmail] = useState("");
@@ -74,6 +75,7 @@ export function InviteMerchantDialog({
       setSendInviteEmail(true);
       setGeneratedLink("");
       setLinkCopied(false);
+      setLinkError("");
 
       setDirectEmail("");
       setBusinessName("");
@@ -113,6 +115,7 @@ export function InviteMerchantDialog({
   const handleGenerateLink = async () => {
     setIsGenerating(true);
     setGeneratedLink("");
+    setLinkError("");
 
     try {
       const res = await fetch("/api/admin/merchant-invites", {
@@ -131,11 +134,11 @@ export function InviteMerchantDialog({
         onSuccess?.();
       } else {
         const data = await res.json();
-        alert(data.error || "Failed to generate invite link");
+        setLinkError(data.error || "Failed to generate invite link");
       }
     } catch (error) {
       console.error("Error generating invite:", error);
-      alert("Failed to generate invite link");
+      setLinkError("Failed to generate invite link");
     } finally {
       setIsGenerating(false);
     }
@@ -255,6 +258,12 @@ export function InviteMerchantDialog({
                     <Label htmlFor="send-invite-email" className="text-sm font-normal cursor-pointer">
                       Send invite email to merchant
                     </Label>
+                  </div>
+                )}
+
+                {linkError && (
+                  <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-red-700 text-sm">
+                    {linkError}
                   </div>
                 )}
 
