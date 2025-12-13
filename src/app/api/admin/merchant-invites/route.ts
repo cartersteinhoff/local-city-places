@@ -4,6 +4,7 @@ import { generateToken, hashToken } from "@/lib/auth";
 import { db, merchantInvites, users } from "@/db";
 import { eq, desc, sql, and, gt, isNull, isNotNull, lt } from "drizzle-orm";
 import { sendMerchantInviteEmail } from "@/lib/email";
+import { validateEmailForMerchant } from "@/lib/merchant-onboarding";
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
 const DEFAULT_EXPIRY_DAYS = 7;
@@ -135,6 +136,14 @@ export async function POST(request: NextRequest) {
 
     const body = await request.json();
     const { email, expiresInDays = DEFAULT_EXPIRY_DAYS, sendEmail = true } = body;
+
+    // If email is provided, validate it's not already in use
+    if (email) {
+      const validationError = await validateEmailForMerchant(email);
+      if (validationError) {
+        return NextResponse.json({ error: validationError.message }, { status: 400 });
+      }
+    }
 
     // Validate expiry days
     const validExpiryDays = Math.min(30, Math.max(1, parseInt(expiresInDays) || DEFAULT_EXPIRY_DAYS));
