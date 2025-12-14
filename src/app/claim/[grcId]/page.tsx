@@ -51,9 +51,6 @@ export default function ClaimGRCPage({ params }: { params: Promise<{ grcId: stri
           setAuthStatus("logged_in");
           setHasMemberProfile(!!authData.member);
 
-          // Store GRC ID for after redirect
-          sessionStorage.setItem("pending_grc_claim", grcId);
-
           // Redirect based on profile status
           if (authData.member) {
             // Has profile - go to dashboard with GRC param
@@ -82,13 +79,13 @@ export default function ClaimGRCPage({ params }: { params: Promise<{ grcId: stri
     setMagicLinkError("");
 
     try {
-      // Store GRC ID for after verification
-      sessionStorage.setItem("pending_grc_claim", grcId);
-
       const res = await fetch("/api/auth/magic-link", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
+        body: JSON.stringify({
+          email,
+          callbackUrl: `/member?grc=${grcId}`
+        }),
       });
 
       const data = await res.json();

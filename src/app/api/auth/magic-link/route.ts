@@ -29,7 +29,7 @@ function isRateLimited(email: string): boolean {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { email } = body;
+    const { email, callbackUrl } = body;
 
     if (!email || typeof email !== "string") {
       return NextResponse.json(
@@ -64,8 +64,8 @@ export async function POST(request: NextRequest) {
       .where(eq(users.email, normalizedEmail))
       .limit(1);
 
-    // Create magic link token
-    const token = await createMagicLinkToken(normalizedEmail);
+    // Create magic link token (callbackUrl is validated in createMagicLinkToken)
+    const token = await createMagicLinkToken(normalizedEmail, callbackUrl);
 
     // Send email
     await sendMagicLinkEmail(normalizedEmail, token);

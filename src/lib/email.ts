@@ -184,10 +184,10 @@ export async function sendMerchantInviteEmail({
 
       <div style="background: #f0fdf4; border: 1px solid #22c55e; border-radius: 12px; padding: 20px; margin: 24px 0;">
         <p style="margin: 0; color: #15803d; font-weight: bold;">
-          Your trial includes 10 FREE Grocery Rebate Certificates ($100 each)!
+          FREE Trial Grocery Rebate Certificates Included!
         </p>
         <p style="margin: 8px 0 0 0; color: #166534; font-size: 14px;">
-          That's $1,000 in value to give to your customers.
+          Our team will set up your trial GRCs after you complete registration.
         </p>
       </div>
 
@@ -218,8 +218,8 @@ export async function sendMerchantInviteEmail({
 
 You've been invited to join Local City Places as a merchant partner.
 
-Your trial includes 10 FREE Grocery Rebate Certificates ($100 each)!
-That's $1,000 in value to give to your customers.
+FREE Trial Grocery Rebate Certificates Included!
+Our team will set up your trial GRCs after you complete registration.
 
 What are Grocery Rebate Certificates?
 GRCs are a unique way to reward and retain your customers. When you give a customer a GRC, they receive monthly grocery rebates just for shopping at their local grocery store.
@@ -304,6 +304,164 @@ Getting Started:
 Access your dashboard: ${loginUrl}
 
 Need help getting started? Reply to this email and our team will be happy to assist.`;
+
+  return sendEmail({ to: email, subject, html, text });
+}
+
+interface MerchantWelcomeNoTrialEmailOptions {
+  email: string;
+  businessName: string;
+  loginUrl: string;
+}
+
+/**
+ * Welcome email for merchants who onboard via invite link (no trial GRCs yet)
+ */
+export async function sendMerchantWelcomeNoTrialEmail({
+  email,
+  businessName,
+  loginUrl,
+}: MerchantWelcomeNoTrialEmailOptions): Promise<boolean> {
+  const subject = `Welcome to Local City Places, ${businessName}!`;
+  const html = `
+    <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
+      <h1 style="color: #ff7a3c;">Welcome to Local City Places!</h1>
+      <p>Hi there,</p>
+      <p>Your merchant account for <strong>${businessName}</strong> has been created and is ready to go!</p>
+
+      <div style="background: #eff6ff; border: 1px solid #3b82f6; border-radius: 12px; padding: 20px; margin: 24px 0;">
+        <p style="margin: 0; color: #1d4ed8; font-weight: bold;">
+          Your Trial GRCs Are Coming!
+        </p>
+        <p style="margin: 8px 0 0 0; color: #1e40af; font-size: 14px;">
+          Our team will contact you shortly to set up your free trial Grocery Rebate Certificates.
+          We'll send you another email when they're ready to use.
+        </p>
+      </div>
+
+      <p><strong>In the meantime:</strong></p>
+      <ol style="color: #444; line-height: 1.8;">
+        <li>Click the button below to access your dashboard</li>
+        <li>Complete your business profile</li>
+        <li>Explore the platform and see how GRCs work</li>
+      </ol>
+
+      <div style="text-align: center; margin: 32px 0;">
+        <a href="${loginUrl}" style="display: inline-block; background: linear-gradient(135deg, #ff7a3c, #ff9f1c); color: white; padding: 16px 32px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 16px;">
+          Access Your Dashboard
+        </a>
+      </div>
+
+      <p style="color: #666; font-size: 14px;">
+        Or copy and paste this link: <a href="${loginUrl}" style="color: #ff7a3c;">${loginUrl}</a>
+      </p>
+
+      <hr style="border: none; border-top: 1px solid #eee; margin: 24px 0;" />
+
+      <p style="color: #666; font-size: 14px;">
+        Need help getting started? Reply to this email and our team will be happy to assist.
+      </p>
+    </div>
+  `;
+
+  const text = `Welcome to Local City Places!
+
+Your merchant account for ${businessName} has been created and is ready to go!
+
+Your Trial GRCs Are Coming!
+Our team will contact you shortly to set up your free trial Grocery Rebate Certificates.
+We'll send you another email when they're ready to use.
+
+In the meantime:
+1. Click the link below to access your dashboard
+2. Complete your business profile
+3. Explore the platform and see how GRCs work
+
+Access your dashboard: ${loginUrl}
+
+Need help getting started? Reply to this email and our team will be happy to assist.`;
+
+  return sendEmail({ to: email, subject, html, text });
+}
+
+interface TrialGrcsActivatedEmailOptions {
+  email: string;
+  businessName: string;
+  loginUrl: string;
+  trialGrcCount: number;
+  trialGrcDenomination: number;
+}
+
+/**
+ * Email sent when admin activates trial GRCs for a merchant
+ */
+export async function sendTrialGrcsActivatedEmail({
+  email,
+  businessName,
+  loginUrl,
+  trialGrcCount,
+  trialGrcDenomination,
+}: TrialGrcsActivatedEmailOptions): Promise<boolean> {
+  const totalValue = trialGrcCount * trialGrcDenomination;
+
+  const subject = `Your trial GRCs are ready, ${businessName}!`;
+  const html = `
+    <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
+      <h1 style="color: #ff7a3c;">Your Trial GRCs Are Ready!</h1>
+      <p>Hi there,</p>
+      <p>Great news! Your free trial Grocery Rebate Certificates for <strong>${businessName}</strong> are now activated and ready to use.</p>
+
+      <div style="background: #f0fdf4; border: 1px solid #22c55e; border-radius: 12px; padding: 20px; margin: 24px 0;">
+        <p style="margin: 0; color: #15803d; font-weight: bold; font-size: 18px;">
+          ${trialGrcCount} Trial GRCs @ $${trialGrcDenomination} each
+        </p>
+        <p style="margin: 8px 0 0 0; color: #166534;">
+          That's $${totalValue.toLocaleString()} in total value to give to your customers!
+        </p>
+      </div>
+
+      <p><strong>What's next?</strong></p>
+      <ol style="color: #444; line-height: 1.8;">
+        <li>Click the button below to access your dashboard</li>
+        <li>Go to the "Issue GRC" section</li>
+        <li>Enter a customer's email to send them a GRC</li>
+        <li>Watch your customer engagement grow!</li>
+      </ol>
+
+      <div style="text-align: center; margin: 32px 0;">
+        <a href="${loginUrl}" style="display: inline-block; background: linear-gradient(135deg, #ff7a3c, #ff9f1c); color: white; padding: 16px 32px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 16px;">
+          Start Issuing GRCs
+        </a>
+      </div>
+
+      <p style="color: #666; font-size: 14px;">
+        Or copy and paste this link: <a href="${loginUrl}" style="color: #ff7a3c;">${loginUrl}</a>
+      </p>
+
+      <hr style="border: none; border-top: 1px solid #eee; margin: 24px 0;" />
+
+      <p style="color: #666; font-size: 14px;">
+        Questions about how to use your GRCs? Reply to this email and our team will be happy to help.
+      </p>
+    </div>
+  `;
+
+  const text = `Your Trial GRCs Are Ready!
+
+Great news! Your free trial Grocery Rebate Certificates for ${businessName} are now activated and ready to use.
+
+${trialGrcCount} Trial GRCs @ $${trialGrcDenomination} each
+That's $${totalValue.toLocaleString()} in total value to give to your customers!
+
+What's next?
+1. Click the link below to access your dashboard
+2. Go to the "Issue GRC" section
+3. Enter a customer's email to send them a GRC
+4. Watch your customer engagement grow!
+
+Start issuing GRCs: ${loginUrl}
+
+Questions about how to use your GRCs? Reply to this email and our team will be happy to help.`;
 
   return sendEmail({ to: email, subject, html, text });
 }

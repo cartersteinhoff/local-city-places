@@ -1,12 +1,16 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { db, users, sessions, magicLinkTokens, members, merchants } from "@/db";
+import { SignJWT, jwtVerify } from "jose";
+import { db, users, magicLinkTokens, members, merchants } from "@/db";
 import { eq, and, gt } from "drizzle-orm";
 import { randomBytes, createHash } from "crypto";
 
 export const SESSION_COOKIE_NAME = "session_token";
-const SESSION_EXPIRY_DAYS = 7;
 const MAGIC_LINK_EXPIRY_MINUTES = 15;
+const JWT_EXPIRY_DAYS = 30;
+
+// JWT secret - must be set in environment
+const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET);
 
 // Generate a secure random token
 export function generateToken(length = 32): string {
@@ -18,8 +22,39 @@ export function hashToken(token: string): string {
   return createHash("sha256").update(token).digest("hex");
 }
 
+// Validate callback URL (must be relative path, prevent open redirects)
+export function isValidCallbackUrl(url: string | null | undefined): boolean {
+  if (!url) return false;
+  // Must start with / but not // (protocol-relative URL)
+  // Skip homepage "/" - use role-based redirect instead
+  if (url === "/" || url === "/?") return false;
+  return url.startsWith("/") && !url.startsWith("//");
+}
+
+// Create a JWT token
+async function createJWT(userId: string, role: string): Promise<string> {
+  return new SignJWT({ userId, role })
+    .setProtectedHeader({ alg: "HS256" })
+    .setIssuedAt()
+    .setExpirationTime(`${JWT_EXPIRY_DAYS}d`)
+    .sign(JWT_SECRET);
+}
+
+// Verify a JWT token
+async function verifyJWT(token: string): Promise<{ userId: string; role: string } | null> {
+  try {
+    const { payload } = await jwtVerify(token, JWT_SECRET);
+    return {
+      userId: payload.userId as string,
+      role: payload.role as string,
+    };
+  } catch {
+    return null;
+  }
+}
+
 // Create a magic link token
-export async function createMagicLinkToken(email: string): Promise<string> {
+export async function createMagicLinkToken(email: string, callbackUrl?: string): Promise<string> {
   const token = generateToken();
   const hashedToken = hashToken(token);
   const expiresAt = new Date(Date.now() + MAGIC_LINK_EXPIRY_MINUTES * 60 * 1000);
@@ -27,19 +62,20 @@ export async function createMagicLinkToken(email: string): Promise<string> {
   await db.insert(magicLinkTokens).values({
     email: email.toLowerCase(),
     token: hashedToken,
+    callbackUrl: isValidCallbackUrl(callbackUrl) ? callbackUrl : null,
     expiresAt,
   });
 
   return token;
 }
 
-// Verify a magic link token and create session
+// Verify a magic link token and create JWT
 export async function verifyMagicLinkToken(token: string): Promise<{
   success: boolean;
   userId?: string;
   role?: string;
-  sessionToken?: string;
-  sessionExpiresAt?: Date;
+  jwtToken?: string;
+  callbackUrl?: string | null;
   error?: string;
 }> {
   const hashedToken = hashToken(token);
@@ -86,70 +122,49 @@ export async function verifyMagicLinkToken(token: string): Promise<{
     user = newUser;
   }
 
-  // Create session
-  const sessionToken = generateToken();
-  const hashedSessionToken = hashToken(sessionToken);
-  const sessionExpiresAt = new Date(Date.now() + SESSION_EXPIRY_DAYS * 24 * 60 * 60 * 1000);
+  // Create JWT token
+  const jwtToken = await createJWT(user.id, user.role);
 
-  await db.insert(sessions).values({
-    userId: user.id,
-    token: hashedSessionToken,
-    expiresAt: sessionExpiresAt,
-  });
-
-  // Return session token for the caller to set as cookie
   return {
     success: true,
     userId: user.id,
     role: user.role,
-    sessionToken,
-    sessionExpiresAt,
+    jwtToken,
+    callbackUrl: magicLink.callbackUrl,
   };
 }
 
-// Get current session
+// Get current session from JWT
 export async function getSession(): Promise<{
   user: typeof users.$inferSelect;
   member?: typeof members.$inferSelect;
   merchant?: typeof merchants.$inferSelect;
 } | null> {
   const cookieStore = await cookies();
-  const sessionToken = cookieStore.get(SESSION_COOKIE_NAME)?.value;
+  const token = cookieStore.get(SESSION_COOKIE_NAME)?.value;
 
-  if (!sessionToken) {
+  if (!token) {
     return null;
   }
 
-  const hashedToken = hashToken(sessionToken);
-
-  // Find valid session
-  const [session] = await db
-    .select()
-    .from(sessions)
-    .where(
-      and(
-        eq(sessions.token, hashedToken),
-        gt(sessions.expiresAt, new Date())
-      )
-    )
-    .limit(1);
-
-  if (!session) {
+  // Verify JWT
+  const payload = await verifyJWT(token);
+  if (!payload) {
     return null;
   }
 
-  // Get user
+  // Get user from DB (for fresh data)
   const [user] = await db
     .select()
     .from(users)
-    .where(eq(users.id, session.userId))
+    .where(eq(users.id, payload.userId))
     .limit(1);
 
   if (!user) {
     return null;
   }
 
-  // Get member and merchant profiles if they exist (admins may have both)
+  // Get member and merchant profiles if they exist
   const [member] = await db
     .select()
     .from(members)
@@ -183,16 +198,9 @@ export async function requireRole(role: "member" | "merchant" | "admin") {
   return session;
 }
 
-// Logout
+// Logout - just clear the cookie (no DB operation needed with JWT)
 export async function logout() {
   const cookieStore = await cookies();
-  const sessionToken = cookieStore.get(SESSION_COOKIE_NAME)?.value;
-
-  if (sessionToken) {
-    const hashedToken = hashToken(sessionToken);
-    await db.delete(sessions).where(eq(sessions.token, hashedToken));
-  }
-
   cookieStore.delete(SESSION_COOKIE_NAME);
 }
 

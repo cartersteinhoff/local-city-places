@@ -1,8 +1,9 @@
 import { db, users, merchants, grcPurchases } from "@/db";
-import { eq } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 
-const TRIAL_GRC_QUANTITY = 10;
-const TRIAL_GRC_DENOMINATION = 100;
+export const TRIAL_GRC_QUANTITY = 10;
+export const TRIAL_GRC_DENOMINATIONS = [25, 50, 75, 100] as const;
+export type TrialGrcDenomination = (typeof TRIAL_GRC_DENOMINATIONS)[number];
 
 export interface CreateMerchantOptions {
   email: string;
@@ -16,12 +17,13 @@ export interface CreateMerchantOptions {
   logoUrl?: string;
   googlePlaceId?: string;
   createdBy?: string; // Admin user ID for admin-assisted flow
+  trialGrcDenomination?: TrialGrcDenomination | null; // null = no trial GRCs
 }
 
 export interface CreateMerchantResult {
   user: typeof users.$inferSelect;
   merchant: typeof merchants.$inferSelect;
-  trialPurchase: typeof grcPurchases.$inferSelect;
+  trialPurchase?: typeof grcPurchases.$inferSelect; // Optional - only if trial GRCs created
 }
 
 export type EmailValidationError =
@@ -117,28 +119,86 @@ export async function createMerchantWithTrialGrcs(
     })
     .returning();
 
+  // Create auto-confirmed trial GRC purchase (if denomination provided)
+  const result: CreateMerchantResult = {
+    user: newUser,
+    merchant: newMerchant,
+  };
+
+  if (options.trialGrcDenomination != null) {
+    const [trialPurchase] = await db
+      .insert(grcPurchases)
+      .values({
+        merchantId: newMerchant.id,
+        denomination: options.trialGrcDenomination,
+        quantity: TRIAL_GRC_QUANTITY,
+        totalCost: "0.00",
+        paymentMethod: "bank_account", // Placeholder for trial
+        paymentStatus: "confirmed", // Auto-confirmed
+        isTrial: true,
+        paymentConfirmedAt: new Date(),
+        paymentConfirmedBy: options.createdBy || null,
+        paymentNotes: "Trial GRCs - automatically issued on merchant onboarding",
+      })
+      .returning();
+    result.trialPurchase = trialPurchase;
+  }
+
+  return result;
+}
+
+/**
+ * Sets trial GRCs for an existing merchant who doesn't have them yet
+ * Used when admin manually activates trial GRCs after merchant onboarding
+ */
+export async function setTrialGrcsForMerchant(
+  merchantId: string,
+  denomination: TrialGrcDenomination,
+  confirmedBy: string
+): Promise<typeof grcPurchases.$inferSelect> {
+  // Verify merchant exists
+  const [merchant] = await db
+    .select()
+    .from(merchants)
+    .where(eq(merchants.id, merchantId))
+    .limit(1);
+
+  if (!merchant) {
+    throw new Error("Merchant not found");
+  }
+
+  // Check merchant doesn't already have trial GRCs
+  const [existingTrial] = await db
+    .select({ id: grcPurchases.id })
+    .from(grcPurchases)
+    .where(
+      and(
+        eq(grcPurchases.merchantId, merchantId),
+        eq(grcPurchases.isTrial, true)
+      )
+    )
+    .limit(1);
+
+  if (existingTrial) {
+    throw new Error("Merchant already has trial GRCs");
+  }
+
   // Create auto-confirmed trial GRC purchase
   const [trialPurchase] = await db
     .insert(grcPurchases)
     .values({
-      merchantId: newMerchant.id,
-      denomination: TRIAL_GRC_DENOMINATION,
+      merchantId,
+      denomination,
       quantity: TRIAL_GRC_QUANTITY,
       totalCost: "0.00",
-      paymentMethod: "bank_account", // Placeholder for trial
-      paymentStatus: "confirmed", // Auto-confirmed
+      paymentMethod: "bank_account",
+      paymentStatus: "confirmed",
       isTrial: true,
       paymentConfirmedAt: new Date(),
-      paymentConfirmedBy: options.createdBy || null,
-      paymentNotes: "Trial GRCs - automatically issued on merchant onboarding",
+      paymentConfirmedBy: confirmedBy,
+      paymentNotes: "Trial GRCs - activated by admin",
     })
     .returning();
 
-  return {
-    user: newUser,
-    merchant: newMerchant,
-    trialPurchase,
-  };
+  return trialPurchase;
 }
-
-export { TRIAL_GRC_QUANTITY, TRIAL_GRC_DENOMINATION };

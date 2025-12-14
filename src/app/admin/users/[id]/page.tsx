@@ -18,6 +18,14 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
   LayoutDashboard,
   ClipboardCheck,
   CreditCard,
@@ -29,6 +37,7 @@ import {
   Save,
   Receipt,
   Mail,
+  Gift,
 } from "lucide-react";
 import { useUser } from "@/hooks/use-user";
 import { formatPhoneNumber, stripPhoneNumber } from "@/lib/utils";
@@ -39,7 +48,7 @@ const adminNavItems = [
   { label: "Orders", href: "/admin/orders", icon: Receipt },
   { label: "Gift Cards", href: "/admin/gift-cards", icon: CreditCard },
   { label: "Users", href: "/admin/users", icon: Users },
-  { label: "Invites", href: "/admin/invites", icon: Mail },
+  { label: "Trials", href: "/admin/invites", icon: Mail },
   { label: "Categories", href: "/admin/categories", icon: FolderOpen },
   { label: "Analytics", href: "/admin/analytics", icon: BarChart3 },
 ];
@@ -75,6 +84,7 @@ interface MerchantDetail {
   phone: string | null;
   website: string | null;
   verified: boolean;
+  hasTrialGrcs: boolean;
 }
 
 export default function AdminUserEditPage() {
@@ -91,6 +101,12 @@ export default function AdminUserEditPage() {
   const [user, setUser] = useState<UserDetail | null>(null);
   const [member, setMember] = useState<MemberDetail | null>(null);
   const [merchant, setMerchant] = useState<MerchantDetail | null>(null);
+
+  // Trial GRC dialog state
+  const [showTrialGrcDialog, setShowTrialGrcDialog] = useState(false);
+  const [selectedDenomination, setSelectedDenomination] = useState("100");
+  const [settingTrialGrcs, setSettingTrialGrcs] = useState(false);
+  const [trialGrcError, setTrialGrcError] = useState("");
 
   // Form state
   const [formData, setFormData] = useState({
@@ -211,6 +227,35 @@ export default function AdminUserEditPage() {
       console.error("Error saving user:", err);
       setError("Failed to save changes");
       setSaving(false);
+    }
+  };
+
+  const handleSetTrialGrcs = async () => {
+    if (!merchant) return;
+
+    setSettingTrialGrcs(true);
+    setTrialGrcError("");
+
+    try {
+      const res = await fetch(`/api/admin/merchants/${merchant.id}/trial-grcs`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ denomination: parseInt(selectedDenomination) }),
+      });
+
+      if (res.ok) {
+        // Update local state
+        setMerchant({ ...merchant, hasTrialGrcs: true });
+        setShowTrialGrcDialog(false);
+      } else {
+        const data = await res.json();
+        setTrialGrcError(data.error || "Failed to set trial GRCs");
+      }
+    } catch (err) {
+      console.error("Error setting trial GRCs:", err);
+      setTrialGrcError("Failed to set trial GRCs");
+    } finally {
+      setSettingTrialGrcs(false);
     }
   };
 
@@ -410,6 +455,28 @@ export default function AdminUserEditPage() {
                   <CardDescription>Business information</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
+                  {/* Trial GRCs Alert */}
+                  {!merchant.hasTrialGrcs && (
+                    <div className="bg-yellow-50 dark:bg-yellow-950 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
+                      <div className="flex items-center justify-between gap-4">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 bg-yellow-100 dark:bg-yellow-900 rounded-full flex items-center justify-center shrink-0">
+                            <Gift className="w-5 h-5 text-yellow-600 dark:text-yellow-400" />
+                          </div>
+                          <div>
+                            <h4 className="font-medium text-yellow-800 dark:text-yellow-200">Trial GRCs Not Set Up</h4>
+                            <p className="text-sm text-yellow-700 dark:text-yellow-300">
+                              This merchant hasn&apos;t received their trial GRCs yet.
+                            </p>
+                          </div>
+                        </div>
+                        <Button onClick={() => setShowTrialGrcDialog(true)} size="sm">
+                          <Gift className="w-4 h-4 mr-2" />
+                          Set Trial GRCs
+                        </Button>
+                      </div>
+                    </div>
+                  )}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="businessName">Business Name</Label>
@@ -492,6 +559,53 @@ export default function AdminUserEditPage() {
           </div>
         </>
       )}
+
+      {/* Set Trial GRCs Dialog */}
+      <Dialog open={showTrialGrcDialog} onOpenChange={setShowTrialGrcDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Set Trial GRCs</DialogTitle>
+            <DialogDescription>
+              Give {merchant?.businessName} their free trial GRCs. They will receive an email notification.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4">
+            <Label htmlFor="trial-denomination">Denomination</Label>
+            <Select value={selectedDenomination} onValueChange={setSelectedDenomination}>
+              <SelectTrigger id="trial-denomination">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="100">$100 each (10 x $100 = $1,000 value)</SelectItem>
+                <SelectItem value="75">$75 each (10 x $75 = $750 value)</SelectItem>
+                <SelectItem value="50">$50 each (10 x $50 = $500 value)</SelectItem>
+                <SelectItem value="25">$25 each (10 x $25 = $250 value)</SelectItem>
+              </SelectContent>
+            </Select>
+            <p className="text-xs text-muted-foreground mt-2">
+              Trial GRCs are free for the merchant to issue to their customers
+            </p>
+          </div>
+          {trialGrcError && (
+            <div className="bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800 rounded-lg p-3 text-red-700 dark:text-red-300 text-sm">
+              {trialGrcError}
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowTrialGrcDialog(false)} disabled={settingTrialGrcs}>
+              Cancel
+            </Button>
+            <Button onClick={handleSetTrialGrcs} disabled={settingTrialGrcs}>
+              {settingTrialGrcs ? (
+                <Loader2 className="w-4 h-4 animate-spin mr-2" />
+              ) : (
+                <Gift className="w-4 h-4 mr-2" />
+              )}
+              Activate Trial GRCs
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </DashboardLayout>
   );
 }

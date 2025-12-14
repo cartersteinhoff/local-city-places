@@ -280,19 +280,9 @@ export const magicLinkTokens = pgTable("magic_link_tokens", {
   id: uuid("id").primaryKey().defaultRandom(),
   email: varchar("email", { length: 255 }).notNull(),
   token: varchar("token", { length: 64 }).notNull().unique(),
+  callbackUrl: varchar("callback_url", { length: 500 }),
   expiresAt: timestamp("expires_at").notNull(),
   usedAt: timestamp("used_at"),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-});
-
-// Sessions table (for auth)
-export const sessions = pgTable("sessions", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  userId: uuid("user_id")
-    .notNull()
-    .references(() => users.id, { onDelete: "cascade" }),
-  token: varchar("token", { length: 64 }).notNull().unique(),
-  expiresAt: timestamp("expires_at").notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
@@ -343,7 +333,6 @@ export const usersRelations = relations(users, ({ one, many }) => ({
     fields: [users.id],
     references: [merchants.userId],
   }),
-  sessions: many(sessions),
 }));
 
 export const membersRelations = relations(members, ({ one, many }) => ({
@@ -434,13 +423,6 @@ export const monthlyQualificationsRelations = relations(monthlyQualifications, (
   grc: one(grcs, {
     fields: [monthlyQualifications.grcId],
     references: [grcs.id],
-  }),
-}));
-
-export const sessionsRelations = relations(sessions, ({ one }) => ({
-  user: one(users, {
-    fields: [sessions.userId],
-    references: [users.id],
   }),
 }));
 

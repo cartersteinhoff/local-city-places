@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { db, users, members, merchants, sessions } from "@/db";
+import { db, users, members, merchants, grcPurchases } from "@/db";
 import { getSession } from "@/lib/auth";
-import { eq } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 
 export async function GET(
   request: NextRequest,
@@ -50,7 +50,27 @@ export async function GET(
       .where(eq(merchants.userId, userId))
       .limit(1);
 
-    return NextResponse.json({ user, member, merchant });
+    // Check if merchant has trial GRCs
+    let hasTrialGrcs = false;
+    if (merchant) {
+      const [trialPurchase] = await db
+        .select({ id: grcPurchases.id })
+        .from(grcPurchases)
+        .where(
+          and(
+            eq(grcPurchases.merchantId, merchant.id),
+            eq(grcPurchases.isTrial, true)
+          )
+        )
+        .limit(1);
+      hasTrialGrcs = !!trialPurchase;
+    }
+
+    return NextResponse.json({
+      user,
+      member,
+      merchant: merchant ? { ...merchant, hasTrialGrcs } : null,
+    });
   } catch (error) {
     console.error("Error fetching user:", error);
     return NextResponse.json({ error: "Failed to fetch user" }, { status: 500 });
@@ -186,9 +206,6 @@ export async function DELETE(
     if (userId === session.user.id) {
       return NextResponse.json({ error: "Cannot delete your own account" }, { status: 400 });
     }
-
-    // Delete sessions first
-    await db.delete(sessions).where(eq(sessions.userId, userId));
 
     // Delete user (cascades to members/merchants due to onDelete: "cascade")
     const [deletedUser] = await db

@@ -21,15 +21,26 @@ import { Loader2, CheckCircle, AlertCircle } from "lucide-react"
 interface LoginModalProps {
   open: boolean
   onOpenChange: (open: boolean) => void
+  /** URL to redirect to after login. Defaults to current page. */
+  callbackUrl?: string
 }
 
 type Status = "idle" | "loading" | "success" | "error"
 
-export function LoginModal({ open, onOpenChange }: LoginModalProps) {
+export function LoginModal({ open, onOpenChange, callbackUrl }: LoginModalProps) {
   const [email, setEmail] = useState("")
   const [status, setStatus] = useState<Status>("idle")
   const [errorMessage, setErrorMessage] = useState("")
   const [devToken, setDevToken] = useState<string | null>(null)
+
+  // Use provided callbackUrl or default to current page
+  const getCallbackUrl = () => {
+    if (callbackUrl) return callbackUrl
+    if (typeof window !== "undefined") {
+      return window.location.pathname + window.location.search
+    }
+    return undefined
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -41,7 +52,7 @@ export function LoginModal({ open, onOpenChange }: LoginModalProps) {
       const response = await fetch("/api/auth/magic-link", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
+        body: JSON.stringify({ email, callbackUrl: getCallbackUrl() }),
       })
 
       const data = await response.json()
@@ -75,7 +86,7 @@ export function LoginModal({ open, onOpenChange }: LoginModalProps) {
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>Login</DialogTitle>
           <DialogDescription>
@@ -95,21 +106,31 @@ export function LoginModal({ open, onOpenChange }: LoginModalProps) {
         </DialogHeader>
 
         {status === "success" ? (
-          <div className="flex flex-col items-center py-6 text-center">
-            <CheckCircle className="w-12 h-12 text-success mb-4" />
-            <h3 className="font-semibold text-lg mb-2">
+          <div className="flex flex-col items-center py-8 text-center">
+            <CheckCircle className="w-16 h-16 text-success mb-6" />
+            <h3 className="font-bold text-2xl mb-3">
               {devToken ? "Click to sign in" : "Check your email!"}
             </h3>
-            <p className="text-muted-foreground text-sm mb-4">
+            <p className="text-muted-foreground text-base mb-2">
               {devToken
                 ? "Dev mode - click the button below to complete sign in"
                 : <>We sent a sign-in link to <strong>{email}</strong></>
               }
             </p>
+            {!devToken && (
+              <>
+                <p className="text-muted-foreground text-base mb-6">
+                  A magic link is a secure, one-time login link — no password needed. Just click the link in your email to sign in.
+                </p>
+                <div className="w-full bg-yellow-50 dark:bg-yellow-950/30 border border-yellow-300 dark:border-yellow-800 rounded-lg px-4 py-3 text-base font-medium text-yellow-800 dark:text-yellow-300">
+                  You can close this tab.
+                </div>
+              </>
+            )}
             {devToken && (
               <Button
                 asChild
-                className="bg-primary-gradient hover:opacity-90"
+                className="bg-primary-gradient hover:opacity-90 mt-4"
               >
                 <a href={`/api/auth/verify?token=${devToken}`}>
                   Sign In Now
