@@ -187,6 +187,30 @@ After adding/updating env vars, redeploy with `--force` to skip cache:
 vercel --prod --force
 ```
 
+## Authentication (JWT)
+
+Auth uses JWT tokens stored in cookies (30-day expiry). No database sessions.
+
+**Required env var:** `JWT_SECRET` - must be set in both production and preview:
+```bash
+# Generate a new secret
+openssl rand -base64 32
+
+# Add to Vercel (both environments)
+printf "your-secret-here" | vercel env add JWT_SECRET production
+printf "your-secret-here" | vercel env add JWT_SECRET preview
+```
+
+**Flow:**
+1. User enters email → magic link sent
+2. User clicks link → JWT created, stored in cookie
+3. `getSession()` verifies JWT, fetches user from DB
+
+**Benefits over sessions:**
+- Survives `db:push` migrations
+- No session table lookups
+- Tokens persist after browser close
+
 ## Server-Side Pagination Pattern
 
 ### API Endpoints
