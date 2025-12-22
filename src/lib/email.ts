@@ -52,22 +52,182 @@ export async function sendMagicLinkEmail(email: string, token: string): Promise<
   const magicLink = `${APP_URL}/api/auth/verify?token=${token}`;
 
   const subject = "Sign in to Local City Places";
-  const html = `
-    <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
-      <h1 style="color: #ff7a3c;">Local City Places</h1>
-      <p>Click the button below to sign in:</p>
-      <a href="${magicLink}" style="display: inline-block; background: linear-gradient(135deg, #ff7a3c, #ff9f1c); color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold;">
-        Sign In
-      </a>
-      <p style="margin-top: 20px; color: #666; font-size: 14px;">
-        This link expires in 15 minutes. If you didn't request this, you can ignore this email.
-      </p>
-      <p style="color: #666; font-size: 14px;">
-        Or copy and paste this link: ${magicLink}
-      </p>
+  const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title>Sign in to Local City Places</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      background-color: #f9fafb;
+    }
+    .email-wrapper {
+      width: 100%;
+      background: linear-gradient(180deg, #0f172a 0%, #020617 100%);
+      padding: 48px 20px;
+    }
+    .email-container {
+      max-width: 600px;
+      margin: 0 auto;
+      background-color: transparent;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2);
+    }
+    .email-header {
+      background: #ffffff;
+      padding: 40px 32px;
+      text-align: center;
+      border-bottom: 1px solid #e2e8f0;
+    }
+    .email-header h1 {
+      color: #000000;
+      margin: 0;
+      font-size: 32px;
+      font-weight: 300;
+      letter-spacing: 0.5px;
+    }
+    .email-header .tagline {
+      color: #666666;
+      margin: 8px 0 0 0;
+      font-size: 16px;
+      font-weight: 400;
+      letter-spacing: 1px;
+    }
+    .email-content {
+      background-color: #ffffff;
+      padding: 40px 32px;
+    }
+    .email-content h2 {
+      color: #1e293b;
+      margin: 0 0 24px 0;
+      font-size: 22px;
+      font-weight: 700;
+    }
+    .email-content p {
+      color: #334155;
+      line-height: 1.7;
+      margin: 0 0 16px 0;
+      font-size: 18px;
+    }
+    .alert-box {
+      padding: 16px;
+      border-radius: 6px;
+      margin: 20px 0;
+      background-color: #fef9f3;
+      border-left: 3px solid #f59e0b;
+      color: #92400e;
+    }
+    .email-footer {
+      background: #ffffff;
+      padding: 32px 24px;
+      text-align: center;
+      border-top: 1px solid #e2e8f0;
+    }
+    .email-footer p {
+      color: #666666;
+      font-size: 14px;
+      margin: 0 0 12px 0;
+      line-height: 1.6;
+    }
+    .email-footer a {
+      color: #2563eb;
+      text-decoration: underline;
+    }
+    .footer-divider {
+      width: 40px;
+      height: 1px;
+      background: #e2e8f0;
+      margin: 20px auto;
+    }
+    .footer-legal {
+      font-size: 12px;
+      color: #999999;
+      margin-top: 20px;
+    }
+    @media only screen and (max-width: 600px) {
+      .email-wrapper {
+        padding: 24px 12px;
+      }
+      .email-content {
+        padding: 32px 24px;
+      }
+      .email-header {
+        padding: 24px 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="email-wrapper">
+    <div class="email-container">
+      <!-- Header -->
+      <div class="email-header">
+        <h1>Local City Places</h1>
+        <p class="tagline">Discover • Review • Earn</p>
+      </div>
+
+      <!-- Content -->
+      <div class="email-content">
+        <h2>Sign in to your account</h2>
+        <p>You will never need a password to login. Click the link below to sign in:</p>
+
+        <p style="font-size: 16px; color: #2563eb; word-break: break-all; margin: 32px 0; text-align: center;">
+          <a href="${magicLink}" style="color: #2563eb; text-decoration: underline;">
+            ${magicLink}
+          </a>
+        </p>
+
+        <div class="alert-box">
+          <strong>This link expires in 3 hours</strong> for your security.
+        </div>
+
+        <p style="font-size: 14px; color: #666;">If you didn't request this email, you can safely ignore it.</p>
+      </div>
+
+      <!-- Footer -->
+      <div class="email-footer">
+        <p>
+          <strong>Need help?</strong><br>
+          <a href="mailto:support@localcityplaces.com">support@localcityplaces.com</a>
+        </p>
+
+        <div class="footer-divider"></div>
+
+        <p class="footer-legal">
+          © 2025 Local City Places. All rights reserved.<br>
+          954 E. County Down Drive, Chandler, AZ 85249
+        </p>
+      </div>
     </div>
-  `;
-  const text = `Sign in to Local City Places\n\nClick this link to sign in: ${magicLink}\n\nThis link expires in 15 minutes.`;
+  </div>
+</body>
+</html>`;
+
+  const text = `Sign in to Local City Places
+Discover • Review • Earn
+
+Sign in to your account
+
+You will never need a password to login. Click the link below to sign in:
+
+${magicLink}
+
+This link expires in 3 hours for your security.
+
+If you didn't request this email, you can safely ignore it.
+
+Need help? support@localcityplaces.com
+
+© 2025 Local City Places. All rights reserved.
+954 E. County Down Drive, Chandler, AZ 85249`;
 
   return sendEmail({ to: email, subject, html, text });
 }

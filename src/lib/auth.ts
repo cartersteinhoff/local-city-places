@@ -6,7 +6,7 @@ import { eq, and, gt } from "drizzle-orm";
 import { randomBytes, createHash } from "crypto";
 
 export const SESSION_COOKIE_NAME = "session_token";
-const MAGIC_LINK_EXPIRY_MINUTES = 15;
+const MAGIC_LINK_EXPIRY_MINUTES = 180; // 3 hours
 const JWT_EXPIRY_DAYS = 30;
 
 // JWT secret - must be set in environment
