@@ -51,14 +51,14 @@ export async function sendEmail({ to, subject, html, text, messageStream }: Send
 export async function sendMagicLinkEmail(email: string, token: string): Promise<boolean> {
   const magicLink = `${APP_URL}/api/auth/verify?token=${token}`;
 
-  const subject = "Sign in to Local City Places";
+  const subject = "Welcome to Local City Places";
   const html = `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <title>Sign in to Local City Places</title>
+  <title>Welcome to Local City Places</title>
   <style>
     body {
       margin: 0;
@@ -74,7 +74,7 @@ export async function sendMagicLinkEmail(email: string, token: string): Promise<
       padding: 48px 20px;
     }
     .email-container {
-      max-width: 600px;
+      max-width: 700px;
       margin: 0 auto;
       background-color: transparent;
       border-radius: 8px;
@@ -83,7 +83,7 @@ export async function sendMagicLinkEmail(email: string, token: string): Promise<
     }
     .email-header {
       background: #ffffff;
-      padding: 40px 32px;
+      padding: 24px 32px;
       text-align: center;
       border-bottom: 1px solid #e2e8f0;
     }
@@ -94,36 +94,66 @@ export async function sendMagicLinkEmail(email: string, token: string): Promise<
       font-weight: 300;
       letter-spacing: 0.5px;
     }
-    .email-header .tagline {
-      color: #666666;
-      margin: 8px 0 0 0;
-      font-size: 16px;
-      font-weight: 400;
-      letter-spacing: 1px;
-    }
     .email-content {
       background-color: #ffffff;
       padding: 40px 32px;
     }
     .email-content h2 {
       color: #1e293b;
-      margin: 0 0 24px 0;
-      font-size: 22px;
+      margin: 0 0 16px 0;
+      font-size: 24px;
       font-weight: 700;
     }
     .email-content p {
       color: #334155;
-      line-height: 1.7;
+      line-height: 1.6;
       margin: 0 0 16px 0;
-      font-size: 18px;
+      font-size: 16px;
     }
-    .alert-box {
+    .info-box {
       padding: 16px;
-      border-radius: 6px;
+      border-radius: 8px;
       margin: 20px 0;
-      background-color: #fef9f3;
-      border-left: 3px solid #f59e0b;
-      color: #92400e;
+      background-color: #e8f4f8;
+      border-left: 4px solid #007bff;
+    }
+    .info-box p {
+      color: #333;
+      font-size: 14px;
+      margin: 0;
+    }
+    .details-box {
+      background: #f5f5f5;
+      padding: 20px;
+      border-radius: 8px;
+      margin: 20px 0;
+    }
+    .details-box p {
+      margin: 5px 0;
+      font-size: 14px;
+    }
+    .details-box .label {
+      color: #333;
+      font-weight: bold;
+      margin-bottom: 10px;
+      font-size: 16px;
+    }
+    .details-box .value {
+      color: #666;
+    }
+    .cta-button {
+      text-align: center;
+      margin: 30px 0;
+    }
+    .cta-button a {
+      display: inline-block;
+      background: #007bff;
+      color: white;
+      padding: 14px 32px;
+      text-decoration: none;
+      border-radius: 6px;
+      font-size: 16px;
+      font-weight: 600;
     }
     .email-footer {
       background: #ffffff;
@@ -170,26 +200,32 @@ export async function sendMagicLinkEmail(email: string, token: string): Promise<
     <div class="email-container">
       <!-- Header -->
       <div class="email-header">
-        <h1>Local City Places</h1>
-        <p class="tagline">Discover • Review • Earn</p>
+        <img src="${APP_URL}/images/logo-horizontal.png" alt="Local City Places" style="max-width: 300px; height: auto;" />
       </div>
 
       <!-- Content -->
       <div class="email-content">
-        <h2>Sign in to your account</h2>
-        <p>You will never need a password to login. Click the link below to sign in:</p>
+        <h2>Welcome to Local City Places!</h2>
+        <p>Hi there,</p>
+        <p>An administrator has created a Member account for you on Local City Places. Click the button below to sign in and access your account.</p>
 
-        <p style="font-size: 16px; color: #2563eb; word-break: break-all; margin: 32px 0; text-align: center;">
-          <a href="${magicLink}" style="color: #2563eb; text-decoration: underline;">
-            ${magicLink}
-          </a>
-        </p>
-
-        <div class="alert-box">
-          <strong>This link expires in 3 hours</strong> for your security.
+        <div class="details-box">
+          <p class="label">Account Details:</p>
+          <p class="value">Email: ${email}</p>
+          <p class="value">Account Type: Member</p>
         </div>
 
-        <p style="font-size: 14px; color: #666;">If you didn't request this email, you can safely ignore it.</p>
+        <div class="cta-button">
+          <a href="${magicLink}">Sign In to Your Account</a>
+        </div>
+
+        <p style="color: #999; font-size: 14px;">This link will expire in 3 days for security reasons. If you didn't expect this email, you can safely ignore it.</p>
+
+        <p style="color: #666; font-size: 14px; margin-top: 20px;">Or copy and paste this link: <a href="${magicLink}" style="color: #007bff;">${magicLink}</a></p>
+
+        <div class="info-box">
+          <p><strong>What's a Magic Link?</strong> You'll never need a password to sign in. Just enter your email at login, and we'll send you a secure link like this one to access your account instantly.</p>
+        </div>
       </div>
 
       <!-- Footer -->
@@ -211,18 +247,22 @@ export async function sendMagicLinkEmail(email: string, token: string): Promise<
 </body>
 </html>`;
 
-  const text = `Sign in to Local City Places
-Discover • Review • Earn
+  const text = `Welcome to Local City Places!
 
-Sign in to your account
+Hi there,
 
-You will never need a password to login. Click the link below to sign in:
+An administrator has created a Member account for you on Local City Places.
+Click the link below to sign in and access your account.
 
-${magicLink}
+Account Details:
+- Email: ${email}
+- Account Type: Member
 
-This link expires in 3 hours for your security.
+Sign In: ${magicLink}
 
-If you didn't request this email, you can safely ignore it.
+This link will expire in 3 days for security reasons. If you didn't expect this email, you can safely ignore it.
+
+What's a Magic Link? You'll never need a password to sign in. Just enter your email at login, and we'll send you a secure link like this one to access your account instantly.
 
 Need help? support@localcityplaces.com
 
