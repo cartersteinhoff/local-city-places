@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db, users, members, merchants, grcPurchases } from "@/db";
 import { getSession, createMagicLinkToken } from "@/lib/auth";
-import { sendMagicLinkEmail } from "@/lib/email";
+import { sendWelcomeEmail } from "@/lib/email";
 import { eq, ilike, or, sql, count, desc, and, isNull } from "drizzle-orm";
 
 export async function GET(request: NextRequest) {
@@ -232,7 +232,7 @@ export async function POST(request: NextRequest) {
     // Send magic link invite if requested
     if (sendInvite) {
       const token = await createMagicLinkToken(normalizedEmail);
-      await sendMagicLinkEmail(normalizedEmail, token);
+      await sendWelcomeEmail(normalizedEmail, token);
     }
 
     return NextResponse.json({

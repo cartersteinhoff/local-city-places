@@ -48,7 +48,76 @@ export async function sendEmail({ to, subject, html, text, messageStream }: Send
   }
 }
 
+// Simple sign-in email for existing users
 export async function sendMagicLinkEmail(email: string, token: string): Promise<boolean> {
+  const magicLink = `${APP_URL}/api/auth/verify?token=${token}`;
+
+  const subject = "Sign in to Local City Places";
+  const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title>Sign in to Local City Places</title>
+  <style>
+    body { margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', sans-serif; background-color: #f9fafb; }
+    .email-wrapper { width: 100%; background: linear-gradient(180deg, #0f172a 0%, #020617 100%); padding: 48px 20px; }
+    .email-container { max-width: 700px; margin: 0 auto; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2); }
+    .email-header { background: #ffffff; padding: 24px 32px; text-align: center; border-bottom: 1px solid #e2e8f0; }
+    .email-content { background-color: #ffffff; padding: 40px 32px; }
+    .email-content h2 { color: #1e293b; margin: 0 0 16px 0; font-size: 24px; font-weight: 700; }
+    .email-content p { color: #334155; line-height: 1.6; margin: 0 0 16px 0; font-size: 16px; }
+    .cta-button { text-align: center; margin: 30px 0; }
+    .cta-button a { display: inline-block; background: #007bff; color: white; padding: 14px 32px; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 600; }
+    .email-footer { background: #ffffff; padding: 32px 24px; text-align: center; border-top: 1px solid #e2e8f0; }
+    .email-footer p { color: #666666; font-size: 14px; margin: 0 0 12px 0; line-height: 1.6; }
+    .email-footer a { color: #2563eb; text-decoration: underline; }
+    .footer-divider { width: 40px; height: 1px; background: #e2e8f0; margin: 20px auto; }
+    .footer-legal { font-size: 12px; color: #999999; margin-top: 20px; }
+  </style>
+</head>
+<body>
+  <div class="email-wrapper">
+    <div class="email-container">
+      <div class="email-header">
+        <img src="${APP_URL}/images/logo-horizontal.png" alt="Local City Places" style="max-width: 300px; height: auto;" />
+      </div>
+      <div class="email-content">
+        <h2>Sign in to your account</h2>
+        <p>Click the button below to sign in to Local City Places.</p>
+        <div class="cta-button">
+          <a href="${magicLink}">Sign In</a>
+        </div>
+        <p style="color: #999; font-size: 14px; text-align: center;">This link will expire in 3 days for security reasons.<br>If you didn't request this, you can safely ignore it.</p>
+        <p style="color: #666; font-size: 14px; margin-top: 20px;">Or copy and paste this link: <a href="${magicLink}" style="color: #007bff;">${magicLink}</a></p>
+      </div>
+      <div class="email-footer">
+        <p><strong>Need help?</strong><br><a href="mailto:support@localcityplaces.com">support@localcityplaces.com</a></p>
+        <div class="footer-divider"></div>
+        <p class="footer-legal">© 2025 Local City Places. All rights reserved.<br>954 E. County Down Drive, Chandler, AZ 85249</p>
+      </div>
+    </div>
+  </div>
+</body>
+</html>`;
+
+  const text = `Sign in to Local City Places
+
+Click this link to sign in: ${magicLink}
+
+This link will expire in 3 days for security reasons. If you didn't request this, you can safely ignore it.
+
+Need help? support@localcityplaces.com
+
+© 2025 Local City Places. All rights reserved.
+954 E. County Down Drive, Chandler, AZ 85249`;
+
+  return sendEmail({ to: email, subject, html, text });
+}
+
+// Welcome email for admin-created accounts
+export async function sendWelcomeEmail(email: string, token: string): Promise<boolean> {
   const magicLink = `${APP_URL}/api/auth/verify?token=${token}`;
 
   const subject = "Welcome to Local City Places";
@@ -219,7 +288,7 @@ export async function sendMagicLinkEmail(email: string, token: string): Promise<
           <a href="${magicLink}">Sign In to Your Account</a>
         </div>
 
-        <p style="color: #999; font-size: 14px;">This link will expire in 3 days for security reasons. If you didn't expect this email, you can safely ignore it.</p>
+        <p style="color: #999; font-size: 14px; text-align: center;">This link will expire in 3 days for security reasons.<br>If you didn't expect this email, you can safely ignore it.</p>
 
         <p style="color: #666; font-size: 14px; margin-top: 20px;">Or copy and paste this link: <a href="${magicLink}" style="color: #007bff;">${magicLink}</a></p>
 
