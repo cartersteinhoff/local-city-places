@@ -106,20 +106,15 @@ export async function verifyMagicLinkToken(token: string): Promise<{
     .set({ usedAt: new Date() })
     .where(eq(magicLinkTokens.id, magicLink.id));
 
-  // Find or create user
-  let [user] = await db
+  // Find user - only existing users can log in (admins create accounts)
+  const [user] = await db
     .select()
     .from(users)
     .where(eq(users.email, magicLink.email))
     .limit(1);
 
   if (!user) {
-    // Create new user (default role is member)
-    const [newUser] = await db
-      .insert(users)
-      .values({ email: magicLink.email })
-      .returning();
-    user = newUser;
+    return { success: false, error: "No account found. Please contact an admin." };
   }
 
   // Create JWT token

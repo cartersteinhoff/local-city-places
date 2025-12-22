@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db, users, members, merchants, grcPurchases } from "@/db";
-import { getSession } from "@/lib/auth";
+import { getSession, createMagicLinkToken } from "@/lib/auth";
+import { sendMagicLinkEmail } from "@/lib/email";
 import { eq, ilike, or, sql, count, desc, and, isNull } from "drizzle-orm";
 
 export async function GET(request: NextRequest) {
@@ -174,5 +175,73 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     console.error("Error fetching users:", error);
     return NextResponse.json({ error: "Failed to fetch users" }, { status: 500 });
+  }
+}
+
+// Create a new user (admin only)
+export async function POST(request: NextRequest) {
+  try {
+    const session = await getSession();
+    if (!session) {
+      return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+    }
+    if (session.user.role !== "admin") {
+      return NextResponse.json({ error: "Not authorized" }, { status: 403 });
+    }
+
+    const body = await request.json();
+    const { email, role = "member", sendInvite = true } = body;
+
+    if (!email || typeof email !== "string") {
+      return NextResponse.json({ error: "Email is required" }, { status: 400 });
+    }
+
+    const normalizedEmail = email.toLowerCase().trim();
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(normalizedEmail)) {
+      return NextResponse.json({ error: "Invalid email format" }, { status: 400 });
+    }
+
+    // Validate role
+    if (!["member", "merchant", "admin"].includes(role)) {
+      return NextResponse.json({ error: "Invalid role" }, { status: 400 });
+    }
+
+    // Check if user already exists
+    const [existingUser] = await db
+      .select()
+      .from(users)
+      .where(eq(users.email, normalizedEmail))
+      .limit(1);
+
+    if (existingUser) {
+      return NextResponse.json({ error: "User already exists" }, { status: 409 });
+    }
+
+    // Create the user
+    const [newUser] = await db
+      .insert(users)
+      .values({
+        email: normalizedEmail,
+        role: role as "member" | "merchant" | "admin",
+      })
+      .returning();
+
+    // Send magic link invite if requested
+    if (sendInvite) {
+      const token = await createMagicLinkToken(normalizedEmail);
+      await sendMagicLinkEmail(normalizedEmail, token);
+    }
+
+    return NextResponse.json({
+      success: true,
+      user: newUser,
+      message: sendInvite ? "User created and invite sent" : "User created",
+    });
+  } catch (error) {
+    console.error("Error creating user:", error);
+    return NextResponse.json({ error: "Failed to create user" }, { status: 500 });
   }
 }

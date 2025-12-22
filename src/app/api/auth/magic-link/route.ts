@@ -57,12 +57,21 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check if user exists and get their role
+    // Check if user exists - only existing users can log in
     const [existingUser] = await db
       .select()
       .from(users)
       .where(eq(users.email, normalizedEmail))
       .limit(1);
+
+    if (!existingUser) {
+      // Don't reveal whether email exists for security, but block signup
+      // Return same success message to prevent email enumeration
+      return NextResponse.json({
+        success: true,
+        message: "If you have an account, check your email for the sign-in link",
+      });
+    }
 
     // Create magic link token (callbackUrl is validated in createMagicLinkToken)
     const token = await createMagicLinkToken(normalizedEmail, callbackUrl);
