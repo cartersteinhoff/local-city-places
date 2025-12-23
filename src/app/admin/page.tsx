@@ -6,33 +6,19 @@ import { DashboardLayout } from "@/components/layout";
 import { PageHeader } from "@/components/ui/page-header";
 import { StatCard } from "@/components/ui/stat-card";
 import {
-  LayoutDashboard,
   ClipboardCheck,
   CreditCard,
   Users,
-  FolderOpen,
-  BarChart3,
   Receipt,
   Gift,
   UserCircle,
   FileCheck,
   UserPlus,
   RefreshCw,
-  Mail,
 } from "lucide-react";
 import { useUser } from "@/hooks/use-user";
 import { Button } from "@/components/ui/button";
-
-const adminNavItems = [
-  { label: "Dashboard", href: "/admin", icon: LayoutDashboard },
-  { label: "Moderation", href: "/admin/moderation", icon: ClipboardCheck },
-  { label: "Orders", href: "/admin/orders", icon: Receipt },
-  { label: "Gift Cards", href: "/admin/gift-cards", icon: CreditCard },
-  { label: "Users", href: "/admin/users", icon: Users },
-  { label: "Trials", href: "/admin/invites", icon: Mail },
-  { label: "Categories", href: "/admin/categories", icon: FolderOpen },
-  { label: "Analytics", href: "/admin/analytics", icon: BarChart3 },
-];
+import { adminNavItems } from "./nav";
 
 interface DashboardStats {
   pendingReceipts: number;
@@ -184,7 +170,7 @@ export default function AdminDashboard() {
             <h2 className="text-lg font-semibold mb-4">Quick Actions</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               <a
-                href="/admin/moderation"
+                href="/admin/receipts"
                 className="flex items-center gap-3 p-4 rounded-lg border border-border hover:bg-muted transition-colors"
               >
                 <ClipboardCheck className="w-5 h-5 text-primary" />

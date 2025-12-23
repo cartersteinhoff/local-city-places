@@ -26,32 +26,14 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import {
-  LayoutDashboard,
-  ClipboardCheck,
-  CreditCard,
-  Users,
-  FolderOpen,
-  BarChart3,
   ArrowLeft,
   Loader2,
   Save,
-  Receipt,
-  Mail,
   Gift,
 } from "lucide-react";
 import { useUser } from "@/hooks/use-user";
 import { formatPhoneNumber, stripPhoneNumber } from "@/lib/utils";
-
-const adminNavItems = [
-  { label: "Dashboard", href: "/admin", icon: LayoutDashboard },
-  { label: "Moderation", href: "/admin/moderation", icon: ClipboardCheck },
-  { label: "Orders", href: "/admin/orders", icon: Receipt },
-  { label: "Gift Cards", href: "/admin/gift-cards", icon: CreditCard },
-  { label: "Users", href: "/admin/users", icon: Users },
-  { label: "Trials", href: "/admin/invites", icon: Mail },
-  { label: "Categories", href: "/admin/categories", icon: FolderOpen },
-  { label: "Analytics", href: "/admin/analytics", icon: BarChart3 },
-];
+import { adminNavItems } from "../../nav";
 
 interface UserDetail {
   id: string;

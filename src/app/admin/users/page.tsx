@@ -17,12 +17,6 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import {
-  LayoutDashboard,
-  ClipboardCheck,
-  CreditCard,
-  Users,
-  FolderOpen,
-  BarChart3,
   Search,
   RefreshCw,
   Shield,
@@ -32,26 +26,15 @@ import {
   Trash2,
   Loader2,
   CheckCircle,
-  Receipt,
-  Mail,
   UserPlus,
   Gift,
+  Users,
 } from "lucide-react";
 import { useUser } from "@/hooks/use-user";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { InviteMerchantDialog } from "@/components/admin/invite-merchant-dialog";
-
-const adminNavItems = [
-  { label: "Dashboard", href: "/admin", icon: LayoutDashboard },
-  { label: "Moderation", href: "/admin/moderation", icon: ClipboardCheck },
-  { label: "Orders", href: "/admin/orders", icon: Receipt },
-  { label: "Gift Cards", href: "/admin/gift-cards", icon: CreditCard },
-  { label: "Users", href: "/admin/users", icon: Users },
-  { label: "Trials", href: "/admin/invites", icon: Mail },
-  { label: "Categories", href: "/admin/categories", icon: FolderOpen },
-  { label: "Analytics", href: "/admin/analytics", icon: BarChart3 },
-];
+import { adminNavItems } from "../nav";
 
 interface UserData {
   id: string;

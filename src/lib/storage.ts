@@ -213,3 +213,29 @@ export async function uploadCheckImage(
 
   return blob.url;
 }
+
+/**
+ * Upload an email image to Vercel Blob storage
+ * For use in email campaigns
+ */
+export async function uploadEmailImage(
+  file: File
+): Promise<string | null> {
+  // Skip upload if token not configured (local dev)
+  if (!process.env.BLOB_READ_WRITE_TOKEN) {
+    console.warn("BLOB_READ_WRITE_TOKEN not configured, skipping email image upload");
+    return null;
+  }
+
+  const buffer = Buffer.from(await file.arrayBuffer());
+  const timestamp = Date.now();
+  const ext = file.name.split(".").pop() || "jpg";
+  const uniqueFileName = `emails/${timestamp}-${Math.random().toString(36).slice(2)}.${ext}`;
+
+  const blob = await put(uniqueFileName, buffer, {
+    access: "public",
+    contentType: file.type || "image/jpeg",
+  });
+
+  return blob.url;
+}

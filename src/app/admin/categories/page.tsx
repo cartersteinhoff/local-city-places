@@ -25,32 +25,15 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import {
-  LayoutDashboard,
-  ClipboardCheck,
-  CreditCard,
-  Users,
-  FolderOpen,
-  BarChart3,
   Plus,
   Pencil,
   Trash2,
   Loader2,
   RefreshCw,
-  Receipt,
-  Mail,
+  FolderOpen,
 } from "lucide-react";
 import { useUser } from "@/hooks/use-user";
-
-const adminNavItems = [
-  { label: "Dashboard", href: "/admin", icon: LayoutDashboard },
-  { label: "Moderation", href: "/admin/moderation", icon: ClipboardCheck },
-  { label: "Orders", href: "/admin/orders", icon: Receipt },
-  { label: "Gift Cards", href: "/admin/gift-cards", icon: CreditCard },
-  { label: "Users", href: "/admin/users", icon: Users },
-  { label: "Trials", href: "/admin/invites", icon: Mail },
-  { label: "Categories", href: "/admin/categories", icon: FolderOpen },
-  { label: "Analytics", href: "/admin/analytics", icon: BarChart3 },
-];
+import { adminNavItems } from "../nav";
 
 interface CategoryData {
   id: string;
