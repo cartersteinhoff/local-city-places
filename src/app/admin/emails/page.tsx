@@ -284,7 +284,7 @@ export default function AdminEmailsPage() {
               ) : (
                 campaigns.map((campaign) => (
                   <Link key={campaign.id} href={campaign.status === "draft" ? `/admin/emails/compose?id=${campaign.id}` : `/admin/emails/${campaign.id}`}>
-                    <div className="p-4 hover:bg-muted/30">
+                    <div className="p-4 hover:bg-muted/30 cursor-pointer">
                       <div className="flex items-start justify-between gap-3 mb-2">
                         <h3 className="font-semibold line-clamp-2">{campaign.subject}</h3>
                         <span
@@ -359,9 +359,9 @@ export default function AdminEmailsPage() {
                   </tr>
                 ) : (
                   campaigns.map((campaign) => (
-                    <tr key={campaign.id} className="hover:bg-muted/30">
+                    <tr key={campaign.id} className="hover:bg-muted/30 cursor-pointer">
                       <td className="px-4 py-3">
-                        <Link href={campaign.status === "draft" ? `/admin/emails/compose?id=${campaign.id}` : `/admin/emails/${campaign.id}`} className="block">
+                        <Link href={campaign.status === "draft" ? `/admin/emails/compose?id=${campaign.id}` : `/admin/emails/${campaign.id}`} className="block cursor-pointer">
                           <div className="font-medium hover:underline">{campaign.subject}</div>
                           {campaign.previewText && (
                             <div className="text-sm text-muted-foreground truncate">{campaign.previewText}</div>

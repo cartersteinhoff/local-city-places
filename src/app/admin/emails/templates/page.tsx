@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { DashboardLayout } from "@/components/layout";
+import { adminNavItems } from "../../nav";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -211,6 +213,7 @@ export default function EmailTemplatesPage() {
     : EMAIL_TEMPLATES.filter((t) => t.category === activeCategory);
 
   return (
+    <DashboardLayout navItems={adminNavItems}>
     <div className="h-[calc(100vh-120px)] flex flex-col">
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
@@ -275,7 +278,7 @@ export default function EmailTemplatesPage() {
                 <button
                   key={template.id}
                   className={cn(
-                    "w-full flex items-center gap-3 px-3 py-2.5 text-left transition-colors border-b last:border-b-0",
+                    "w-full flex items-center gap-3 px-3 py-2.5 text-left transition-colors border-b last:border-b-0 cursor-pointer",
                     isSelected
                       ? "bg-primary/10 border-l-2 border-l-primary"
                       : "hover:bg-muted/50"
@@ -399,5 +402,6 @@ export default function EmailTemplatesPage() {
         </DialogContent>
       </Dialog>
     </div>
+    </DashboardLayout>
   );
 }
