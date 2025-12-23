@@ -6,13 +6,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import {
   Dialog,
   DialogContent,
   DialogDescription,
@@ -25,7 +18,6 @@ import {
   ArrowLeft,
   Mail,
   Send,
-  Eye,
   UserPlus,
   Store,
   Gift,
@@ -33,7 +25,10 @@ import {
   LogIn,
   Sparkles,
   Loader2,
+  ChevronRight,
+  Info,
 } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
 interface EmailTemplate {
@@ -216,172 +211,148 @@ export default function EmailTemplatesPage() {
     : EMAIL_TEMPLATES.filter((t) => t.category === activeCategory);
 
   return (
-    <div className="space-y-6">
+    <div className="h-[calc(100vh-120px)] flex flex-col">
       {/* Header */}
-      <div className="flex items-center gap-4">
-        <Link href="/admin/emails">
-          <Button variant="ghost" size="sm">
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to Emails
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-4">
+          <Link href="/admin/emails">
+            <Button variant="ghost" size="sm">
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Back to Emails
+            </Button>
+          </Link>
+          <div>
+            <h1 className="text-xl font-bold">Email Templates</h1>
+            <p className="text-sm text-muted-foreground">
+              Preview and test transactional emails
+            </p>
+          </div>
+        </div>
+        {selectedTemplate && (
+          <Button size="sm" onClick={() => setTestDialogOpen(true)}>
+            <Send className="w-4 h-4 mr-2" />
+            Send Test
           </Button>
-        </Link>
+        )}
       </div>
 
-      <div>
-        <h1 className="text-2xl font-bold">Email Templates</h1>
-        <p className="text-muted-foreground">
-          Preview and test all transactional email templates
-        </p>
-      </div>
+      {/* Main Content */}
+      <div className="flex-1 flex gap-4 min-h-0">
+        {/* Sidebar - Template List */}
+        <div className="w-[280px] shrink-0 flex flex-col border rounded-lg bg-card">
+          {/* Category Filter */}
+          <div className="p-3 border-b">
+            <div className="flex flex-wrap gap-1">
+              <Button
+                variant={activeCategory === "all" ? "default" : "ghost"}
+                size="sm"
+                className="h-7 text-xs"
+                onClick={() => setActiveCategory("all")}
+              >
+                All
+              </Button>
+              {Object.entries(CATEGORY_LABELS).map(([key, { label }]) => (
+                <Button
+                  key={key}
+                  variant={activeCategory === key ? "default" : "ghost"}
+                  size="sm"
+                  className="h-7 text-xs"
+                  onClick={() => setActiveCategory(key)}
+                >
+                  {label}
+                </Button>
+              ))}
+            </div>
+          </div>
 
-      {/* Category Filter */}
-      <div className="flex flex-wrap gap-2">
-        <Button
-          variant={activeCategory === "all" ? "default" : "outline"}
-          size="sm"
-          onClick={() => setActiveCategory("all")}
-        >
-          All Templates
-        </Button>
-        {Object.entries(CATEGORY_LABELS).map(([key, { label }]) => (
-          <Button
-            key={key}
-            variant={activeCategory === key ? "default" : "outline"}
-            size="sm"
-            onClick={() => setActiveCategory(key)}
-          >
-            {label}
-          </Button>
-        ))}
-      </div>
-
-      <div className="grid lg:grid-cols-2 gap-6">
-        {/* Template List */}
-        <div className="space-y-4">
-          <h2 className="text-lg font-semibold">Available Templates</h2>
-          <div className="space-y-3">
+          {/* Template List */}
+          <div className="flex-1 overflow-auto">
             {filteredTemplates.map((template) => {
               const category = CATEGORY_LABELS[template.category];
               const isSelected = selectedTemplate?.id === template.id;
 
               return (
-                <Card
+                <button
                   key={template.id}
-                  className={`cursor-pointer transition-all hover:shadow-md ${
-                    isSelected ? "ring-2 ring-primary" : ""
-                  }`}
+                  className={cn(
+                    "w-full flex items-center gap-3 px-3 py-2.5 text-left transition-colors border-b last:border-b-0",
+                    isSelected
+                      ? "bg-primary/10 border-l-2 border-l-primary"
+                      : "hover:bg-muted/50"
+                  )}
                   onClick={() => loadPreview(template)}
                 >
-                  <CardContent className="p-4">
-                    <div className="flex items-start gap-3">
-                      <div className="p-2 bg-muted rounded-lg shrink-0">
-                        {template.icon}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <h3 className="font-medium">{template.name}</h3>
-                          <span
-                            className={`text-xs px-2 py-0.5 rounded-full ${category.color}`}
-                          >
-                            {category.label}
-                          </span>
-                        </div>
-                        <p className="text-sm text-muted-foreground mt-1">
-                          {template.description}
-                        </p>
-                      </div>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="shrink-0"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          loadPreview(template);
-                        }}
-                      >
-                        <Eye className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
+                  <div className={cn(
+                    "p-1.5 rounded shrink-0",
+                    isSelected ? "bg-primary/20" : "bg-muted"
+                  )}>
+                    {template.icon}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="font-medium text-sm truncate">{template.name}</div>
+                    <span className={cn("text-[10px] px-1.5 py-0.5 rounded-full", category.color)}>
+                      {category.label}
+                    </span>
+                  </div>
+                  <ChevronRight className={cn(
+                    "w-4 h-4 shrink-0 text-muted-foreground transition-transform",
+                    isSelected && "text-primary"
+                  )} />
+                </button>
               );
             })}
           </div>
         </div>
 
         {/* Preview Panel */}
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold">Preview</h2>
-            {selectedTemplate && (
-              <Button
-                size="sm"
-                onClick={() => setTestDialogOpen(true)}
-              >
-                <Send className="w-4 h-4 mr-2" />
-                Send Test
-              </Button>
-            )}
-          </div>
-
-          <Card className="min-h-[600px]">
-            {!selectedTemplate ? (
-              <div className="flex flex-col items-center justify-center h-[600px] text-muted-foreground">
-                <Mail className="w-12 h-12 mb-4 opacity-50" />
-                <p>Select a template to preview</p>
-              </div>
-            ) : isLoadingPreview ? (
-              <div className="flex flex-col items-center justify-center h-[600px]">
-                <Loader2 className="w-8 h-8 animate-spin text-muted-foreground mb-4" />
-                <p className="text-muted-foreground">Loading preview...</p>
-              </div>
-            ) : (
-              <div className="h-[600px] overflow-hidden">
-                <Tabs defaultValue="preview" className="h-full flex flex-col">
-                  <div className="px-4 pt-4 border-b">
-                    <TabsList>
-                      <TabsTrigger value="preview">Preview</TabsTrigger>
-                      <TabsTrigger value="html">HTML Source</TabsTrigger>
-                    </TabsList>
-                  </div>
-                  <TabsContent value="preview" className="flex-1 m-0 overflow-hidden">
-                    <iframe
-                      srcDoc={previewHtml}
-                      className="w-full h-full border-0"
-                      title="Email Preview"
-                      sandbox="allow-same-origin"
-                    />
-                  </TabsContent>
-                  <TabsContent value="html" className="flex-1 m-0 overflow-auto p-4">
-                    <pre className="text-xs whitespace-pre-wrap font-mono bg-muted p-4 rounded-lg overflow-auto max-h-[520px]">
-                      {previewHtml}
-                    </pre>
-                  </TabsContent>
-                </Tabs>
-              </div>
-            )}
-          </Card>
-
-          {/* Template Parameters */}
-          {selectedTemplate && (
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-base">Template Parameters</CardTitle>
-                <CardDescription>
-                  Sample values used for this preview
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2">
-                  {Object.entries(selectedTemplate.previewParams).map(([key, value]) => (
-                    <div key={key} className="flex items-center gap-2 text-sm">
-                      <span className="font-mono text-muted-foreground">{key}:</span>
-                      <span className="font-medium">{String(value)}</span>
-                    </div>
-                  ))}
+        <div className="flex-1 flex flex-col border rounded-lg bg-card min-w-0">
+          {!selectedTemplate ? (
+            <div className="flex-1 flex flex-col items-center justify-center text-muted-foreground">
+              <Mail className="w-12 h-12 mb-4 opacity-50" />
+              <p>Select a template to preview</p>
+            </div>
+          ) : isLoadingPreview ? (
+            <div className="flex-1 flex flex-col items-center justify-center">
+              <Loader2 className="w-8 h-8 animate-spin text-muted-foreground mb-4" />
+              <p className="text-muted-foreground">Loading preview...</p>
+            </div>
+          ) : (
+            <Tabs defaultValue="preview" className="flex-1 flex flex-col min-h-0">
+              <div className="px-4 pt-3 pb-2 border-b flex items-center justify-between">
+                <TabsList>
+                  <TabsTrigger value="preview">Preview</TabsTrigger>
+                  <TabsTrigger value="html">HTML Source</TabsTrigger>
+                </TabsList>
+                {/* Inline Parameters */}
+                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <Info className="w-3.5 h-3.5" />
+                  <span>
+                    {Object.entries(selectedTemplate.previewParams).slice(0, 2).map(([key, value], i) => (
+                      <span key={key}>
+                        {i > 0 && " · "}
+                        <span className="font-mono">{key}:</span> {String(value).slice(0, 20)}{String(value).length > 20 && "..."}
+                      </span>
+                    ))}
+                    {Object.keys(selectedTemplate.previewParams).length > 2 && (
+                      <span> · +{Object.keys(selectedTemplate.previewParams).length - 2} more</span>
+                    )}
+                  </span>
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+              <TabsContent value="preview" className="flex-1 m-0 overflow-hidden">
+                <iframe
+                  srcDoc={previewHtml}
+                  className="w-full h-full border-0"
+                  title="Email Preview"
+                  sandbox="allow-same-origin"
+                />
+              </TabsContent>
+              <TabsContent value="html" className="flex-1 m-0 overflow-auto p-4">
+                <pre className="text-xs whitespace-pre-wrap font-mono bg-muted p-4 rounded-lg">
+                  {previewHtml}
+                </pre>
+              </TabsContent>
+            </Tabs>
           )}
         </div>
       </div>
