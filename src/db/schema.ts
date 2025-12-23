@@ -323,6 +323,83 @@ export const merchantInvites = pgTable("merchant_invites", {
     .references(() => users.id),
 });
 
+// ============================================================================
+// EMAIL MARKETING TABLES
+// ============================================================================
+
+// Enums for email campaigns
+export const campaignStatusEnum = pgEnum("campaign_status", ["draft", "sending", "sent", "failed"]);
+export const recipientStatusEnum = pgEnum("recipient_status", ["pending", "sent", "failed", "bounced"]);
+
+// Email campaigns table
+export const emailCampaigns = pgTable("email_campaigns", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  subject: varchar("subject", { length: 255 }).notNull(),
+  previewText: varchar("preview_text", { length: 255 }),
+  content: text("content").notNull(), // HTML content
+  recipientType: varchar("recipient_type", { length: 50 }).notNull(), // 'all', 'members', 'merchants', 'admins', 'custom', 'individual'
+  recipientLists: jsonb("recipient_lists").$type<string[]>(), // For multi-select lists ['members', 'merchants']
+  recipientCount: integer("recipient_count").notNull().default(0),
+  individualRecipientId: uuid("individual_recipient_id").references(() => users.id),
+  status: campaignStatusEnum("status").notNull().default("draft"),
+  scheduledAt: timestamp("scheduled_at"),
+  sentAt: timestamp("sent_at"),
+  createdBy: uuid("created_by").notNull().references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  // Stats (updated by Postmark webhooks or sync)
+  totalSent: integer("total_sent").default(0),
+  totalOpened: integer("total_opened").default(0),
+  totalClicked: integer("total_clicked").default(0),
+  totalBounced: integer("total_bounced").default(0),
+  uniqueOpens: integer("unique_opens").default(0),
+  uniqueClicks: integer("unique_clicks").default(0),
+  postmarkBatchId: varchar("postmark_batch_id", { length: 100 }),
+});
+
+// Campaign recipients table (for tracking individual sends)
+export const campaignRecipients = pgTable("campaign_recipients", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  campaignId: uuid("campaign_id").notNull().references(() => emailCampaigns.id, { onDelete: "cascade" }),
+  userId: uuid("user_id").references(() => users.id),
+  email: varchar("email", { length: 255 }).notNull(),
+  name: varchar("name", { length: 255 }),
+  status: recipientStatusEnum("status").notNull().default("pending"),
+  sentAt: timestamp("sent_at"),
+  openedAt: timestamp("opened_at"),
+  clickedAt: timestamp("clicked_at"),
+  bouncedAt: timestamp("bounced_at"),
+  postmarkMessageId: varchar("postmark_message_id", { length: 100 }),
+  errorMessage: text("error_message"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => [
+  uniqueIndex("campaign_recipient_unique_idx").on(table.campaignId, table.email),
+]);
+
+// Email logs table (for transactional email history)
+export const emailLogs = pgTable("email_logs", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: uuid("user_id").references(() => users.id),
+  emailType: varchar("email_type", { length: 50 }).notNull(), // 'magic_link', 'welcome', 'grc_issued', etc.
+  status: varchar("status", { length: 20 }).notNull(), // 'sent', 'failed'
+  postmarkId: varchar("postmark_id", { length: 100 }),
+  subject: varchar("subject", { length: 255 }),
+  recipientEmail: varchar("recipient_email", { length: 255 }).notNull(),
+  error: text("error"),
+  sentAt: timestamp("sent_at").defaultNow().notNull(),
+});
+
+// Email preferences table (for unsubscribe management)
+export const emailPreferences = pgTable("email_preferences", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: uuid("user_id").notNull().references(() => users.id).unique(),
+  unsubscribedAll: boolean("unsubscribed_all").default(false),
+  marketingEmails: boolean("marketing_emails").default(true),
+  transactionalEmails: boolean("transactional_emails").default(true),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
 // Relations
 export const usersRelations = relations(users, ({ one, many }) => ({
   member: one(members, {
@@ -433,6 +510,44 @@ export const merchantInvitesRelations = relations(merchantInvites, ({ one }) => 
   }),
   usedByUser: one(users, {
     fields: [merchantInvites.usedByUserId],
+    references: [users.id],
+  }),
+}));
+
+// Email marketing relations
+export const emailCampaignsRelations = relations(emailCampaigns, ({ one, many }) => ({
+  createdByUser: one(users, {
+    fields: [emailCampaigns.createdBy],
+    references: [users.id],
+  }),
+  individualRecipient: one(users, {
+    fields: [emailCampaigns.individualRecipientId],
+    references: [users.id],
+  }),
+  recipients: many(campaignRecipients),
+}));
+
+export const campaignRecipientsRelations = relations(campaignRecipients, ({ one }) => ({
+  campaign: one(emailCampaigns, {
+    fields: [campaignRecipients.campaignId],
+    references: [emailCampaigns.id],
+  }),
+  user: one(users, {
+    fields: [campaignRecipients.userId],
+    references: [users.id],
+  }),
+}));
+
+export const emailLogsRelations = relations(emailLogs, ({ one }) => ({
+  user: one(users, {
+    fields: [emailLogs.userId],
+    references: [users.id],
+  }),
+}));
+
+export const emailPreferencesRelations = relations(emailPreferences, ({ one }) => ({
+  user: one(users, {
+    fields: [emailPreferences.userId],
     references: [users.id],
   }),
 }));

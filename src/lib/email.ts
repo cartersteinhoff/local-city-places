@@ -89,7 +89,7 @@ export async function sendMagicLinkEmail(email: string, token: string): Promise<
         <div class="cta-button">
           <a href="${magicLink}">Sign In</a>
         </div>
-        <p style="color: #999; font-size: 14px; text-align: center;">This link will expire in 3 days for security reasons.<br>If you didn't request this, you can safely ignore it.</p>
+        <p style="color: #999; font-size: 14px;">This link will expire in 3 days for security reasons.<br>If you didn't request this, you can safely ignore it.</p>
         <p style="color: #666; font-size: 14px; margin-top: 20px;">Or copy and paste this link: <a href="${magicLink}" style="color: #007bff;">${magicLink}</a></p>
       </div>
       <div class="email-footer">
@@ -288,7 +288,7 @@ export async function sendWelcomeEmail(email: string, token: string): Promise<bo
           <a href="${magicLink}">Sign In to Your Account</a>
         </div>
 
-        <p style="color: #999; font-size: 14px; text-align: center;">This link will expire in 3 days for security reasons.<br>If you didn't expect this email, you can safely ignore it.</p>
+        <p style="color: #999; font-size: 14px;">This link will expire in 3 days for security reasons.<br>If you didn't expect this email, you can safely ignore it.</p>
 
         <p style="color: #666; font-size: 14px; margin-top: 20px;">Or copy and paste this link: <a href="${magicLink}" style="color: #007bff;">${magicLink}</a></p>
 
