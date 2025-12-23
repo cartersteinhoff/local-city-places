@@ -3,6 +3,8 @@ import * as postmark from "postmark";
 const FROM_EMAIL = process.env.POSTMARK_FROM_EMAIL || "team@localcityplaces.com";
 const FROM_NAME = process.env.POSTMARK_FROM_NAME || "Local City Places";
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+// Always use production URL for email images (localhost not accessible from email clients)
+const EMAIL_ASSETS_URL = "https://localcityplaces.com";
 
 const client = process.env.POSTMARK_API_KEY
   ? new postmark.ServerClient(process.env.POSTMARK_API_KEY)
@@ -81,7 +83,7 @@ export async function sendMagicLinkEmail(email: string, token: string): Promise<
   <div class="email-wrapper">
     <div class="email-container">
       <div class="email-header">
-        <img src="${APP_URL}/images/logo-horizontal.png" alt="Local City Places" style="max-width: 300px; height: auto;" />
+        <img src="${EMAIL_ASSETS_URL}/images/logo-horizontal.png" alt="Local City Places" style="max-width: 300px; height: auto;" />
       </div>
       <div class="email-content">
         <h2>Sign in to your account</h2>
@@ -269,7 +271,7 @@ export async function sendWelcomeEmail(email: string, token: string): Promise<bo
     <div class="email-container">
       <!-- Header -->
       <div class="email-header">
-        <img src="${APP_URL}/images/logo-horizontal.png" alt="Local City Places" style="max-width: 300px; height: auto;" />
+        <img src="${EMAIL_ASSETS_URL}/images/logo-horizontal.png" alt="Local City Places" style="max-width: 300px; height: auto;" />
       </div>
 
       <!-- Content -->
