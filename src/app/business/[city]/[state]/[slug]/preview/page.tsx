@@ -1,0 +1,313 @@
+"use client";
+
+import { useState, useEffect } from "react";
+import { useParams } from "next/navigation";
+import { EditorialSwissDesign } from "@/components/merchant-page/designs/editorial-swiss";
+import { VibrantPopDesign } from "@/components/merchant-page/designs/vibrant-pop";
+import { NoirLuxeDesign } from "@/components/merchant-page/designs/noir-luxe";
+import { CoastalBreezeDesign } from "@/components/merchant-page/designs/coastal-breeze";
+import { NeoBrutalistDesign } from "@/components/merchant-page/designs/neo-brutalist";
+import { ArtDecoDesign } from "@/components/merchant-page/designs/art-deco";
+import { ZenMinimalistDesign } from "@/components/merchant-page/designs/zen-minimalist";
+import { Retro80sDesign } from "@/components/merchant-page/designs/retro-80s";
+import { MagazineEditorialDesign } from "@/components/merchant-page/designs/magazine-editorial";
+import { GlassmorphismDesign } from "@/components/merchant-page/designs/glassmorphism";
+import { NewspaperDesign } from "@/components/merchant-page/designs/newspaper";
+import { NeonSignDesign } from "@/components/merchant-page/designs/neon-sign";
+import { TechMinimalDesign } from "@/components/merchant-page/designs/tech-minimal";
+import { TropicalDesign } from "@/components/merchant-page/designs/tropical";
+import { IndustrialDesign } from "@/components/merchant-page/designs/industrial";
+
+interface MerchantData {
+  businessName: string;
+  city: string | null;
+  state: string | null;
+  phone: string | null;
+  website: string | null;
+  vimeoUrl: string | null;
+  categoryName: string | null;
+  description: string | null;
+  logoUrl: string | null;
+}
+
+const designs = [
+  { id: "swiss", name: "Swiss", description: "Clean, minimal, dramatic typography" },
+  { id: "pop", name: "Pop", description: "Bold, colorful, playful energy" },
+  { id: "luxe", name: "Luxe", description: "Premium dark with gold accents" },
+  { id: "coastal", name: "Coastal", description: "Light, airy, beach vibes" },
+  { id: "brutalist", name: "Brutalist", description: "Bold, chunky, raw energy" },
+  { id: "deco", name: "Art Deco", description: "1920s elegance, geometric" },
+  { id: "zen", name: "Zen", description: "Japanese minimalism, serene" },
+  { id: "retro", name: "80s Retro", description: "Synthwave, neon vibes" },
+  { id: "magazine", name: "Magazine", description: "Editorial, publication style" },
+  { id: "glass", name: "Glass", description: "Frosted glass, modern" },
+  { id: "newspaper", name: "Newspaper", description: "Vintage print, classic" },
+  { id: "neon", name: "Neon", description: "Glowing sign, urban night" },
+  { id: "tech", name: "Tech", description: "Apple-style, ultra clean" },
+  { id: "tropical", name: "Tropical", description: "Summer vibes, warm colors" },
+  { id: "industrial", name: "Industrial", description: "Warehouse, steel & concrete" },
+] as const;
+
+export default function PreviewPage() {
+  const params = useParams();
+  const [merchant, setMerchant] = useState<MerchantData | null>(null);
+  const [selectedDesign, setSelectedDesign] = useState<string>("swiss");
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchMerchant() {
+      try {
+        const res = await fetch(`/api/merchants/public/${params.slug}`);
+        if (res.ok) {
+          const data = await res.json();
+          setMerchant(data.merchant);
+        }
+      } catch (error) {
+        console.error("Error fetching merchant:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    fetchMerchant();
+  }, [params.slug]);
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+        <div className="animate-spin w-8 h-8 border-4 border-gray-300 border-t-gray-900 rounded-full" />
+      </div>
+    );
+  }
+
+  if (!merchant) {
+    return (
+      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+        <p className="text-gray-500">Merchant not found</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-900">
+      {/* Design Switcher */}
+      <div className="fixed top-4 left-1/2 -translate-x-1/2 z-[100] bg-white/95 backdrop-blur-lg rounded-2xl shadow-2xl border border-gray-200 p-2 max-w-[95vw]">
+        <div className="flex items-center gap-1 overflow-x-auto">
+          <span className="text-xs font-medium text-gray-500 px-2 shrink-0">Design:</span>
+          {designs.map((design) => (
+            <button
+              key={design.id}
+              onClick={() => setSelectedDesign(design.id)}
+              className={`px-3 py-2 rounded-xl text-xs sm:text-sm font-medium transition-all whitespace-nowrap shrink-0 ${
+                selectedDesign === design.id
+                  ? "bg-gray-900 text-white"
+                  : "text-gray-600 hover:bg-gray-100"
+              }`}
+              title={design.description}
+            >
+              {design.name}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Design Preview */}
+      <div className="pt-16">
+        {selectedDesign === "swiss" && (
+          <EditorialSwissDesign
+            businessName={merchant.businessName}
+            city={merchant.city}
+            state={merchant.state}
+            logoUrl={merchant.logoUrl}
+            categoryName={merchant.categoryName}
+            phone={merchant.phone}
+            website={merchant.website}
+            description={merchant.description}
+            vimeoUrl={merchant.vimeoUrl}
+          />
+        )}
+        {selectedDesign === "pop" && (
+          <VibrantPopDesign
+            businessName={merchant.businessName}
+            city={merchant.city}
+            state={merchant.state}
+            logoUrl={merchant.logoUrl}
+            categoryName={merchant.categoryName}
+            phone={merchant.phone}
+            website={merchant.website}
+            description={merchant.description}
+            vimeoUrl={merchant.vimeoUrl}
+          />
+        )}
+        {selectedDesign === "luxe" && (
+          <NoirLuxeDesign
+            businessName={merchant.businessName}
+            city={merchant.city}
+            state={merchant.state}
+            logoUrl={merchant.logoUrl}
+            categoryName={merchant.categoryName}
+            phone={merchant.phone}
+            website={merchant.website}
+            description={merchant.description}
+            vimeoUrl={merchant.vimeoUrl}
+          />
+        )}
+        {selectedDesign === "coastal" && (
+          <CoastalBreezeDesign
+            businessName={merchant.businessName}
+            city={merchant.city}
+            state={merchant.state}
+            logoUrl={merchant.logoUrl}
+            categoryName={merchant.categoryName}
+            phone={merchant.phone}
+            website={merchant.website}
+            description={merchant.description}
+            vimeoUrl={merchant.vimeoUrl}
+          />
+        )}
+        {selectedDesign === "brutalist" && (
+          <NeoBrutalistDesign
+            businessName={merchant.businessName}
+            city={merchant.city}
+            state={merchant.state}
+            logoUrl={merchant.logoUrl}
+            categoryName={merchant.categoryName}
+            phone={merchant.phone}
+            website={merchant.website}
+            description={merchant.description}
+            vimeoUrl={merchant.vimeoUrl}
+          />
+        )}
+        {selectedDesign === "deco" && (
+          <ArtDecoDesign
+            businessName={merchant.businessName}
+            city={merchant.city}
+            state={merchant.state}
+            logoUrl={merchant.logoUrl}
+            categoryName={merchant.categoryName}
+            phone={merchant.phone}
+            website={merchant.website}
+            description={merchant.description}
+            vimeoUrl={merchant.vimeoUrl}
+          />
+        )}
+        {selectedDesign === "zen" && (
+          <ZenMinimalistDesign
+            businessName={merchant.businessName}
+            city={merchant.city}
+            state={merchant.state}
+            logoUrl={merchant.logoUrl}
+            categoryName={merchant.categoryName}
+            phone={merchant.phone}
+            website={merchant.website}
+            description={merchant.description}
+            vimeoUrl={merchant.vimeoUrl}
+          />
+        )}
+        {selectedDesign === "retro" && (
+          <Retro80sDesign
+            businessName={merchant.businessName}
+            city={merchant.city}
+            state={merchant.state}
+            logoUrl={merchant.logoUrl}
+            categoryName={merchant.categoryName}
+            phone={merchant.phone}
+            website={merchant.website}
+            description={merchant.description}
+            vimeoUrl={merchant.vimeoUrl}
+          />
+        )}
+        {selectedDesign === "magazine" && (
+          <MagazineEditorialDesign
+            businessName={merchant.businessName}
+            city={merchant.city}
+            state={merchant.state}
+            logoUrl={merchant.logoUrl}
+            categoryName={merchant.categoryName}
+            phone={merchant.phone}
+            website={merchant.website}
+            description={merchant.description}
+            vimeoUrl={merchant.vimeoUrl}
+          />
+        )}
+        {selectedDesign === "glass" && (
+          <GlassmorphismDesign
+            businessName={merchant.businessName}
+            city={merchant.city}
+            state={merchant.state}
+            logoUrl={merchant.logoUrl}
+            categoryName={merchant.categoryName}
+            phone={merchant.phone}
+            website={merchant.website}
+            description={merchant.description}
+            vimeoUrl={merchant.vimeoUrl}
+          />
+        )}
+        {selectedDesign === "newspaper" && (
+          <NewspaperDesign
+            businessName={merchant.businessName}
+            city={merchant.city}
+            state={merchant.state}
+            logoUrl={merchant.logoUrl}
+            categoryName={merchant.categoryName}
+            phone={merchant.phone}
+            website={merchant.website}
+            description={merchant.description}
+            vimeoUrl={merchant.vimeoUrl}
+          />
+        )}
+        {selectedDesign === "neon" && (
+          <NeonSignDesign
+            businessName={merchant.businessName}
+            city={merchant.city}
+            state={merchant.state}
+            logoUrl={merchant.logoUrl}
+            categoryName={merchant.categoryName}
+            phone={merchant.phone}
+            website={merchant.website}
+            description={merchant.description}
+            vimeoUrl={merchant.vimeoUrl}
+          />
+        )}
+        {selectedDesign === "tech" && (
+          <TechMinimalDesign
+            businessName={merchant.businessName}
+            city={merchant.city}
+            state={merchant.state}
+            logoUrl={merchant.logoUrl}
+            categoryName={merchant.categoryName}
+            phone={merchant.phone}
+            website={merchant.website}
+            description={merchant.description}
+            vimeoUrl={merchant.vimeoUrl}
+          />
+        )}
+        {selectedDesign === "tropical" && (
+          <TropicalDesign
+            businessName={merchant.businessName}
+            city={merchant.city}
+            state={merchant.state}
+            logoUrl={merchant.logoUrl}
+            categoryName={merchant.categoryName}
+            phone={merchant.phone}
+            website={merchant.website}
+            description={merchant.description}
+            vimeoUrl={merchant.vimeoUrl}
+          />
+        )}
+        {selectedDesign === "industrial" && (
+          <IndustrialDesign
+            businessName={merchant.businessName}
+            city={merchant.city}
+            state={merchant.state}
+            logoUrl={merchant.logoUrl}
+            categoryName={merchant.categoryName}
+            phone={merchant.phone}
+            website={merchant.website}
+            description={merchant.description}
+            vimeoUrl={merchant.vimeoUrl}
+          />
+        )}
+      </div>
+    </div>
+  );
+}

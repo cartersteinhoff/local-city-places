@@ -1,0 +1,432 @@
+"use client";
+
+import { useEffect, useState, useCallback } from "react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { DashboardLayout } from "@/components/layout";
+import { PageHeader } from "@/components/ui/page-header";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { EmptyState } from "@/components/ui/empty-state";
+import { Pagination } from "@/components/ui/pagination";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Plus,
+  Pencil,
+  Trash2,
+  Loader2,
+  RefreshCw,
+  Store,
+  Search,
+  ExternalLink,
+  Copy,
+  Check,
+  Video,
+} from "lucide-react";
+import { useUser } from "@/hooks/use-user";
+import { adminNavItems } from "../nav";
+import { formatPhoneNumber } from "@/lib/utils";
+import { cn } from "@/lib/utils";
+
+interface MerchantPageData {
+  id: string;
+  businessName: string;
+  city: string | null;
+  state: string | null;
+  phone: string | null;
+  website: string | null;
+  vimeoUrl: string | null;
+  slug: string | null;
+  categoryName: string | null;
+  createdAt: string;
+  urls: {
+    full: string | null;
+    short: string | null;
+  };
+}
+
+export default function MerchantPagesPage() {
+  const router = useRouter();
+  const { user, isLoading: authLoading, isAuthenticated } = useUser();
+  const [merchants, setMerchants] = useState<MerchantPageData[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [total, setTotal] = useState(0);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
+
+  // Delete dialog
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [selectedMerchant, setSelectedMerchant] = useState<MerchantPageData | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  useEffect(() => {
+    if (!authLoading && (!isAuthenticated || user?.role !== "admin")) {
+      router.push("/");
+    }
+  }, [authLoading, isAuthenticated, user?.role, router]);
+
+  // Debounce search
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchQuery);
+      setPage(1);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
+  const fetchMerchants = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      const params = new URLSearchParams({
+        page: page.toString(),
+        limit: "20",
+      });
+      if (debouncedSearch) {
+        params.set("search", debouncedSearch);
+      }
+
+      const res = await fetch(`/api/admin/merchant-pages?${params}`);
+      if (res.ok) {
+        const data = await res.json();
+        setMerchants(data.merchants);
+        setTotalPages(data.pagination.totalPages);
+        setTotal(data.pagination.total);
+      }
+    } catch (error) {
+      console.error("Error fetching merchant pages:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [page, debouncedSearch]);
+
+  useEffect(() => {
+    if (!authLoading && isAuthenticated) {
+      fetchMerchants();
+    }
+  }, [authLoading, isAuthenticated, fetchMerchants]);
+
+  const handleDelete = async () => {
+    if (!selectedMerchant) return;
+    setIsDeleting(true);
+    try {
+      const res = await fetch(`/api/admin/merchant-pages/${selectedMerchant.id}`, {
+        method: "DELETE",
+      });
+      if (res.ok) {
+        setDeleteDialogOpen(false);
+        setSelectedMerchant(null);
+        await fetchMerchants();
+      } else {
+        const data = await res.json();
+        alert(data.error || "Failed to delete merchant page");
+      }
+    } catch (error) {
+      console.error("Error deleting merchant page:", error);
+      alert("Failed to delete merchant page");
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const copyToClipboard = async (text: string, id: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopiedId(id);
+      setTimeout(() => setCopiedId(null), 2000);
+    } catch (err) {
+      console.error("Failed to copy:", err);
+    }
+  };
+
+  const getFullUrl = (path: string) => {
+    if (typeof window !== "undefined") {
+      return `${window.location.origin}${path}`;
+    }
+    return path;
+  };
+
+  return (
+    <DashboardLayout navItems={adminNavItems}>
+      {authLoading ? (
+        <div className="flex items-center justify-center min-h-[400px]">
+          <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+        </div>
+      ) : (
+        <>
+          <div className="flex items-center justify-between mb-6">
+            <PageHeader
+              title="Merchant Pages"
+              description="Create and manage public merchant pages"
+            />
+            <div className="flex gap-2">
+              <Button variant="outline" size="icon" onClick={fetchMerchants} disabled={isLoading}>
+                <RefreshCw className={cn("w-4 h-4", isLoading && "animate-spin")} />
+              </Button>
+              <Button asChild>
+                <Link href="/admin/merchants/create">
+                  <Plus className="w-4 h-4 mr-2" />
+                  Create Page
+                </Link>
+              </Button>
+            </div>
+          </div>
+
+          {/* Search */}
+          <div className="relative mb-4">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input
+              placeholder="Search by business name, city, or phone..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-9 max-w-md"
+            />
+          </div>
+
+          {merchants.length === 0 && !isLoading ? (
+            <EmptyState
+              icon={Store}
+              title="No merchant pages yet"
+              description="Create your first merchant page to showcase a local business."
+              action={
+                <Button asChild>
+                  <Link href="/admin/merchants/create">
+                    <Plus className="w-4 h-4 mr-2" />
+                    Create Page
+                  </Link>
+                </Button>
+              }
+            />
+          ) : (
+            <>
+              {/* Mobile cards */}
+              <div className="md:hidden divide-y divide-border border rounded-lg">
+                {merchants.map((merchant) => (
+                  <div key={merchant.id} className="p-4">
+                    <div className="flex items-start justify-between gap-3 mb-2">
+                      <div className="min-w-0">
+                        <h3 className="font-semibold truncate">{merchant.businessName}</h3>
+                        <p className="text-sm text-muted-foreground">
+                          {[merchant.city, merchant.state].filter(Boolean).join(", ")}
+                        </p>
+                      </div>
+                      {merchant.vimeoUrl && (
+                        <Video className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                      )}
+                    </div>
+
+                    {merchant.phone && (
+                      <p className="text-sm text-muted-foreground mb-2">
+                        {formatPhoneNumber(merchant.phone)}
+                      </p>
+                    )}
+
+                    {merchant.urls.short && (
+                      <div className="flex items-center gap-2 mb-3">
+                        <code className="text-xs bg-muted px-2 py-1 rounded flex-1 truncate">
+                          {getFullUrl(merchant.urls.short)}
+                        </code>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 flex-shrink-0"
+                          onClick={() => copyToClipboard(getFullUrl(merchant.urls.short!), merchant.id)}
+                        >
+                          {copiedId === merchant.id ? (
+                            <Check className="w-4 h-4 text-green-600" />
+                          ) : (
+                            <Copy className="w-4 h-4" />
+                          )}
+                        </Button>
+                      </div>
+                    )}
+
+                    <div className="flex gap-2">
+                      {merchant.urls.full && (
+                        <Button variant="outline" size="sm" asChild className="flex-1">
+                          <a href={merchant.urls.full} target="_blank" rel="noopener noreferrer">
+                            <ExternalLink className="w-4 h-4 mr-1" />
+                            View
+                          </a>
+                        </Button>
+                      )}
+                      <Button variant="outline" size="sm" asChild className="flex-1">
+                        <Link href={`/admin/merchants/${merchant.id}/edit`}>
+                          <Pencil className="w-4 h-4 mr-1" />
+                          Edit
+                        </Link>
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="text-destructive hover:text-destructive"
+                        onClick={() => {
+                          setSelectedMerchant(merchant);
+                          setDeleteDialogOpen(true);
+                        }}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Desktop table */}
+              <div className="border rounded-lg hidden md:block">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Business</TableHead>
+                      <TableHead className="w-[140px]">Location</TableHead>
+                      <TableHead className="w-[140px]">Phone</TableHead>
+                      <TableHead className="w-[200px]">Short URL</TableHead>
+                      <TableHead className="w-[60px] text-center">Video</TableHead>
+                      <TableHead className="w-[130px] text-right">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {!isLoading && merchants.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={6} className="px-4 py-8 text-center text-muted-foreground">
+                          No merchant pages found
+                        </TableCell>
+                      </TableRow>
+                    ) : (
+                      merchants.map((merchant) => (
+                        <TableRow key={merchant.id}>
+                          <TableCell>
+                            <div className="font-medium">{merchant.businessName}</div>
+                            {merchant.categoryName && (
+                              <div className="text-sm text-muted-foreground">{merchant.categoryName}</div>
+                            )}
+                          </TableCell>
+                          <TableCell className="text-muted-foreground">
+                            {[merchant.city, merchant.state].filter(Boolean).join(", ")}
+                          </TableCell>
+                          <TableCell className="text-muted-foreground">
+                            {merchant.phone ? formatPhoneNumber(merchant.phone) : "-"}
+                          </TableCell>
+                          <TableCell>
+                            {merchant.urls.short ? (
+                              <div className="flex items-center gap-1">
+                                <code className="text-xs bg-muted px-2 py-1 rounded truncate max-w-[140px]">
+                                  {merchant.urls.short}
+                                </code>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-7 w-7 flex-shrink-0"
+                                  onClick={() => copyToClipboard(getFullUrl(merchant.urls.short!), merchant.id)}
+                                >
+                                  {copiedId === merchant.id ? (
+                                    <Check className="w-3 h-3 text-green-600" />
+                                  ) : (
+                                    <Copy className="w-3 h-3" />
+                                  )}
+                                </Button>
+                              </div>
+                            ) : (
+                              <span className="text-muted-foreground">-</span>
+                            )}
+                          </TableCell>
+                          <TableCell className="text-center">
+                            {merchant.vimeoUrl ? (
+                              <Video className="w-4 h-4 mx-auto text-muted-foreground" />
+                            ) : (
+                              <span className="text-muted-foreground">-</span>
+                            )}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <div className="flex items-center justify-end gap-1">
+                              {merchant.urls.full && (
+                                <Button variant="ghost" size="icon" className="h-8 w-8" asChild>
+                                  <a href={merchant.urls.full} target="_blank" rel="noopener noreferrer" title="View page">
+                                    <ExternalLink className="w-4 h-4" />
+                                  </a>
+                                </Button>
+                              )}
+                              <Button variant="ghost" size="icon" className="h-8 w-8" asChild>
+                                <Link href={`/admin/merchants/${merchant.id}/edit`} title="Edit">
+                                  <Pencil className="w-4 h-4" />
+                                </Link>
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 text-destructive hover:text-destructive"
+                                onClick={() => {
+                                  setSelectedMerchant(merchant);
+                                  setDeleteDialogOpen(true);
+                                }}
+                                title="Delete"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
+
+              {/* Pagination */}
+              {totalPages > 1 && (
+                <div className="mt-4">
+                  <Pagination
+                    page={page}
+                    totalPages={totalPages}
+                    total={total}
+                    limit={20}
+                    onPageChange={setPage}
+                    disabled={isLoading}
+                  />
+                </div>
+              )}
+            </>
+          )}
+
+          {/* Delete Dialog */}
+          <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Delete Merchant Page</DialogTitle>
+                <DialogDescription>
+                  Are you sure you want to delete the page for &quot;{selectedMerchant?.businessName}&quot;? This action cannot be undone.
+                </DialogDescription>
+              </DialogHeader>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>
+                  Cancel
+                </Button>
+                <Button variant="destructive" onClick={handleDelete} disabled={isDeleting}>
+                  {isDeleting ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+                  Delete
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        </>
+      )}
+    </DashboardLayout>
+  );
+}

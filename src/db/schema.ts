@@ -69,9 +69,7 @@ export const categories = pgTable("categories", {
 // Merchants table
 export const merchants = pgTable("merchants", {
   id: uuid("id").primaryKey().defaultRandom(),
-  userId: uuid("user_id")
-    .notNull()
-    .references(() => users.id, { onDelete: "cascade" }),
+  userId: uuid("user_id").references(() => users.id, { onDelete: "cascade" }), // Nullable for admin-created "page only" merchants
   businessName: varchar("business_name", { length: 255 }).notNull(),
   categoryId: uuid("category_id").references(() => categories.id),
   city: varchar("city", { length: 100 }),
@@ -81,6 +79,9 @@ export const merchants = pgTable("merchants", {
   phone: varchar("phone", { length: 20 }),
   website: varchar("website", { length: 255 }),
   googlePlaceId: varchar("google_place_id", { length: 255 }), // For Google Places integration
+  vimeoUrl: text("vimeo_url"), // Full Vimeo URL for video embed
+  slug: varchar("slug", { length: 255 }), // SEO-friendly slug (business-name-abc123)
+  isPublicPage: boolean("is_public_page").default(false), // True for admin-created "page only" merchants
   verified: boolean("verified").default(false).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
