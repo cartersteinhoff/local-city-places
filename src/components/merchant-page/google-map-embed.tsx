@@ -30,7 +30,8 @@ export function GoogleMapEmbed({
   className = "",
   height = "300px",
 }: GoogleMapEmbedProps) {
-  const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
+  // Use the same API key as Google Places - just needs Maps Embed API enabled
+  const apiKey = process.env.NEXT_PUBLIC_GOOGLE_PLACES_API_KEY;
 
   // If no API key, don't render
   if (!apiKey) {
