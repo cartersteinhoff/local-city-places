@@ -23,14 +23,17 @@ import { ProfessionalDarkDesign } from "@/components/merchant-page/designs/profe
 
 interface MerchantData {
   businessName: string;
+  streetAddress: string | null;
   city: string | null;
   state: string | null;
+  zipCode: string | null;
   phone: string | null;
   website: string | null;
   vimeoUrl: string | null;
   categoryName: string | null;
   description: string | null;
   logoUrl: string | null;
+  googlePlaceId: string | null;
 }
 
 const designs = [
@@ -121,40 +124,49 @@ export default function PreviewPage() {
         {selectedDesign === "clean" && (
           <CleanModernDesign
             businessName={merchant.businessName}
+            streetAddress={merchant.streetAddress}
             city={merchant.city}
             state={merchant.state}
+            zipCode={merchant.zipCode}
             logoUrl={merchant.logoUrl}
             categoryName={merchant.categoryName}
             phone={merchant.phone}
             website={merchant.website}
             description={merchant.description}
             vimeoUrl={merchant.vimeoUrl}
+            googlePlaceId={merchant.googlePlaceId}
           />
         )}
         {selectedDesign === "warm" && (
           <WarmFriendlyDesign
             businessName={merchant.businessName}
+            streetAddress={merchant.streetAddress}
             city={merchant.city}
             state={merchant.state}
+            zipCode={merchant.zipCode}
             logoUrl={merchant.logoUrl}
             categoryName={merchant.categoryName}
             phone={merchant.phone}
             website={merchant.website}
             description={merchant.description}
             vimeoUrl={merchant.vimeoUrl}
+            googlePlaceId={merchant.googlePlaceId}
           />
         )}
         {selectedDesign === "dark" && (
           <ProfessionalDarkDesign
             businessName={merchant.businessName}
+            streetAddress={merchant.streetAddress}
             city={merchant.city}
             state={merchant.state}
+            zipCode={merchant.zipCode}
             logoUrl={merchant.logoUrl}
             categoryName={merchant.categoryName}
             phone={merchant.phone}
             website={merchant.website}
             description={merchant.description}
             vimeoUrl={merchant.vimeoUrl}
+            googlePlaceId={merchant.googlePlaceId}
           />
         )}
         {selectedDesign === "swiss" && (

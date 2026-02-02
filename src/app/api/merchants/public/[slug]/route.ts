@@ -14,8 +14,10 @@ export async function GET(
       .select({
         id: merchants.id,
         businessName: merchants.businessName,
+        streetAddress: merchants.streetAddress,
         city: merchants.city,
         state: merchants.state,
+        zipCode: merchants.zipCode,
         phone: merchants.phone,
         website: merchants.website,
         vimeoUrl: merchants.vimeoUrl,
@@ -23,6 +25,7 @@ export async function GET(
         categoryName: categories.name,
         description: merchants.description,
         logoUrl: merchants.logoUrl,
+        googlePlaceId: merchants.googlePlaceId,
       })
       .from(merchants)
       .leftJoin(categories, eq(merchants.categoryId, categories.id))

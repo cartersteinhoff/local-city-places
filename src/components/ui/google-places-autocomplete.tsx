@@ -9,8 +9,10 @@ export interface PlaceDetails {
   name: string;
   placeId: string;
   formattedAddress?: string;
+  streetAddress?: string;
   city?: string;
   state?: string;
+  zipCode?: string;
   phone?: string;
   website?: string;
 }
@@ -187,26 +189,43 @@ export function GooglePlacesAutocomplete({
         (place: any, status: string) => {
           setIsLoading(false);
           if (status === "OK" && place) {
-            // Extract city and state from address components
+            // Extract address components
+            let streetNumber = "";
+            let route = "";
             let city = "";
             let state = "";
+            let zipCode = "";
             if (place.address_components) {
               for (const component of place.address_components) {
+                if (component.types.includes("street_number")) {
+                  streetNumber = component.long_name;
+                }
+                if (component.types.includes("route")) {
+                  route = component.long_name;
+                }
                 if (component.types.includes("locality")) {
                   city = component.long_name;
                 }
                 if (component.types.includes("administrative_area_level_1")) {
                   state = component.short_name;
                 }
+                if (component.types.includes("postal_code")) {
+                  zipCode = component.long_name;
+                }
               }
             }
+
+            // Build street address from components
+            const streetAddress = [streetNumber, route].filter(Boolean).join(" ");
 
             const details: PlaceDetails = {
               name: place.name || prediction.structured_formatting.main_text,
               placeId: prediction.place_id,
               formattedAddress: place.formatted_address,
+              streetAddress,
               city,
               state,
+              zipCode,
               phone: place.formatted_phone_number,
               website: place.website,
             };

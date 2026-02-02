@@ -43,7 +43,9 @@ export default function CreateMerchantPage() {
 
   // Form state
   const [businessName, setBusinessName] = useState("");
+  const [streetAddress, setStreetAddress] = useState("");
   const [cityState, setCityState] = useState("");
+  const [zipCode, setZipCode] = useState("");
   const [phone, setPhone] = useState("");
   const [website, setWebsite] = useState("");
   const [categoryId, setCategoryId] = useState("");
@@ -89,9 +91,19 @@ export default function CreateMerchantPage() {
       setBusinessName(details.name);
       setGooglePlaceId(details.placeId);
 
+      // Set street address
+      if (details.streetAddress) {
+        setStreetAddress(details.streetAddress);
+      }
+
       // Combine city and state
       if (details.city || details.state) {
         setCityState([details.city, details.state].filter(Boolean).join(", "));
+      }
+
+      // Set zip code
+      if (details.zipCode) {
+        setZipCode(details.zipCode);
       }
 
       if (details.phone) {
@@ -148,8 +160,10 @@ export default function CreateMerchantPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           businessName: businessName.trim(),
+          streetAddress: streetAddress.trim() || null,
           city,
           state,
+          zipCode: zipCode.trim() || null,
           phone: strippedPhone,
           website: website.trim() || null,
           categoryId: categoryId || null,
@@ -267,7 +281,9 @@ export default function CreateMerchantPage() {
               onClick={() => {
                 setSuccess(null);
                 setBusinessName("");
+                setStreetAddress("");
                 setCityState("");
+                setZipCode("");
                 setPhone("");
                 setWebsite("");
                 setCategoryId("");
@@ -333,19 +349,38 @@ export default function CreateMerchantPage() {
               />
             </div>
 
-            {/* City, State */}
+            {/* Street Address */}
             <div>
-              <Label htmlFor="cityState">City, State *</Label>
+              <Label htmlFor="streetAddress">Street Address</Label>
               <Input
-                id="cityState"
-                value={cityState}
-                onChange={(e) => setCityState(e.target.value)}
-                placeholder="Denver, CO"
-                required
+                id="streetAddress"
+                value={streetAddress}
+                onChange={(e) => setStreetAddress(e.target.value)}
+                placeholder="123 Main Street"
               />
-              <p className="text-xs text-muted-foreground mt-1">
-                Format: City, ST (e.g., Denver, CO)
-              </p>
+            </div>
+
+            {/* City, State and Zip in a row */}
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="cityState">City, State *</Label>
+                <Input
+                  id="cityState"
+                  value={cityState}
+                  onChange={(e) => setCityState(e.target.value)}
+                  placeholder="Denver, CO"
+                  required
+                />
+              </div>
+              <div>
+                <Label htmlFor="zipCode">ZIP Code</Label>
+                <Input
+                  id="zipCode"
+                  value={zipCode}
+                  onChange={(e) => setZipCode(e.target.value)}
+                  placeholder="80202"
+                />
+              </div>
             </div>
 
             {/* Phone */}

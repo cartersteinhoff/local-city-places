@@ -8,37 +8,46 @@
  * Works for any business type.
  */
 
-import { MapPin, Phone, Globe, Share2, Star, Building2 } from "lucide-react";
+import { MapPin, Phone, Globe, Share2, Star, Building2, Navigation } from "lucide-react";
 import { formatPhoneNumber } from "@/lib/utils";
 import { extractVimeoId, getVimeoEmbedUrl } from "@/lib/vimeo";
 import { useState } from "react";
+import { GoogleMapEmbed, getGoogleMapsDirectionsUrl, formatFullAddress } from "../google-map-embed";
 
 interface MerchantPageProps {
   businessName: string;
+  streetAddress?: string | null;
   city?: string | null;
   state?: string | null;
+  zipCode?: string | null;
   logoUrl?: string | null;
   categoryName?: string | null;
   phone?: string | null;
   website?: string | null;
   description?: string | null;
   vimeoUrl?: string | null;
+  googlePlaceId?: string | null;
 }
 
 export function CleanModernDesign({
   businessName,
+  streetAddress,
   city,
   state,
+  zipCode,
   logoUrl,
   categoryName,
   phone,
   website,
   description,
   vimeoUrl,
+  googlePlaceId,
 }: MerchantPageProps) {
   const [copied, setCopied] = useState(false);
   const location = [city, state].filter(Boolean).join(", ");
+  const fullAddress = formatFullAddress(streetAddress, city, state, zipCode);
   const videoId = vimeoUrl ? extractVimeoId(vimeoUrl) : null;
+  const directionsUrl = getGoogleMapsDirectionsUrl(businessName, streetAddress, city, state, zipCode, googlePlaceId);
 
   const initials = businessName
     .split(" ")
@@ -108,16 +117,22 @@ export function CleanModernDesign({
                 </div>
               </a>
             )}
-            {location && (
-              <div className="flex items-center gap-3">
+            {(fullAddress || location) && (
+              <a
+                href={directionsUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-3 text-gray-700 hover:text-blue-600 transition-colors"
+              >
                 <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center">
                   <MapPin className="w-4 h-4 text-blue-600" />
                 </div>
                 <div>
                   <p className="text-xs text-gray-400 uppercase tracking-wider">Location</p>
-                  <p className="text-sm font-medium">{location}</p>
+                  {streetAddress && <p className="text-sm font-medium">{streetAddress}</p>}
+                  <p className="text-sm font-medium">{[city, state, zipCode].filter(Boolean).join(", ") || location}</p>
                 </div>
-              </div>
+              </a>
             )}
           </div>
         </div>
@@ -182,6 +197,15 @@ export function CleanModernDesign({
                   Visit Website
                 </a>
               )}
+              <a
+                href={directionsUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center justify-center gap-2 px-6 py-3 border border-gray-200 text-gray-700 font-medium rounded-lg hover:border-blue-600 hover:text-blue-600 transition-colors cursor-pointer"
+              >
+                <Navigation className="w-4 h-4" />
+                Get Directions
+              </a>
             </div>
           </div>
 
@@ -212,6 +236,37 @@ export function CleanModernDesign({
               </div>
             </div>
           )}
+        </div>
+      </div>
+
+      {/* Map Section */}
+      <div className="border-t border-gray-100">
+        <div className="max-w-5xl mx-auto px-6 py-12">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-2xl font-bold text-gray-900">Location</h2>
+            <a
+              href={directionsUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 text-sm text-blue-600 hover:text-blue-700 font-medium"
+            >
+              <Navigation className="w-4 h-4" />
+              Get Directions
+            </a>
+          </div>
+          {fullAddress && (
+            <p className="text-gray-600 mb-4">{fullAddress}</p>
+          )}
+          <GoogleMapEmbed
+            businessName={businessName}
+            streetAddress={streetAddress}
+            city={city}
+            state={state}
+            zipCode={zipCode}
+            googlePlaceId={googlePlaceId}
+            className="rounded-xl"
+            height="300px"
+          />
         </div>
       </div>
 

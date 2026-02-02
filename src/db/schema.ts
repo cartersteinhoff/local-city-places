@@ -72,8 +72,10 @@ export const merchants = pgTable("merchants", {
   userId: uuid("user_id").references(() => users.id, { onDelete: "cascade" }), // Nullable for admin-created "page only" merchants
   businessName: varchar("business_name", { length: 255 }).notNull(),
   categoryId: uuid("category_id").references(() => categories.id),
+  streetAddress: varchar("street_address", { length: 255 }), // Full street address (e.g., "123 Main St")
   city: varchar("city", { length: 100 }),
   state: varchar("state", { length: 2 }), // 2-letter state code (e.g., "CO", "CA")
+  zipCode: varchar("zip_code", { length: 10 }), // ZIP code (e.g., "80202")
   logoUrl: text("logo_url"),
   description: text("description"),
   phone: varchar("phone", { length: 20 }),

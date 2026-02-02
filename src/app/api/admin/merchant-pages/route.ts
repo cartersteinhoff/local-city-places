@@ -38,8 +38,10 @@ export async function GET(request: NextRequest) {
       .select({
         id: merchants.id,
         businessName: merchants.businessName,
+        streetAddress: merchants.streetAddress,
         city: merchants.city,
         state: merchants.state,
+        zipCode: merchants.zipCode,
         phone: merchants.phone,
         website: merchants.website,
         vimeoUrl: merchants.vimeoUrl,
@@ -77,8 +79,10 @@ export async function GET(request: NextRequest) {
       merchants: filteredMerchants.map((m) => ({
         id: m.id,
         businessName: m.businessName,
+        streetAddress: m.streetAddress,
         city: m.city,
         state: m.state,
+        zipCode: m.zipCode,
         phone: m.phone,
         website: m.website,
         vimeoUrl: m.vimeoUrl,
@@ -119,8 +123,10 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const {
       businessName,
+      streetAddress,
       city,
       state,
+      zipCode,
       phone,
       website,
       categoryId,
@@ -195,8 +201,10 @@ export async function POST(request: NextRequest) {
       .insert(merchants)
       .values({
         businessName: businessName.trim(),
+        streetAddress: streetAddress?.trim() || null,
         city: city.trim(),
         state: state.trim().toUpperCase(),
+        zipCode: zipCode?.trim() || null,
         phone: strippedPhone,
         website: website?.trim() || null,
         categoryId: categoryId || null,
