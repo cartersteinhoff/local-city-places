@@ -52,11 +52,20 @@ export async function POST(
       );
     }
 
+    // Check if merchant has a user account (page-only merchants don't)
+    const userId = merchant.userId;
+    if (!userId) {
+      return NextResponse.json(
+        { error: "This merchant does not have a user account. Trial GRCs can only be given to merchants with accounts." },
+        { status: 400 }
+      );
+    }
+
     // Get user email
     const [user] = await db
       .select({ email: users.email })
       .from(users)
-      .where(eq(users.id, merchant.userId))
+      .where(eq(users.id, userId))
       .limit(1);
 
     if (!user) {
