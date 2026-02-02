@@ -17,6 +17,9 @@ import { NeonSignDesign } from "@/components/merchant-page/designs/neon-sign";
 import { TechMinimalDesign } from "@/components/merchant-page/designs/tech-minimal";
 import { TropicalDesign } from "@/components/merchant-page/designs/tropical";
 import { IndustrialDesign } from "@/components/merchant-page/designs/industrial";
+import { CleanModernDesign } from "@/components/merchant-page/designs/clean-modern";
+import { WarmFriendlyDesign } from "@/components/merchant-page/designs/warm-friendly";
+import { ProfessionalDarkDesign } from "@/components/merchant-page/designs/professional-dark";
 
 interface MerchantData {
   businessName: string;
@@ -31,9 +34,9 @@ interface MerchantData {
 }
 
 const designs = [
-  { id: "swiss", name: "Swiss", description: "Clean, minimal, dramatic typography" },
-  { id: "pop", name: "Pop", description: "Bold, colorful, playful energy" },
-  { id: "luxe", name: "Luxe", description: "Premium dark with gold accents" },
+  { id: "clean", name: "Clean", description: "Simple, professional, universal" },
+  { id: "warm", name: "Warm", description: "Friendly, approachable, soft colors" },
+  { id: "dark", name: "Dark", description: "Sleek, corporate, trustworthy" },
   { id: "coastal", name: "Coastal", description: "Light, airy, beach vibes" },
   { id: "brutalist", name: "Brutalist", description: "Bold, chunky, raw energy" },
   { id: "deco", name: "Art Deco", description: "1920s elegance, geometric" },
@@ -46,12 +49,15 @@ const designs = [
   { id: "tech", name: "Tech", description: "Apple-style, ultra clean" },
   { id: "tropical", name: "Tropical", description: "Summer vibes, warm colors" },
   { id: "industrial", name: "Industrial", description: "Warehouse, steel & concrete" },
+  { id: "swiss", name: "Swiss", description: "Clean, minimal, dramatic typography" },
+  { id: "pop", name: "Pop", description: "Bold, colorful, playful energy" },
+  { id: "luxe", name: "Luxe", description: "Premium dark with gold accents" },
 ] as const;
 
 export default function PreviewPage() {
   const params = useParams();
   const [merchant, setMerchant] = useState<MerchantData | null>(null);
-  const [selectedDesign, setSelectedDesign] = useState<string>("swiss");
+  const [selectedDesign, setSelectedDesign] = useState<string>("clean");
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -112,6 +118,45 @@ export default function PreviewPage() {
 
       {/* Design Preview */}
       <div className="pt-16">
+        {selectedDesign === "clean" && (
+          <CleanModernDesign
+            businessName={merchant.businessName}
+            city={merchant.city}
+            state={merchant.state}
+            logoUrl={merchant.logoUrl}
+            categoryName={merchant.categoryName}
+            phone={merchant.phone}
+            website={merchant.website}
+            description={merchant.description}
+            vimeoUrl={merchant.vimeoUrl}
+          />
+        )}
+        {selectedDesign === "warm" && (
+          <WarmFriendlyDesign
+            businessName={merchant.businessName}
+            city={merchant.city}
+            state={merchant.state}
+            logoUrl={merchant.logoUrl}
+            categoryName={merchant.categoryName}
+            phone={merchant.phone}
+            website={merchant.website}
+            description={merchant.description}
+            vimeoUrl={merchant.vimeoUrl}
+          />
+        )}
+        {selectedDesign === "dark" && (
+          <ProfessionalDarkDesign
+            businessName={merchant.businessName}
+            city={merchant.city}
+            state={merchant.state}
+            logoUrl={merchant.logoUrl}
+            categoryName={merchant.categoryName}
+            phone={merchant.phone}
+            website={merchant.website}
+            description={merchant.description}
+            vimeoUrl={merchant.vimeoUrl}
+          />
+        )}
         {selectedDesign === "swiss" && (
           <EditorialSwissDesign
             businessName={merchant.businessName}
