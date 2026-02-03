@@ -3,9 +3,7 @@ import { Metadata } from "next";
 import { db } from "@/db";
 import { merchants, categories } from "@/db/schema";
 import { eq } from "drizzle-orm";
-import { MerchantHero } from "@/components/merchant-page/merchant-hero";
-import { MerchantContent } from "@/components/merchant-page/merchant-content";
-import { MobileActionBar } from "@/components/merchant-page/mobile-action-bar";
+import { ArtDecoDesign } from "@/components/merchant-page/designs/art-deco";
 
 interface PageProps {
   params: Promise<{
@@ -20,8 +18,10 @@ async function getMerchant(slug: string) {
     .select({
       id: merchants.id,
       businessName: merchants.businessName,
+      streetAddress: merchants.streetAddress,
       city: merchants.city,
       state: merchants.state,
+      zipCode: merchants.zipCode,
       phone: merchants.phone,
       website: merchants.website,
       vimeoUrl: merchants.vimeoUrl,
@@ -29,6 +29,14 @@ async function getMerchant(slug: string) {
       categoryName: categories.name,
       description: merchants.description,
       logoUrl: merchants.logoUrl,
+      googlePlaceId: merchants.googlePlaceId,
+      hours: merchants.hours,
+      instagramUrl: merchants.instagramUrl,
+      facebookUrl: merchants.facebookUrl,
+      tiktokUrl: merchants.tiktokUrl,
+      photos: merchants.photos,
+      services: merchants.services,
+      aboutStory: merchants.aboutStory,
     })
     .from(merchants)
     .leftJoin(categories, eq(merchants.categoryId, categories.id))
@@ -73,37 +81,26 @@ export default async function MerchantPage({ params }: PageProps) {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Hero section */}
-      <MerchantHero
-        businessName={merchant.businessName}
-        city={merchant.city}
-        state={merchant.state}
-        logoUrl={merchant.logoUrl}
-        categoryName={merchant.categoryName}
-        phone={merchant.phone}
-        website={merchant.website}
-        vimeoUrl={merchant.vimeoUrl}
-      />
-
-      {/* Main content */}
-      <MerchantContent
-        businessName={merchant.businessName}
-        phone={merchant.phone}
-        website={merchant.website}
-        description={merchant.description}
-        categoryName={merchant.categoryName}
-      />
-
-      {/* Mobile sticky action bar */}
-      <MobileActionBar
-        businessName={merchant.businessName}
-        phone={merchant.phone}
-        website={merchant.website}
-      />
-
-      {/* Bottom padding for mobile action bar */}
-      <div className="h-20 lg:hidden" />
-    </div>
+    <ArtDecoDesign
+      businessName={merchant.businessName}
+      streetAddress={merchant.streetAddress}
+      city={merchant.city}
+      state={merchant.state}
+      zipCode={merchant.zipCode}
+      logoUrl={merchant.logoUrl}
+      categoryName={merchant.categoryName}
+      phone={merchant.phone}
+      website={merchant.website}
+      description={merchant.description}
+      vimeoUrl={merchant.vimeoUrl}
+      googlePlaceId={merchant.googlePlaceId}
+      hours={merchant.hours}
+      instagramUrl={merchant.instagramUrl}
+      facebookUrl={merchant.facebookUrl}
+      tiktokUrl={merchant.tiktokUrl}
+      photos={merchant.photos}
+      services={merchant.services}
+      aboutStory={merchant.aboutStory}
+    />
   );
 }

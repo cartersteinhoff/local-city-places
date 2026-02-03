@@ -195,7 +195,7 @@ export function ImageUploader({
             <button
               type="button"
               onClick={handleRemove}
-              className="absolute top-2 right-2 p-1.5 bg-black/70 hover:bg-black/90 text-white rounded-full transition-colors"
+              className="absolute top-2 right-2 p-1.5 bg-black/70 hover:bg-black/90 text-white rounded-full transition-colors cursor-pointer"
             >
               <X className="w-4 h-4" />
             </button>
@@ -216,7 +216,7 @@ export function ImageUploader({
           <button
             type="button"
             onClick={(e) => { e.stopPropagation(); handleRetry(); }}
-            className="flex items-center gap-1 text-sm text-primary hover:underline"
+            className="flex items-center gap-1 text-sm text-primary hover:underline cursor-pointer"
           >
             <RefreshCw className="w-3 h-3" />
             Retry

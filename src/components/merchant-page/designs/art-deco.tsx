@@ -10,7 +10,7 @@
  */
 
 import { Poiret_One, Raleway } from "next/font/google";
-import { MapPin, Phone, Globe, Share2, Star, Gem, Navigation, Clock, Instagram, Facebook, Image, Sparkles } from "lucide-react";
+import { MapPin, Phone, Globe, Share2, Gem, Navigation, Clock, Instagram, Facebook, Image, Sparkles } from "lucide-react";
 import { formatPhoneNumber } from "@/lib/utils";
 
 const poiretOne = Poiret_One({
@@ -141,31 +141,30 @@ export function ArtDecoDesign({
         <div className="max-w-6xl mx-auto px-4">
           <div className="flex items-center justify-center gap-1 sm:gap-2 py-2 overflow-x-auto scrollbar-hide">
             {aboutStory && (
-              <a href="#story" className={`px-3 py-2 text-[10px] sm:text-xs tracking-[0.15em] uppercase text-[#D4AF37]/70 hover:text-[#D4AF37] hover:bg-[#D4AF37]/10 transition-all whitespace-nowrap ${raleway.className}`}>
+              <a href="#story" className={`px-3 py-2 text-[10px] sm:text-xs tracking-[0.15em] uppercase text-[#D4AF37]/70 hover:text-[#D4AF37] hover:bg-[#D4AF37]/10 transition-all whitespace-nowrap cursor-pointer ${raleway.className}`}>
                 Story
               </a>
             )}
             {hours && Object.values(hours).some(Boolean) && (
-              <a href="#hours" className={`px-3 py-2 text-[10px] sm:text-xs tracking-[0.15em] uppercase text-[#D4AF37]/70 hover:text-[#D4AF37] hover:bg-[#D4AF37]/10 transition-all whitespace-nowrap ${raleway.className}`}>
+              <a href="#hours" className={`px-3 py-2 text-[10px] sm:text-xs tracking-[0.15em] uppercase text-[#D4AF37]/70 hover:text-[#D4AF37] hover:bg-[#D4AF37]/10 transition-all whitespace-nowrap cursor-pointer ${raleway.className}`}>
                 Hours
               </a>
             )}
             {services && services.length > 0 && (
-              <a href="#services" className={`px-3 py-2 text-[10px] sm:text-xs tracking-[0.15em] uppercase text-[#D4AF37]/70 hover:text-[#D4AF37] hover:bg-[#D4AF37]/10 transition-all whitespace-nowrap ${raleway.className}`}>
+              <a href="#services" className={`px-3 py-2 text-[10px] sm:text-xs tracking-[0.15em] uppercase text-[#D4AF37]/70 hover:text-[#D4AF37] hover:bg-[#D4AF37]/10 transition-all whitespace-nowrap cursor-pointer ${raleway.className}`}>
                 Services
               </a>
             )}
             {photos && photos.length > 0 && (
-              <a href="#gallery" className={`px-3 py-2 text-[10px] sm:text-xs tracking-[0.15em] uppercase text-[#D4AF37]/70 hover:text-[#D4AF37] hover:bg-[#D4AF37]/10 transition-all whitespace-nowrap ${raleway.className}`}>
+              <a href="#gallery" className={`px-3 py-2 text-[10px] sm:text-xs tracking-[0.15em] uppercase text-[#D4AF37]/70 hover:text-[#D4AF37] hover:bg-[#D4AF37]/10 transition-all whitespace-nowrap cursor-pointer ${raleway.className}`}>
                 Gallery
               </a>
             )}
-            <a href="#location" className={`px-3 py-2 text-[10px] sm:text-xs tracking-[0.15em] uppercase text-[#D4AF37]/70 hover:text-[#D4AF37] hover:bg-[#D4AF37]/10 transition-all whitespace-nowrap ${raleway.className}`}>
-              Location
-            </a>
-            <a href="#reviews" className={`px-3 py-2 text-[10px] sm:text-xs tracking-[0.15em] uppercase text-[#D4AF37]/70 hover:text-[#D4AF37] hover:bg-[#D4AF37]/10 transition-all whitespace-nowrap ${raleway.className}`}>
-              Reviews
-            </a>
+{(googlePlaceId || city) && (
+              <a href="#location" className={`px-3 py-2 text-[10px] sm:text-xs tracking-[0.15em] uppercase text-[#D4AF37]/70 hover:text-[#D4AF37] hover:bg-[#D4AF37]/10 transition-all whitespace-nowrap cursor-pointer ${raleway.className}`}>
+                Location
+              </a>
+            )}
           </div>
         </div>
       </nav>
@@ -177,7 +176,7 @@ export function ArtDecoDesign({
             {phone && (
               <a
                 href={`tel:${phone}`}
-                className="flex items-center gap-3 hover:opacity-80 transition-opacity"
+                className="flex items-center gap-3 hover:opacity-80 transition-opacity cursor-pointer"
               >
                 <Phone className="w-5 h-5" />
                 <div>
@@ -191,7 +190,7 @@ export function ArtDecoDesign({
                 href={website.startsWith("http") ? website : `https://${website}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-3 hover:opacity-80 transition-opacity"
+                className="flex items-center gap-3 hover:opacity-80 transition-opacity cursor-pointer"
               >
                 <Globe className="w-5 h-5" />
                 <div>
@@ -207,7 +206,7 @@ export function ArtDecoDesign({
                 href={directionsUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-3 hover:opacity-80 transition-opacity"
+                className="flex items-center gap-3 hover:opacity-80 transition-opacity cursor-pointer"
               >
                 <MapPin className="w-5 h-5" />
                 <div>
@@ -229,25 +228,30 @@ export function ArtDecoDesign({
             {/* Left - Business Info */}
             <div className="text-center lg:text-left">
               {/* Logo with art deco frame */}
-              <div className="inline-block mb-8">
-                <div className="relative">
-                  {/* Corner decorations */}
-                  <div className="absolute -top-2 -left-2 w-6 h-6 border-t-2 border-l-2 border-[#D4AF37]" />
-                  <div className="absolute -top-2 -right-2 w-6 h-6 border-t-2 border-r-2 border-[#D4AF37]" />
-                  <div className="absolute -bottom-2 -left-2 w-6 h-6 border-b-2 border-l-2 border-[#D4AF37]" />
-                  <div className="absolute -bottom-2 -right-2 w-6 h-6 border-b-2 border-r-2 border-[#D4AF37]" />
+              {logoUrl && (
+                <div className="inline-block mb-8">
+                  <div className="relative">
+                    {/* Outer glow */}
+                    <div className="absolute inset-0 bg-[#D4AF37]/20 blur-xl" />
 
-                  <div className="w-28 h-28 bg-[#0D1F22] border border-[#D4AF37]/50 flex items-center justify-center overflow-hidden">
-                    {logoUrl ? (
-                      <img src={logoUrl} alt={businessName} className="w-full h-full object-cover" />
-                    ) : (
-                      <span className={`text-4xl text-[#D4AF37] ${poiretOne.className}`}>
-                        {initials}
-                      </span>
-                    )}
+                    {/* Diamond corner accents */}
+                    <div className="absolute -top-3 -left-3 w-4 h-4 bg-[#D4AF37] rotate-45" />
+                    <div className="absolute -top-3 -right-3 w-4 h-4 bg-[#D4AF37] rotate-45" />
+                    <div className="absolute -bottom-3 -left-3 w-4 h-4 bg-[#D4AF37] rotate-45" />
+                    <div className="absolute -bottom-3 -right-3 w-4 h-4 bg-[#D4AF37] rotate-45" />
+
+                    {/* Ornate frame lines */}
+                    <div className="absolute -top-1 left-4 right-4 h-px bg-gradient-to-r from-transparent via-[#D4AF37] to-transparent" />
+                    <div className="absolute -bottom-1 left-4 right-4 h-px bg-gradient-to-r from-transparent via-[#D4AF37] to-transparent" />
+                    <div className="absolute -left-1 top-4 bottom-4 w-px bg-gradient-to-b from-transparent via-[#D4AF37] to-transparent" />
+                    <div className="absolute -right-1 top-4 bottom-4 w-px bg-gradient-to-b from-transparent via-[#D4AF37] to-transparent" />
+
+                    <div className="relative w-32 h-32 bg-[#0D1F22] border-2 border-[#D4AF37] flex items-center justify-center overflow-hidden">
+                      <img src={logoUrl} alt={businessName} className="w-full h-full object-contain p-2" />
+                    </div>
                   </div>
                 </div>
-              </div>
+              )}
 
               {/* Category */}
               {categoryName && (
@@ -260,10 +264,25 @@ export function ArtDecoDesign({
                 </div>
               )}
 
-              {/* Business Name */}
-              <h1 className={`text-4xl sm:text-5xl lg:text-6xl font-light mb-6 leading-tight ${poiretOne.className}`}>
-                {businessName}
-              </h1>
+              {/* Business Name with Art Deco styling */}
+              <div className="relative mb-8">
+                {/* Decorative line above */}
+                <div className="flex items-center justify-center lg:justify-start gap-3 mb-4">
+                  <div className="w-2 h-2 bg-[#D4AF37] rotate-45" />
+                  <div className="w-16 h-px bg-gradient-to-r from-[#D4AF37] to-transparent" />
+                </div>
+
+                <h1 className={`text-4xl sm:text-5xl lg:text-6xl font-light leading-tight bg-gradient-to-r from-[#F5F1E6] via-[#D4AF37] to-[#F5F1E6] bg-clip-text text-transparent ${poiretOne.className}`}>
+                  {businessName}
+                </h1>
+
+                {/* Decorative line below */}
+                <div className="flex items-center justify-center lg:justify-start gap-3 mt-4">
+                  <div className="w-24 h-px bg-gradient-to-r from-[#D4AF37] to-transparent" />
+                  <div className="w-2 h-2 bg-[#D4AF37] rotate-45" />
+                  <div className="w-12 h-px bg-gradient-to-l from-[#D4AF37] to-transparent" />
+                </div>
+              </div>
 
               {/* Description */}
               {description && (
@@ -351,18 +370,7 @@ export function ArtDecoDesign({
               </div>
             )}
 
-            {/* If no video */}
-            {!videoId && (
-              <div className="hidden lg:flex justify-center">
-                <div className="relative w-48 h-48">
-                  <div className="absolute inset-0 border border-[#D4AF37]/30" />
-                  <div className="absolute inset-2 border border-[#D4AF37]/20" />
-                  <div className="absolute inset-4 flex items-center justify-center">
-                    <Gem className="w-16 h-16 text-[#D4AF37]/30" />
-                  </div>
-                </div>
-              </div>
-            )}
+{/* No placeholder when no video - keep it clean */}
           </div>
         </div>
 
@@ -373,43 +381,45 @@ export function ArtDecoDesign({
           <div className="w-32 h-px bg-gradient-to-l from-transparent to-[#D4AF37]/40" />
         </div>
 
-        {/* Map Section */}
-        <div id="location" className="max-w-6xl mx-auto px-4 py-12 scroll-mt-16">
-          <div className="flex items-center justify-between mb-8">
-            <div className="flex items-center gap-4">
-              <h2 className={`text-2xl ${poiretOne.className}`}>
-                Our Location
-              </h2>
-              <div className="flex-1 h-px bg-gradient-to-r from-[#D4AF37]/30 to-transparent" />
+        {/* Map Section - only show if we have location data */}
+        {(googlePlaceId || fullAddress) && (
+          <div id="location" className="max-w-6xl mx-auto px-4 py-12 scroll-mt-16">
+            <div className="flex items-center justify-between mb-8">
+              <div className="flex items-center gap-4">
+                <h2 className={`text-2xl ${poiretOne.className}`}>
+                  Our Location
+                </h2>
+                <div className="flex-1 h-px bg-gradient-to-r from-[#D4AF37]/30 to-transparent" />
+              </div>
+              <a
+                href={directionsUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 text-xs tracking-[0.2em] uppercase text-[#D4AF37] hover:text-[#E5C97B] transition-colors cursor-pointer"
+              >
+                <Navigation className="w-4 h-4" />
+                Get Directions
+              </a>
             </div>
-            <a
-              href={directionsUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-2 text-xs tracking-[0.2em] uppercase text-[#D4AF37] hover:text-[#E5C97B] transition-colors"
-            >
-              <Navigation className="w-4 h-4" />
-              Get Directions
-            </a>
+            {fullAddress && (
+              <p className={`text-[#F5F1E6]/70 mb-6 ${raleway.className}`}>{fullAddress}</p>
+            )}
+            <div className="relative">
+              {/* Art deco frame for map */}
+              <div className="absolute -inset-2 border border-[#D4AF37]/30" />
+              <GoogleMapEmbed
+                businessName={businessName}
+                streetAddress={streetAddress}
+                city={city}
+                state={state}
+                zipCode={zipCode}
+                googlePlaceId={googlePlaceId}
+                height="300px"
+                mapStyle="cool"
+              />
+            </div>
           </div>
-          {fullAddress && (
-            <p className={`text-[#F5F1E6]/70 mb-6 ${raleway.className}`}>{fullAddress}</p>
-          )}
-          <div className="relative">
-            {/* Art deco frame for map */}
-            <div className="absolute -inset-2 border border-[#D4AF37]/30" />
-            <GoogleMapEmbed
-              businessName={businessName}
-              streetAddress={streetAddress}
-              city={city}
-              state={state}
-              zipCode={zipCode}
-              googlePlaceId={googlePlaceId}
-              height="300px"
-              mapStyle="cool"
-            />
-          </div>
-        </div>
+        )}
 
         {/* About/Story Section */}
         {aboutStory && (
@@ -534,30 +544,7 @@ export function ArtDecoDesign({
           </>
         )}
 
-        {/* Decorative divider */}
-        <div className="flex items-center justify-center gap-4 py-4">
-          <div className="w-32 h-px bg-gradient-to-r from-transparent to-[#D4AF37]/40" />
-          <div className="w-3 h-3 rotate-45 border border-[#D4AF37]/50" />
-          <div className="w-32 h-px bg-gradient-to-l from-transparent to-[#D4AF37]/40" />
-        </div>
-
-        {/* Reviews Section */}
-        <div id="reviews" className="max-w-6xl mx-auto px-4 py-12 scroll-mt-16">
-          <div className="flex items-center gap-4 mb-8">
-            <h2 className={`text-2xl ${poiretOne.className}`}>
-              Guest Reviews
-            </h2>
-            <div className="flex-1 h-px bg-gradient-to-r from-[#D4AF37]/30 to-transparent" />
-          </div>
-
-          <div className="border border-[#D4AF37]/20 p-12 text-center">
-            <div className="w-16 h-16 mx-auto mb-6 border border-[#D4AF37]/30 flex items-center justify-center rotate-45">
-              <Star className="w-6 h-6 text-[#D4AF37]/40 -rotate-45" />
-            </div>
-            <p className="text-[#F5F1E6]/50 text-sm tracking-wider mb-2">No reviews yet</p>
-            <p className="text-[#F5F1E6]/30 text-xs">Be the first to share your experience</p>
-          </div>
-        </div>
+{/* Reviews Section - will show when reviews data is available */}
 
         {/* Social Links */}
         {(instagramUrl || facebookUrl || tiktokUrl) && (
@@ -571,7 +558,7 @@ export function ArtDecoDesign({
                       href={instagramUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="w-12 h-12 border border-[#D4AF37]/30 flex items-center justify-center hover:border-[#D4AF37] hover:bg-[#D4AF37]/10 transition-all"
+                      className="w-12 h-12 border border-[#D4AF37]/30 flex items-center justify-center hover:border-[#D4AF37] hover:bg-[#D4AF37]/10 transition-all cursor-pointer"
                     >
                       <Instagram className="w-5 h-5 text-[#D4AF37]" />
                     </a>
@@ -581,7 +568,7 @@ export function ArtDecoDesign({
                       href={facebookUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="w-12 h-12 border border-[#D4AF37]/30 flex items-center justify-center hover:border-[#D4AF37] hover:bg-[#D4AF37]/10 transition-all"
+                      className="w-12 h-12 border border-[#D4AF37]/30 flex items-center justify-center hover:border-[#D4AF37] hover:bg-[#D4AF37]/10 transition-all cursor-pointer"
                     >
                       <Facebook className="w-5 h-5 text-[#D4AF37]" />
                     </a>
@@ -591,7 +578,7 @@ export function ArtDecoDesign({
                       href={tiktokUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="w-12 h-12 border border-[#D4AF37]/30 flex items-center justify-center hover:border-[#D4AF37] hover:bg-[#D4AF37]/10 transition-all"
+                      className="w-12 h-12 border border-[#D4AF37]/30 flex items-center justify-center hover:border-[#D4AF37] hover:bg-[#D4AF37]/10 transition-all cursor-pointer"
                     >
                       <svg className="w-5 h-5 text-[#D4AF37]" viewBox="0 0 24 24" fill="currentColor">
                         <path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-5.2 1.74 2.89 2.89 0 012.31-4.64 2.93 2.93 0 01.88.13V9.4a6.84 6.84 0 00-1-.05A6.33 6.33 0 005 20.1a6.34 6.34 0 0010.86-4.43v-7a8.16 8.16 0 004.77 1.52v-3.4a4.85 4.85 0 01-1-.1z"/>
