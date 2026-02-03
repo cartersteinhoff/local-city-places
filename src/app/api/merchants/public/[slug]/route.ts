@@ -26,6 +26,14 @@ export async function GET(
         description: merchants.description,
         logoUrl: merchants.logoUrl,
         googlePlaceId: merchants.googlePlaceId,
+        // Extended business info
+        hours: merchants.hours,
+        instagramUrl: merchants.instagramUrl,
+        facebookUrl: merchants.facebookUrl,
+        tiktokUrl: merchants.tiktokUrl,
+        photos: merchants.photos,
+        services: merchants.services,
+        aboutStory: merchants.aboutStory,
       })
       .from(merchants)
       .leftJoin(categories, eq(merchants.categoryId, categories.id))

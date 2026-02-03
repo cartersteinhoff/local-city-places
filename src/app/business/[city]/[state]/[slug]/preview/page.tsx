@@ -34,6 +34,22 @@ interface MerchantData {
   description: string | null;
   logoUrl: string | null;
   googlePlaceId: string | null;
+  // Extended business info
+  hours: {
+    monday?: string;
+    tuesday?: string;
+    wednesday?: string;
+    thursday?: string;
+    friday?: string;
+    saturday?: string;
+    sunday?: string;
+  } | null;
+  instagramUrl: string | null;
+  facebookUrl: string | null;
+  tiktokUrl: string | null;
+  photos: string[] | null;
+  services: { name: string; description?: string; price?: string }[] | null;
+  aboutStory: string | null;
 }
 
 const designs = [
@@ -248,6 +264,13 @@ export default function PreviewPage() {
             description={merchant.description}
             vimeoUrl={merchant.vimeoUrl}
             googlePlaceId={merchant.googlePlaceId}
+            hours={merchant.hours}
+            instagramUrl={merchant.instagramUrl}
+            facebookUrl={merchant.facebookUrl}
+            tiktokUrl={merchant.tiktokUrl}
+            photos={merchant.photos}
+            services={merchant.services}
+            aboutStory={merchant.aboutStory}
           />
         )}
         {selectedDesign === "zen" && (

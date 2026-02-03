@@ -10,7 +10,7 @@
  */
 
 import { Poiret_One, Raleway } from "next/font/google";
-import { MapPin, Phone, Globe, Share2, Star, Gem, Navigation } from "lucide-react";
+import { MapPin, Phone, Globe, Share2, Star, Gem, Navigation, Clock, Instagram, Facebook, Image, Sparkles } from "lucide-react";
 import { formatPhoneNumber } from "@/lib/utils";
 
 const poiretOne = Poiret_One({
@@ -41,6 +41,22 @@ interface MerchantPageProps {
   description?: string | null;
   vimeoUrl?: string | null;
   googlePlaceId?: string | null;
+  // Extended business info
+  hours?: {
+    monday?: string;
+    tuesday?: string;
+    wednesday?: string;
+    thursday?: string;
+    friday?: string;
+    saturday?: string;
+    sunday?: string;
+  } | null;
+  instagramUrl?: string | null;
+  facebookUrl?: string | null;
+  tiktokUrl?: string | null;
+  photos?: string[] | null;
+  services?: { name: string; description?: string; price?: string }[] | null;
+  aboutStory?: string | null;
 }
 
 export function ArtDecoDesign({
@@ -56,6 +72,13 @@ export function ArtDecoDesign({
   description,
   vimeoUrl,
   googlePlaceId,
+  hours,
+  instagramUrl,
+  facebookUrl,
+  tiktokUrl,
+  photos,
+  services,
+  aboutStory,
 }: MerchantPageProps) {
   const [copied, setCopied] = useState(false);
   const location = [city, state].filter(Boolean).join(", ");
@@ -350,10 +373,133 @@ export function ArtDecoDesign({
               zipCode={zipCode}
               googlePlaceId={googlePlaceId}
               height="300px"
-              mapStyle="dark"
+              mapStyle="cool"
             />
           </div>
         </div>
+
+        {/* About/Story Section */}
+        {aboutStory && (
+          <>
+            <div className="flex items-center justify-center gap-4 py-4">
+              <div className="w-32 h-px bg-gradient-to-r from-transparent to-[#D4AF37]/40" />
+              <div className="w-3 h-3 rotate-45 border border-[#D4AF37]/50" />
+              <div className="w-32 h-px bg-gradient-to-l from-transparent to-[#D4AF37]/40" />
+            </div>
+            <div className="max-w-6xl mx-auto px-4 py-12">
+              <div className="flex items-center gap-4 mb-8">
+                <h2 className={`text-2xl ${poiretOne.className}`}>Our Story</h2>
+                <div className="flex-1 h-px bg-gradient-to-r from-[#D4AF37]/30 to-transparent" />
+              </div>
+              <div className="border border-[#D4AF37]/20 p-8">
+                <p className={`text-[#F5F1E6]/80 leading-relaxed whitespace-pre-line ${raleway.className}`}>
+                  {aboutStory}
+                </p>
+              </div>
+            </div>
+          </>
+        )}
+
+        {/* Hours Section */}
+        {hours && Object.values(hours).some(Boolean) && (
+          <>
+            <div className="flex items-center justify-center gap-4 py-4">
+              <div className="w-32 h-px bg-gradient-to-r from-transparent to-[#D4AF37]/40" />
+              <div className="w-3 h-3 rotate-45 border border-[#D4AF37]/50" />
+              <div className="w-32 h-px bg-gradient-to-l from-transparent to-[#D4AF37]/40" />
+            </div>
+            <div className="max-w-6xl mx-auto px-4 py-12">
+              <div className="flex items-center gap-4 mb-8">
+                <Clock className="w-6 h-6 text-[#D4AF37]" />
+                <h2 className={`text-2xl ${poiretOne.className}`}>Hours of Operation</h2>
+                <div className="flex-1 h-px bg-gradient-to-r from-[#D4AF37]/30 to-transparent" />
+              </div>
+              <div className="grid sm:grid-cols-2 gap-4 border border-[#D4AF37]/20 p-8">
+                {[
+                  { day: "Monday", value: hours.monday },
+                  { day: "Tuesday", value: hours.tuesday },
+                  { day: "Wednesday", value: hours.wednesday },
+                  { day: "Thursday", value: hours.thursday },
+                  { day: "Friday", value: hours.friday },
+                  { day: "Saturday", value: hours.saturday },
+                  { day: "Sunday", value: hours.sunday },
+                ].map(({ day, value }) => (
+                  <div key={day} className="flex justify-between items-center py-2 border-b border-[#D4AF37]/10 last:border-0">
+                    <span className={`text-[#D4AF37] ${raleway.className}`}>{day}</span>
+                    <span className={`text-[#F5F1E6]/70 ${raleway.className}`}>{value || "Closed"}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </>
+        )}
+
+        {/* Services Section */}
+        {services && services.length > 0 && (
+          <>
+            <div className="flex items-center justify-center gap-4 py-4">
+              <div className="w-32 h-px bg-gradient-to-r from-transparent to-[#D4AF37]/40" />
+              <div className="w-3 h-3 rotate-45 border border-[#D4AF37]/50" />
+              <div className="w-32 h-px bg-gradient-to-l from-transparent to-[#D4AF37]/40" />
+            </div>
+            <div className="max-w-6xl mx-auto px-4 py-12">
+              <div className="flex items-center gap-4 mb-8">
+                <Sparkles className="w-6 h-6 text-[#D4AF37]" />
+                <h2 className={`text-2xl ${poiretOne.className}`}>Our Services</h2>
+                <div className="flex-1 h-px bg-gradient-to-r from-[#D4AF37]/30 to-transparent" />
+              </div>
+              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {services.map((service, idx) => (
+                  <div key={idx} className="border border-[#D4AF37]/20 p-6 hover:border-[#D4AF37]/40 transition-colors">
+                    <div className="flex justify-between items-start mb-2">
+                      <h3 className={`text-lg text-[#D4AF37] ${poiretOne.className}`}>{service.name}</h3>
+                      {service.price && (
+                        <span className={`text-[#E5C97B] ${raleway.className}`}>{service.price}</span>
+                      )}
+                    </div>
+                    {service.description && (
+                      <p className={`text-sm text-[#F5F1E6]/60 ${raleway.className}`}>{service.description}</p>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </>
+        )}
+
+        {/* Photo Gallery Section */}
+        {photos && photos.length > 0 && (
+          <>
+            <div className="flex items-center justify-center gap-4 py-4">
+              <div className="w-32 h-px bg-gradient-to-r from-transparent to-[#D4AF37]/40" />
+              <div className="w-3 h-3 rotate-45 border border-[#D4AF37]/50" />
+              <div className="w-32 h-px bg-gradient-to-l from-transparent to-[#D4AF37]/40" />
+            </div>
+            <div className="max-w-6xl mx-auto px-4 py-12">
+              <div className="flex items-center gap-4 mb-8">
+                <Image className="w-6 h-6 text-[#D4AF37]" />
+                <h2 className={`text-2xl ${poiretOne.className}`}>Gallery</h2>
+                <div className="flex-1 h-px bg-gradient-to-r from-[#D4AF37]/30 to-transparent" />
+              </div>
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                {photos.map((photo, idx) => (
+                  <div key={idx} className="relative aspect-square border-2 border-[#D4AF37]/30 overflow-hidden group">
+                    <img
+                      src={photo}
+                      alt={`${businessName} photo ${idx + 1}`}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    />
+                    {/* Art deco corner accents */}
+                    <div className="absolute top-0 left-0 w-4 h-4 border-t-2 border-l-2 border-[#D4AF37]" />
+                    <div className="absolute top-0 right-0 w-4 h-4 border-t-2 border-r-2 border-[#D4AF37]" />
+                    <div className="absolute bottom-0 left-0 w-4 h-4 border-b-2 border-l-2 border-[#D4AF37]" />
+                    <div className="absolute bottom-0 right-0 w-4 h-4 border-b-2 border-r-2 border-[#D4AF37]" />
+                  </div>
+                ))}
+              </div>
+            </div>
+          </>
+        )}
 
         {/* Decorative divider */}
         <div className="flex items-center justify-center gap-4 py-4">
@@ -379,6 +525,51 @@ export function ArtDecoDesign({
             <p className="text-[#F5F1E6]/30 text-xs">Be the first to share your experience</p>
           </div>
         </div>
+
+        {/* Social Links */}
+        {(instagramUrl || facebookUrl || tiktokUrl) && (
+          <div className="border-t border-[#D4AF37]/20">
+            <div className="max-w-6xl mx-auto px-4 py-8">
+              <div className="flex items-center justify-center gap-6">
+                <span className={`text-sm text-[#F5F1E6]/50 ${raleway.className}`}>Follow Us</span>
+                <div className="flex items-center gap-4">
+                  {instagramUrl && (
+                    <a
+                      href={instagramUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="w-12 h-12 border border-[#D4AF37]/30 flex items-center justify-center hover:border-[#D4AF37] hover:bg-[#D4AF37]/10 transition-all"
+                    >
+                      <Instagram className="w-5 h-5 text-[#D4AF37]" />
+                    </a>
+                  )}
+                  {facebookUrl && (
+                    <a
+                      href={facebookUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="w-12 h-12 border border-[#D4AF37]/30 flex items-center justify-center hover:border-[#D4AF37] hover:bg-[#D4AF37]/10 transition-all"
+                    >
+                      <Facebook className="w-5 h-5 text-[#D4AF37]" />
+                    </a>
+                  )}
+                  {tiktokUrl && (
+                    <a
+                      href={tiktokUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="w-12 h-12 border border-[#D4AF37]/30 flex items-center justify-center hover:border-[#D4AF37] hover:bg-[#D4AF37]/10 transition-all"
+                    >
+                      <svg className="w-5 h-5 text-[#D4AF37]" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-5.2 1.74 2.89 2.89 0 012.31-4.64 2.93 2.93 0 01.88.13V9.4a6.84 6.84 0 00-1-.05A6.33 6.33 0 005 20.1a6.34 6.34 0 0010.86-4.43v-7a8.16 8.16 0 004.77 1.52v-3.4a4.85 4.85 0 01-1-.1z"/>
+                      </svg>
+                    </a>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Partner Section */}
         <div className="border-t border-[#D4AF37]/20">

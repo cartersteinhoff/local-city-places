@@ -84,6 +84,22 @@ export const merchants = pgTable("merchants", {
   vimeoUrl: text("vimeo_url"), // Full Vimeo URL for video embed
   slug: varchar("slug", { length: 255 }), // SEO-friendly slug (business-name-abc123)
   isPublicPage: boolean("is_public_page").default(false), // True for admin-created "page only" merchants
+  // Extended business info
+  hours: jsonb("hours").$type<{
+    monday?: string;
+    tuesday?: string;
+    wednesday?: string;
+    thursday?: string;
+    friday?: string;
+    saturday?: string;
+    sunday?: string;
+  }>(), // Hours of operation by day
+  instagramUrl: varchar("instagram_url", { length: 255 }),
+  facebookUrl: varchar("facebook_url", { length: 255 }),
+  tiktokUrl: varchar("tiktok_url", { length: 255 }),
+  photos: jsonb("photos").$type<string[]>(), // Array of photo URLs
+  services: jsonb("services").$type<{ name: string; description?: string; price?: string }[]>(), // Services/menu items
+  aboutStory: text("about_story"), // Longer about/history section
   verified: boolean("verified").default(false).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
