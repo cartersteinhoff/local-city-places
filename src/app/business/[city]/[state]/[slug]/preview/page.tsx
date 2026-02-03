@@ -237,14 +237,17 @@ export default function PreviewPage() {
         {selectedDesign === "deco" && (
           <ArtDecoDesign
             businessName={merchant.businessName}
+            streetAddress={merchant.streetAddress}
             city={merchant.city}
             state={merchant.state}
+            zipCode={merchant.zipCode}
             logoUrl={merchant.logoUrl}
             categoryName={merchant.categoryName}
             phone={merchant.phone}
             website={merchant.website}
             description={merchant.description}
             vimeoUrl={merchant.vimeoUrl}
+            googlePlaceId={merchant.googlePlaceId}
           />
         )}
         {selectedDesign === "zen" && (

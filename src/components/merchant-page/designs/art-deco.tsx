@@ -9,37 +9,46 @@
  * Vertical video in ornate frame.
  */
 
-import { MapPin, Phone, Globe, Share2, Star, Gem } from "lucide-react";
+import { MapPin, Phone, Globe, Share2, Star, Gem, Navigation } from "lucide-react";
 import { formatPhoneNumber } from "@/lib/utils";
 import { extractVimeoId, getVimeoEmbedUrl } from "@/lib/vimeo";
 import { useState } from "react";
+import { GoogleMapEmbed, getGoogleMapsDirectionsUrl, formatFullAddress } from "../google-map-embed";
 
 interface MerchantPageProps {
   businessName: string;
+  streetAddress?: string | null;
   city?: string | null;
   state?: string | null;
+  zipCode?: string | null;
   logoUrl?: string | null;
   categoryName?: string | null;
   phone?: string | null;
   website?: string | null;
   description?: string | null;
   vimeoUrl?: string | null;
+  googlePlaceId?: string | null;
 }
 
 export function ArtDecoDesign({
   businessName,
+  streetAddress,
   city,
   state,
+  zipCode,
   logoUrl,
   categoryName,
   phone,
   website,
   description,
   vimeoUrl,
+  googlePlaceId,
 }: MerchantPageProps) {
   const [copied, setCopied] = useState(false);
   const location = [city, state].filter(Boolean).join(", ");
+  const fullAddress = formatFullAddress(streetAddress, city, state, zipCode);
   const videoId = vimeoUrl ? extractVimeoId(vimeoUrl) : null;
+  const directionsUrl = getGoogleMapsDirectionsUrl(businessName, streetAddress, city, state, zipCode, googlePlaceId);
 
   const initials = businessName
     .split(" ")
@@ -125,14 +134,20 @@ export function ArtDecoDesign({
               </a>
             )}
             {(phone || website) && location && <div className="w-px h-10 bg-[#0D1F22]/20 hidden sm:block" />}
-            {location && (
-              <div className="flex items-center gap-3">
+            {(fullAddress || location) && (
+              <a
+                href={directionsUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-3 hover:opacity-80 transition-opacity"
+              >
                 <MapPin className="w-5 h-5" />
                 <div>
                   <p className="text-[10px] uppercase tracking-wider opacity-70">Location</p>
-                  <p className="font-semibold" style={{ fontFamily: "'Playfair Display', serif" }}>{location}</p>
+                  {streetAddress && <p className="font-semibold" style={{ fontFamily: "'Playfair Display', serif" }}>{streetAddress}</p>}
+                  <p className="font-semibold" style={{ fontFamily: "'Playfair Display', serif" }}>{[city, state, zipCode].filter(Boolean).join(", ") || location}</p>
                 </div>
-              </div>
+              </a>
             )}
           </div>
         </div>
@@ -202,7 +217,7 @@ export function ArtDecoDesign({
                 {phone && (
                   <a
                     href={`tel:${phone}`}
-                    className="group flex items-center justify-center gap-3 px-8 py-4 bg-gradient-to-r from-[#D4AF37] via-[#E5C97B] to-[#D4AF37] text-[#0D1F22] font-medium"
+                    className="group flex items-center justify-center gap-3 px-8 py-4 bg-gradient-to-r from-[#D4AF37] via-[#E5C97B] to-[#D4AF37] text-[#0D1F22] font-medium cursor-pointer"
                   >
                     <Phone className="w-5 h-5" />
                     <span style={{ fontFamily: "'Playfair Display', serif" }}>Call Now</span>
@@ -213,12 +228,21 @@ export function ArtDecoDesign({
                     href={website.startsWith("http") ? website : `https://${website}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center justify-center gap-3 px-8 py-4 border border-[#D4AF37] hover:bg-[#D4AF37]/10 transition-colors"
+                    className="flex items-center justify-center gap-3 px-8 py-4 border border-[#D4AF37] hover:bg-[#D4AF37]/10 transition-colors cursor-pointer"
                   >
                     <Globe className="w-5 h-5 text-[#D4AF37]" />
                     <span style={{ fontFamily: "'Playfair Display', serif" }}>Visit Website</span>
                   </a>
                 )}
+                <a
+                  href={directionsUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center justify-center gap-3 px-8 py-4 border border-[#D4AF37] hover:bg-[#D4AF37]/10 transition-colors cursor-pointer"
+                >
+                  <Navigation className="w-5 h-5 text-[#D4AF37]" />
+                  <span style={{ fontFamily: "'Playfair Display', serif" }}>Directions</span>
+                </a>
               </div>
             </div>
 
@@ -279,6 +303,53 @@ export function ArtDecoDesign({
                 </div>
               </div>
             )}
+          </div>
+        </div>
+
+        {/* Decorative divider */}
+        <div className="flex items-center justify-center gap-4 py-4">
+          <div className="w-32 h-px bg-gradient-to-r from-transparent to-[#D4AF37]/40" />
+          <div className="w-3 h-3 rotate-45 border border-[#D4AF37]/50" />
+          <div className="w-32 h-px bg-gradient-to-l from-transparent to-[#D4AF37]/40" />
+        </div>
+
+        {/* Map Section */}
+        <div className="max-w-6xl mx-auto px-4 py-12">
+          <div className="flex items-center justify-between mb-8">
+            <div className="flex items-center gap-4">
+              <h2
+                className="text-2xl"
+                style={{ fontFamily: "'Playfair Display', serif" }}
+              >
+                Our Location
+              </h2>
+              <div className="flex-1 h-px bg-gradient-to-r from-[#D4AF37]/30 to-transparent" />
+            </div>
+            <a
+              href={directionsUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2 text-xs tracking-[0.2em] uppercase text-[#D4AF37] hover:text-[#E5C97B] transition-colors"
+            >
+              <Navigation className="w-4 h-4" />
+              Get Directions
+            </a>
+          </div>
+          {fullAddress && (
+            <p className="text-[#F5F1E6]/70 mb-6" style={{ fontFamily: "'Cormorant Garamond', serif" }}>{fullAddress}</p>
+          )}
+          <div className="relative">
+            {/* Art deco frame for map */}
+            <div className="absolute -inset-2 border border-[#D4AF37]/30" />
+            <GoogleMapEmbed
+              businessName={businessName}
+              streetAddress={streetAddress}
+              city={city}
+              state={state}
+              zipCode={zipCode}
+              googlePlaceId={googlePlaceId}
+              height="300px"
+            />
           </div>
         </div>
 
