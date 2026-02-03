@@ -37,12 +37,12 @@ interface MerchantData {
 }
 
 const designs = [
+  { id: "deco", name: "Art Deco", description: "1920s elegance, geometric" },
   { id: "clean", name: "Clean", description: "Simple, professional, universal" },
   { id: "warm", name: "Warm", description: "Friendly, approachable, soft colors" },
   { id: "dark", name: "Dark", description: "Sleek, corporate, trustworthy" },
   { id: "coastal", name: "Coastal", description: "Light, airy, beach vibes" },
   { id: "brutalist", name: "Brutalist", description: "Bold, chunky, raw energy" },
-  { id: "deco", name: "Art Deco", description: "1920s elegance, geometric" },
   { id: "zen", name: "Zen", description: "Japanese minimalism, serene" },
   { id: "retro", name: "80s Retro", description: "Synthwave, neon vibes" },
   { id: "magazine", name: "Magazine", description: "Editorial, publication style" },
@@ -60,7 +60,7 @@ const designs = [
 export default function PreviewPage() {
   const params = useParams();
   const [merchant, setMerchant] = useState<MerchantData | null>(null);
-  const [selectedDesign, setSelectedDesign] = useState<string>("clean");
+  const [selectedDesign, setSelectedDesign] = useState<string>("deco");
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
