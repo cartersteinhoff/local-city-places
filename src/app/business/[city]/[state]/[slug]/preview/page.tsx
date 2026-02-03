@@ -98,15 +98,15 @@ export default function PreviewPage() {
 
   return (
     <div className="min-h-screen bg-gray-900">
-      {/* Design Switcher */}
-      <div className="fixed top-4 left-1/2 -translate-x-1/2 z-[100] bg-white/95 backdrop-blur-lg rounded-2xl shadow-2xl border border-gray-200 p-2 max-w-[95vw]">
-        <div className="flex items-center gap-1 overflow-x-auto">
-          <span className="text-xs font-medium text-gray-500 px-2 shrink-0">Design:</span>
+      {/* Style Selector - Fixed Right Sidebar */}
+      <div className="fixed right-4 top-1/2 -translate-y-1/2 z-[100] bg-white/95 backdrop-blur-lg rounded-2xl shadow-2xl border border-gray-200 p-3 max-h-[80vh] overflow-y-auto">
+        <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3 px-1">Style</p>
+        <div className="flex flex-col gap-1">
           {designs.map((design) => (
             <button
               key={design.id}
               onClick={() => setSelectedDesign(design.id)}
-              className={`px-3 py-2 rounded-xl text-xs sm:text-sm font-medium transition-all whitespace-nowrap shrink-0 ${
+              className={`px-3 py-2 rounded-lg text-sm font-medium transition-all text-left cursor-pointer ${
                 selectedDesign === design.id
                   ? "bg-gray-900 text-white"
                   : "text-gray-600 hover:bg-gray-100"
@@ -120,7 +120,7 @@ export default function PreviewPage() {
       </div>
 
       {/* Design Preview */}
-      <div className="pt-16">
+      <div>
         {selectedDesign === "clean" && (
           <CleanModernDesign
             businessName={merchant.businessName}
