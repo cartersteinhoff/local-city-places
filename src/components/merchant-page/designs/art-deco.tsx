@@ -9,8 +9,21 @@
  * Vertical video in ornate frame.
  */
 
+import { Poiret_One, Raleway } from "next/font/google";
 import { MapPin, Phone, Globe, Share2, Star, Gem, Navigation } from "lucide-react";
 import { formatPhoneNumber } from "@/lib/utils";
+
+const poiretOne = Poiret_One({
+  weight: "400",
+  subsets: ["latin"],
+  display: "swap",
+});
+
+const raleway = Raleway({
+  weight: ["300", "400", "500"],
+  subsets: ["latin"],
+  display: "swap",
+});
 import { extractVimeoId, getVimeoEmbedUrl } from "@/lib/vimeo";
 import { useState } from "react";
 import { GoogleMapEmbed, getGoogleMapsDirectionsUrl, formatFullAddress } from "../google-map-embed";
@@ -112,7 +125,7 @@ export function ArtDecoDesign({
                 <Phone className="w-5 h-5" />
                 <div>
                   <p className="text-[10px] uppercase tracking-wider opacity-70">Telephone</p>
-                  <p className="font-semibold" style={{ fontFamily: "'Playfair Display', serif" }}>{formatPhoneNumber(phone)}</p>
+                  <p className={`font-semibold ${raleway.className}`}>{formatPhoneNumber(phone)}</p>
                 </div>
               </a>
             )}
@@ -127,7 +140,7 @@ export function ArtDecoDesign({
                 <Globe className="w-5 h-5" />
                 <div>
                   <p className="text-[10px] uppercase tracking-wider opacity-70">Website</p>
-                  <p className="font-semibold truncate max-w-[180px]" style={{ fontFamily: "'Playfair Display', serif" }}>
+                  <p className={`font-semibold truncate max-w-[180px] ${raleway.className}`}>
                     {website.replace(/^https?:\/\//, "")}
                   </p>
                 </div>
@@ -144,8 +157,8 @@ export function ArtDecoDesign({
                 <MapPin className="w-5 h-5" />
                 <div>
                   <p className="text-[10px] uppercase tracking-wider opacity-70">Location</p>
-                  {streetAddress && <p className="font-semibold" style={{ fontFamily: "'Playfair Display', serif" }}>{streetAddress}</p>}
-                  <p className="font-semibold" style={{ fontFamily: "'Playfair Display', serif" }}>{[city, state, zipCode].filter(Boolean).join(", ") || location}</p>
+                  {streetAddress && <p className={`font-semibold ${raleway.className}`}>{streetAddress}</p>}
+                  <p className={`font-semibold ${raleway.className}`}>{[city, state, zipCode].filter(Boolean).join(", ") || location}</p>
                 </div>
               </a>
             )}
@@ -172,10 +185,7 @@ export function ArtDecoDesign({
                     {logoUrl ? (
                       <img src={logoUrl} alt={businessName} className="w-full h-full object-cover" />
                     ) : (
-                      <span
-                        className="text-4xl text-[#D4AF37]"
-                        style={{ fontFamily: "'Playfair Display', serif" }}
-                      >
+                      <span className={`text-4xl text-[#D4AF37] ${poiretOne.className}`}>
                         {initials}
                       </span>
                     )}
@@ -195,19 +205,13 @@ export function ArtDecoDesign({
               )}
 
               {/* Business Name */}
-              <h1
-                className="text-4xl sm:text-5xl lg:text-6xl font-light mb-6 leading-tight"
-                style={{ fontFamily: "'Playfair Display', 'Cormorant Garamond', serif" }}
-              >
+              <h1 className={`text-4xl sm:text-5xl lg:text-6xl font-light mb-6 leading-tight ${poiretOne.className}`}>
                 {businessName}
               </h1>
 
               {/* Description */}
               {description && (
-                <p
-                  className="text-lg text-[#F5F1E6]/70 leading-relaxed max-w-lg mx-auto lg:mx-0 mb-10"
-                  style={{ fontFamily: "'Cormorant Garamond', serif" }}
-                >
+                <p className={`text-lg text-[#F5F1E6]/70 leading-relaxed max-w-lg mx-auto lg:mx-0 mb-10 ${raleway.className}`}>
                   {description}
                 </p>
               )}
@@ -220,7 +224,7 @@ export function ArtDecoDesign({
                     className="group flex items-center justify-center gap-3 px-8 py-4 bg-gradient-to-r from-[#D4AF37] via-[#E5C97B] to-[#D4AF37] text-[#0D1F22] font-medium cursor-pointer"
                   >
                     <Phone className="w-5 h-5" />
-                    <span style={{ fontFamily: "'Playfair Display', serif" }}>Call Now</span>
+                    <span className={poiretOne.className}>Call Now</span>
                   </a>
                 )}
                 {website && (
@@ -231,7 +235,7 @@ export function ArtDecoDesign({
                     className="flex items-center justify-center gap-3 px-8 py-4 border border-[#D4AF37] hover:bg-[#D4AF37]/10 transition-colors cursor-pointer"
                   >
                     <Globe className="w-5 h-5 text-[#D4AF37]" />
-                    <span style={{ fontFamily: "'Playfair Display', serif" }}>Visit Website</span>
+                    <span className={poiretOne.className}>Visit Website</span>
                   </a>
                 )}
                 <a
@@ -241,7 +245,7 @@ export function ArtDecoDesign({
                   className="flex items-center justify-center gap-3 px-8 py-4 border border-[#D4AF37] hover:bg-[#D4AF37]/10 transition-colors cursor-pointer"
                 >
                   <Navigation className="w-5 h-5 text-[#D4AF37]" />
-                  <span style={{ fontFamily: "'Playfair Display', serif" }}>Directions</span>
+                  <span className={poiretOne.className}>Directions</span>
                 </a>
               </div>
             </div>
@@ -317,10 +321,7 @@ export function ArtDecoDesign({
         <div className="max-w-6xl mx-auto px-4 py-12">
           <div className="flex items-center justify-between mb-8">
             <div className="flex items-center gap-4">
-              <h2
-                className="text-2xl"
-                style={{ fontFamily: "'Playfair Display', serif" }}
-              >
+              <h2 className={`text-2xl ${poiretOne.className}`}>
                 Our Location
               </h2>
               <div className="flex-1 h-px bg-gradient-to-r from-[#D4AF37]/30 to-transparent" />
@@ -336,7 +337,7 @@ export function ArtDecoDesign({
             </a>
           </div>
           {fullAddress && (
-            <p className="text-[#F5F1E6]/70 mb-6" style={{ fontFamily: "'Cormorant Garamond', serif" }}>{fullAddress}</p>
+            <p className={`text-[#F5F1E6]/70 mb-6 ${raleway.className}`}>{fullAddress}</p>
           )}
           <div className="relative">
             {/* Art deco frame for map */}
@@ -363,10 +364,7 @@ export function ArtDecoDesign({
         {/* Reviews Section */}
         <div className="max-w-6xl mx-auto px-4 py-12">
           <div className="flex items-center gap-4 mb-8">
-            <h2
-              className="text-2xl"
-              style={{ fontFamily: "'Playfair Display', serif" }}
-            >
+            <h2 className={`text-2xl ${poiretOne.className}`}>
               Guest Reviews
             </h2>
             <div className="flex-1 h-px bg-gradient-to-r from-[#D4AF37]/30 to-transparent" />
@@ -387,7 +385,7 @@ export function ArtDecoDesign({
             <div className="flex items-center justify-center gap-4">
               <Gem className="w-6 h-6 text-[#D4AF37]" />
               <div className="text-center">
-                <p className="text-[#D4AF37] font-medium" style={{ fontFamily: "'Playfair Display', serif" }}>
+                <p className={`text-[#D4AF37] font-medium ${poiretOne.className}`}>
                   Exclusive Partner Establishment
                 </p>
                 <p className="text-[#F5F1E6]/50 text-sm">Earn rewards with every visit</p>
