@@ -15,26 +15,32 @@ import { useState } from "react";
 
 interface MerchantPageProps {
   businessName: string;
+  streetAddress?: string | null;
   city?: string | null;
   state?: string | null;
+  zipCode?: string | null;
   logoUrl?: string | null;
   categoryName?: string | null;
   phone?: string | null;
   website?: string | null;
   description?: string | null;
   vimeoUrl?: string | null;
+  googlePlaceId?: string | null;
 }
 
 export function WarmFriendlyDesign({
   businessName,
+  streetAddress,
   city,
   state,
+  zipCode,
   logoUrl,
   categoryName,
   phone,
   website,
   description,
   vimeoUrl,
+  googlePlaceId,
 }: MerchantPageProps) {
   const [copied, setCopied] = useState(false);
   const location = [city, state].filter(Boolean).join(", ");
