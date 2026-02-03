@@ -665,7 +665,7 @@ export default function EditMerchantPage({ params }: { params: Promise<{ id: str
                 <div className="space-y-4">
                   {/* Google Places Search for Address */}
                   <div>
-                    <Label>Search Address</Label>
+                    <Label>Search Address on Google Places</Label>
                     <p className="text-xs text-muted-foreground mb-2">
                       Search to auto-fill address details from Google
                     </p>
