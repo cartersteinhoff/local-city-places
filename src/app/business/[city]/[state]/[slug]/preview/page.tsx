@@ -99,14 +99,14 @@ export default function PreviewPage() {
   return (
     <div className="min-h-screen bg-gray-900">
       {/* Style Selector - Fixed Right Sidebar */}
-      <div className="fixed right-4 top-1/2 -translate-y-1/2 z-[100] bg-white/95 backdrop-blur-lg rounded-2xl shadow-2xl border border-gray-200 p-3 max-h-[80vh] overflow-y-auto">
-        <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3 px-1">Style</p>
-        <div className="flex flex-col gap-1">
+      <div className="fixed right-3 top-1/2 -translate-y-1/2 z-[100] bg-white/95 backdrop-blur-lg rounded-xl shadow-2xl border border-gray-200 p-2 max-h-[80vh] overflow-y-auto">
+        <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-2 px-1">Style</p>
+        <div className="flex flex-col gap-0.5">
           {designs.map((design) => (
             <button
               key={design.id}
               onClick={() => setSelectedDesign(design.id)}
-              className={`px-3 py-2 rounded-lg text-sm font-medium transition-all text-left cursor-pointer ${
+              className={`px-2 py-1.5 rounded-md text-xs font-medium transition-all text-left cursor-pointer ${
                 selectedDesign === design.id
                   ? "bg-gray-900 text-white"
                   : "text-gray-600 hover:bg-gray-100"
