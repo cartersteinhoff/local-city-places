@@ -198,7 +198,8 @@ function FunnelBar({ label, value, max, color }: { label: string; value: number;
 const formatCurrency = (value: number) =>
   new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 0 }).format(value);
 
-const formatWeek = (dateStr: string) => {
+const formatWeek = (dateStr: unknown) => {
+  if (typeof dateStr !== "string") return "";
   const date = new Date(dateStr);
   return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
 };
@@ -587,7 +588,7 @@ export default function AnalyticsPage() {
                       <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
                       <XAxis dataKey="week" tickFormatter={formatWeek} className="text-xs" />
                       <YAxis tickFormatter={(v) => `$${v}`} className="text-xs" />
-                      <Tooltip labelFormatter={formatWeek} formatter={(value: number) => [formatCurrency(value), "Revenue"]} contentStyle={{ backgroundColor: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }} />
+                      <Tooltip labelFormatter={formatWeek} formatter={(value) => [formatCurrency(typeof value === "number" ? value : 0), "Revenue"]} contentStyle={{ backgroundColor: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }} />
                       <Line type="monotone" dataKey="total" stroke="#22c55e" strokeWidth={2} dot={{ fill: "#22c55e" }} />
                     </LineChart>
                   </ResponsiveContainer>
