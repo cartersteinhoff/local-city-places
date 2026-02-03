@@ -103,12 +103,20 @@ export function ParisianEleganceDesign({
   };
 
   return (
-    <div className="min-h-screen bg-[#FDF8F5] text-[#2C1810]">
-      {/* Subtle pattern overlay */}
+    <div className="min-h-screen text-[#2C1810]" style={{
+      background: `
+        radial-gradient(ellipse at top, rgba(184, 134, 11, 0.06) 0%, transparent 50%),
+        radial-gradient(ellipse at bottom right, rgba(232, 213, 196, 0.4) 0%, transparent 40%),
+        radial-gradient(ellipse at bottom left, rgba(232, 213, 196, 0.4) 0%, transparent 40%),
+        linear-gradient(to bottom, #FDF8F5, #FAF5F0)
+      `
+    }}>
+      {/* French damask/fleur pattern overlay */}
       <div
-        className="fixed inset-0 pointer-events-none opacity-[0.03]"
+        className="fixed inset-0 pointer-events-none opacity-[0.06]"
         style={{
-          backgroundImage: `url("data:image/svg+xml,%3Csvg width='52' height='26' viewBox='0 0 52 26' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23B8860B' fill-opacity='1'%3E%3Cpath d='M10 10c0-2.21-1.79-4-4-4-3.314 0-6-2.686-6-6h2c0 2.21 1.79 4 4 4 3.314 0 6 2.686 6 6 0 2.21 1.79 4 4 4 3.314 0 6 2.686 6 6 0 2.21 1.79 4 4 4v2c-3.314 0-6-2.686-6-6 0-2.21-1.79-4-4-4-3.314 0-6-2.686-6-6zm25.464-1.95l8.486 8.486-1.414 1.414-8.486-8.486 1.414-1.414z' /%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
+          backgroundImage: `url("data:image/svg+xml,%3Csvg width='48' height='48' viewBox='0 0 48 48' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' stroke='%23B8860B' stroke-width='0.8'%3E%3Cpath d='M24 4 Q28 12 24 20 Q20 12 24 4'/%3E%3Cpath d='M24 28 Q28 36 24 44 Q20 36 24 28'/%3E%3Cpath d='M4 24 Q12 28 20 24 Q12 20 4 24'/%3E%3Cpath d='M28 24 Q36 28 44 24 Q36 20 28 24'/%3E%3Ccircle cx='24' cy='24' r='3'/%3E%3Cpath d='M12 12 Q18 18 12 24 Q6 18 12 12'/%3E%3Cpath d='M36 12 Q42 18 36 24 Q30 18 36 12'/%3E%3Cpath d='M12 24 Q18 30 12 36 Q6 30 12 24'/%3E%3Cpath d='M36 24 Q42 30 36 36 Q30 30 36 24'/%3E%3C/g%3E%3C/svg%3E")`,
+          backgroundSize: '48px 48px',
         }}
       />
 
@@ -142,13 +150,13 @@ export function ParisianEleganceDesign({
             {hours && Object.values(hours).some(Boolean) && (
               <a href="#hours" className={`px-3 py-2 text-xs tracking-widest uppercase text-[#B8860B]/60 hover:text-[#B8860B] transition-all ${cormorant.className}`}>Hours</a>
             )}
+            <a href="#location" className={`px-3 py-2 text-xs tracking-widest uppercase text-[#B8860B]/60 hover:text-[#B8860B] transition-all ${cormorant.className}`}>Location</a>
             {services && services.length > 0 && (
               <a href="#services" className={`px-3 py-2 text-xs tracking-widest uppercase text-[#B8860B]/60 hover:text-[#B8860B] transition-all ${cormorant.className}`}>Services</a>
             )}
             {photos && photos.length > 0 && (
               <a href="#gallery" className={`px-3 py-2 text-xs tracking-widest uppercase text-[#B8860B]/60 hover:text-[#B8860B] transition-all ${cormorant.className}`}>Gallery</a>
             )}
-            <a href="#location" className={`px-3 py-2 text-xs tracking-widest uppercase text-[#B8860B]/60 hover:text-[#B8860B] transition-all ${cormorant.className}`}>Location</a>
             <a href="#reviews" className={`px-3 py-2 text-xs tracking-widest uppercase text-[#B8860B]/60 hover:text-[#B8860B] transition-all ${cormorant.className}`}>Reviews</a>
           </div>
         </div>
@@ -272,15 +280,61 @@ export function ParisianEleganceDesign({
             {/* Right - Video */}
             {videoId && (
               <div className="flex justify-center lg:justify-end">
-                <div className="relative w-[280px] sm:w-[320px] rounded-2xl overflow-hidden border-4 border-[#E8D5C4] shadow-xl" style={{ aspectRatio: '9/16' }}>
-                  <iframe
-                    src={`${getVimeoEmbedUrl(videoId)}?background=0&autoplay=0&title=0&byline=0&portrait=0`}
-                    className="absolute inset-0 w-full h-full"
-                    frameBorder="0"
-                    allow="autoplay; fullscreen; picture-in-picture"
-                    allowFullScreen
-                    title="Featured video"
-                  />
+                <div className="relative">
+                  {/* Ornate flourish frame - top left */}
+                  <svg className="absolute -top-8 -left-8 w-20 h-20 text-[#B8860B]" viewBox="0 0 80 80" fill="none">
+                    <path d="M40 10 Q20 10 15 25 Q10 40 15 50 Q5 45 5 30 Q5 15 20 8 Q35 1 50 5" stroke="currentColor" strokeWidth="1.5" fill="none" />
+                    <path d="M10 40 Q10 20 25 15" stroke="currentColor" strokeWidth="1" fill="none" />
+                    <circle cx="50" cy="5" r="2" fill="currentColor" opacity="0.6" />
+                    <circle cx="5" cy="30" r="1.5" fill="currentColor" opacity="0.4" />
+                  </svg>
+                  {/* Ornate flourish frame - top right */}
+                  <svg className="absolute -top-8 -right-8 w-20 h-20 text-[#B8860B]" viewBox="0 0 80 80" fill="none" style={{ transform: 'scaleX(-1)' }}>
+                    <path d="M40 10 Q20 10 15 25 Q10 40 15 50 Q5 45 5 30 Q5 15 20 8 Q35 1 50 5" stroke="currentColor" strokeWidth="1.5" fill="none" />
+                    <path d="M10 40 Q10 20 25 15" stroke="currentColor" strokeWidth="1" fill="none" />
+                    <circle cx="50" cy="5" r="2" fill="currentColor" opacity="0.6" />
+                    <circle cx="5" cy="30" r="1.5" fill="currentColor" opacity="0.4" />
+                  </svg>
+                  {/* Ornate flourish frame - bottom left */}
+                  <svg className="absolute -bottom-8 -left-8 w-20 h-20 text-[#B8860B]" viewBox="0 0 80 80" fill="none" style={{ transform: 'scaleY(-1)' }}>
+                    <path d="M40 10 Q20 10 15 25 Q10 40 15 50 Q5 45 5 30 Q5 15 20 8 Q35 1 50 5" stroke="currentColor" strokeWidth="1.5" fill="none" />
+                    <path d="M10 40 Q10 20 25 15" stroke="currentColor" strokeWidth="1" fill="none" />
+                    <circle cx="50" cy="5" r="2" fill="currentColor" opacity="0.6" />
+                    <circle cx="5" cy="30" r="1.5" fill="currentColor" opacity="0.4" />
+                  </svg>
+                  {/* Ornate flourish frame - bottom right */}
+                  <svg className="absolute -bottom-8 -right-8 w-20 h-20 text-[#B8860B]" viewBox="0 0 80 80" fill="none" style={{ transform: 'scale(-1, -1)' }}>
+                    <path d="M40 10 Q20 10 15 25 Q10 40 15 50 Q5 45 5 30 Q5 15 20 8 Q35 1 50 5" stroke="currentColor" strokeWidth="1.5" fill="none" />
+                    <path d="M10 40 Q10 20 25 15" stroke="currentColor" strokeWidth="1" fill="none" />
+                    <circle cx="50" cy="5" r="2" fill="currentColor" opacity="0.6" />
+                    <circle cx="5" cy="30" r="1.5" fill="currentColor" opacity="0.4" />
+                  </svg>
+                  {/* Side flourish accents - left */}
+                  <div className="absolute top-1/2 -left-6 -translate-y-1/2 w-4 flex flex-col items-center gap-8">
+                    <div className="w-2 h-2 rounded-full bg-[#B8860B]/40" />
+                    <div className="w-1 h-16 bg-gradient-to-b from-transparent via-[#B8860B]/30 to-transparent" />
+                    <Heart className="w-4 h-4 text-[#B8860B]/30" />
+                    <div className="w-1 h-16 bg-gradient-to-b from-transparent via-[#B8860B]/30 to-transparent" />
+                    <div className="w-2 h-2 rounded-full bg-[#B8860B]/40" />
+                  </div>
+                  {/* Side flourish accents - right */}
+                  <div className="absolute top-1/2 -right-6 -translate-y-1/2 w-4 flex flex-col items-center gap-8">
+                    <div className="w-2 h-2 rounded-full bg-[#B8860B]/40" />
+                    <div className="w-1 h-16 bg-gradient-to-b from-transparent via-[#B8860B]/30 to-transparent" />
+                    <Heart className="w-4 h-4 text-[#B8860B]/30" />
+                    <div className="w-1 h-16 bg-gradient-to-b from-transparent via-[#B8860B]/30 to-transparent" />
+                    <div className="w-2 h-2 rounded-full bg-[#B8860B]/40" />
+                  </div>
+                  <div className="w-[280px] sm:w-[320px] rounded-2xl overflow-hidden border-4 border-[#E8D5C4] shadow-xl bg-white" style={{ aspectRatio: '9/16' }}>
+                    <iframe
+                      src={`${getVimeoEmbedUrl(videoId)}?background=0&autoplay=0&title=0&byline=0&portrait=0`}
+                      className="absolute inset-0 w-full h-full"
+                      frameBorder="0"
+                      allow="autoplay; fullscreen; picture-in-picture"
+                      allowFullScreen
+                      title="Featured video"
+                    />
+                  </div>
                 </div>
               </div>
             )}
@@ -304,7 +358,7 @@ export function ParisianEleganceDesign({
 
         {/* About Section */}
         {aboutStory && (
-          <div id="story" className="max-w-4xl mx-auto px-4 py-12 scroll-mt-16">
+          <div id="story" className="max-w-6xl mx-auto px-4 py-12 scroll-mt-16">
             <h2 className={`text-4xl text-[#B8860B] text-center mb-8 ${greatVibes.className}`}>Our Story</h2>
             <div className="border border-[#B8860B]/20 p-8 bg-white/50 rounded-2xl">
               <p className={`text-lg text-[#2C1810]/80 leading-relaxed whitespace-pre-line ${cormorant.className}`}>{aboutStory}</p>
@@ -314,7 +368,7 @@ export function ParisianEleganceDesign({
 
         {/* Hours Section */}
         {hours && Object.values(hours).some(Boolean) && (
-          <div id="hours" className="max-w-4xl mx-auto px-4 py-12 scroll-mt-16">
+          <div id="hours" className="max-w-6xl mx-auto px-4 py-12 scroll-mt-16">
             <div className="flex items-center justify-center gap-4 mb-8">
               <Clock className="w-6 h-6 text-[#B8860B]" />
               <h2 className={`text-4xl text-[#B8860B] ${greatVibes.className}`}>Hours</h2>
@@ -337,6 +391,18 @@ export function ParisianEleganceDesign({
             </div>
           </div>
         )}
+
+        {/* Location Section */}
+        <div id="location" className="max-w-6xl mx-auto px-4 py-12 scroll-mt-16">
+          <div className="flex items-center justify-center gap-4 mb-8">
+            <MapPin className="w-6 h-6 text-[#B8860B]" />
+            <h2 className={`text-4xl text-[#B8860B] ${greatVibes.className}`}>Location</h2>
+          </div>
+          {fullAddress && <p className={`text-center text-[#2C1810]/70 mb-6 ${cormorant.className}`}>{fullAddress}</p>}
+          <div className="border-2 border-[#E8D5C4] rounded-2xl overflow-hidden shadow-lg">
+            <GoogleMapEmbed businessName={businessName} streetAddress={streetAddress} city={city} state={state} zipCode={zipCode} googlePlaceId={googlePlaceId} height="300px" mapStyle="warm" />
+          </div>
+        </div>
 
         {/* Services Section */}
         {services && services.length > 0 && (
@@ -373,20 +439,8 @@ export function ParisianEleganceDesign({
           </div>
         )}
 
-        {/* Map Section */}
-        <div id="location" className="max-w-6xl mx-auto px-4 py-12 scroll-mt-16">
-          <div className="flex items-center justify-center gap-4 mb-8">
-            <MapPin className="w-6 h-6 text-[#B8860B]" />
-            <h2 className={`text-4xl text-[#B8860B] ${greatVibes.className}`}>Location</h2>
-          </div>
-          {fullAddress && <p className={`text-center text-[#2C1810]/70 mb-6 ${cormorant.className}`}>{fullAddress}</p>}
-          <div className="border-2 border-[#E8D5C4] rounded-2xl overflow-hidden shadow-lg">
-            <GoogleMapEmbed businessName={businessName} streetAddress={streetAddress} city={city} state={state} zipCode={zipCode} googlePlaceId={googlePlaceId} height="300px" mapStyle="warm" />
-          </div>
-        </div>
-
         {/* Reviews Section */}
-        <div id="reviews" className="max-w-4xl mx-auto px-4 py-12 scroll-mt-16">
+        <div id="reviews" className="max-w-6xl mx-auto px-4 py-12 scroll-mt-16">
           <h2 className={`text-4xl text-[#B8860B] text-center mb-8 ${greatVibes.className}`}>Reviews</h2>
           <div className="border border-[#B8860B]/20 p-12 text-center bg-white/50 rounded-2xl">
             <Star className="w-10 h-10 text-[#B8860B]/40 mx-auto mb-4" />

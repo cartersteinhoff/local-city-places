@@ -103,10 +103,25 @@ export function VintageHollywoodDesign({
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#1a0a0a] via-[#0d0d0d] to-[#0d0d0d] text-[#E8E8E8]">
+    <div className="min-h-screen text-[#E8E8E8]" style={{
+      background: `
+        radial-gradient(ellipse at top center, rgba(192, 192, 192, 0.1) 0%, transparent 40%),
+        radial-gradient(ellipse at 20% 80%, rgba(139, 0, 0, 0.08) 0%, transparent 30%),
+        radial-gradient(ellipse at 80% 80%, rgba(139, 0, 0, 0.08) 0%, transparent 30%),
+        linear-gradient(to bottom, #1a0a0a, #0d0d0d, #0a0a0a)
+      `
+    }}>
+      {/* Vintage curtain/drape pattern */}
+      <div
+        className="fixed inset-0 pointer-events-none opacity-[0.06]"
+        style={{
+          backgroundImage: `url("data:image/svg+xml,%3Csvg width='40' height='80' viewBox='0 0 40 80' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 0 Q20 20 40 0 Q20 40 40 80 Q20 60 0 80 Q20 40 0 0' fill='none' stroke='%23C0C0C0' stroke-width='0.5'/%3E%3Cpath d='M20 0 L20 80' stroke='%23C0C0C0' stroke-width='0.3' stroke-dasharray='2,4'/%3E%3C/svg%3E")`,
+          backgroundSize: '40px 80px',
+        }}
+      />
       {/* Spotlight effect */}
       <div className="fixed inset-0 pointer-events-none">
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[600px] bg-gradient-radial from-[#C0C0C0]/5 via-transparent to-transparent rounded-full blur-3xl" />
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[600px] bg-gradient-radial from-[#C0C0C0]/8 via-transparent to-transparent rounded-full blur-3xl" />
       </div>
 
       {/* Silver top border */}
@@ -139,13 +154,13 @@ export function VintageHollywoodDesign({
             {hours && Object.values(hours).some(Boolean) && (
               <a href="#hours" className={`px-3 py-2 text-xs tracking-[0.15em] uppercase text-[#C0C0C0]/60 hover:text-[#C0C0C0] transition-all ${lato.className}`}>Hours</a>
             )}
+            <a href="#location" className={`px-3 py-2 text-xs tracking-[0.15em] uppercase text-[#C0C0C0]/60 hover:text-[#C0C0C0] transition-all ${lato.className}`}>Location</a>
             {services && services.length > 0 && (
               <a href="#services" className={`px-3 py-2 text-xs tracking-[0.15em] uppercase text-[#C0C0C0]/60 hover:text-[#C0C0C0] transition-all ${lato.className}`}>Services</a>
             )}
             {photos && photos.length > 0 && (
               <a href="#gallery" className={`px-3 py-2 text-xs tracking-[0.15em] uppercase text-[#C0C0C0]/60 hover:text-[#C0C0C0] transition-all ${lato.className}`}>Gallery</a>
             )}
-            <a href="#location" className={`px-3 py-2 text-xs tracking-[0.15em] uppercase text-[#C0C0C0]/60 hover:text-[#C0C0C0] transition-all ${lato.className}`}>Location</a>
             <a href="#reviews" className={`px-3 py-2 text-xs tracking-[0.15em] uppercase text-[#C0C0C0]/60 hover:text-[#C0C0C0] transition-all ${lato.className}`}>Reviews</a>
           </div>
         </div>
@@ -250,12 +265,33 @@ export function VintageHollywoodDesign({
               </div>
             </div>
 
-            {/* Right - Video */}
+            {/* Right - Video with Film Reel Frame */}
             {videoId && (
               <div className="flex justify-center lg:justify-end">
                 <div className="relative">
-                  <div className="absolute inset-0 -m-4 bg-gradient-to-b from-[#C0C0C0]/10 to-transparent blur-2xl rounded-lg" />
-                  <div className="relative w-[280px] sm:w-[320px] rounded-lg overflow-hidden border-2 border-[#C0C0C0]/30 shadow-2xl" style={{ aspectRatio: '9/16' }}>
+                  {/* Spotlight glow */}
+                  <div className="absolute -inset-8 bg-gradient-radial from-[#C0C0C0]/20 via-transparent to-transparent blur-2xl" />
+
+                  {/* Film strip perforations - left */}
+                  <div className="absolute -left-6 top-0 bottom-0 w-4 flex flex-col justify-around py-4">
+                    {[...Array(12)].map((_, i) => (
+                      <div key={i} className="w-3 h-4 bg-[#C0C0C0]/30 rounded-sm" />
+                    ))}
+                  </div>
+
+                  {/* Film strip perforations - right */}
+                  <div className="absolute -right-6 top-0 bottom-0 w-4 flex flex-col justify-around py-4">
+                    {[...Array(12)].map((_, i) => (
+                      <div key={i} className="w-3 h-4 bg-[#C0C0C0]/30 rounded-sm" />
+                    ))}
+                  </div>
+
+                  {/* Star decorations */}
+                  <Star className="absolute -top-6 left-1/2 -translate-x-1/2 w-6 h-6 text-[#C0C0C0]" />
+                  <Star className="absolute -bottom-6 left-1/2 -translate-x-1/2 w-6 h-6 text-[#C0C0C0]" />
+
+                  {/* Video container */}
+                  <div className="relative w-[280px] sm:w-[320px] border-4 border-[#C0C0C0]/60 bg-black overflow-hidden shadow-2xl" style={{ aspectRatio: '9/16' }}>
                     <iframe
                       src={`${getVimeoEmbedUrl(videoId)}?background=0&autoplay=0&title=0&byline=0&portrait=0`}
                       className="absolute inset-0 w-full h-full"
@@ -264,6 +300,11 @@ export function VintageHollywoodDesign({
                       allowFullScreen
                       title="Featured video"
                     />
+                  </div>
+
+                  {/* Label */}
+                  <div className="absolute -bottom-12 left-1/2 -translate-x-1/2 text-center">
+                    <p className={`text-[10px] tracking-[0.3em] uppercase text-[#C0C0C0]/70 ${lato.className}`}>Now Showing</p>
                   </div>
                 </div>
               </div>
@@ -288,7 +329,7 @@ export function VintageHollywoodDesign({
 
         {/* About Section */}
         {aboutStory && (
-          <div id="story" className="max-w-4xl mx-auto px-4 py-12 scroll-mt-16">
+          <div id="story" className="max-w-6xl mx-auto px-4 py-12 scroll-mt-16">
             <h2 className={`text-3xl text-[#C0C0C0] text-center mb-8 ${cinzel.className}`}>Our Story</h2>
             <div className="border border-[#C0C0C0]/20 p-8 bg-gradient-to-b from-[#1a1a1a]/50 to-transparent rounded-lg">
               <p className={`text-lg text-[#E8E8E8]/80 leading-relaxed whitespace-pre-line ${lato.className}`}>{aboutStory}</p>
@@ -298,7 +339,7 @@ export function VintageHollywoodDesign({
 
         {/* Hours Section */}
         {hours && Object.values(hours).some(Boolean) && (
-          <div id="hours" className="max-w-4xl mx-auto px-4 py-12 scroll-mt-16">
+          <div id="hours" className="max-w-6xl mx-auto px-4 py-12 scroll-mt-16">
             <div className="flex items-center justify-center gap-4 mb-8">
               <Clock className="w-6 h-6 text-[#C0C0C0]" />
               <h2 className={`text-3xl text-[#C0C0C0] ${cinzel.className}`}>Hours</h2>
@@ -321,6 +362,18 @@ export function VintageHollywoodDesign({
             </div>
           </div>
         )}
+
+        {/* Location Section */}
+        <div id="location" className="max-w-6xl mx-auto px-4 py-12 scroll-mt-16">
+          <div className="flex items-center justify-center gap-4 mb-8">
+            <MapPin className="w-6 h-6 text-[#C0C0C0]" />
+            <h2 className={`text-3xl text-[#C0C0C0] ${cinzel.className}`}>Location</h2>
+          </div>
+          {fullAddress && <p className={`text-center text-[#E8E8E8]/70 mb-6 ${lato.className}`}>{fullAddress}</p>}
+          <div className="border border-[#C0C0C0]/20 rounded-lg overflow-hidden">
+            <GoogleMapEmbed businessName={businessName} streetAddress={streetAddress} city={city} state={state} zipCode={zipCode} googlePlaceId={googlePlaceId} height="300px" mapStyle="dark" />
+          </div>
+        </div>
 
         {/* Services Section */}
         {services && services.length > 0 && (
@@ -357,20 +410,8 @@ export function VintageHollywoodDesign({
           </div>
         )}
 
-        {/* Map Section */}
-        <div id="location" className="max-w-6xl mx-auto px-4 py-12 scroll-mt-16">
-          <div className="flex items-center justify-center gap-4 mb-8">
-            <MapPin className="w-6 h-6 text-[#C0C0C0]" />
-            <h2 className={`text-3xl text-[#C0C0C0] ${cinzel.className}`}>Location</h2>
-          </div>
-          {fullAddress && <p className={`text-center text-[#E8E8E8]/70 mb-6 ${lato.className}`}>{fullAddress}</p>}
-          <div className="border border-[#C0C0C0]/20 rounded-lg overflow-hidden">
-            <GoogleMapEmbed businessName={businessName} streetAddress={streetAddress} city={city} state={state} zipCode={zipCode} googlePlaceId={googlePlaceId} height="300px" mapStyle="dark" />
-          </div>
-        </div>
-
         {/* Reviews Section */}
-        <div id="reviews" className="max-w-4xl mx-auto px-4 py-12 scroll-mt-16">
+        <div id="reviews" className="max-w-6xl mx-auto px-4 py-12 scroll-mt-16">
           <h2 className={`text-3xl text-[#C0C0C0] text-center mb-8 ${cinzel.className}`}>Reviews</h2>
           <div className="border border-[#C0C0C0]/20 p-12 text-center bg-gradient-to-b from-[#1a1a1a]/50 to-transparent rounded-lg">
             <Star className="w-10 h-10 text-[#C0C0C0]/40 mx-auto mb-4" />

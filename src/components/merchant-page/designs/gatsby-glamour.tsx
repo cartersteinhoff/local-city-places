@@ -103,12 +103,19 @@ export function GatsbyGlamourDesign({
   };
 
   return (
-    <div className="min-h-screen bg-black text-[#F8F4E8]">
-      {/* Sunburst pattern overlay */}
+    <div className="min-h-screen text-[#F8F4E8]" style={{
+      background: `
+        radial-gradient(ellipse at top, rgba(201, 169, 98, 0.08) 0%, transparent 50%),
+        radial-gradient(ellipse at bottom, rgba(201, 169, 98, 0.05) 0%, transparent 50%),
+        linear-gradient(to bottom, #0a0a0a, #000000)
+      `
+    }}>
+      {/* Art Deco fan/sunburst pattern overlay */}
       <div
-        className="fixed inset-0 pointer-events-none opacity-[0.03]"
+        className="fixed inset-0 pointer-events-none opacity-[0.08]"
         style={{
-          backgroundImage: `url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M50 0 L52 50 L50 100 L48 50 Z' fill='%23C9A962'/%3E%3Cpath d='M0 50 L50 48 L100 50 L50 52 Z' fill='%23C9A962'/%3E%3Cpath d='M15 15 L51 49 L85 85 L49 51 Z' fill='%23C9A962'/%3E%3Cpath d='M85 15 L51 49 L15 85 L49 51 Z' fill='%23C9A962'/%3E%3C/svg%3E")`,
+          backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' stroke='%23C9A962' stroke-width='1'%3E%3Cpath d='M30 0 L30 30 M0 30 L30 30 M60 30 L30 30 M30 60 L30 30'/%3E%3Cpath d='M10 10 L30 30 M50 10 L30 30 M10 50 L30 30 M50 50 L30 30'/%3E%3Ccircle cx='30' cy='30' r='8'/%3E%3Ccircle cx='30' cy='30' r='15'/%3E%3C/g%3E%3C/svg%3E")`,
+          backgroundSize: '60px 60px',
         }}
       />
 
@@ -142,13 +149,13 @@ export function GatsbyGlamourDesign({
             {hours && Object.values(hours).some(Boolean) && (
               <a href="#hours" className={`px-3 py-2 text-xs tracking-widest uppercase text-[#C9A962]/60 hover:text-[#C9A962] transition-all ${cormorant.className}`}>Hours</a>
             )}
+            <a href="#location" className={`px-3 py-2 text-xs tracking-widest uppercase text-[#C9A962]/60 hover:text-[#C9A962] transition-all ${cormorant.className}`}>Location</a>
             {services && services.length > 0 && (
               <a href="#services" className={`px-3 py-2 text-xs tracking-widest uppercase text-[#C9A962]/60 hover:text-[#C9A962] transition-all ${cormorant.className}`}>Services</a>
             )}
             {photos && photos.length > 0 && (
               <a href="#gallery" className={`px-3 py-2 text-xs tracking-widest uppercase text-[#C9A962]/60 hover:text-[#C9A962] transition-all ${cormorant.className}`}>Gallery</a>
             )}
-            <a href="#location" className={`px-3 py-2 text-xs tracking-widest uppercase text-[#C9A962]/60 hover:text-[#C9A962] transition-all ${cormorant.className}`}>Location</a>
             <a href="#reviews" className={`px-3 py-2 text-xs tracking-widest uppercase text-[#C9A962]/60 hover:text-[#C9A962] transition-all ${cormorant.className}`}>Reviews</a>
           </div>
         </div>
@@ -258,18 +265,44 @@ export function GatsbyGlamourDesign({
               </div>
             </div>
 
-            {/* Right - Video */}
+            {/* Right - Video with Gatsby Frame */}
             {videoId && (
               <div className="flex justify-center lg:justify-end">
-                <div className="relative w-[280px] sm:w-[320px] rounded-lg overflow-hidden border-4 border-[#C9A962]" style={{ aspectRatio: '9/16' }}>
-                  <iframe
-                    src={`${getVimeoEmbedUrl(videoId)}?background=0&autoplay=0&title=0&byline=0&portrait=0`}
-                    className="absolute inset-0 w-full h-full"
-                    frameBorder="0"
-                    allow="autoplay; fullscreen; picture-in-picture"
-                    allowFullScreen
-                    title="Featured video"
-                  />
+                <div className="relative">
+                  {/* Outer decorative border */}
+                  <div className="absolute -inset-4 border-2 border-[#C9A962]/40" />
+                  <div className="absolute -inset-6 border border-[#C9A962]/20" />
+
+                  {/* Corner fan decorations */}
+                  <div className="absolute -top-8 -left-8 w-16 h-16">
+                    <div className="absolute bottom-0 right-0 w-12 h-12 border-b-2 border-r-2 border-[#C9A962]/60 rounded-br-full" />
+                  </div>
+                  <div className="absolute -top-8 -right-8 w-16 h-16">
+                    <div className="absolute bottom-0 left-0 w-12 h-12 border-b-2 border-l-2 border-[#C9A962]/60 rounded-bl-full" />
+                  </div>
+                  <div className="absolute -bottom-8 -left-8 w-16 h-16">
+                    <div className="absolute top-0 right-0 w-12 h-12 border-t-2 border-r-2 border-[#C9A962]/60 rounded-tr-full" />
+                  </div>
+                  <div className="absolute -bottom-8 -right-8 w-16 h-16">
+                    <div className="absolute top-0 left-0 w-12 h-12 border-t-2 border-l-2 border-[#C9A962]/60 rounded-tl-full" />
+                  </div>
+
+                  {/* Video container */}
+                  <div className="relative w-[280px] sm:w-[320px] border-4 border-[#C9A962] bg-black overflow-hidden" style={{ aspectRatio: '9/16' }}>
+                    <iframe
+                      src={`${getVimeoEmbedUrl(videoId)}?background=0&autoplay=0&title=0&byline=0&portrait=0`}
+                      className="absolute inset-0 w-full h-full"
+                      frameBorder="0"
+                      allow="autoplay; fullscreen; picture-in-picture"
+                      allowFullScreen
+                      title="Featured video"
+                    />
+                  </div>
+
+                  {/* Label */}
+                  <div className="absolute -bottom-12 left-1/2 -translate-x-1/2 text-center">
+                    <p className={`text-[10px] tracking-[0.3em] uppercase text-[#C9A962]/70 ${cormorant.className}`}>Featured Presentation</p>
+                  </div>
                 </div>
               </div>
             )}
@@ -293,7 +326,7 @@ export function GatsbyGlamourDesign({
 
         {/* About Section */}
         {aboutStory && (
-          <div id="story" className="max-w-4xl mx-auto px-4 py-12 scroll-mt-16">
+          <div id="story" className="max-w-6xl mx-auto px-4 py-12 scroll-mt-16">
             <h2 className={`text-3xl text-[#C9A962] text-center mb-8 ${playfair.className}`}>Our Story</h2>
             <div className="border border-[#C9A962]/30 p-8 bg-[#C9A962]/5">
               <p className={`text-lg text-[#F8F4E8]/80 leading-relaxed whitespace-pre-line ${cormorant.className}`}>{aboutStory}</p>
@@ -303,7 +336,7 @@ export function GatsbyGlamourDesign({
 
         {/* Hours Section */}
         {hours && Object.values(hours).some(Boolean) && (
-          <div id="hours" className="max-w-4xl mx-auto px-4 py-12 scroll-mt-16">
+          <div id="hours" className="max-w-6xl mx-auto px-4 py-12 scroll-mt-16">
             <div className="flex items-center justify-center gap-4 mb-8">
               <Clock className="w-6 h-6 text-[#C9A962]" />
               <h2 className={`text-3xl text-[#C9A962] ${playfair.className}`}>Hours</h2>
@@ -326,6 +359,18 @@ export function GatsbyGlamourDesign({
             </div>
           </div>
         )}
+
+        {/* Location Section */}
+        <div id="location" className="max-w-6xl mx-auto px-4 py-12 scroll-mt-16">
+          <div className="flex items-center justify-center gap-4 mb-8">
+            <MapPin className="w-6 h-6 text-[#C9A962]" />
+            <h2 className={`text-3xl text-[#C9A962] ${playfair.className}`}>Location</h2>
+          </div>
+          {fullAddress && <p className={`text-center text-[#F8F4E8]/70 mb-6 ${cormorant.className}`}>{fullAddress}</p>}
+          <div className="border-2 border-[#C9A962]/30">
+            <GoogleMapEmbed businessName={businessName} streetAddress={streetAddress} city={city} state={state} zipCode={zipCode} googlePlaceId={googlePlaceId} height="300px" mapStyle="dark" />
+          </div>
+        </div>
 
         {/* Services Section */}
         {services && services.length > 0 && (
@@ -362,20 +407,8 @@ export function GatsbyGlamourDesign({
           </div>
         )}
 
-        {/* Map Section */}
-        <div id="location" className="max-w-6xl mx-auto px-4 py-12 scroll-mt-16">
-          <div className="flex items-center justify-center gap-4 mb-8">
-            <MapPin className="w-6 h-6 text-[#C9A962]" />
-            <h2 className={`text-3xl text-[#C9A962] ${playfair.className}`}>Location</h2>
-          </div>
-          {fullAddress && <p className={`text-center text-[#F8F4E8]/70 mb-6 ${cormorant.className}`}>{fullAddress}</p>}
-          <div className="border-2 border-[#C9A962]/30">
-            <GoogleMapEmbed businessName={businessName} streetAddress={streetAddress} city={city} state={state} zipCode={zipCode} googlePlaceId={googlePlaceId} height="300px" mapStyle="dark" />
-          </div>
-        </div>
-
         {/* Reviews Section */}
-        <div id="reviews" className="max-w-4xl mx-auto px-4 py-12 scroll-mt-16">
+        <div id="reviews" className="max-w-6xl mx-auto px-4 py-12 scroll-mt-16">
           <h2 className={`text-3xl text-[#C9A962] text-center mb-8 ${playfair.className}`}>Reviews</h2>
           <div className="border border-[#C9A962]/30 p-12 text-center bg-[#C9A962]/5">
             <Star className="w-10 h-10 text-[#C9A962]/40 mx-auto mb-4" />
