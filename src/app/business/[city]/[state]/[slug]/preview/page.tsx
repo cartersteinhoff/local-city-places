@@ -20,6 +20,9 @@ import { IndustrialDesign } from "@/components/merchant-page/designs/industrial"
 import { CleanModernDesign } from "@/components/merchant-page/designs/clean-modern";
 import { WarmFriendlyDesign } from "@/components/merchant-page/designs/warm-friendly";
 import { ProfessionalDarkDesign } from "@/components/merchant-page/designs/professional-dark";
+import { GatsbyGlamourDesign } from "@/components/merchant-page/designs/gatsby-glamour";
+import { VintageHollywoodDesign } from "@/components/merchant-page/designs/vintage-hollywood";
+import { ParisianEleganceDesign } from "@/components/merchant-page/designs/parisian-elegance";
 
 interface MerchantData {
   businessName: string;
@@ -54,6 +57,9 @@ interface MerchantData {
 
 const designs = [
   { id: "deco", name: "Art Deco", description: "1920s elegance, geometric" },
+  { id: "gatsby", name: "Gatsby", description: "Roaring 20s party glam" },
+  { id: "hollywood", name: "Hollywood", description: "Old Hollywood red carpet" },
+  { id: "parisian", name: "Parisian", description: "French luxury, romantic" },
   { id: "clean", name: "Clean", description: "Simple, professional, universal" },
   { id: "warm", name: "Warm", description: "Friendly, approachable, soft colors" },
   { id: "dark", name: "Dark", description: "Sleek, corporate, trustworthy" },
@@ -252,6 +258,75 @@ export default function PreviewPage() {
         )}
         {selectedDesign === "deco" && (
           <ArtDecoDesign
+            businessName={merchant.businessName}
+            streetAddress={merchant.streetAddress}
+            city={merchant.city}
+            state={merchant.state}
+            zipCode={merchant.zipCode}
+            logoUrl={merchant.logoUrl}
+            categoryName={merchant.categoryName}
+            phone={merchant.phone}
+            website={merchant.website}
+            description={merchant.description}
+            vimeoUrl={merchant.vimeoUrl}
+            googlePlaceId={merchant.googlePlaceId}
+            hours={merchant.hours}
+            instagramUrl={merchant.instagramUrl}
+            facebookUrl={merchant.facebookUrl}
+            tiktokUrl={merchant.tiktokUrl}
+            photos={merchant.photos}
+            services={merchant.services}
+            aboutStory={merchant.aboutStory}
+          />
+        )}
+        {selectedDesign === "gatsby" && (
+          <GatsbyGlamourDesign
+            businessName={merchant.businessName}
+            streetAddress={merchant.streetAddress}
+            city={merchant.city}
+            state={merchant.state}
+            zipCode={merchant.zipCode}
+            logoUrl={merchant.logoUrl}
+            categoryName={merchant.categoryName}
+            phone={merchant.phone}
+            website={merchant.website}
+            description={merchant.description}
+            vimeoUrl={merchant.vimeoUrl}
+            googlePlaceId={merchant.googlePlaceId}
+            hours={merchant.hours}
+            instagramUrl={merchant.instagramUrl}
+            facebookUrl={merchant.facebookUrl}
+            tiktokUrl={merchant.tiktokUrl}
+            photos={merchant.photos}
+            services={merchant.services}
+            aboutStory={merchant.aboutStory}
+          />
+        )}
+        {selectedDesign === "hollywood" && (
+          <VintageHollywoodDesign
+            businessName={merchant.businessName}
+            streetAddress={merchant.streetAddress}
+            city={merchant.city}
+            state={merchant.state}
+            zipCode={merchant.zipCode}
+            logoUrl={merchant.logoUrl}
+            categoryName={merchant.categoryName}
+            phone={merchant.phone}
+            website={merchant.website}
+            description={merchant.description}
+            vimeoUrl={merchant.vimeoUrl}
+            googlePlaceId={merchant.googlePlaceId}
+            hours={merchant.hours}
+            instagramUrl={merchant.instagramUrl}
+            facebookUrl={merchant.facebookUrl}
+            tiktokUrl={merchant.tiktokUrl}
+            photos={merchant.photos}
+            services={merchant.services}
+            aboutStory={merchant.aboutStory}
+          />
+        )}
+        {selectedDesign === "parisian" && (
+          <ParisianEleganceDesign
             businessName={merchant.businessName}
             streetAddress={merchant.streetAddress}
             city={merchant.city}

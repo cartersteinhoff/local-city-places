@@ -186,7 +186,6 @@ export function ArtDecoDesign({
                 </div>
               </a>
             )}
-            {phone && website && <div className="w-px h-10 bg-[#0D1F22]/20 hidden sm:block" />}
             {website && (
               <a
                 href={website.startsWith("http") ? website : `https://${website}`}
@@ -197,13 +196,12 @@ export function ArtDecoDesign({
                 <Globe className="w-5 h-5" />
                 <div>
                   <p className="text-[10px] uppercase tracking-wider opacity-70">Website</p>
-                  <p className={`font-semibold truncate max-w-[180px] ${raleway.className}`}>
+                  <p className={`font-semibold ${raleway.className}`}>
                     {website.replace(/^https?:\/\//, "")}
                   </p>
                 </div>
               </a>
             )}
-            {(phone || website) && location && <div className="w-px h-10 bg-[#0D1F22]/20 hidden sm:block" />}
             {(fullAddress || location) && (
               <a
                 href={directionsUrl}
@@ -214,8 +212,9 @@ export function ArtDecoDesign({
                 <MapPin className="w-5 h-5" />
                 <div>
                   <p className="text-[10px] uppercase tracking-wider opacity-70">Location</p>
-                  {streetAddress && <p className={`font-semibold ${raleway.className}`}>{streetAddress}</p>}
-                  <p className={`font-semibold ${raleway.className}`}>{[city, state, zipCode].filter(Boolean).join(", ") || location}</p>
+                  <p className={`font-semibold whitespace-nowrap ${raleway.className}`}>
+                    {[streetAddress, city, state, zipCode].filter(Boolean).join(", ") || location}
+                  </p>
                 </div>
               </a>
             )}
