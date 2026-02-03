@@ -7,7 +7,24 @@
  * Uses either the Google Place ID (most accurate) or falls back to address query.
  *
  * Requires NEXT_PUBLIC_GOOGLE_MAPS_API_KEY environment variable.
+ *
+ * Map styles use CSS filters to match different design themes:
+ * - default: Standard Google Maps
+ * - dark: Inverted colors for dark themes (Art Deco, Noir Luxe)
+ * - grayscale: Black & white for minimal themes
+ * - warm: Sepia tint for warm/friendly themes
+ * - cool: Blue tint for tech/professional themes
  */
+
+type MapStyle = "default" | "dark" | "grayscale" | "warm" | "cool";
+
+const mapStyleFilters: Record<MapStyle, string> = {
+  default: "",
+  dark: "invert(90%) hue-rotate(180deg) brightness(0.9) contrast(1.1)",
+  grayscale: "grayscale(100%) contrast(1.1)",
+  warm: "sepia(30%) saturate(1.1) brightness(1.05)",
+  cool: "saturate(0.8) hue-rotate(10deg) brightness(1.05)",
+};
 
 interface GoogleMapEmbedProps {
   businessName: string;
@@ -18,6 +35,7 @@ interface GoogleMapEmbedProps {
   googlePlaceId?: string | null;
   className?: string;
   height?: string;
+  mapStyle?: MapStyle;
 }
 
 export function GoogleMapEmbed({
@@ -29,6 +47,7 @@ export function GoogleMapEmbed({
   googlePlaceId,
   className = "",
   height = "300px",
+  mapStyle = "default",
 }: GoogleMapEmbedProps) {
   // Use the same API key as Google Places - just needs Maps Embed API enabled
   const apiKey = process.env.NEXT_PUBLIC_GOOGLE_PLACES_API_KEY;
@@ -53,13 +72,15 @@ export function GoogleMapEmbed({
     embedUrl = `https://www.google.com/maps/embed/v1/place?key=${apiKey}&q=${encodeURIComponent(query)}`;
   }
 
+  const filterStyle = mapStyleFilters[mapStyle];
+
   return (
     <div className={`overflow-hidden ${className}`} style={{ height }}>
       <iframe
         src={embedUrl}
         width="100%"
         height="100%"
-        style={{ border: 0 }}
+        style={{ border: 0, filter: filterStyle || undefined }}
         allowFullScreen
         loading="lazy"
         referrerPolicy="no-referrer-when-downgrade"

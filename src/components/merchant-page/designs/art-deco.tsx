@@ -350,6 +350,7 @@ export function ArtDecoDesign({
               zipCode={zipCode}
               googlePlaceId={googlePlaceId}
               height="300px"
+              mapStyle="dark"
             />
           </div>
         </div>
