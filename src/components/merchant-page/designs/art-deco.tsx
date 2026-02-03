@@ -345,7 +345,7 @@ export function ArtDecoDesign({
 
                   {/* Label */}
                   <div className="absolute -bottom-12 left-1/2 -translate-x-1/2 text-center">
-                    <p className="text-[10px] tracking-[0.3em] uppercase text-[#D4AF37]/70">Featured Presentation</p>
+                    <p className="text-[10px] tracking-[0.3em] uppercase text-[#D4AF37]/70">Merchant Tracks</p>
                   </div>
                 </div>
               </div>
