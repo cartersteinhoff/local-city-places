@@ -27,8 +27,10 @@ export async function GET(
       .select({
         id: merchants.id,
         businessName: merchants.businessName,
+        streetAddress: merchants.streetAddress,
         city: merchants.city,
         state: merchants.state,
+        zipCode: merchants.zipCode,
         phone: merchants.phone,
         website: merchants.website,
         vimeoUrl: merchants.vimeoUrl,
@@ -39,6 +41,14 @@ export async function GET(
         logoUrl: merchants.logoUrl,
         googlePlaceId: merchants.googlePlaceId,
         isPublicPage: merchants.isPublicPage,
+        // Extended fields
+        hours: merchants.hours,
+        instagramUrl: merchants.instagramUrl,
+        facebookUrl: merchants.facebookUrl,
+        tiktokUrl: merchants.tiktokUrl,
+        photos: merchants.photos,
+        services: merchants.services,
+        aboutStory: merchants.aboutStory,
         createdAt: merchants.createdAt,
       })
       .from(merchants)
@@ -97,14 +107,25 @@ export async function PATCH(
     const body = await request.json();
     const {
       businessName,
+      streetAddress,
       city,
       state,
+      zipCode,
       phone,
       website,
       categoryId,
       description,
       vimeoUrl,
       googlePlaceId,
+      logoUrl,
+      // Extended fields
+      hours,
+      instagramUrl,
+      facebookUrl,
+      tiktokUrl,
+      photos,
+      services,
+      aboutStory,
     } = body;
 
     // Build update object
@@ -118,6 +139,10 @@ export async function PATCH(
         );
       }
       updates.businessName = businessName.trim();
+    }
+
+    if (streetAddress !== undefined) {
+      updates.streetAddress = streetAddress?.trim() || null;
     }
 
     if (city !== undefined) {
@@ -138,6 +163,10 @@ export async function PATCH(
         );
       }
       updates.state = state.trim().toUpperCase();
+    }
+
+    if (zipCode !== undefined) {
+      updates.zipCode = zipCode?.trim() || null;
     }
 
     if (phone !== undefined) {
@@ -195,6 +224,39 @@ export async function PATCH(
 
     if (googlePlaceId !== undefined) {
       updates.googlePlaceId = googlePlaceId || null;
+    }
+
+    if (logoUrl !== undefined) {
+      updates.logoUrl = logoUrl?.trim() || null;
+    }
+
+    // Extended fields
+    if (hours !== undefined) {
+      updates.hours = hours || null;
+    }
+
+    if (instagramUrl !== undefined) {
+      updates.instagramUrl = instagramUrl?.trim() || null;
+    }
+
+    if (facebookUrl !== undefined) {
+      updates.facebookUrl = facebookUrl?.trim() || null;
+    }
+
+    if (tiktokUrl !== undefined) {
+      updates.tiktokUrl = tiktokUrl?.trim() || null;
+    }
+
+    if (photos !== undefined) {
+      updates.photos = Array.isArray(photos) ? photos.filter(Boolean) : null;
+    }
+
+    if (services !== undefined) {
+      updates.services = Array.isArray(services) ? services : null;
+    }
+
+    if (aboutStory !== undefined) {
+      updates.aboutStory = aboutStory?.trim() || null;
     }
 
     // Regenerate slug if business name changed
