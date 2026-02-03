@@ -128,13 +128,47 @@ export function ArtDecoDesign({
           </div>
           <button
             onClick={handleShare}
-            className="flex items-center gap-2 text-xs tracking-[0.2em] uppercase text-[#D4AF37]/70 hover:text-[#D4AF37] transition-colors"
+            className="flex items-center gap-2 text-xs tracking-[0.2em] uppercase text-[#D4AF37]/70 hover:text-[#D4AF37] transition-colors cursor-pointer"
           >
             <Share2 className="w-4 h-4" />
             {copied ? "Copied" : "Share"}
           </button>
         </div>
       </header>
+
+      {/* Section Navigation */}
+      <nav className="bg-[#0D1F22]/95 border-b border-[#D4AF37]/20 sticky top-0 z-40 backdrop-blur-sm">
+        <div className="max-w-6xl mx-auto px-4">
+          <div className="flex items-center justify-center gap-1 sm:gap-2 py-2 overflow-x-auto scrollbar-hide">
+            {aboutStory && (
+              <a href="#story" className={`px-3 py-2 text-[10px] sm:text-xs tracking-[0.15em] uppercase text-[#D4AF37]/70 hover:text-[#D4AF37] hover:bg-[#D4AF37]/10 transition-all whitespace-nowrap ${raleway.className}`}>
+                Story
+              </a>
+            )}
+            {hours && Object.values(hours).some(Boolean) && (
+              <a href="#hours" className={`px-3 py-2 text-[10px] sm:text-xs tracking-[0.15em] uppercase text-[#D4AF37]/70 hover:text-[#D4AF37] hover:bg-[#D4AF37]/10 transition-all whitespace-nowrap ${raleway.className}`}>
+                Hours
+              </a>
+            )}
+            {services && services.length > 0 && (
+              <a href="#services" className={`px-3 py-2 text-[10px] sm:text-xs tracking-[0.15em] uppercase text-[#D4AF37]/70 hover:text-[#D4AF37] hover:bg-[#D4AF37]/10 transition-all whitespace-nowrap ${raleway.className}`}>
+                Services
+              </a>
+            )}
+            {photos && photos.length > 0 && (
+              <a href="#gallery" className={`px-3 py-2 text-[10px] sm:text-xs tracking-[0.15em] uppercase text-[#D4AF37]/70 hover:text-[#D4AF37] hover:bg-[#D4AF37]/10 transition-all whitespace-nowrap ${raleway.className}`}>
+                Gallery
+              </a>
+            )}
+            <a href="#location" className={`px-3 py-2 text-[10px] sm:text-xs tracking-[0.15em] uppercase text-[#D4AF37]/70 hover:text-[#D4AF37] hover:bg-[#D4AF37]/10 transition-all whitespace-nowrap ${raleway.className}`}>
+              Location
+            </a>
+            <a href="#reviews" className={`px-3 py-2 text-[10px] sm:text-xs tracking-[0.15em] uppercase text-[#D4AF37]/70 hover:text-[#D4AF37] hover:bg-[#D4AF37]/10 transition-all whitespace-nowrap ${raleway.className}`}>
+              Reviews
+            </a>
+          </div>
+        </div>
+      </nav>
 
       {/* Contact Strip - Gold Bar */}
       <div className="bg-gradient-to-r from-[#D4AF37] via-[#E5C97B] to-[#D4AF37] text-[#0D1F22]">
@@ -341,7 +375,7 @@ export function ArtDecoDesign({
         </div>
 
         {/* Map Section */}
-        <div className="max-w-6xl mx-auto px-4 py-12">
+        <div id="location" className="max-w-6xl mx-auto px-4 py-12 scroll-mt-16">
           <div className="flex items-center justify-between mb-8">
             <div className="flex items-center gap-4">
               <h2 className={`text-2xl ${poiretOne.className}`}>
@@ -386,7 +420,7 @@ export function ArtDecoDesign({
               <div className="w-3 h-3 rotate-45 border border-[#D4AF37]/50" />
               <div className="w-32 h-px bg-gradient-to-l from-transparent to-[#D4AF37]/40" />
             </div>
-            <div className="max-w-6xl mx-auto px-4 py-12">
+            <div id="story" className="max-w-6xl mx-auto px-4 py-12 scroll-mt-16">
               <div className="flex items-center gap-4 mb-8">
                 <h2 className={`text-2xl ${poiretOne.className}`}>Our Story</h2>
                 <div className="flex-1 h-px bg-gradient-to-r from-[#D4AF37]/30 to-transparent" />
@@ -408,7 +442,7 @@ export function ArtDecoDesign({
               <div className="w-3 h-3 rotate-45 border border-[#D4AF37]/50" />
               <div className="w-32 h-px bg-gradient-to-l from-transparent to-[#D4AF37]/40" />
             </div>
-            <div className="max-w-6xl mx-auto px-4 py-12">
+            <div id="hours" className="max-w-6xl mx-auto px-4 py-12 scroll-mt-16">
               <div className="flex items-center gap-4 mb-8">
                 <Clock className="w-6 h-6 text-[#D4AF37]" />
                 <h2 className={`text-2xl ${poiretOne.className}`}>Hours of Operation</h2>
@@ -442,7 +476,7 @@ export function ArtDecoDesign({
               <div className="w-3 h-3 rotate-45 border border-[#D4AF37]/50" />
               <div className="w-32 h-px bg-gradient-to-l from-transparent to-[#D4AF37]/40" />
             </div>
-            <div className="max-w-6xl mx-auto px-4 py-12">
+            <div id="services" className="max-w-6xl mx-auto px-4 py-12 scroll-mt-16">
               <div className="flex items-center gap-4 mb-8">
                 <Sparkles className="w-6 h-6 text-[#D4AF37]" />
                 <h2 className={`text-2xl ${poiretOne.className}`}>Our Services</h2>
@@ -475,7 +509,7 @@ export function ArtDecoDesign({
               <div className="w-3 h-3 rotate-45 border border-[#D4AF37]/50" />
               <div className="w-32 h-px bg-gradient-to-l from-transparent to-[#D4AF37]/40" />
             </div>
-            <div className="max-w-6xl mx-auto px-4 py-12">
+            <div id="gallery" className="max-w-6xl mx-auto px-4 py-12 scroll-mt-16">
               <div className="flex items-center gap-4 mb-8">
                 <Image className="w-6 h-6 text-[#D4AF37]" />
                 <h2 className={`text-2xl ${poiretOne.className}`}>Gallery</h2>
@@ -509,7 +543,7 @@ export function ArtDecoDesign({
         </div>
 
         {/* Reviews Section */}
-        <div className="max-w-6xl mx-auto px-4 py-12">
+        <div id="reviews" className="max-w-6xl mx-auto px-4 py-12 scroll-mt-16">
           <div className="flex items-center gap-4 mb-8">
             <h2 className={`text-2xl ${poiretOne.className}`}>
               Guest Reviews
