@@ -53,7 +53,7 @@ import { ImageUploader, GalleryUploader } from "@/components/ui/image-uploader";
 import { SortableList, SortableImageGrid } from "@/components/ui/sortable-list";
 import { HoursSection, Hours } from "./_components/hours-section";
 import { CompletionIndicator } from "./_components/completion-indicator";
-import { LivePreview, DesignSelector, DesignType } from "./_components/live-preview";
+import { LivePreview, DesignSelector, DeviceSelector, DesignType, DeviceType, getDeviceConfig } from "./_components/live-preview";
 import { MerchantData } from "@/lib/merchant-completion";
 
 interface Category {
@@ -140,6 +140,7 @@ export default function EditMerchantPage({ params }: { params: Promise<{ id: str
   const [copiedUrl, setCopiedUrl] = useState<string | null>(null);
   const [activeSection, setActiveSection] = useState("business");
   const [previewDesign, setPreviewDesign] = useState<DesignType>("art-deco");
+  const [previewDevice, setPreviewDevice] = useState<DeviceType>("mobile");
   const [previewOpen, setPreviewOpen] = useState(false);
   const [categoryName, setCategoryName] = useState<string>("");
   const [isRebuilding, setIsRebuilding] = useState(false);
@@ -1050,15 +1051,17 @@ export default function EditMerchantPage({ params }: { params: Promise<{ id: str
               <SheetContent className="w-full sm:max-w-full h-[85vh] p-0">
                 <div className="flex items-center justify-between px-4 py-3 border-b">
                   <span className="font-medium">Preview</span>
-                  <DesignSelector value={previewDesign} onChange={setPreviewDesign} />
-                </div>
-                <div className="h-[calc(100%-60px)] overflow-y-auto">
-                  <div className="transform scale-[0.5] origin-top-left w-[200%]">
-                    {previewDesign === "art-deco" && <ArtDecoPreview data={previewData} />}
-                    {previewDesign === "gatsby" && <GatsbyPreview data={previewData} />}
-                    {previewDesign === "hollywood" && <HollywoodPreview data={previewData} />}
-                    {previewDesign === "parisian" && <ParisianPreview data={previewData} />}
+                  <div className="flex items-center gap-2">
+                    <DeviceSelector value={previewDevice} onChange={setPreviewDevice} />
+                    <DesignSelector value={previewDesign} onChange={setPreviewDesign} />
                   </div>
+                </div>
+                <div className="h-[calc(100%-60px)] overflow-auto bg-muted/30 flex justify-center">
+                  <MobilePreviewContent
+                    design={previewDesign}
+                    device={previewDevice}
+                    data={previewData}
+                  />
                 </div>
               </SheetContent>
             </Sheet>
@@ -1075,18 +1078,32 @@ import { GatsbyGlamourDesign } from "@/components/merchant-page/designs/gatsby-g
 import { VintageHollywoodDesign } from "@/components/merchant-page/designs/vintage-hollywood";
 import { ParisianEleganceDesign } from "@/components/merchant-page/designs/parisian-elegance";
 
-function ArtDecoPreview({ data }: { data: any }) {
-  return <ArtDecoDesign {...data} />;
-}
+function MobilePreviewContent({
+  design,
+  device,
+  data
+}: {
+  design: DesignType;
+  device: DeviceType;
+  data: any;
+}) {
+  const deviceConfig = getDeviceConfig(device);
+  const DesignComponent = {
+    "art-deco": ArtDecoDesign,
+    "gatsby": GatsbyGlamourDesign,
+    "hollywood": VintageHollywoodDesign,
+    "parisian": ParisianEleganceDesign,
+  }[design];
 
-function GatsbyPreview({ data }: { data: any }) {
-  return <GatsbyGlamourDesign {...data} />;
-}
-
-function HollywoodPreview({ data }: { data: any }) {
-  return <VintageHollywoodDesign {...data} />;
-}
-
-function ParisianPreview({ data }: { data: any }) {
-  return <ParisianEleganceDesign {...data} />;
+  return (
+    <div
+      className="bg-white shadow-lg transition-all duration-300 origin-top my-4"
+      style={{
+        width: deviceConfig.width,
+        transform: `scale(${deviceConfig.scale})`,
+      }}
+    >
+      <DesignComponent {...data} />
+    </div>
+  );
 }

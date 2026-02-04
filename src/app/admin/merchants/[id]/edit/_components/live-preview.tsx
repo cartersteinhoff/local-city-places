@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { ArtDecoDesign } from "@/components/merchant-page/designs/art-deco";
 import { GatsbyGlamourDesign } from "@/components/merchant-page/designs/gatsby-glamour";
 import { VintageHollywoodDesign } from "@/components/merchant-page/designs/vintage-hollywood";
@@ -12,15 +12,24 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Eye } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Eye, Monitor, Tablet, Smartphone } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 export type DesignType = "art-deco" | "gatsby" | "hollywood" | "parisian";
+export type DeviceType = "desktop" | "tablet" | "mobile";
 
 const DESIGNS: { id: DesignType; label: string }[] = [
   { id: "art-deco", label: "Art Deco" },
   { id: "gatsby", label: "Gatsby Glamour" },
   { id: "hollywood", label: "Vintage Hollywood" },
   { id: "parisian", label: "Parisian Elegance" },
+];
+
+const DEVICES: { id: DeviceType; label: string; icon: typeof Monitor; width: number; scale: number }[] = [
+  { id: "desktop", label: "Desktop", icon: Monitor, width: 1440, scale: 0.45 },
+  { id: "tablet", label: "Tablet", icon: Tablet, width: 768, scale: 0.65 },
+  { id: "mobile", label: "Mobile", icon: Smartphone, width: 375, scale: 0.85 },
 ];
 
 interface MerchantPreviewData {
@@ -61,6 +70,8 @@ interface LivePreviewProps {
 }
 
 export function LivePreview({ data, design, onDesignChange, className }: LivePreviewProps) {
+  const [device, setDevice] = useState<DeviceType>("desktop");
+
   const DesignComponent = useMemo(() => {
     switch (design) {
       case "gatsby":
@@ -74,32 +85,63 @@ export function LivePreview({ data, design, onDesignChange, className }: LivePre
     }
   }, [design]);
 
+  const deviceConfig = DEVICES.find(d => d.id === device) || DEVICES[0];
+  const inverseScale = 1 / deviceConfig.scale;
+
   return (
     <div className={className}>
-      {/* Header with design selector */}
+      {/* Header with device and design selectors */}
       <div className="flex items-center justify-between mb-3 px-1">
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <Eye className="w-4 h-4" />
           <span>Live Preview</span>
         </div>
-        <Select value={design} onValueChange={(v) => onDesignChange(v as DesignType)}>
-          <SelectTrigger className="w-[160px] h-8 text-sm">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {DESIGNS.map((d) => (
-              <SelectItem key={d.id} value={d.id}>
-                {d.label}
-              </SelectItem>
+        <div className="flex items-center gap-2">
+          {/* Device selector */}
+          <div className="flex items-center border rounded-md p-0.5 bg-muted/50">
+            {DEVICES.map((d) => (
+              <Button
+                key={d.id}
+                variant="ghost"
+                size="sm"
+                onClick={() => setDevice(d.id)}
+                className={cn(
+                  "h-7 w-7 p-0",
+                  device === d.id && "bg-background shadow-sm"
+                )}
+                title={d.label}
+              >
+                <d.icon className="w-4 h-4" />
+              </Button>
             ))}
-          </SelectContent>
-        </Select>
+          </div>
+          {/* Design selector */}
+          <Select value={design} onValueChange={(v) => onDesignChange(v as DesignType)}>
+            <SelectTrigger className="w-[140px] h-8 text-sm">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {DESIGNS.map((d) => (
+                <SelectItem key={d.id} value={d.id}>
+                  {d.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       {/* Preview container */}
-      <div className="border rounded-lg overflow-hidden bg-white shadow-sm">
-        <div className="h-[calc(100vh-280px)] min-h-[400px] overflow-y-auto">
-          <div className="transform scale-[0.6] origin-top-left w-[166.67%]">
+      <div className="border rounded-lg overflow-hidden bg-muted/30 shadow-sm">
+        <div className="h-[calc(100vh-280px)] min-h-[400px] overflow-auto flex justify-center">
+          <div
+            className="bg-white shadow-lg transition-all duration-300 origin-top"
+            style={{
+              width: deviceConfig.width,
+              transform: `scale(${deviceConfig.scale})`,
+              minHeight: `${100 * inverseScale}%`,
+            }}
+          >
             <DesignComponent
               businessName={data.businessName || "Business Name"}
               streetAddress={data.streetAddress}
@@ -137,7 +179,7 @@ interface DesignSelectorProps {
 export function DesignSelector({ value, onChange }: DesignSelectorProps) {
   return (
     <Select value={value} onValueChange={(v) => onChange(v as DesignType)}>
-      <SelectTrigger className="w-[160px] h-8 text-sm">
+      <SelectTrigger className="w-[140px] h-8 text-sm">
         <SelectValue />
       </SelectTrigger>
       <SelectContent>
@@ -149,4 +191,37 @@ export function DesignSelector({ value, onChange }: DesignSelectorProps) {
       </SelectContent>
     </Select>
   );
+}
+
+// Device selector only (for use in mobile sheet header)
+interface DeviceSelectorProps {
+  value: DeviceType;
+  onChange: (device: DeviceType) => void;
+}
+
+export function DeviceSelector({ value, onChange }: DeviceSelectorProps) {
+  return (
+    <div className="flex items-center border rounded-md p-0.5 bg-muted/50">
+      {DEVICES.map((d) => (
+        <Button
+          key={d.id}
+          variant="ghost"
+          size="sm"
+          onClick={() => onChange(d.id)}
+          className={cn(
+            "h-7 w-7 p-0",
+            value === d.id && "bg-background shadow-sm"
+          )}
+          title={d.label}
+        >
+          <d.icon className="w-4 h-4" />
+        </Button>
+      ))}
+    </div>
+  );
+}
+
+// Get device config for external use
+export function getDeviceConfig(device: DeviceType) {
+  return DEVICES.find(d => d.id === device) || DEVICES[0];
 }
