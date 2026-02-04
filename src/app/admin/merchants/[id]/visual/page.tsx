@@ -25,7 +25,7 @@ import { useUser } from "@/hooks/use-user";
 import { adminNavItems } from "../../../nav";
 import { formatPhoneNumber, stripPhoneNumber, cn } from "@/lib/utils";
 import { useManualSave } from "@/hooks/use-manual-save";
-import { ArtDecoVisualEditor } from "./_components/art-deco-visual-editor";
+import { UnifiedVisualEditor } from "./_components/unified-visual-editor";
 
 // Device configurations for visual editor
 type DeviceType = "desktop" | "tablet" | "mobile";
@@ -534,14 +534,12 @@ export default function VisualEditorPage({ params }: { params: Promise<{ id: str
                     device === "tablet" && "rounded-[12px]",
                     device === "desktop" && "rounded-t-md"
                   )}>
-                    <ArtDecoVisualEditor
+                    <UnifiedVisualEditor
                       data={formData}
-                      categories={categories}
                       onUpdate={updateField}
                       onPhotoUpload={handlePhotoUpload}
                       onLogoUpload={handleLogoUpload}
                       showEditHints={showEditHints}
-                      device={device}
                     />
                   </div>
                 </div>

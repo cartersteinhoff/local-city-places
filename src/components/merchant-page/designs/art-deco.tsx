@@ -7,11 +7,16 @@
  * Deep emerald/navy with gold accents.
  * Contact info prominent at top.
  * Vertical video in ornate frame.
+ *
+ * UNIFIED COMPONENT: Works in both view mode and edit mode.
+ * Wrap with EditorProvider to enable editing.
  */
 
 import { Poiret_One, Raleway } from "next/font/google";
-import { MapPin, Phone, Globe, Share2, Gem, Navigation, Clock, Instagram, Facebook, Image, Sparkles } from "lucide-react";
-import { formatPhoneNumber, formatHoursDisplay } from "@/lib/utils";
+import { MapPin, Phone, Globe, Share2, Gem, Navigation, Clock, Instagram, Facebook, Image as ImageIcon, Sparkles, Upload, Plus, Trash2, GripVertical } from "lucide-react";
+import { formatPhoneNumber, formatHoursDisplay, cn } from "@/lib/utils";
+import { useEditor, useEditable } from "../editor-context";
+import { EditableText, EditableImage, EditableLink, PreventLink } from "../editable-primitives";
 
 const poiretOne = Poiret_One({
   weight: "400",
@@ -25,8 +30,569 @@ const raleway = Raleway({
   display: "swap",
 });
 import { extractVimeoId, getVimeoEmbedUrl } from "@/lib/vimeo";
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { GoogleMapEmbed, getGoogleMapsDirectionsUrl, formatFullAddress } from "../google-map-embed";
+
+// =============================================================================
+// EDITABLE VIDEO EMBED
+// Handles video display with URL editing in edit mode
+// =============================================================================
+
+function EditableVideoEmbed({ vimeoUrl }: { vimeoUrl: string | null | undefined }) {
+  const { editable, onUpdate, showEditHints } = useEditor();
+  const [isEditing, setIsEditing] = useState(false);
+  const [localUrl, setLocalUrl] = useState(vimeoUrl || "");
+  const videoId = vimeoUrl ? extractVimeoId(vimeoUrl) : null;
+
+  const handleSave = () => {
+    onUpdate("vimeoUrl", localUrl || null);
+    setIsEditing(false);
+  };
+
+  // No video and not editable - show nothing
+  if (!videoId && !editable) {
+    return null;
+  }
+
+  // Editable mode with no video - show add placeholder
+  if (!videoId && editable) {
+    return (
+      <div className="flex justify-center">
+        <div className="relative">
+          {/* Outer decorative frame */}
+          <div className="absolute -inset-4 border border-[#D4AF37]/30" />
+          <div className="absolute -inset-6 border border-[#D4AF37]/20" />
+
+          {/* Corner ornaments */}
+          <div className="absolute -top-8 -left-8 w-12 h-12 flex items-center justify-center">
+            <div className="w-4 h-4 bg-[#D4AF37] rotate-45" />
+          </div>
+          <div className="absolute -top-8 -right-8 w-12 h-12 flex items-center justify-center">
+            <div className="w-4 h-4 bg-[#D4AF37] rotate-45" />
+          </div>
+          <div className="absolute -bottom-8 -left-8 w-12 h-12 flex items-center justify-center">
+            <div className="w-4 h-4 bg-[#D4AF37] rotate-45" />
+          </div>
+          <div className="absolute -bottom-8 -right-8 w-12 h-12 flex items-center justify-center">
+            <div className="w-4 h-4 bg-[#D4AF37] rotate-45" />
+          </div>
+
+          {/* Placeholder container */}
+          <div
+            className="relative w-[260px] sm:w-[300px] border-2 border-dashed border-[#D4AF37]/30 bg-[#0D1F22] flex flex-col items-center justify-center gap-4 cursor-pointer hover:border-[#D4AF37]/60 transition-colors"
+            style={{ aspectRatio: '9/16' }}
+            onClick={() => setIsEditing(true)}
+          >
+            {isEditing ? (
+              <div className="p-4 w-full space-y-3">
+                <input
+                  type="text"
+                  value={localUrl}
+                  onChange={(e) => setLocalUrl(e.target.value)}
+                  placeholder="https://vimeo.com/..."
+                  className="w-full bg-transparent border-b border-[#D4AF37]/50 focus:border-[#D4AF37] outline-none text-sm text-[#F5F1E6] px-2 py-1"
+                  autoFocus
+                />
+                <div className="flex gap-2">
+                  <button
+                    onClick={(e) => { e.stopPropagation(); handleSave(); }}
+                    className="flex-1 text-xs bg-[#D4AF37] text-[#0D1F22] py-1 px-2 hover:bg-[#E5C97B]"
+                  >
+                    Save
+                  </button>
+                  <button
+                    onClick={(e) => { e.stopPropagation(); setIsEditing(false); setLocalUrl(vimeoUrl || ""); }}
+                    className="flex-1 text-xs border border-[#D4AF37]/50 text-[#D4AF37] py-1 px-2 hover:bg-[#D4AF37]/10"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <>
+                <Upload className="w-8 h-8 text-[#D4AF37]/60" />
+                <span className="text-sm text-[#D4AF37]/60">Add Video URL</span>
+                <span className="text-xs text-[#D4AF37]/40">Vimeo</span>
+              </>
+            )}
+          </div>
+
+          {/* Label */}
+          <div className="absolute -bottom-12 left-1/2 -translate-x-1/2 text-center">
+            <p className="text-[10px] tracking-[0.3em] uppercase text-[#D4AF37]/70">Merchant Tracks</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Has video
+  return (
+    <div className="flex justify-center">
+      <div className="relative group">
+        {/* Outer decorative frame */}
+        <div className="absolute -inset-4 border border-[#D4AF37]/30" />
+        <div className="absolute -inset-6 border border-[#D4AF37]/20" />
+
+        {/* Corner ornaments */}
+        <div className="absolute -top-8 -left-8 w-12 h-12 flex items-center justify-center">
+          <div className="w-4 h-4 bg-[#D4AF37] rotate-45" />
+        </div>
+        <div className="absolute -top-8 -right-8 w-12 h-12 flex items-center justify-center">
+          <div className="w-4 h-4 bg-[#D4AF37] rotate-45" />
+        </div>
+        <div className="absolute -bottom-8 -left-8 w-12 h-12 flex items-center justify-center">
+          <div className="w-4 h-4 bg-[#D4AF37] rotate-45" />
+        </div>
+        <div className="absolute -bottom-8 -right-8 w-12 h-12 flex items-center justify-center">
+          <div className="w-4 h-4 bg-[#D4AF37] rotate-45" />
+        </div>
+
+        {/* Video container */}
+        <div
+          className="relative w-[260px] sm:w-[300px] border-2 border-[#D4AF37] bg-black overflow-hidden"
+          style={{ aspectRatio: '9/16' }}
+        >
+          <iframe
+            src={`${getVimeoEmbedUrl(videoId!)}?background=0&autoplay=0&title=0&byline=0&portrait=0`}
+            className="absolute inset-0 w-full h-full"
+            frameBorder="0"
+            allow="autoplay; fullscreen; picture-in-picture"
+            allowFullScreen
+            title="Featured video"
+          />
+
+          {/* Edit overlay */}
+          {editable && showEditHints && (
+            <div
+              className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center cursor-pointer"
+              onClick={() => setIsEditing(true)}
+            >
+              {isEditing ? (
+                <div className="p-4 w-full space-y-3" onClick={(e) => e.stopPropagation()}>
+                  <input
+                    type="text"
+                    value={localUrl}
+                    onChange={(e) => setLocalUrl(e.target.value)}
+                    placeholder="https://vimeo.com/..."
+                    className="w-full bg-transparent border-b border-white/50 focus:border-white outline-none text-sm text-white px-2 py-1"
+                    autoFocus
+                  />
+                  <div className="flex gap-2">
+                    <button
+                      onClick={handleSave}
+                      className="flex-1 text-xs bg-white text-black py-1 px-2 hover:bg-gray-200"
+                    >
+                      Save
+                    </button>
+                    <button
+                      onClick={() => { setIsEditing(false); setLocalUrl(vimeoUrl || ""); }}
+                      className="flex-1 text-xs border border-white/50 text-white py-1 px-2 hover:bg-white/10"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <span className="text-white text-sm">Click to edit video URL</span>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Label */}
+        <div className="absolute -bottom-12 left-1/2 -translate-x-1/2 text-center">
+          <p className="text-[10px] tracking-[0.3em] uppercase text-[#D4AF37]/70">Merchant Tracks</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// =============================================================================
+// EDITABLE HOURS
+// Handles business hours display with inline editing
+// =============================================================================
+
+interface Hours {
+  monday?: string;
+  tuesday?: string;
+  wednesday?: string;
+  thursday?: string;
+  friday?: string;
+  saturday?: string;
+  sunday?: string;
+}
+
+const DAYS: (keyof Hours)[] = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"];
+const DAY_LABELS: Record<keyof Hours, string> = {
+  monday: "Monday",
+  tuesday: "Tuesday",
+  wednesday: "Wednesday",
+  thursday: "Thursday",
+  friday: "Friday",
+  saturday: "Saturday",
+  sunday: "Sunday",
+};
+
+function EditableHours({ hours }: { hours: Hours }) {
+  const { editable, onUpdate, showEditHints } = useEditor();
+
+  const handleUpdateDay = (day: keyof Hours, value: string) => {
+    const newHours = { ...hours, [day]: value };
+    onUpdate("hours", newHours);
+  };
+
+  return (
+    <div className="grid sm:grid-cols-2 gap-4 border border-[#D4AF37]/20 p-8">
+      {DAYS.map((day) => (
+        <div key={day} className="flex justify-between items-center py-2 border-b border-[#D4AF37]/10 last:border-0">
+          <span className={`text-[#D4AF37] ${raleway.className}`}>{DAY_LABELS[day]}</span>
+          {editable ? (
+            <input
+              type="text"
+              value={hours[day] || ""}
+              onChange={(e) => handleUpdateDay(day, e.target.value)}
+              placeholder="e.g., 9:00 AM - 5:00 PM"
+              className={cn(
+                "bg-transparent border-b border-transparent focus:border-[#D4AF37]/50 outline-none text-right text-[#F5F1E6]/70 w-48",
+                showEditHints && "hover:border-[#D4AF37]/30",
+                raleway.className
+              )}
+            />
+          ) : (
+            <span className={`text-[#F5F1E6]/70 ${raleway.className}`}>{formatHoursDisplay(hours[day])}</span>
+          )}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// =============================================================================
+// EDITABLE SERVICES LIST
+// Handles services display with edit/add/remove in edit mode
+// =============================================================================
+
+interface Service {
+  name: string;
+  description?: string;
+  price?: string;
+}
+
+function EditableServicesList({ services }: { services: Service[] }) {
+  const { editable, onUpdate, showEditHints } = useEditor();
+  const [editingIndex, setEditingIndex] = useState<number | null>(null);
+
+  const handleAdd = () => {
+    const newServices = [...services, { name: "New Service", description: "", price: "" }];
+    onUpdate("services", newServices);
+    setEditingIndex(newServices.length - 1);
+  };
+
+  const handleRemove = (index: number) => {
+    const newServices = services.filter((_, i) => i !== index);
+    onUpdate("services", newServices);
+    if (editingIndex === index) setEditingIndex(null);
+  };
+
+  const handleUpdateService = (index: number, field: keyof Service, value: string) => {
+    const newServices = services.map((s, i) =>
+      i === index ? { ...s, [field]: value } : s
+    );
+    onUpdate("services", newServices);
+  };
+
+  return (
+    <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      {services.map((service, idx) => (
+        <div key={idx} className={cn(
+          "border border-[#D4AF37]/20 p-6 hover:border-[#D4AF37]/40 transition-colors relative group",
+          editable && "cursor-pointer"
+        )}>
+          {editable && editingIndex === idx ? (
+            // Edit mode for this service
+            <div className="space-y-3">
+              <input
+                type="text"
+                value={service.name}
+                onChange={(e) => handleUpdateService(idx, "name", e.target.value)}
+                placeholder="Service name"
+                className="w-full bg-transparent border-b border-[#D4AF37]/50 focus:border-[#D4AF37] outline-none text-lg text-[#D4AF37] font-medium"
+                autoFocus
+              />
+              <input
+                type="text"
+                value={service.price || ""}
+                onChange={(e) => handleUpdateService(idx, "price", e.target.value)}
+                placeholder="Price (optional)"
+                className="w-full bg-transparent border-b border-[#D4AF37]/50 focus:border-[#D4AF37] outline-none text-[#E5C97B]"
+              />
+              <textarea
+                value={service.description || ""}
+                onChange={(e) => handleUpdateService(idx, "description", e.target.value)}
+                placeholder="Description (optional)"
+                className="w-full bg-transparent border-b border-[#D4AF37]/50 focus:border-[#D4AF37] outline-none text-sm text-[#F5F1E6]/60 resize-none"
+                rows={2}
+              />
+              <button
+                onClick={() => setEditingIndex(null)}
+                className="text-xs text-[#D4AF37] hover:underline"
+              >
+                Done
+              </button>
+            </div>
+          ) : (
+            // Display mode
+            <>
+              <div className="flex justify-between items-start mb-2" onClick={() => editable && setEditingIndex(idx)}>
+                <h3 className={`text-lg text-[#D4AF37] ${poiretOne.className}`}>{service.name}</h3>
+                {service.price && (
+                  <span className={`text-[#E5C97B] ${raleway.className}`}>{service.price}</span>
+                )}
+              </div>
+              {service.description && (
+                <p className={`text-sm text-[#F5F1E6]/60 ${raleway.className}`} onClick={() => editable && setEditingIndex(idx)}>
+                  {service.description}
+                </p>
+              )}
+
+              {/* Edit mode: delete button */}
+              {editable && showEditHints && (
+                <button
+                  onClick={(e) => { e.stopPropagation(); handleRemove(idx); }}
+                  className="absolute top-2 right-2 w-6 h-6 bg-red-500/80 hover:bg-red-500 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                >
+                  <Trash2 className="w-3 h-3 text-white" />
+                </button>
+              )}
+            </>
+          )}
+        </div>
+      ))}
+
+      {/* Add service placeholder */}
+      {editable && (
+        <div
+          className="border border-dashed border-[#D4AF37]/30 p-6 flex flex-col items-center justify-center gap-2 cursor-pointer hover:border-[#D4AF37]/60 hover:bg-[#D4AF37]/5 transition-colors"
+          onClick={handleAdd}
+        >
+          <Plus className="w-6 h-6 text-[#D4AF37]/60" />
+          <span className="text-sm text-[#D4AF37]/60">Add Service</span>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// =============================================================================
+// EDITABLE PHOTO GALLERY
+// Handles photo display with edit/add/remove in edit mode
+// =============================================================================
+
+function EditablePhotoGallery({ photos, businessName }: { photos: string[]; businessName: string }) {
+  const { editable, onUpdate, onPhotoUpload, showEditHints } = useEditor();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isUploading, setIsUploading] = useState(false);
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !onPhotoUpload) return;
+
+    setIsUploading(true);
+    try {
+      const url = await onPhotoUpload(file);
+      onUpdate("photos", [...photos, url]);
+    } catch (error) {
+      console.error("Upload failed:", error);
+    } finally {
+      setIsUploading(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+    }
+  };
+
+  const handleRemove = (index: number) => {
+    const newPhotos = photos.filter((_, i) => i !== index);
+    onUpdate("photos", newPhotos);
+  };
+
+  return (
+    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+      {photos.map((photo, idx) => (
+        <div key={idx} className="relative aspect-square border-2 border-[#D4AF37]/30 overflow-hidden group">
+          <img
+            src={photo}
+            alt={`${businessName} photo ${idx + 1}`}
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+          />
+          {/* Art deco corner accents */}
+          <div className="absolute top-0 left-0 w-4 h-4 border-t-2 border-l-2 border-[#D4AF37]" />
+          <div className="absolute top-0 right-0 w-4 h-4 border-t-2 border-r-2 border-[#D4AF37]" />
+          <div className="absolute bottom-0 left-0 w-4 h-4 border-b-2 border-l-2 border-[#D4AF37]" />
+          <div className="absolute bottom-0 right-0 w-4 h-4 border-b-2 border-r-2 border-[#D4AF37]" />
+
+          {/* Edit mode: delete button */}
+          {editable && showEditHints && (
+            <button
+              onClick={() => handleRemove(idx)}
+              className="absolute top-2 right-2 w-8 h-8 bg-red-500/80 hover:bg-red-500 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+            >
+              <Trash2 className="w-4 h-4 text-white" />
+            </button>
+          )}
+        </div>
+      ))}
+
+      {/* Add photo placeholder */}
+      {editable && (
+        <div
+          className="relative aspect-square border-2 border-dashed border-[#D4AF37]/30 flex flex-col items-center justify-center gap-2 cursor-pointer hover:border-[#D4AF37]/60 hover:bg-[#D4AF37]/5 transition-colors"
+          onClick={() => fileInputRef.current?.click()}
+        >
+          {isUploading ? (
+            <span className="text-sm text-[#D4AF37]/60">Uploading...</span>
+          ) : (
+            <>
+              <Plus className="w-8 h-8 text-[#D4AF37]/60" />
+              <span className="text-sm text-[#D4AF37]/60">Add Photo</span>
+            </>
+          )}
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={handleFileChange}
+          />
+        </div>
+      )}
+    </div>
+  );
+}
+
+// =============================================================================
+// EDITABLE SOCIAL LINKS
+// Handles social media links with inline URL editing
+// =============================================================================
+
+function EditableSocialLinks({
+  instagramUrl,
+  facebookUrl,
+  tiktokUrl,
+}: {
+  instagramUrl?: string | null;
+  facebookUrl?: string | null;
+  tiktokUrl?: string | null;
+}) {
+  const { editable, onUpdate, showEditHints } = useEditor();
+  const [editingField, setEditingField] = useState<string | null>(null);
+  const [localValue, setLocalValue] = useState("");
+
+  const startEditing = (field: string, currentValue: string | null | undefined) => {
+    setEditingField(field);
+    setLocalValue(currentValue || "");
+  };
+
+  const handleSave = (field: string) => {
+    onUpdate(field, localValue || null);
+    setEditingField(null);
+  };
+
+  const socialLinks = [
+    { field: "instagramUrl", url: instagramUrl, icon: Instagram, label: "Instagram" },
+    { field: "facebookUrl", url: facebookUrl, icon: Facebook, label: "Facebook" },
+    {
+      field: "tiktokUrl",
+      url: tiktokUrl,
+      label: "TikTok",
+      customIcon: (
+        <svg className="w-5 h-5 text-[#D4AF37]" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-5.2 1.74 2.89 2.89 0 012.31-4.64 2.93 2.93 0 01.88.13V9.4a6.84 6.84 0 00-1-.05A6.33 6.33 0 005 20.1a6.34 6.34 0 0010.86-4.43v-7a8.16 8.16 0 004.77 1.52v-3.4a4.85 4.85 0 01-1-.1z"/>
+        </svg>
+      ),
+    },
+  ];
+
+  const hasAnySocial = instagramUrl || facebookUrl || tiktokUrl;
+
+  if (!hasAnySocial && !editable) {
+    return null;
+  }
+
+  return (
+    <div className="border-t border-[#D4AF37]/20">
+      <div className="max-w-6xl mx-auto px-4 py-8">
+        <div className="flex items-center justify-center gap-6">
+          <span className={`text-sm text-[#F5F1E6]/50 ${raleway.className}`}>Follow Us</span>
+          <div className="flex items-center gap-4">
+            {socialLinks.map(({ field, url, icon: Icon, customIcon, label }) => {
+              const isEditing = editingField === field;
+              const hasValue = !!url;
+
+              // In view mode, only show links that have values
+              if (!editable && !hasValue) return null;
+
+              return (
+                <div key={field} className="relative">
+                  {isEditing ? (
+                    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 bg-[#0D1F22] border border-[#D4AF37]/30 p-3 rounded shadow-lg z-10 w-64">
+                      <input
+                        type="text"
+                        value={localValue}
+                        onChange={(e) => setLocalValue(e.target.value)}
+                        placeholder={`${label} URL...`}
+                        className="w-full bg-transparent border-b border-[#D4AF37]/50 focus:border-[#D4AF37] outline-none text-sm text-[#F5F1E6] px-1 py-1"
+                        autoFocus
+                      />
+                      <div className="flex gap-2 mt-2">
+                        <button
+                          onClick={() => handleSave(field)}
+                          className="flex-1 text-xs bg-[#D4AF37] text-[#0D1F22] py-1 px-2"
+                        >
+                          Save
+                        </button>
+                        <button
+                          onClick={() => setEditingField(null)}
+                          className="flex-1 text-xs border border-[#D4AF37]/50 text-[#D4AF37] py-1 px-2"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  ) : null}
+
+                  {hasValue ? (
+                    <a
+                      href={editable ? undefined : url!}
+                      target={editable ? undefined : "_blank"}
+                      rel={editable ? undefined : "noopener noreferrer"}
+                      onClick={editable ? (e) => { e.preventDefault(); startEditing(field, url); } : undefined}
+                      className={cn(
+                        "w-12 h-12 border border-[#D4AF37]/30 flex items-center justify-center hover:border-[#D4AF37] hover:bg-[#D4AF37]/10 transition-all",
+                        editable && "cursor-pointer"
+                      )}
+                    >
+                      {customIcon || (Icon && <Icon className="w-5 h-5 text-[#D4AF37]" />)}
+                    </a>
+                  ) : editable ? (
+                    <button
+                      onClick={() => startEditing(field, url)}
+                      className="w-12 h-12 border border-dashed border-[#D4AF37]/30 flex items-center justify-center hover:border-[#D4AF37]/60 hover:bg-[#D4AF37]/5 transition-all"
+                    >
+                      {customIcon || (Icon && <Icon className="w-5 h-5 text-[#D4AF37]/40" />)}
+                    </button>
+                  ) : null}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 interface MerchantPageProps {
   businessName: string;
@@ -81,6 +647,7 @@ export function ArtDecoDesign({
   aboutStory,
 }: MerchantPageProps) {
   const [copied, setCopied] = useState(false);
+  const { editable, onUpdate, showEditHints } = useEditor();
   const location = [city, state].filter(Boolean).join(", ");
   const fullAddress = formatFullAddress(streetAddress, city, state, zipCode);
   const videoId = vimeoUrl ? extractVimeoId(vimeoUrl) : null;
@@ -228,7 +795,7 @@ export function ArtDecoDesign({
             {/* Left - Business Info */}
             <div className="text-center lg:text-left">
               {/* Logo with art deco frame */}
-              {logoUrl && (
+              {(logoUrl || editable) && (
                 <div className="inline-block mb-8">
                   <div className="relative">
                     {/* Outer glow */}
@@ -246,9 +813,14 @@ export function ArtDecoDesign({
                     <div className="absolute -left-1 top-4 bottom-4 w-px bg-gradient-to-b from-transparent via-[#D4AF37] to-transparent" />
                     <div className="absolute -right-1 top-4 bottom-4 w-px bg-gradient-to-b from-transparent via-[#D4AF37] to-transparent" />
 
-                    <div className="relative w-32 h-32 bg-[#0D1F22] border-2 border-[#D4AF37] flex items-center justify-center overflow-hidden">
-                      <img src={logoUrl} alt={businessName} className="w-full h-full object-contain p-2" />
-                    </div>
+                    <EditableImage
+                      field="logoUrl"
+                      value={logoUrl}
+                      alt={businessName}
+                      className="relative w-32 h-32 bg-[#0D1F22] border-2 border-[#D4AF37] flex items-center justify-center overflow-hidden"
+                      placeholderIcon={<Gem className="w-8 h-8 text-[#D4AF37]/60" />}
+                      placeholderText="Add Logo"
+                    />
                   </div>
                 </div>
               )}
@@ -272,9 +844,14 @@ export function ArtDecoDesign({
                   <div className="w-16 h-px bg-gradient-to-r from-[#D4AF37] to-transparent" />
                 </div>
 
-                <h1 className={`text-4xl sm:text-5xl lg:text-6xl font-light leading-tight bg-gradient-to-r from-[#F5F1E6] via-[#D4AF37] to-[#F5F1E6] bg-clip-text text-transparent ${poiretOne.className}`}>
-                  {businessName}
-                </h1>
+                <EditableText
+                  field="businessName"
+                  value={businessName}
+                  placeholder="Business Name"
+                  as="h1"
+                  className={`text-4xl sm:text-5xl lg:text-6xl font-light leading-tight bg-gradient-to-r from-[#F5F1E6] via-[#D4AF37] to-[#F5F1E6] bg-clip-text text-transparent ${poiretOne.className}`}
+                  inputClassName="text-4xl sm:text-5xl lg:text-6xl bg-transparent text-[#F5F1E6]"
+                />
 
                 {/* Decorative line below */}
                 <div className="flex items-center justify-center lg:justify-start gap-3 mt-4">
@@ -285,10 +862,15 @@ export function ArtDecoDesign({
               </div>
 
               {/* Description */}
-              {description && (
-                <p className={`text-lg text-[#F5F1E6]/70 leading-relaxed max-w-lg mx-auto lg:mx-0 mb-10 ${raleway.className}`}>
-                  {description}
-                </p>
+              {(description || editable) && (
+                <EditableText
+                  field="description"
+                  value={description || ""}
+                  placeholder="Add a short description of your business..."
+                  as="p"
+                  className={`text-lg text-[#F5F1E6]/70 leading-relaxed max-w-lg mx-auto lg:mx-0 mb-10 ${raleway.className}`}
+                  multiline
+                />
               )}
 
               {/* CTAs */}
@@ -326,51 +908,9 @@ export function ArtDecoDesign({
             </div>
 
             {/* Right - Vertical Video with Art Deco Frame */}
-            {videoId && (
-              <div className="flex justify-center">
-                <div className="relative">
-                  {/* Outer decorative frame */}
-                  <div className="absolute -inset-4 border border-[#D4AF37]/30" />
-                  <div className="absolute -inset-6 border border-[#D4AF37]/20" />
-
-                  {/* Corner ornaments */}
-                  <div className="absolute -top-8 -left-8 w-12 h-12 flex items-center justify-center">
-                    <div className="w-4 h-4 bg-[#D4AF37] rotate-45" />
-                  </div>
-                  <div className="absolute -top-8 -right-8 w-12 h-12 flex items-center justify-center">
-                    <div className="w-4 h-4 bg-[#D4AF37] rotate-45" />
-                  </div>
-                  <div className="absolute -bottom-8 -left-8 w-12 h-12 flex items-center justify-center">
-                    <div className="w-4 h-4 bg-[#D4AF37] rotate-45" />
-                  </div>
-                  <div className="absolute -bottom-8 -right-8 w-12 h-12 flex items-center justify-center">
-                    <div className="w-4 h-4 bg-[#D4AF37] rotate-45" />
-                  </div>
-
-                  {/* Video container */}
-                  <div
-                    className="relative w-[260px] sm:w-[300px] border-2 border-[#D4AF37] bg-black overflow-hidden"
-                    style={{ aspectRatio: '9/16' }}
-                  >
-                    <iframe
-                      src={`${getVimeoEmbedUrl(videoId)}?background=0&autoplay=0&title=0&byline=0&portrait=0`}
-                      className="absolute inset-0 w-full h-full"
-                      frameBorder="0"
-                      allow="autoplay; fullscreen; picture-in-picture"
-                      allowFullScreen
-                      title="Featured video"
-                    />
-                  </div>
-
-                  {/* Label */}
-                  <div className="absolute -bottom-12 left-1/2 -translate-x-1/2 text-center">
-                    <p className="text-[10px] tracking-[0.3em] uppercase text-[#D4AF37]/70">Merchant Tracks</p>
-                  </div>
-                </div>
-              </div>
+            {(videoId || editable) && (
+              <EditableVideoEmbed vimeoUrl={vimeoUrl} />
             )}
-
-{/* No placeholder when no video - keep it clean */}
           </div>
         </div>
 
@@ -422,7 +962,7 @@ export function ArtDecoDesign({
         )}
 
         {/* About/Story Section */}
-        {aboutStory && (
+        {(aboutStory || editable) && (
           <>
             <div className="flex items-center justify-center gap-4 py-4">
               <div className="w-32 h-px bg-gradient-to-r from-transparent to-[#D4AF37]/40" />
@@ -435,16 +975,21 @@ export function ArtDecoDesign({
                 <div className="flex-1 h-px bg-gradient-to-r from-[#D4AF37]/30 to-transparent" />
               </div>
               <div className="border border-[#D4AF37]/20 p-8">
-                <p className={`text-[#F5F1E6]/80 leading-relaxed whitespace-pre-line ${raleway.className}`}>
-                  {aboutStory}
-                </p>
+                <EditableText
+                  field="aboutStory"
+                  value={aboutStory || ""}
+                  placeholder="Tell your story... What makes your business special?"
+                  as="p"
+                  className={`text-[#F5F1E6]/80 leading-relaxed whitespace-pre-line ${raleway.className}`}
+                  multiline
+                />
               </div>
             </div>
           </>
         )}
 
         {/* Hours Section */}
-        {hours && Object.values(hours).some(Boolean) && (
+        {((hours && Object.values(hours).some(Boolean)) || editable) && (
           <>
             <div className="flex items-center justify-center gap-4 py-4">
               <div className="w-32 h-px bg-gradient-to-r from-transparent to-[#D4AF37]/40" />
@@ -457,28 +1002,13 @@ export function ArtDecoDesign({
                 <h2 className={`text-2xl ${poiretOne.className}`}>Hours of Operation</h2>
                 <div className="flex-1 h-px bg-gradient-to-r from-[#D4AF37]/30 to-transparent" />
               </div>
-              <div className="grid sm:grid-cols-2 gap-4 border border-[#D4AF37]/20 p-8">
-                {[
-                  { day: "Monday", value: hours.monday },
-                  { day: "Tuesday", value: hours.tuesday },
-                  { day: "Wednesday", value: hours.wednesday },
-                  { day: "Thursday", value: hours.thursday },
-                  { day: "Friday", value: hours.friday },
-                  { day: "Saturday", value: hours.saturday },
-                  { day: "Sunday", value: hours.sunday },
-                ].map(({ day, value }) => (
-                  <div key={day} className="flex justify-between items-center py-2 border-b border-[#D4AF37]/10 last:border-0">
-                    <span className={`text-[#D4AF37] ${raleway.className}`}>{day}</span>
-                    <span className={`text-[#F5F1E6]/70 ${raleway.className}`}>{formatHoursDisplay(value)}</span>
-                  </div>
-                ))}
-              </div>
+              <EditableHours hours={hours || {}} />
             </div>
           </>
         )}
 
         {/* Services Section */}
-        {services && services.length > 0 && (
+        {((services && services.length > 0) || editable) && (
           <>
             <div className="flex items-center justify-center gap-4 py-4">
               <div className="w-32 h-px bg-gradient-to-r from-transparent to-[#D4AF37]/40" />
@@ -491,27 +1021,13 @@ export function ArtDecoDesign({
                 <h2 className={`text-2xl ${poiretOne.className}`}>Our Services</h2>
                 <div className="flex-1 h-px bg-gradient-to-r from-[#D4AF37]/30 to-transparent" />
               </div>
-              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {services.map((service, idx) => (
-                  <div key={idx} className="border border-[#D4AF37]/20 p-6 hover:border-[#D4AF37]/40 transition-colors">
-                    <div className="flex justify-between items-start mb-2">
-                      <h3 className={`text-lg text-[#D4AF37] ${poiretOne.className}`}>{service.name}</h3>
-                      {service.price && (
-                        <span className={`text-[#E5C97B] ${raleway.className}`}>{service.price}</span>
-                      )}
-                    </div>
-                    {service.description && (
-                      <p className={`text-sm text-[#F5F1E6]/60 ${raleway.className}`}>{service.description}</p>
-                    )}
-                  </div>
-                ))}
-              </div>
+              <EditableServicesList services={services || []} />
             </div>
           </>
         )}
 
         {/* Photo Gallery Section */}
-        {photos && photos.length > 0 && (
+        {((photos && photos.length > 0) || editable) && (
           <>
             <div className="flex items-center justify-center gap-4 py-4">
               <div className="w-32 h-px bg-gradient-to-r from-transparent to-[#D4AF37]/40" />
@@ -520,26 +1036,14 @@ export function ArtDecoDesign({
             </div>
             <div id="gallery" className="max-w-6xl mx-auto px-4 py-12 scroll-mt-16">
               <div className="flex items-center gap-4 mb-8">
-                <Image className="w-6 h-6 text-[#D4AF37]" />
+                <ImageIcon className="w-6 h-6 text-[#D4AF37]" />
                 <h2 className={`text-2xl ${poiretOne.className}`}>Gallery</h2>
                 <div className="flex-1 h-px bg-gradient-to-r from-[#D4AF37]/30 to-transparent" />
               </div>
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                {photos.map((photo, idx) => (
-                  <div key={idx} className="relative aspect-square border-2 border-[#D4AF37]/30 overflow-hidden group">
-                    <img
-                      src={photo}
-                      alt={`${businessName} photo ${idx + 1}`}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                    />
-                    {/* Art deco corner accents */}
-                    <div className="absolute top-0 left-0 w-4 h-4 border-t-2 border-l-2 border-[#D4AF37]" />
-                    <div className="absolute top-0 right-0 w-4 h-4 border-t-2 border-r-2 border-[#D4AF37]" />
-                    <div className="absolute bottom-0 left-0 w-4 h-4 border-b-2 border-l-2 border-[#D4AF37]" />
-                    <div className="absolute bottom-0 right-0 w-4 h-4 border-b-2 border-r-2 border-[#D4AF37]" />
-                  </div>
-                ))}
-              </div>
+              <EditablePhotoGallery
+                photos={photos || []}
+                businessName={businessName}
+              />
             </div>
           </>
         )}
@@ -547,49 +1051,11 @@ export function ArtDecoDesign({
 {/* Reviews Section - will show when reviews data is available */}
 
         {/* Social Links */}
-        {(instagramUrl || facebookUrl || tiktokUrl) && (
-          <div className="border-t border-[#D4AF37]/20">
-            <div className="max-w-6xl mx-auto px-4 py-8">
-              <div className="flex items-center justify-center gap-6">
-                <span className={`text-sm text-[#F5F1E6]/50 ${raleway.className}`}>Follow Us</span>
-                <div className="flex items-center gap-4">
-                  {instagramUrl && (
-                    <a
-                      href={instagramUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="w-12 h-12 border border-[#D4AF37]/30 flex items-center justify-center hover:border-[#D4AF37] hover:bg-[#D4AF37]/10 transition-all cursor-pointer"
-                    >
-                      <Instagram className="w-5 h-5 text-[#D4AF37]" />
-                    </a>
-                  )}
-                  {facebookUrl && (
-                    <a
-                      href={facebookUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="w-12 h-12 border border-[#D4AF37]/30 flex items-center justify-center hover:border-[#D4AF37] hover:bg-[#D4AF37]/10 transition-all cursor-pointer"
-                    >
-                      <Facebook className="w-5 h-5 text-[#D4AF37]" />
-                    </a>
-                  )}
-                  {tiktokUrl && (
-                    <a
-                      href={tiktokUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="w-12 h-12 border border-[#D4AF37]/30 flex items-center justify-center hover:border-[#D4AF37] hover:bg-[#D4AF37]/10 transition-all cursor-pointer"
-                    >
-                      <svg className="w-5 h-5 text-[#D4AF37]" viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-5.2 1.74 2.89 2.89 0 012.31-4.64 2.93 2.93 0 01.88.13V9.4a6.84 6.84 0 00-1-.05A6.33 6.33 0 005 20.1a6.34 6.34 0 0010.86-4.43v-7a8.16 8.16 0 004.77 1.52v-3.4a4.85 4.85 0 01-1-.1z"/>
-                      </svg>
-                    </a>
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
+        <EditableSocialLinks
+          instagramUrl={instagramUrl}
+          facebookUrl={facebookUrl}
+          tiktokUrl={tiktokUrl}
+        />
 
         {/* Partner Section */}
         <div className="border-t border-[#D4AF37]/20">
