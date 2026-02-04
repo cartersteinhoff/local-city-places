@@ -180,7 +180,7 @@ export default function EditMerchantPage({ params }: { params: Promise<{ id: str
         vimeoUrl: data.vimeoUrl.trim() || null,
         googlePlaceId: data.googlePlaceId || null,
         logoUrl: data.logoUrl.trim() || null,
-        slug: data.slug.trim() || null,
+        slug: data.slug?.trim() || null,
         hours: Object.keys(data.hours).length > 0 ? data.hours : null,
         instagramUrl: data.instagramUrl.trim() || null,
         facebookUrl: data.facebookUrl.trim() || null,
