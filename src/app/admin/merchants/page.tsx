@@ -36,7 +36,6 @@ import {
   ExternalLink,
   Copy,
   Check,
-  Video,
 } from "lucide-react";
 import { useUser } from "@/hooks/use-user";
 import { adminNavItems } from "../nav";
@@ -54,6 +53,8 @@ interface MerchantPageData {
   slug: string | null;
   categoryName: string | null;
   createdAt: string;
+  updatedAt: string;
+  completionPercentage: number;
   urls: {
     full: string | null;
     short: string | null;
@@ -227,16 +228,21 @@ export default function MerchantPagesPage() {
                           {[merchant.city, merchant.state].filter(Boolean).join(", ")}
                         </p>
                       </div>
-                      {merchant.vimeoUrl && (
-                        <Video className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-                      )}
+                      <span className={cn(
+                        "inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium flex-shrink-0",
+                        merchant.completionPercentage === 100 && "bg-green-100 text-green-700",
+                        merchant.completionPercentage >= 50 && merchant.completionPercentage < 100 && "bg-yellow-100 text-yellow-700",
+                        merchant.completionPercentage < 50 && "bg-red-100 text-red-700"
+                      )}>
+                        {merchant.completionPercentage}%
+                      </span>
                     </div>
 
-                    {merchant.phone && (
-                      <p className="text-sm text-muted-foreground mb-2">
-                        {formatPhoneNumber(merchant.phone)}
-                      </p>
-                    )}
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
+                      {merchant.phone && <span>{formatPhoneNumber(merchant.phone)}</span>}
+                      {merchant.phone && <span>·</span>}
+                      <span>Updated {new Date(merchant.updatedAt).toLocaleDateString()}</span>
+                    </div>
 
                     {merchant.urls.short && (
                       <div className="flex items-center gap-2 mb-3">
@@ -295,11 +301,11 @@ export default function MerchantPagesPage() {
                   <TableHeader>
                     <TableRow>
                       <TableHead>Business</TableHead>
-                      <TableHead className="w-[140px]">Location</TableHead>
-                      <TableHead className="w-[140px]">Phone</TableHead>
-                      <TableHead className="w-[200px]">Short URL</TableHead>
-                      <TableHead className="w-[60px] text-center">Video</TableHead>
-                      <TableHead className="w-[130px] text-right">Actions</TableHead>
+                      <TableHead className="w-[80px] text-center">Complete</TableHead>
+                      <TableHead className="w-[120px]">Location</TableHead>
+                      <TableHead className="w-[180px]">Short URL</TableHead>
+                      <TableHead className="w-[90px]">Updated</TableHead>
+                      <TableHead className="w-[110px] text-right">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -314,20 +320,27 @@ export default function MerchantPagesPage() {
                         <TableRow key={merchant.id}>
                           <TableCell>
                             <div className="font-medium">{merchant.businessName}</div>
-                            {merchant.categoryName && (
-                              <div className="text-sm text-muted-foreground">{merchant.categoryName}</div>
-                            )}
+                            <div className="text-sm text-muted-foreground">
+                              {[merchant.categoryName, merchant.phone ? formatPhoneNumber(merchant.phone) : null].filter(Boolean).join(" · ")}
+                            </div>
+                          </TableCell>
+                          <TableCell className="text-center">
+                            <span className={cn(
+                              "inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium",
+                              merchant.completionPercentage === 100 && "bg-green-100 text-green-700",
+                              merchant.completionPercentage >= 50 && merchant.completionPercentage < 100 && "bg-yellow-100 text-yellow-700",
+                              merchant.completionPercentage < 50 && "bg-red-100 text-red-700"
+                            )}>
+                              {merchant.completionPercentage}%
+                            </span>
                           </TableCell>
                           <TableCell className="text-muted-foreground">
                             {[merchant.city, merchant.state].filter(Boolean).join(", ")}
                           </TableCell>
-                          <TableCell className="text-muted-foreground">
-                            {merchant.phone ? formatPhoneNumber(merchant.phone) : "-"}
-                          </TableCell>
                           <TableCell>
                             {merchant.urls.short ? (
                               <div className="flex items-center gap-1">
-                                <code className="text-xs bg-muted px-2 py-1 rounded truncate max-w-[140px]">
+                                <code className="text-xs bg-muted px-2 py-1 rounded truncate max-w-[120px]">
                                   {merchant.urls.short}
                                 </code>
                                 <Button
@@ -347,12 +360,8 @@ export default function MerchantPagesPage() {
                               <span className="text-muted-foreground">-</span>
                             )}
                           </TableCell>
-                          <TableCell className="text-center">
-                            {merchant.vimeoUrl ? (
-                              <Video className="w-4 h-4 mx-auto text-muted-foreground" />
-                            ) : (
-                              <span className="text-muted-foreground">-</span>
-                            )}
+                          <TableCell className="text-muted-foreground text-sm">
+                            {new Date(merchant.updatedAt).toLocaleDateString()}
                           </TableCell>
                           <TableCell className="text-right">
                             <div className="flex items-center justify-end gap-1">

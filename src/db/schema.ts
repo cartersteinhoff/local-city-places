@@ -102,6 +102,7 @@ export const merchants = pgTable("merchants", {
   aboutStory: text("about_story"), // Longer about/history section
   verified: boolean("verified").default(false).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
 // Merchant bank accounts table

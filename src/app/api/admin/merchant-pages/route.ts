@@ -10,6 +10,7 @@ import {
   getMerchantPageUrl,
   getMerchantShortUrl,
 } from "@/lib/utils";
+import { calculateCompletion } from "@/lib/merchant-completion";
 
 export async function GET(request: NextRequest) {
   try {
@@ -51,6 +52,15 @@ export async function GET(request: NextRequest) {
         description: merchants.description,
         logoUrl: merchants.logoUrl,
         createdAt: merchants.createdAt,
+        updatedAt: merchants.updatedAt,
+        // Additional fields for completion calculation
+        aboutStory: merchants.aboutStory,
+        hours: merchants.hours,
+        instagramUrl: merchants.instagramUrl,
+        facebookUrl: merchants.facebookUrl,
+        tiktokUrl: merchants.tiktokUrl,
+        photos: merchants.photos,
+        services: merchants.services,
       })
       .from(merchants)
       .leftJoin(categories, eq(merchants.categoryId, categories.id))
@@ -76,27 +86,52 @@ export async function GET(request: NextRequest) {
     const totalPages = Math.ceil(Number(count) / limit);
 
     return NextResponse.json({
-      merchants: filteredMerchants.map((m) => ({
-        id: m.id,
-        businessName: m.businessName,
-        streetAddress: m.streetAddress,
-        city: m.city,
-        state: m.state,
-        zipCode: m.zipCode,
-        phone: m.phone,
-        website: m.website,
-        vimeoUrl: m.vimeoUrl,
-        slug: m.slug,
-        categoryId: m.categoryId,
-        categoryName: m.categoryName,
-        description: m.description,
-        logoUrl: m.logoUrl,
-        createdAt: m.createdAt.toISOString(),
-        urls: {
-          full: m.city && m.state && m.slug ? getMerchantPageUrl(m.city, m.state, m.slug) : null,
-          short: m.phone ? getMerchantShortUrl(m.phone) : null,
-        },
-      })),
+      merchants: filteredMerchants.map((m) => {
+        const completion = calculateCompletion({
+          businessName: m.businessName,
+          categoryId: m.categoryId || undefined,
+          description: m.description || undefined,
+          aboutStory: m.aboutStory || undefined,
+          streetAddress: m.streetAddress || undefined,
+          city: m.city || undefined,
+          state: m.state || undefined,
+          zipCode: m.zipCode || undefined,
+          phone: m.phone || undefined,
+          website: m.website || undefined,
+          instagramUrl: m.instagramUrl || undefined,
+          facebookUrl: m.facebookUrl || undefined,
+          tiktokUrl: m.tiktokUrl || undefined,
+          hours: m.hours || undefined,
+          logoUrl: m.logoUrl || undefined,
+          vimeoUrl: m.vimeoUrl || undefined,
+          photos: m.photos || undefined,
+          services: m.services || undefined,
+        });
+
+        return {
+          id: m.id,
+          businessName: m.businessName,
+          streetAddress: m.streetAddress,
+          city: m.city,
+          state: m.state,
+          zipCode: m.zipCode,
+          phone: m.phone,
+          website: m.website,
+          vimeoUrl: m.vimeoUrl,
+          slug: m.slug,
+          categoryId: m.categoryId,
+          categoryName: m.categoryName,
+          description: m.description,
+          logoUrl: m.logoUrl,
+          createdAt: m.createdAt.toISOString(),
+          updatedAt: m.updatedAt.toISOString(),
+          completionPercentage: completion.percentage,
+          urls: {
+            full: m.city && m.state && m.slug ? getMerchantPageUrl(m.city, m.state, m.slug) : null,
+            short: m.phone ? getMerchantShortUrl(m.phone) : null,
+          },
+        };
+      }),
       pagination: {
         total: Number(count),
         page,

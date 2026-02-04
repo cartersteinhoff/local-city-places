@@ -287,7 +287,7 @@ export async function PATCH(
 
     // Perform update
     if (Object.keys(updates).length > 0) {
-      await db.update(merchants).set(updates).where(eq(merchants.id, id));
+      await db.update(merchants).set({ ...updates, updatedAt: new Date() }).where(eq(merchants.id, id));
     }
 
     // Fetch updated merchant
