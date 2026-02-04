@@ -78,9 +78,11 @@ function EditableContactField({
   const [searchQuery, setSearchQuery] = useState("");
   const [predictions, setPredictions] = useState<Array<{ place_id: string; description: string }>>([]);
   const [isSearching, setIsSearching] = useState(false);
-  const autocompleteService = useRef<google.maps.places.AutocompleteService | null>(null);
-  const placesService = useRef<google.maps.places.PlacesService | null>(null);
+  const [isScriptLoaded, setIsScriptLoaded] = useState(false);
+  const autocompleteService = useRef<any>(null);
+  const placesService = useRef<any>(null);
   const dummyDiv = useRef<HTMLDivElement | null>(null);
+  const debounceRef = useRef<NodeJS.Timeout | null>(null);
 
   // Sync local state when props change
   useEffect(() => {
@@ -92,26 +94,40 @@ function EditableContactField({
     }
   }, [value, secondaryFields]);
 
-  // Initialize Google Places
+  // Check if this is a location field
+  const isLocationField = secondaryFields !== undefined;
+
+  // Load Google Places script when popover opens for location field
   useEffect(() => {
-    if (secondaryFields === undefined) return; // Only for location field
+    if (!isLocationField || !isOpen) return;
+
+    const apiKey = process.env.NEXT_PUBLIC_GOOGLE_PLACES_API_KEY;
+    if (!apiKey) {
+      console.error("Google Places API key not configured");
+      return;
+    }
 
     if (!dummyDiv.current) {
       dummyDiv.current = document.createElement("div");
     }
 
     const initServices = () => {
-      if (window.google?.maps?.places) {
-        autocompleteService.current = new window.google.maps.places.AutocompleteService();
-        if (dummyDiv.current) {
-          placesService.current = new window.google.maps.places.PlacesService(dummyDiv.current);
-        }
+      console.log("Google Places initialized");
+      setIsScriptLoaded(true);
+      autocompleteService.current = new window.google.maps.places.AutocompleteService();
+      if (dummyDiv.current) {
+        placesService.current = new window.google.maps.places.PlacesService(dummyDiv.current);
       }
     };
 
+    // Check if already loaded
     if (window.google?.maps?.places) {
       initServices();
-    } else {
+      return;
+    }
+
+    // Check if script is loading
+    if (document.querySelector('script[src*="maps.googleapis.com"]')) {
       const checkLoaded = setInterval(() => {
         if (window.google?.maps?.places) {
           initServices();
@@ -120,32 +136,58 @@ function EditableContactField({
       }, 100);
       return () => clearInterval(checkLoaded);
     }
-  }, [secondaryFields]);
 
-  // Search for places
+    // Load script
+    console.log("Loading Google Places script...");
+    const callbackName = `initGooglePlacesContact_${Date.now()}`;
+    (window as any)[callbackName] = initServices;
+    const script = document.createElement("script");
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places&callback=${callbackName}`;
+    script.async = true;
+    script.defer = true;
+    document.head.appendChild(script);
+
+    return () => {
+      delete (window as any)[callbackName];
+    };
+  }, [isLocationField, isOpen]);
+
+  // Search for places with debounce
   const handleSearch = (query: string) => {
     setSearchQuery(query);
-    if (!query.trim() || !autocompleteService.current) {
+
+    if (debounceRef.current) {
+      clearTimeout(debounceRef.current);
+    }
+
+    if (!query.trim()) {
       setPredictions([]);
       return;
     }
 
-    setIsSearching(true);
-    autocompleteService.current.getPlacePredictions(
-      {
-        input: query,
-        types: ["address"],
-        componentRestrictions: { country: "us" },
-      },
-      (results, status) => {
-        setIsSearching(false);
-        if (status === "OK" && results) {
-          setPredictions(results.map(r => ({ place_id: r.place_id, description: r.description })));
-        } else {
-          setPredictions([]);
+    if (!autocompleteService.current) {
+      console.log("Google Places not loaded yet");
+      return;
+    }
+
+    debounceRef.current = setTimeout(() => {
+      setIsSearching(true);
+      autocompleteService.current.getPlacePredictions(
+        {
+          input: query,
+          types: ["address"],
+          componentRestrictions: { country: "us" },
+        },
+        (results: any[] | null, status: string) => {
+          setIsSearching(false);
+          if (status === "OK" && results) {
+            setPredictions(results.map((r: any) => ({ place_id: r.place_id, description: r.description })));
+          } else {
+            setPredictions([]);
+          }
         }
-      }
-    );
+      );
+    }, 300);
   };
 
   // Select a place from predictions
@@ -157,7 +199,7 @@ function EditableContactField({
         placeId,
         fields: ["address_components", "formatted_address"],
       },
-      (place, status) => {
+      (place: any, status: string) => {
         if (status === "OK" && place?.address_components) {
           let streetNumber = "";
           let route = "";
@@ -262,16 +304,26 @@ function EditableContactField({
             <div className="space-y-3">
               {/* Google Places Search */}
               <div className="relative">
-                <label className="text-xs text-[#D4AF37]/70 block mb-1">Search Address</label>
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => handleSearch(e.target.value)}
-                  placeholder="Search for address..."
-                  className="w-full bg-[#0D1F22] border border-[#D4AF37]/30 rounded px-3 py-2 text-sm focus:border-[#D4AF37] outline-none"
-                />
+                <label className="text-xs text-[#D4AF37]/70 block mb-1">
+                  Search Address {!isScriptLoaded && <span className="text-[#D4AF37]/50">(loading...)</span>}
+                </label>
+                <div className="relative">
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => handleSearch(e.target.value)}
+                    placeholder={isScriptLoaded ? "Type to search..." : "Loading Google Places..."}
+                    disabled={!isScriptLoaded}
+                    className="w-full bg-[#0D1F22] border border-[#D4AF37]/30 rounded px-3 py-2 text-sm focus:border-[#D4AF37] outline-none disabled:opacity-50"
+                  />
+                  {isSearching && (
+                    <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                      <div className="w-4 h-4 border-2 border-[#D4AF37]/30 border-t-[#D4AF37] rounded-full animate-spin" />
+                    </div>
+                  )}
+                </div>
                 {predictions.length > 0 && (
-                  <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-[#0D1F22] border border-[#D4AF37]/30 rounded max-h-40 overflow-auto">
+                  <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-[#0D1F22] border border-[#D4AF37]/30 rounded max-h-40 overflow-auto shadow-lg">
                     {predictions.map((pred) => (
                       <button
                         key={pred.place_id}
