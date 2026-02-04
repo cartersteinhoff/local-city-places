@@ -97,60 +97,49 @@ function EditableContactField({
   // Check if this is a location field
   const isLocationField = secondaryFields !== undefined;
 
-  // Load Google Places script when popover opens for location field
+  // Initialize Google Places when popover opens for location field
   useEffect(() => {
     if (!isLocationField || !isOpen) return;
-
-    const apiKey = process.env.NEXT_PUBLIC_GOOGLE_PLACES_API_KEY;
-    if (!apiKey) {
-      console.error("Google Places API key not configured");
-      return;
-    }
+    if (isScriptLoaded) return; // Already initialized
 
     if (!dummyDiv.current) {
       dummyDiv.current = document.createElement("div");
     }
 
     const initServices = () => {
-      console.log("Google Places initialized");
-      setIsScriptLoaded(true);
+      if (!window.google?.maps?.places) return;
+
       autocompleteService.current = new window.google.maps.places.AutocompleteService();
       if (dummyDiv.current) {
         placesService.current = new window.google.maps.places.PlacesService(dummyDiv.current);
       }
+      setIsScriptLoaded(true);
     };
 
-    // Check if already loaded
+    // Check if already loaded (e.g., from ImportGoogleDialog)
     if (window.google?.maps?.places) {
       initServices();
       return;
     }
 
-    // Check if script is loading
-    if (document.querySelector('script[src*="maps.googleapis.com"]')) {
-      const checkLoaded = setInterval(() => {
-        if (window.google?.maps?.places) {
-          initServices();
-          clearInterval(checkLoaded);
-        }
-      }, 100);
-      return () => clearInterval(checkLoaded);
-    }
+    // Wait for it to load
+    const checkLoaded = setInterval(() => {
+      if (window.google?.maps?.places) {
+        initServices();
+        clearInterval(checkLoaded);
+      }
+    }, 100);
 
-    // Load script
-    console.log("Loading Google Places script...");
-    const callbackName = `initGooglePlacesContact_${Date.now()}`;
-    (window as any)[callbackName] = initServices;
-    const script = document.createElement("script");
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places&callback=${callbackName}`;
-    script.async = true;
-    script.defer = true;
-    document.head.appendChild(script);
+    // Timeout after 5 seconds
+    const timeout = setTimeout(() => {
+      clearInterval(checkLoaded);
+    }, 5000);
 
     return () => {
-      delete (window as any)[callbackName];
+      clearInterval(checkLoaded);
+      clearTimeout(timeout);
     };
-  }, [isLocationField, isOpen]);
+  }, [isLocationField, isOpen, isScriptLoaded]);
 
   // Search for places with debounce
   const handleSearch = (query: string) => {
