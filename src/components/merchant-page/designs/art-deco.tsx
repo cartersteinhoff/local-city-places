@@ -17,6 +17,7 @@ import { MapPin, Phone, Globe, Share2, Gem, Navigation, Clock, Instagram, Facebo
 import { formatPhoneNumber, formatHoursDisplay, cn } from "@/lib/utils";
 import { useEditor, useEditable } from "../editor-context";
 import { EditableText, EditableImage, EditableLink, PreventLink } from "../editable-primitives";
+import { SortableGrid } from "@/components/ui/sortable-grid";
 
 const poiretOne = Poiret_One({
   weight: "400",
@@ -303,84 +304,122 @@ function EditableServicesList({ services }: { services: Service[] }) {
     onUpdate("services", newServices);
   };
 
+  const handleReorder = (newServices: Service[]) => {
+    onUpdate("services", newServices);
+  };
+
+  const renderServiceItem = (service: Service, idx: number) => (
+    <div className={cn(
+      "border border-[#D4AF37]/20 p-6 hover:border-[#D4AF37]/40 transition-colors relative group h-full bg-[#0D1F22]",
+      editable && editingIndex !== idx && "cursor-grab"
+    )}>
+      {editable && editingIndex === idx ? (
+        // Edit mode for this service
+        <div className="space-y-3">
+          <input
+            type="text"
+            value={service.name}
+            onChange={(e) => handleUpdateService(idx, "name", e.target.value)}
+            placeholder="Service name"
+            className="w-full bg-transparent border-b border-[#D4AF37]/50 focus:border-[#D4AF37] outline-none text-lg text-[#D4AF37] font-medium"
+            autoFocus
+            onClick={(e) => e.stopPropagation()}
+          />
+          <input
+            type="text"
+            value={service.price || ""}
+            onChange={(e) => handleUpdateService(idx, "price", e.target.value)}
+            placeholder="Price (optional)"
+            className="w-full bg-transparent border-b border-[#D4AF37]/50 focus:border-[#D4AF37] outline-none text-[#E5C97B]"
+            onClick={(e) => e.stopPropagation()}
+          />
+          <textarea
+            value={service.description || ""}
+            onChange={(e) => handleUpdateService(idx, "description", e.target.value)}
+            placeholder="Description (optional)"
+            className="w-full bg-transparent border-b border-[#D4AF37]/50 focus:border-[#D4AF37] outline-none text-sm text-[#F5F1E6]/60 resize-none"
+            rows={2}
+            onClick={(e) => e.stopPropagation()}
+          />
+          <button
+            onClick={(e) => { e.stopPropagation(); setEditingIndex(null); }}
+            className="text-xs text-[#D4AF37] hover:underline"
+          >
+            Done
+          </button>
+        </div>
+      ) : (
+        // Display mode
+        <>
+          {/* Drag handle indicator */}
+          {editable && showEditHints && (
+            <div className="absolute top-2 left-2 opacity-0 group-hover:opacity-60 transition-opacity">
+              <GripVertical className="w-4 h-4 text-[#D4AF37]" />
+            </div>
+          )}
+
+          <div
+            className="flex justify-between items-start mb-2 cursor-pointer"
+            onClick={(e) => { e.stopPropagation(); editable && setEditingIndex(idx); }}
+          >
+            <h3 className={`text-lg text-[#D4AF37] ${poiretOne.className}`}>{service.name}</h3>
+            {service.price && (
+              <span className={`text-[#E5C97B] ${raleway.className}`}>{service.price}</span>
+            )}
+          </div>
+          {service.description && (
+            <p
+              className={`text-sm text-[#F5F1E6]/60 ${raleway.className} cursor-pointer`}
+              onClick={(e) => { e.stopPropagation(); editable && setEditingIndex(idx); }}
+            >
+              {service.description}
+            </p>
+          )}
+
+          {/* Edit mode: delete button */}
+          {editable && showEditHints && (
+            <button
+              onClick={(e) => { e.stopPropagation(); handleRemove(idx); }}
+              className="absolute top-2 right-2 w-6 h-6 bg-red-500/80 hover:bg-red-500 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-10"
+            >
+              <Trash2 className="w-3 h-3 text-white" />
+            </button>
+          )}
+        </>
+      )}
+    </div>
+  );
+
+  // View mode - no drag and drop
+  if (!editable) {
+    return (
+      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        {services.map((service, idx) => (
+          <div key={idx}>{renderServiceItem(service, idx)}</div>
+        ))}
+      </div>
+    );
+  }
+
+  // Edit mode - with drag and drop
   return (
     <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-      {services.map((service, idx) => (
-        <div key={idx} className={cn(
-          "border border-[#D4AF37]/20 p-6 hover:border-[#D4AF37]/40 transition-colors relative group",
-          editable && "cursor-pointer"
-        )}>
-          {editable && editingIndex === idx ? (
-            // Edit mode for this service
-            <div className="space-y-3">
-              <input
-                type="text"
-                value={service.name}
-                onChange={(e) => handleUpdateService(idx, "name", e.target.value)}
-                placeholder="Service name"
-                className="w-full bg-transparent border-b border-[#D4AF37]/50 focus:border-[#D4AF37] outline-none text-lg text-[#D4AF37] font-medium"
-                autoFocus
-              />
-              <input
-                type="text"
-                value={service.price || ""}
-                onChange={(e) => handleUpdateService(idx, "price", e.target.value)}
-                placeholder="Price (optional)"
-                className="w-full bg-transparent border-b border-[#D4AF37]/50 focus:border-[#D4AF37] outline-none text-[#E5C97B]"
-              />
-              <textarea
-                value={service.description || ""}
-                onChange={(e) => handleUpdateService(idx, "description", e.target.value)}
-                placeholder="Description (optional)"
-                className="w-full bg-transparent border-b border-[#D4AF37]/50 focus:border-[#D4AF37] outline-none text-sm text-[#F5F1E6]/60 resize-none"
-                rows={2}
-              />
-              <button
-                onClick={() => setEditingIndex(null)}
-                className="text-xs text-[#D4AF37] hover:underline"
-              >
-                Done
-              </button>
-            </div>
-          ) : (
-            // Display mode
-            <>
-              <div className="flex justify-between items-start mb-2" onClick={() => editable && setEditingIndex(idx)}>
-                <h3 className={`text-lg text-[#D4AF37] ${poiretOne.className}`}>{service.name}</h3>
-                {service.price && (
-                  <span className={`text-[#E5C97B] ${raleway.className}`}>{service.price}</span>
-                )}
-              </div>
-              {service.description && (
-                <p className={`text-sm text-[#F5F1E6]/60 ${raleway.className}`} onClick={() => editable && setEditingIndex(idx)}>
-                  {service.description}
-                </p>
-              )}
-
-              {/* Edit mode: delete button */}
-              {editable && showEditHints && (
-                <button
-                  onClick={(e) => { e.stopPropagation(); handleRemove(idx); }}
-                  className="absolute top-2 right-2 w-6 h-6 bg-red-500/80 hover:bg-red-500 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                >
-                  <Trash2 className="w-3 h-3 text-white" />
-                </button>
-              )}
-            </>
-          )}
-        </div>
-      ))}
+      <SortableGrid
+        items={services}
+        getItemId={(_, index) => `service-${index}`}
+        onReorder={handleReorder}
+        renderItem={renderServiceItem}
+        className="contents"
+      />
 
       {/* Add service placeholder */}
-      {editable && (
-        <div
-          className="border border-dashed border-[#D4AF37]/30 p-6 flex flex-col items-center justify-center gap-2 cursor-pointer hover:border-[#D4AF37]/60 hover:bg-[#D4AF37]/5 transition-colors"
-          onClick={handleAdd}
-        >
-          <Plus className="w-6 h-6 text-[#D4AF37]/60" />
-          <span className="text-sm text-[#D4AF37]/60">Add Service</span>
-        </div>
-      )}
+      <div
+        className="border border-dashed border-[#D4AF37]/30 p-6 flex flex-col items-center justify-center gap-2 cursor-pointer hover:border-[#D4AF37]/60 hover:bg-[#D4AF37]/5 transition-colors"
+        onClick={handleAdd}
+      >
+        <Plus className="w-6 h-6 text-[#D4AF37]/60" />
+        <span className="text-sm text-[#D4AF37]/60">Add Service</span>
+      </div>
     </div>
   );
 }
@@ -413,61 +452,94 @@ function EditablePhotoGallery({ photos, businessName }: { photos: string[]; busi
     }
   };
 
-  const handleRemove = (index: number) => {
+  const handleRemove = (index: number, e: React.MouseEvent) => {
+    e.stopPropagation();
     const newPhotos = photos.filter((_, i) => i !== index);
     onUpdate("photos", newPhotos);
   };
 
-  return (
-    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-      {photos.map((photo, idx) => (
-        <div key={idx} className="relative aspect-square border-2 border-[#D4AF37]/30 overflow-hidden group">
-          <img
-            src={photo}
-            alt={`${businessName} photo ${idx + 1}`}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-          />
-          {/* Art deco corner accents */}
-          <div className="absolute top-0 left-0 w-4 h-4 border-t-2 border-l-2 border-[#D4AF37]" />
-          <div className="absolute top-0 right-0 w-4 h-4 border-t-2 border-r-2 border-[#D4AF37]" />
-          <div className="absolute bottom-0 left-0 w-4 h-4 border-b-2 border-l-2 border-[#D4AF37]" />
-          <div className="absolute bottom-0 right-0 w-4 h-4 border-b-2 border-r-2 border-[#D4AF37]" />
+  const handleReorder = (newPhotos: string[]) => {
+    onUpdate("photos", newPhotos);
+  };
 
-          {/* Edit mode: delete button */}
-          {editable && showEditHints && (
-            <button
-              onClick={() => handleRemove(idx)}
-              className="absolute top-2 right-2 w-8 h-8 bg-red-500/80 hover:bg-red-500 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-            >
-              <Trash2 className="w-4 h-4 text-white" />
-            </button>
-          )}
-        </div>
-      ))}
+  const renderPhotoItem = (photo: string, idx: number) => (
+    <div className={cn(
+      "relative aspect-square border-2 border-[#D4AF37]/30 overflow-hidden group",
+      editable && "cursor-grab"
+    )}>
+      <img
+        src={photo}
+        alt={`${businessName} photo ${idx + 1}`}
+        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+      />
+      {/* Art deco corner accents */}
+      <div className="absolute top-0 left-0 w-4 h-4 border-t-2 border-l-2 border-[#D4AF37]" />
+      <div className="absolute top-0 right-0 w-4 h-4 border-t-2 border-r-2 border-[#D4AF37]" />
+      <div className="absolute bottom-0 left-0 w-4 h-4 border-b-2 border-l-2 border-[#D4AF37]" />
+      <div className="absolute bottom-0 right-0 w-4 h-4 border-b-2 border-r-2 border-[#D4AF37]" />
 
-      {/* Add photo placeholder */}
-      {editable && (
-        <div
-          className="relative aspect-square border-2 border-dashed border-[#D4AF37]/30 flex flex-col items-center justify-center gap-2 cursor-pointer hover:border-[#D4AF37]/60 hover:bg-[#D4AF37]/5 transition-colors"
-          onClick={() => fileInputRef.current?.click()}
-        >
-          {isUploading ? (
-            <span className="text-sm text-[#D4AF37]/60">Uploading...</span>
-          ) : (
-            <>
-              <Plus className="w-8 h-8 text-[#D4AF37]/60" />
-              <span className="text-sm text-[#D4AF37]/60">Add Photo</span>
-            </>
-          )}
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/*"
-            className="hidden"
-            onChange={handleFileChange}
-          />
+      {/* Edit mode: drag indicator */}
+      {editable && showEditHints && (
+        <div className="absolute top-2 left-2 opacity-0 group-hover:opacity-80 transition-opacity bg-black/50 rounded p-1">
+          <GripVertical className="w-4 h-4 text-white" />
         </div>
       )}
+
+      {/* Edit mode: delete button */}
+      {editable && showEditHints && (
+        <button
+          onClick={(e) => handleRemove(idx, e)}
+          className="absolute top-2 right-2 w-8 h-8 bg-red-500/80 hover:bg-red-500 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-10"
+        >
+          <Trash2 className="w-4 h-4 text-white" />
+        </button>
+      )}
+    </div>
+  );
+
+  // View mode - no drag and drop
+  if (!editable) {
+    return (
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+        {photos.map((photo, idx) => (
+          <div key={idx}>{renderPhotoItem(photo, idx)}</div>
+        ))}
+      </div>
+    );
+  }
+
+  // Edit mode - with drag and drop
+  return (
+    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+      <SortableGrid
+        items={photos}
+        getItemId={(photo, index) => `photo-${index}-${photo.slice(-20)}`}
+        onReorder={handleReorder}
+        renderItem={renderPhotoItem}
+        className="contents"
+      />
+
+      {/* Add photo placeholder */}
+      <div
+        className="relative aspect-square border-2 border-dashed border-[#D4AF37]/30 flex flex-col items-center justify-center gap-2 cursor-pointer hover:border-[#D4AF37]/60 hover:bg-[#D4AF37]/5 transition-colors"
+        onClick={() => fileInputRef.current?.click()}
+      >
+        {isUploading ? (
+          <span className="text-sm text-[#D4AF37]/60">Uploading...</span>
+        ) : (
+          <>
+            <Plus className="w-8 h-8 text-[#D4AF37]/60" />
+            <span className="text-sm text-[#D4AF37]/60">Add Photo</span>
+          </>
+        )}
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={handleFileChange}
+        />
+      </div>
     </div>
   );
 }
