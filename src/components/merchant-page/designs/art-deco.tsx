@@ -353,8 +353,10 @@ function EditableServicesList({ services }: { services: Service[] }) {
         <>
           {/* Drag handle indicator */}
           {editable && showEditHints && (
-            <div className="absolute top-2 left-2 opacity-0 group-hover:opacity-60 transition-opacity">
-              <GripVertical className="w-4 h-4 text-[#D4AF37]" />
+            <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/20 pointer-events-none">
+              <div className="bg-[#D4AF37]/80 rounded-full p-2">
+                <GripVertical className="w-5 h-5 text-[#0D1F22]" />
+              </div>
             </div>
           )}
 
@@ -480,8 +482,10 @@ function EditablePhotoGallery({ photos, businessName }: { photos: string[]; busi
 
       {/* Edit mode: drag indicator */}
       {editable && showEditHints && (
-        <div className="absolute top-2 left-2 opacity-0 group-hover:opacity-80 transition-opacity bg-black/50 rounded p-1">
-          <GripVertical className="w-4 h-4 text-white" />
+        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/30 pointer-events-none">
+          <div className="bg-black/60 rounded-full p-2">
+            <GripVertical className="w-6 h-6 text-white" />
+          </div>
         </div>
       )}
 
