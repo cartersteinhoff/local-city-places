@@ -144,7 +144,6 @@ export default function EditMerchantPage({ params }: { params: Promise<{ id: str
   const [previewDesign, setPreviewDesign] = useState<DesignType>("art-deco");
   const [previewOpen, setPreviewOpen] = useState(false);
   const [categoryName, setCategoryName] = useState<string>("");
-  const [needsRebuild, setNeedsRebuild] = useState(false);
   const [isRebuilding, setIsRebuilding] = useState(false);
 
   // Auto-save
@@ -201,7 +200,6 @@ export default function EditMerchantPage({ params }: { params: Promise<{ id: str
       throw new Error(result.error || "Failed to save");
     }
     setUrls(result.urls);
-    setNeedsRebuild(true); // Show rebuild button after save
   }, [id]);
 
   const { status, lastSaved, error: saveError, canUndo, undo, saveNow, retry } = useAutoSave({
@@ -215,12 +213,9 @@ export default function EditMerchantPage({ params }: { params: Promise<{ id: str
   const handleRebuild = useCallback(async () => {
     setIsRebuilding(true);
     try {
-      const res = await fetch(`/api/admin/merchant-pages/${id}/revalidate`, {
+      await fetch(`/api/admin/merchant-pages/${id}/revalidate`, {
         method: "POST",
       });
-      if (res.ok) {
-        setNeedsRebuild(false);
-      }
     } catch (err) {
       console.error("Failed to rebuild:", err);
     } finally {
@@ -520,7 +515,7 @@ export default function EditMerchantPage({ params }: { params: Promise<{ id: str
                     )}
                     Save
                   </Button>
-                  {needsRebuild && urls.full && (
+                  {urls.full && (
                     <Button
                       size="sm"
                       variant="outline"
