@@ -13,11 +13,16 @@
  */
 
 import { Poiret_One, Raleway } from "next/font/google";
-import { MapPin, Phone, Globe, Share2, Gem, Navigation, Clock, Instagram, Facebook, Image as ImageIcon, Sparkles, Upload, Plus, Trash2, GripVertical } from "lucide-react";
+import { MapPin, Phone, Globe, Share2, Gem, Navigation, Clock, Instagram, Facebook, Image as ImageIcon, Sparkles, Upload, Plus, Trash2, GripVertical, Pencil } from "lucide-react";
 import { formatPhoneNumber, formatHoursDisplay, cn } from "@/lib/utils";
 import { useEditor, useEditable } from "../editor-context";
 import { EditableText, EditableImage, EditableLink, PreventLink } from "../editable-primitives";
 import { SortableGrid } from "@/components/ui/sortable-grid";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 
 const poiretOne = Poiret_One({
   weight: "400",
@@ -387,7 +392,7 @@ function EditableVideoEmbed({ vimeoUrl }: { vimeoUrl: string | null | undefined 
 
 // =============================================================================
 // EDITABLE HOURS
-// Handles business hours display with inline editing
+// Handles business hours display with time picker popovers
 // =============================================================================
 
 interface Hours {
@@ -411,8 +416,151 @@ const DAY_LABELS: Record<keyof Hours, string> = {
   sunday: "Sunday",
 };
 
+const TIME_OPTIONS = [
+  "6:00 AM", "6:30 AM", "7:00 AM", "7:30 AM", "8:00 AM", "8:30 AM",
+  "9:00 AM", "9:30 AM", "10:00 AM", "10:30 AM", "11:00 AM", "11:30 AM",
+  "12:00 PM", "12:30 PM", "1:00 PM", "1:30 PM", "2:00 PM", "2:30 PM",
+  "3:00 PM", "3:30 PM", "4:00 PM", "4:30 PM", "5:00 PM", "5:30 PM",
+  "6:00 PM", "6:30 PM", "7:00 PM", "7:30 PM", "8:00 PM", "8:30 PM",
+  "9:00 PM", "9:30 PM", "10:00 PM", "10:30 PM", "11:00 PM", "11:30 PM",
+];
+
+function parseHoursValue(value: string | undefined): { isOpen: boolean; open: string; close: string } {
+  if (!value || value.toLowerCase() === "closed") {
+    return { isOpen: false, open: "9:00 AM", close: "5:00 PM" };
+  }
+  if (value === "24 Hours") {
+    return { isOpen: true, open: "12:00 AM", close: "11:59 PM" };
+  }
+  // Try to parse display format "9:00 AM - 5:00 PM"
+  const displayMatch = value.match(/^(.+?)\s*[-–]\s*(.+)$/);
+  if (displayMatch) {
+    return { isOpen: true, open: displayMatch[1].trim(), close: displayMatch[2].trim() };
+  }
+  return { isOpen: true, open: "9:00 AM", close: "5:00 PM" };
+}
+
+function formatHoursForStorage(isOpen: boolean, open: string, close: string): string {
+  if (!isOpen) return "Closed";
+  return `${open} - ${close}`;
+}
+
+function HoursEditorRow({
+  day,
+  label,
+  value,
+  onChange,
+}: {
+  day: keyof Hours;
+  label: string;
+  value: string | undefined;
+  onChange: (value: string) => void;
+}) {
+  const { editable, showEditHints } = useEditor();
+  const [isOpen, setIsOpen] = useState(false);
+  const parsed = parseHoursValue(value);
+  const [isOpenToday, setIsOpenToday] = useState(parsed.isOpen);
+  const [openTime, setOpenTime] = useState(parsed.open);
+  const [closeTime, setCloseTime] = useState(parsed.close);
+
+  const handleSave = () => {
+    onChange(formatHoursForStorage(isOpenToday, openTime, closeTime));
+    setIsOpen(false);
+  };
+
+  // View mode
+  if (!editable) {
+    return (
+      <div className="flex justify-between items-center py-2 border-b border-[#D4AF37]/10 last:border-0">
+        <span className={`text-[#D4AF37] ${raleway.className}`}>{label}</span>
+        <span className={`text-[#F5F1E6]/70 ${raleway.className}`}>{formatHoursDisplay(value)}</span>
+      </div>
+    );
+  }
+
+  // Edit mode with popover
+  return (
+    <Popover open={isOpen} onOpenChange={setIsOpen}>
+      <PopoverTrigger asChild>
+        <div
+          className={cn(
+            "flex justify-between items-center py-2 border-b border-[#D4AF37]/10 last:border-0 cursor-pointer group",
+            showEditHints && "hover:bg-[#D4AF37]/10 rounded px-2 -mx-2"
+          )}
+        >
+          <span className={`text-[#D4AF37] ${raleway.className}`}>{label}</span>
+          <span className={`text-[#F5F1E6]/70 ${raleway.className} flex items-center gap-2`}>
+            {formatHoursDisplay(value)}
+            {showEditHints && <Pencil className="w-3 h-3 opacity-0 group-hover:opacity-50 text-[#D4AF37]" />}
+          </span>
+        </div>
+      </PopoverTrigger>
+      <PopoverContent className="w-72 bg-[#1a2f33] border-[#D4AF37]/30 text-[#F5F1E6]">
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <span className="font-medium">{label}</span>
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={isOpenToday}
+                onChange={(e) => setIsOpenToday(e.target.checked)}
+                className="w-4 h-4 accent-[#D4AF37]"
+              />
+              <span className="text-sm">Open</span>
+            </label>
+          </div>
+
+          {isOpenToday && (
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="text-xs text-[#D4AF37]/70 block mb-1">Opens</label>
+                <select
+                  value={openTime}
+                  onChange={(e) => setOpenTime(e.target.value)}
+                  className="w-full bg-[#0D1F22] border border-[#D4AF37]/30 rounded px-2 py-1.5 text-sm focus:border-[#D4AF37] outline-none"
+                >
+                  {TIME_OPTIONS.map((t) => (
+                    <option key={t} value={t}>{t}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="text-xs text-[#D4AF37]/70 block mb-1">Closes</label>
+                <select
+                  value={closeTime}
+                  onChange={(e) => setCloseTime(e.target.value)}
+                  className="w-full bg-[#0D1F22] border border-[#D4AF37]/30 rounded px-2 py-1.5 text-sm focus:border-[#D4AF37] outline-none"
+                >
+                  {TIME_OPTIONS.map((t) => (
+                    <option key={t} value={t}>{t}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+          )}
+
+          <div className="flex gap-2 pt-2">
+            <button
+              onClick={handleSave}
+              className="flex-1 bg-[#D4AF37] text-[#0D1F22] py-1.5 rounded text-sm font-medium hover:bg-[#E5C97B]"
+            >
+              Save
+            </button>
+            <button
+              onClick={() => setIsOpen(false)}
+              className="flex-1 border border-[#D4AF37]/50 text-[#D4AF37] py-1.5 rounded text-sm hover:bg-[#D4AF37]/10"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      </PopoverContent>
+    </Popover>
+  );
+}
+
 function EditableHours({ hours }: { hours: Hours }) {
-  const { editable, onUpdate, showEditHints } = useEditor();
+  const { onUpdate } = useEditor();
 
   const handleUpdateDay = (day: keyof Hours, value: string) => {
     const newHours = { ...hours, [day]: value };
@@ -422,24 +570,13 @@ function EditableHours({ hours }: { hours: Hours }) {
   return (
     <div className="grid sm:grid-cols-2 gap-4 border border-[#D4AF37]/20 p-8">
       {DAYS.map((day) => (
-        <div key={day} className="flex justify-between items-center py-2 border-b border-[#D4AF37]/10 last:border-0">
-          <span className={`text-[#D4AF37] ${raleway.className}`}>{DAY_LABELS[day]}</span>
-          {editable ? (
-            <input
-              type="text"
-              value={hours[day] || ""}
-              onChange={(e) => handleUpdateDay(day, e.target.value)}
-              placeholder="9:00 AM - 5:00 PM"
-              className={cn(
-                "bg-[#D4AF37]/10 border border-[#D4AF37]/30 rounded px-2 py-1 focus:border-[#D4AF37] focus:bg-[#D4AF37]/20 outline-none text-right text-[#F5F1E6] w-48",
-                showEditHints && "hover:border-[#D4AF37]/50 hover:bg-[#D4AF37]/15",
-                raleway.className
-              )}
-            />
-          ) : (
-            <span className={`text-[#F5F1E6]/70 ${raleway.className}`}>{formatHoursDisplay(hours[day])}</span>
-          )}
-        </div>
+        <HoursEditorRow
+          key={day}
+          day={day}
+          label={DAY_LABELS[day]}
+          value={hours[day]}
+          onChange={(val) => handleUpdateDay(day, val)}
+        />
       ))}
     </div>
   );
