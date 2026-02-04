@@ -1,5 +1,48 @@
 # Claude Code Context
 
+## Dev Login (Development Only)
+
+For browser testing authenticated pages, use the dev login endpoint:
+
+```bash
+# Login as admin (default)
+agent-browser navigate "http://localhost:3000/api/auth/dev-login"
+
+# Login as specific role
+agent-browser navigate "http://localhost:3000/api/auth/dev-login?role=merchant"
+
+# Login and redirect to specific page
+agent-browser navigate "http://localhost:3000/api/auth/dev-login?redirect=/admin/merchants/123/edit"
+
+# Get JSON response instead of redirect
+curl "http://localhost:3000/api/auth/dev-login?role=admin&json=true"
+```
+
+This only works when `NODE_ENV=development`.
+
+---
+
+## Browser Testing
+
+Use `agent-browser` for web automation and browser testing. Run `agent-browser --help` for all available commands.
+
+**Core workflow:**
+1. Navigate to page with `agent-browser navigate <url>`
+2. Get interactive elements with refs using `agent-browser snapshot`
+3. Interact using refs (click, fill, type)
+4. Re-snapshot after page changes
+
+**Common commands:**
+```bash
+agent-browser navigate "http://localhost:3000"  # Open page
+agent-browser snapshot                           # Get page elements with refs
+agent-browser click <ref>                        # Click element
+agent-browser fill <ref> "text"                  # Fill input
+agent-browser screenshot                         # Take screenshot
+```
+
+---
+
 ## GRC Data Model
 
 **Critical**: Understand this flow before modifying GRC-related code.
