@@ -36,6 +36,11 @@ yarn-error.log*
 # vercel
 .vercel
 
+# AI agent tools
+.agents/
+.codex/
+.playwright-mcp/
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts
