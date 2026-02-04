@@ -27,9 +27,9 @@ const DESIGNS: { id: DesignType; label: string }[] = [
 ];
 
 const DEVICES: { id: DeviceType; label: string; icon: typeof Monitor; width: number; scale: number }[] = [
-  { id: "desktop", label: "Desktop", icon: Monitor, width: 1440, scale: 0.45 },
-  { id: "tablet", label: "Tablet", icon: Tablet, width: 768, scale: 0.65 },
-  { id: "mobile", label: "Mobile", icon: Smartphone, width: 375, scale: 0.85 },
+  { id: "desktop", label: "Desktop", icon: Monitor, width: 1280, scale: 0.38 },
+  { id: "tablet", label: "Tablet", icon: Tablet, width: 768, scale: 0.52 },
+  { id: "mobile", label: "Mobile", icon: Smartphone, width: 375, scale: 0.72 },
 ];
 
 interface MerchantPreviewData {
@@ -133,15 +133,21 @@ export function LivePreview({ data, design, onDesignChange, className }: LivePre
 
       {/* Preview container */}
       <div className="border rounded-lg overflow-hidden bg-muted/30 shadow-sm">
-        <div className="h-[calc(100vh-280px)] min-h-[400px] overflow-auto flex justify-center">
+        <div className="h-[calc(100vh-280px)] min-h-[400px] overflow-y-auto overflow-x-hidden flex justify-center">
           <div
-            className="bg-white shadow-lg transition-all duration-300 origin-top"
+            className="transition-all duration-300 origin-top shrink-0"
             style={{
-              width: deviceConfig.width,
-              transform: `scale(${deviceConfig.scale})`,
-              minHeight: `${100 * inverseScale}%`,
+              width: deviceConfig.width * deviceConfig.scale,
+              height: 'fit-content',
             }}
           >
+            <div
+              className="bg-white shadow-lg origin-top-left"
+              style={{
+                width: deviceConfig.width,
+                transform: `scale(${deviceConfig.scale})`,
+              }}
+            >
             <DesignComponent
               businessName={data.businessName || "Business Name"}
               streetAddress={data.streetAddress}
@@ -163,6 +169,7 @@ export function LivePreview({ data, design, onDesignChange, className }: LivePre
               services={data.services}
               aboutStory={data.aboutStory}
             />
+            </div>
           </div>
         </div>
       </div>

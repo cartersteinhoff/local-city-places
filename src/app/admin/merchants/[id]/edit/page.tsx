@@ -473,7 +473,7 @@ export default function EditMerchantPage({ params }: { params: Promise<{ id: str
           </Button>
         </div>
       ) : (
-        <div className="flex flex-col lg:flex-row gap-6">
+        <div className="flex flex-col lg:flex-row gap-6 overflow-x-hidden">
           {/* Form Panel */}
           <div className="flex-1 lg:max-w-[60%]">
             {/* Header */}
@@ -1097,13 +1097,20 @@ function MobilePreviewContent({
 
   return (
     <div
-      className="bg-white shadow-lg transition-all duration-300 origin-top my-4"
+      className="transition-all duration-300 my-4 shrink-0"
       style={{
-        width: deviceConfig.width,
-        transform: `scale(${deviceConfig.scale})`,
+        width: deviceConfig.width * deviceConfig.scale,
       }}
     >
-      <DesignComponent {...data} />
+      <div
+        className="bg-white shadow-lg origin-top-left"
+        style={{
+          width: deviceConfig.width,
+          transform: `scale(${deviceConfig.scale})`,
+        }}
+      >
+        <DesignComponent {...data} />
+      </div>
     </div>
   );
 }
