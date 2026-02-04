@@ -147,16 +147,16 @@ export default function EditMerchantPage({ params }: { params: Promise<{ id: str
   // Auto-save
   const handleSave = useCallback(async (data: FormData) => {
     // Validation
-    if (!data.businessName.trim()) {
+    if (!data.businessName?.trim()) {
       throw new Error("Business name is required");
     }
-    if (!data.city.trim()) {
+    if (!data.city?.trim()) {
       throw new Error("City is required");
     }
-    if (!data.state.trim() || data.state.length !== 2) {
+    if (!data.state?.trim() || data.state.length !== 2) {
       throw new Error("State must be a 2-letter code");
     }
-    const strippedPhone = stripPhoneNumber(data.phone);
+    const strippedPhone = stripPhoneNumber(data.phone || "");
     if (!strippedPhone || strippedPhone.length !== 10) {
       throw new Error("Phone number must be 10 digits");
     }
@@ -168,28 +168,28 @@ export default function EditMerchantPage({ params }: { params: Promise<{ id: str
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        businessName: data.businessName.trim(),
-        streetAddress: data.streetAddress.trim() || null,
-        city: data.city.trim(),
-        state: data.state.trim().toUpperCase(),
-        zipCode: data.zipCode.trim() || null,
+        businessName: data.businessName?.trim() || "",
+        streetAddress: data.streetAddress?.trim() || null,
+        city: data.city?.trim() || "",
+        state: data.state?.trim()?.toUpperCase() || "",
+        zipCode: data.zipCode?.trim() || null,
         phone: strippedPhone,
-        website: data.website.trim() || null,
+        website: data.website?.trim() || null,
         categoryId: data.categoryId || null,
-        description: data.description.trim() || null,
-        vimeoUrl: data.vimeoUrl.trim() || null,
+        description: data.description?.trim() || null,
+        vimeoUrl: data.vimeoUrl?.trim() || null,
         googlePlaceId: data.googlePlaceId || null,
-        logoUrl: data.logoUrl.trim() || null,
+        logoUrl: data.logoUrl?.trim() || null,
         slug: data.slug?.trim() || null,
-        hours: Object.keys(data.hours).length > 0 ? data.hours : null,
-        instagramUrl: data.instagramUrl.trim() || null,
-        facebookUrl: data.facebookUrl.trim() || null,
-        tiktokUrl: data.tiktokUrl.trim() || null,
-        photos: data.photos.length > 0 ? data.photos : null,
-        services: data.services.length > 0
+        hours: data.hours && Object.keys(data.hours).length > 0 ? data.hours : null,
+        instagramUrl: data.instagramUrl?.trim() || null,
+        facebookUrl: data.facebookUrl?.trim() || null,
+        tiktokUrl: data.tiktokUrl?.trim() || null,
+        photos: data.photos?.length > 0 ? data.photos : null,
+        services: data.services?.length > 0
           ? data.services.map(({ name, description, price }) => ({ name, description, price }))
           : null,
-        aboutStory: data.aboutStory.trim() || null,
+        aboutStory: data.aboutStory?.trim() || null,
       }),
     });
 
