@@ -102,6 +102,12 @@ function EditableContactField({
     if (!isLocationField || !isOpen) return;
     if (isScriptLoaded) return; // Already initialized
 
+    const apiKey = process.env.NEXT_PUBLIC_GOOGLE_PLACES_API_KEY;
+    if (!apiKey) {
+      console.error("NEXT_PUBLIC_GOOGLE_PLACES_API_KEY not set");
+      return;
+    }
+
     if (!dummyDiv.current) {
       dummyDiv.current = document.createElement("div");
     }
@@ -116,29 +122,35 @@ function EditableContactField({
       setIsScriptLoaded(true);
     };
 
-    // Check if already loaded (e.g., from ImportGoogleDialog)
+    // Check if already loaded
     if (window.google?.maps?.places) {
       initServices();
       return;
     }
 
-    // Wait for it to load
-    const checkLoaded = setInterval(() => {
-      if (window.google?.maps?.places) {
-        initServices();
-        clearInterval(checkLoaded);
-      }
-    }, 100);
+    // Check if script tag exists (loading in progress)
+    if (document.querySelector('script[src*="maps.googleapis.com"]')) {
+      const checkLoaded = setInterval(() => {
+        if (window.google?.maps?.places) {
+          initServices();
+          clearInterval(checkLoaded);
+        }
+      }, 100);
+      return () => clearInterval(checkLoaded);
+    }
 
-    // Timeout after 5 seconds
-    const timeout = setTimeout(() => {
-      clearInterval(checkLoaded);
-    }, 5000);
-
-    return () => {
-      clearInterval(checkLoaded);
-      clearTimeout(timeout);
+    // Load the script ourselves
+    const callbackName = `initGooglePlaces_${Date.now()}`;
+    (window as any)[callbackName] = () => {
+      initServices();
+      delete (window as any)[callbackName];
     };
+
+    const script = document.createElement("script");
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places&callback=${callbackName}`;
+    script.async = true;
+    script.defer = true;
+    document.head.appendChild(script);
   }, [isLocationField, isOpen, isScriptLoaded]);
 
   // Search for places with debounce
