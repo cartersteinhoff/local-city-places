@@ -110,6 +110,8 @@ function EditableContactField({
 
     if (!dummyDiv.current) {
       dummyDiv.current = document.createElement("div");
+      dummyDiv.current.style.display = "none";
+      document.body.appendChild(dummyDiv.current);
     }
 
     const initServices = () => {
@@ -118,6 +120,7 @@ function EditableContactField({
       autocompleteService.current = new window.google.maps.places.AutocompleteService();
       if (dummyDiv.current) {
         placesService.current = new window.google.maps.places.PlacesService(dummyDiv.current);
+        console.log("PlacesService initialized");
       }
       setIsScriptLoaded(true);
     };
@@ -163,23 +166,25 @@ function EditableContactField({
 
     if (!query.trim()) {
       setPredictions([]);
+      setIsSearching(false);
       return;
     }
 
     if (!autocompleteService.current) {
-      console.log("Google Places not loaded yet");
+      console.log("Google Places not loaded yet, isScriptLoaded:", isScriptLoaded);
       return;
     }
 
+    setIsSearching(true);
     debounceRef.current = setTimeout(() => {
-      setIsSearching(true);
+      console.log("Searching for:", query);
       autocompleteService.current.getPlacePredictions(
         {
           input: query,
-          types: ["address"],
           componentRestrictions: { country: "us" },
         },
         (results: any[] | null, status: string) => {
+          console.log("Places API status:", status, "results:", results?.length);
           setIsSearching(false);
           if (status === "OK" && results) {
             setPredictions(results.map((r: any) => ({ place_id: r.place_id, description: r.description })));
@@ -193,7 +198,17 @@ function EditableContactField({
 
   // Select a place from predictions
   const handleSelectPlace = (placeId: string) => {
-    if (!placesService.current) return;
+    console.log("Selecting place:", placeId, "placesService:", !!placesService.current);
+
+    if (!placesService.current) {
+      console.error("PlacesService not initialized");
+      // Try to initialize it now
+      if (window.google?.maps?.places && dummyDiv.current) {
+        placesService.current = new window.google.maps.places.PlacesService(dummyDiv.current);
+      } else {
+        return;
+      }
+    }
 
     placesService.current.getDetails(
       {
@@ -201,6 +216,7 @@ function EditableContactField({
         fields: ["address_components", "formatted_address"],
       },
       (place: any, status: string) => {
+        console.log("Place details status:", status, place);
         if (status === "OK" && place?.address_components) {
           let streetNumber = "";
           let route = "";
@@ -226,6 +242,7 @@ function EditableContactField({
             }
           }
 
+          console.log("Parsed address:", { streetNumber, route, city, state, zipCode });
           setLocalValue([streetNumber, route].filter(Boolean).join(" "));
           setLocalCity(city);
           setLocalState(state);
