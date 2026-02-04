@@ -89,6 +89,7 @@ interface FormData {
   vimeoUrl: string;
   photos: string[];
   services: Service[];
+  slug: string;
 }
 
 const INITIAL_FORM_DATA: FormData = {
@@ -111,6 +112,7 @@ const INITIAL_FORM_DATA: FormData = {
   vimeoUrl: "",
   photos: [],
   services: [],
+  slug: "",
 };
 
 const sections = [
@@ -178,6 +180,7 @@ export default function EditMerchantPage({ params }: { params: Promise<{ id: str
         vimeoUrl: data.vimeoUrl.trim() || null,
         googlePlaceId: data.googlePlaceId || null,
         logoUrl: data.logoUrl.trim() || null,
+        slug: data.slug.trim() || null,
         hours: Object.keys(data.hours).length > 0 ? data.hours : null,
         instagramUrl: data.instagramUrl.trim() || null,
         facebookUrl: data.facebookUrl.trim() || null,
@@ -295,6 +298,7 @@ export default function EditMerchantPage({ params }: { params: Promise<{ id: str
               ...s,
               id: `service-${i}-${Date.now()}`,
             })),
+            slug: m.slug || "",
           };
 
           setFormData(loadedData);
@@ -509,52 +513,63 @@ export default function EditMerchantPage({ params }: { params: Promise<{ id: str
             </div>
 
             {/* URLs */}
-            {(urls.full || urls.short) && (
-              <div className="grid gap-3 sm:grid-cols-2 mb-6">
-                {urls.short && (
-                  <div className="bg-card border rounded-lg p-3">
-                    <Label className="text-xs text-muted-foreground">Short URL</Label>
-                    <div className="flex items-center gap-2 mt-1">
-                      <code className="flex-1 text-xs bg-muted px-2 py-1 rounded truncate">
-                        {getFullUrl(urls.short)}
-                      </code>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-7 w-7 flex-shrink-0"
-                        onClick={() => copyToClipboard(urls.short!, "short")}
-                      >
-                        {copiedUrl === "short" ? (
-                          <Check className="w-3 h-3 text-green-600" />
-                        ) : (
-                          <Copy className="w-3 h-3" />
-                        )}
-                      </Button>
-                    </div>
+            <div className="grid gap-3 sm:grid-cols-2 mb-6">
+              {/* Full URL with editable slug */}
+              <div className="bg-card border rounded-lg p-3">
+                <Label className="text-xs text-muted-foreground">Full URL</Label>
+                <div className="flex items-center gap-1 mt-1">
+                  <code className="text-xs bg-muted px-2 py-1 rounded text-muted-foreground whitespace-nowrap">
+                    /business/{formData.city.toLowerCase() || "city"}/{formData.state.toLowerCase() || "st"}/
+                  </code>
+                  <Input
+                    value={formData.slug}
+                    onChange={(e) => updateField("slug", e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, "-"))}
+                    placeholder="url-slug"
+                    className="h-7 text-xs font-mono flex-1 min-w-0"
+                  />
+                  {urls.full && (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-7 w-7 flex-shrink-0"
+                      asChild
+                    >
+                      <a href={urls.full} target="_blank" rel="noopener noreferrer">
+                        <ExternalLink className="w-3 h-3" />
+                      </a>
+                    </Button>
+                  )}
+                </div>
+              </div>
+
+              {/* Short URL */}
+              <div className="bg-card border rounded-lg p-3">
+                <Label className="text-xs text-muted-foreground">Short URL</Label>
+                {urls.short ? (
+                  <div className="flex items-center gap-2 mt-1">
+                    <code className="flex-1 text-xs bg-muted px-2 py-1 rounded truncate">
+                      {getFullUrl(urls.short)}
+                    </code>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-7 w-7 flex-shrink-0"
+                      onClick={() => copyToClipboard(urls.short!, "short")}
+                    >
+                      {copiedUrl === "short" ? (
+                        <Check className="w-3 h-3 text-green-600" />
+                      ) : (
+                        <Copy className="w-3 h-3" />
+                      )}
+                    </Button>
                   </div>
-                )}
-                {urls.full && (
-                  <div className="bg-card border rounded-lg p-3">
-                    <Label className="text-xs text-muted-foreground">Full URL</Label>
-                    <div className="flex items-center gap-2 mt-1">
-                      <code className="flex-1 text-xs bg-muted px-2 py-1 rounded truncate">
-                        {urls.full}
-                      </code>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-7 w-7 flex-shrink-0"
-                        asChild
-                      >
-                        <a href={urls.full} target="_blank" rel="noopener noreferrer">
-                          <ExternalLink className="w-3 h-3" />
-                        </a>
-                      </Button>
-                    </div>
-                  </div>
+                ) : (
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Add phone number to generate short URL
+                  </p>
                 )}
               </div>
-            )}
+            </div>
 
             {/* Section Navigation */}
             <div className="flex gap-1 mb-6 overflow-x-auto pb-2">
@@ -754,6 +769,9 @@ export default function EditMerchantPage({ params }: { params: Promise<{ id: str
                       onChange={(e) => updateField("phone", formatPhoneNumber(e.target.value))}
                       placeholder="(425) 577-9060"
                     />
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Changing phone number will update the short URL
+                    </p>
                   </div>
 
                   <div>

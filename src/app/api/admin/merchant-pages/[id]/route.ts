@@ -118,6 +118,7 @@ export async function PATCH(
       vimeoUrl,
       googlePlaceId,
       logoUrl,
+      slug,
       // Extended fields
       hours,
       instagramUrl,
@@ -259,8 +260,15 @@ export async function PATCH(
       updates.aboutStory = aboutStory?.trim() || null;
     }
 
-    // Regenerate slug if business name changed
-    if (updates.businessName) {
+    // Handle custom slug or regenerate if business name changed and no custom slug
+    if (slug !== undefined) {
+      // Custom slug provided - sanitize it
+      const sanitizedSlug = slug.trim().toLowerCase().replace(/[^a-z0-9-]/g, "-").replace(/-+/g, "-").replace(/^-|-$/g, "");
+      if (sanitizedSlug) {
+        updates.slug = sanitizedSlug;
+      }
+    } else if (updates.businessName && !existing.slug) {
+      // Only auto-generate slug if business name changed AND no slug exists yet
       updates.slug = generateMerchantSlug(updates.businessName, id);
     }
 
