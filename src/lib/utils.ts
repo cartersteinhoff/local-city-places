@@ -73,3 +73,41 @@ export function getMerchantPageUrl(city: string, state: string, slug: string): s
 export function getMerchantShortUrl(phone: string): string {
   return `/${stripPhoneNumber(phone)}`;
 }
+
+/**
+ * Format hours value for display
+ * Handles stored formats: "HH:MM-HH:MM", "Closed", "24 Hours", or legacy "H:MM AM - H:MM PM"
+ * @param value - Hours string from database
+ * @returns Formatted display string (e.g., "9:00 AM - 5:00 PM")
+ */
+export function formatHoursDisplay(value: string | undefined): string {
+  if (!value || value.toLowerCase() === "closed") return "Closed";
+  if (value.toLowerCase() === "24 hours") return "24 Hours";
+
+  // Check if already in display format (legacy)
+  if (value.includes("AM") || value.includes("PM")) return value;
+
+  // Parse "HH:MM-HH:MM" format
+  const match = value.match(/^(\d{2}):(\d{2})-(\d{2}):(\d{2})$/);
+  if (match) {
+    const formatTime = (h: number, m: number) => {
+      const h12 = h === 0 ? 12 : h > 12 ? h - 12 : h;
+      const ampm = h < 12 ? "AM" : "PM";
+      return `${h12}:${m.toString().padStart(2, "0")} ${ampm}`;
+    };
+
+    const openH = parseInt(match[1]);
+    const openM = parseInt(match[2]);
+    const closeH = parseInt(match[3]);
+    const closeM = parseInt(match[4]);
+
+    if (openH === 0 && openM === 0 && closeH === 23 && closeM === 59) {
+      return "24 Hours";
+    }
+
+    return `${formatTime(openH, openM)} - ${formatTime(closeH, closeM)}`;
+  }
+
+  // Return as-is if can't parse
+  return value;
+}

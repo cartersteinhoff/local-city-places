@@ -11,7 +11,7 @@
 
 import { Poiret_One, Raleway } from "next/font/google";
 import { MapPin, Phone, Globe, Share2, Gem, Navigation, Clock, Instagram, Facebook, Image, Sparkles } from "lucide-react";
-import { formatPhoneNumber } from "@/lib/utils";
+import { formatPhoneNumber, formatHoursDisplay } from "@/lib/utils";
 
 const poiretOne = Poiret_One({
   weight: "400",
@@ -469,7 +469,7 @@ export function ArtDecoDesign({
                 ].map(({ day, value }) => (
                   <div key={day} className="flex justify-between items-center py-2 border-b border-[#D4AF37]/10 last:border-0">
                     <span className={`text-[#D4AF37] ${raleway.className}`}>{day}</span>
-                    <span className={`text-[#F5F1E6]/70 ${raleway.className}`}>{value || "Closed"}</span>
+                    <span className={`text-[#F5F1E6]/70 ${raleway.className}`}>{formatHoursDisplay(value)}</span>
                   </div>
                 ))}
               </div>
