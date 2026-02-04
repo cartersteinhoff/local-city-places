@@ -681,13 +681,14 @@ export function MerchantForm({
               <div>
                 <Label htmlFor="category">Category</Label>
                 <Select
-                  value={formData.categoryId}
-                  onValueChange={(v) => updateField("categoryId", v)}
+                  value={formData.categoryId || "none"}
+                  onValueChange={(v) => updateField("categoryId", v === "none" ? "" : v)}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Select a category" />
                   </SelectTrigger>
                   <SelectContent>
+                    <SelectItem value="none">No category</SelectItem>
                     {categories.map((cat) => (
                       <SelectItem key={cat.id} value={cat.id}>
                         {cat.name}
