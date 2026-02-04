@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/db";
 import { merchants, categories } from "@/db/schema";
-import { eq } from "drizzle-orm";
+import { eq, and, ne } from "drizzle-orm";
 import { getSession } from "@/lib/auth";
 import { isValidVimeoUrl } from "@/lib/vimeo";
 import {
@@ -264,7 +264,20 @@ export async function PATCH(
     if (slug !== undefined) {
       // Custom slug provided - sanitize it
       const sanitizedSlug = slug.trim().toLowerCase().replace(/[^a-z0-9-]/g, "-").replace(/-+/g, "-").replace(/^-|-$/g, "");
-      if (sanitizedSlug) {
+      if (sanitizedSlug && sanitizedSlug !== existing.slug) {
+        // Check if slug is already taken by another merchant
+        const [existingSlug] = await db
+          .select({ id: merchants.id })
+          .from(merchants)
+          .where(and(eq(merchants.slug, sanitizedSlug), ne(merchants.id, id)))
+          .limit(1);
+
+        if (existingSlug) {
+          return NextResponse.json(
+            { error: "This URL slug is already taken. Please choose a different one." },
+            { status: 400 }
+          );
+        }
         updates.slug = sanitizedSlug;
       }
     } else if (updates.businessName && !existing.slug) {
