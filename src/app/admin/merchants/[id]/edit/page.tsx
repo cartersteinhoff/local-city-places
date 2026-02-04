@@ -41,6 +41,7 @@ import {
   Eye,
   Undo2,
   Save,
+  RefreshCw,
 } from "lucide-react";
 import { useUser } from "@/hooks/use-user";
 import { adminNavItems } from "../../../nav";
@@ -143,6 +144,8 @@ export default function EditMerchantPage({ params }: { params: Promise<{ id: str
   const [previewDesign, setPreviewDesign] = useState<DesignType>("art-deco");
   const [previewOpen, setPreviewOpen] = useState(false);
   const [categoryName, setCategoryName] = useState<string>("");
+  const [needsRebuild, setNeedsRebuild] = useState(false);
+  const [isRebuilding, setIsRebuilding] = useState(false);
 
   // Auto-save
   const handleSave = useCallback(async (data: FormData) => {
@@ -198,6 +201,7 @@ export default function EditMerchantPage({ params }: { params: Promise<{ id: str
       throw new Error(result.error || "Failed to save");
     }
     setUrls(result.urls);
+    setNeedsRebuild(true); // Show rebuild button after save
   }, [id]);
 
   const { status, lastSaved, error: saveError, canUndo, undo, saveNow, retry } = useAutoSave({
@@ -206,6 +210,23 @@ export default function EditMerchantPage({ params }: { params: Promise<{ id: str
     debounceMs: 3000,
     enabled: !isLoading,
   });
+
+  // Handle rebuild page
+  const handleRebuild = useCallback(async () => {
+    setIsRebuilding(true);
+    try {
+      const res = await fetch(`/api/admin/merchant-pages/${id}/revalidate`, {
+        method: "POST",
+      });
+      if (res.ok) {
+        setNeedsRebuild(false);
+      }
+    } catch (err) {
+      console.error("Failed to rebuild:", err);
+    } finally {
+      setIsRebuilding(false);
+    }
+  }, [id]);
 
   // Handle undo
   const handleUndo = useCallback(() => {
@@ -499,6 +520,22 @@ export default function EditMerchantPage({ params }: { params: Promise<{ id: str
                     )}
                     Save
                   </Button>
+                  {needsRebuild && urls.full && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={handleRebuild}
+                      disabled={isRebuilding}
+                      title="Publish changes to live page. Auto-updates in ~1 hour anyway."
+                    >
+                      {isRebuilding ? (
+                        <Loader2 className="w-4 h-4 mr-1 animate-spin" />
+                      ) : (
+                        <RefreshCw className="w-4 h-4 mr-1" />
+                      )}
+                      Publish
+                    </Button>
+                  )}
                 </div>
               </div>
               <PageHeader

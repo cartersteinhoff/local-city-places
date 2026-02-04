@@ -5,9 +5,9 @@ import { merchants, categories } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { ArtDecoDesign } from "@/components/merchant-page/designs/art-deco";
 
-// Cache pages but revalidate on-demand when merchant is updated
-// Also revalidate every 60 seconds as a fallback
-export const revalidate = 60;
+// Cache pages, auto-revalidate every hour as fallback
+// Admin can manually trigger rebuild for instant updates
+export const revalidate = 3600; // 1 hour
 
 interface PageProps {
   params: Promise<{
