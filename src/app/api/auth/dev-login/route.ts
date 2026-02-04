@@ -20,7 +20,8 @@ export async function GET(request: NextRequest) {
   }
 
   const searchParams = request.nextUrl.searchParams;
-  const role = searchParams.get("role") || "admin";
+  const roleParam = searchParams.get("role") || "admin";
+  const role = roleParam as "member" | "merchant" | "admin";
   const email = searchParams.get("email");
   const redirect = searchParams.get("redirect") || "/admin";
 

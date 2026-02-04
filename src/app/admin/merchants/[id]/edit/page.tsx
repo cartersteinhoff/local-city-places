@@ -39,7 +39,6 @@ import {
   Building2,
   FileText,
   Eye,
-  Undo2,
   Save,
   RefreshCw,
 } from "lucide-react";
@@ -49,8 +48,7 @@ import { formatPhoneNumber, stripPhoneNumber } from "@/lib/utils";
 import { isValidVimeoUrl } from "@/lib/vimeo";
 import { GooglePlacesAutocomplete, PlaceDetails } from "@/components/ui/google-places-autocomplete";
 import { cn } from "@/lib/utils";
-import { useAutoSave } from "@/hooks/use-auto-save";
-import { AutoSaveIndicator } from "@/components/ui/auto-save-indicator";
+import { useManualSave } from "@/hooks/use-manual-save";
 import { ImageUploader, GalleryUploader } from "@/components/ui/image-uploader";
 import { SortableList, SortableImageGrid } from "@/components/ui/sortable-list";
 import { HoursSection, Hours } from "./_components/hours-section";
@@ -200,13 +198,13 @@ export default function EditMerchantPage({ params }: { params: Promise<{ id: str
       throw new Error(result.error || "Failed to save");
     }
     setUrls(result.urls);
+    setOriginalData(data); // Mark as clean after successful save
   }, [id]);
 
-  const { status, lastSaved, error: saveError, canUndo, undo, saveNow, retry } = useAutoSave({
+  const { status, isDirty, isSaving, lastSaved, error: saveError, save, retry } = useManualSave({
     data: formData,
+    originalData,
     onSave: handleSave,
-    debounceMs: 3000,
-    enabled: !isLoading,
   });
 
   // Handle rebuild page
@@ -223,13 +221,6 @@ export default function EditMerchantPage({ params }: { params: Promise<{ id: str
     }
   }, [id]);
 
-  // Handle undo
-  const handleUndo = useCallback(() => {
-    const previousData = undo();
-    if (previousData) {
-      setFormData(previousData);
-    }
-  }, [undo]);
 
   // Update form field
   const updateField = useCallback(<K extends keyof FormData>(field: K, value: FormData[K]) => {
@@ -495,20 +486,11 @@ export default function EditMerchantPage({ params }: { params: Promise<{ id: str
                 </Button>
                 <div className="flex items-center gap-2">
                   <Button
-                    variant="outline"
                     size="sm"
-                    onClick={handleUndo}
-                    disabled={!canUndo}
+                    onClick={save}
+                    disabled={isSaving || !isDirty}
                   >
-                    <Undo2 className="w-4 h-4 mr-1" />
-                    Undo
-                  </Button>
-                  <Button
-                    size="sm"
-                    onClick={saveNow}
-                    disabled={status === "saving" || status === "clean"}
-                  >
-                    {status === "saving" ? (
+                    {isSaving ? (
                       <Loader2 className="w-4 h-4 mr-1 animate-spin" />
                     ) : (
                       <Save className="w-4 h-4 mr-1" />
@@ -1014,13 +996,35 @@ export default function EditMerchantPage({ params }: { params: Promise<{ id: str
 
             {/* Save Status */}
             <div className="mt-6 flex items-center justify-between">
-              <AutoSaveIndicator
-                status={status}
-                lastSaved={lastSaved}
-                error={saveError}
-                onRetry={retry}
-              />
-              {saveError && (
+              <div className="flex items-center gap-2 text-sm">
+                {status === "clean" && (
+                  <span className="text-muted-foreground">All changes saved</span>
+                )}
+                {status === "dirty" && (
+                  <span className="text-yellow-600">Unsaved changes</span>
+                )}
+                {status === "saving" && (
+                  <span className="flex items-center gap-1 text-muted-foreground">
+                    <Loader2 className="w-3 h-3 animate-spin" />
+                    Saving...
+                  </span>
+                )}
+                {status === "saved" && (
+                  <span className="flex items-center gap-1 text-green-600">
+                    <Check className="w-3 h-3" />
+                    Saved {lastSaved && `at ${lastSaved.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}`}
+                  </span>
+                )}
+                {status === "error" && (
+                  <span className="flex items-center gap-2 text-destructive">
+                    Failed to save
+                    <Button variant="ghost" size="sm" onClick={retry} className="h-6 px-2 text-xs">
+                      Retry
+                    </Button>
+                  </span>
+                )}
+              </div>
+              {saveError && status !== "error" && (
                 <p className="text-sm text-destructive">{saveError}</p>
               )}
             </div>
