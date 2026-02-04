@@ -4,7 +4,6 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { LogOut, Shield, Store, User, Moon, Sun, Check } from "lucide-react";
 import { useTheme } from "next-themes";
-import { cn } from "@/lib/utils";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -15,7 +14,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { useUser } from "@/hooks/use-user";
-import type { NavItem } from "./types";
 
 const roleConfig = {
   admin: { label: "Admin", icon: Shield, href: "/admin", color: "text-primary" },
@@ -23,13 +21,7 @@ const roleConfig = {
   member: { label: "Member", icon: User, href: "/member", color: "text-green-500" },
 };
 
-interface SidebarProps {
-  navItems: NavItem[];
-  isCollapsed?: boolean;
-  onToggleCollapse?: () => void;
-}
-
-export function Sidebar({ navItems, isCollapsed = false }: SidebarProps) {
+export function MobileHeader() {
   const pathname = usePathname();
   const { theme, setTheme } = useTheme();
   const { user, userName } = useUser();
@@ -58,75 +50,34 @@ export function Sidebar({ navItems, isCollapsed = false }: SidebarProps) {
   const isAdmin = user?.role === "admin";
 
   return (
-    <aside
-      className={cn(
-        "hidden md:flex flex-col bg-sidebar border-r border-sidebar-border h-screen sticky top-0 transition-all duration-200",
-        isCollapsed ? "w-16" : "w-64"
-      )}
-    >
+    <header className="md:hidden h-14 bg-card border-b border-border flex items-center justify-between px-4 sticky top-0 z-40">
       {/* Logo */}
-      <div className="h-16 flex items-center px-4 border-b border-sidebar-border">
-        <Link href="/" className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg bg-primary-gradient flex items-center justify-center">
-            <span className="text-white font-bold text-sm">LC</span>
-          </div>
-          {!isCollapsed && (
-            <span className="font-semibold text-sidebar-foreground">
-              Local City Places
-            </span>
-          )}
-        </Link>
-      </div>
+      <Link href="/" className="flex items-center gap-2">
+        <div className="w-8 h-8 rounded-lg bg-primary-gradient flex items-center justify-center">
+          <span className="text-white font-bold text-sm">LC</span>
+        </div>
+        <span className="font-semibold text-foreground">
+          Local City Places
+        </span>
+      </Link>
 
-      {/* Navigation */}
-      <nav className="flex-1 py-4 px-2 space-y-1 overflow-y-auto">
-        {navItems.map((item) => {
-          const hrefSegments = item.href.split('/').filter(Boolean).length;
-          const isActive = pathname === item.href ||
-            (hrefSegments > 1 && pathname.startsWith(`${item.href}/`));
-          const Icon = item.icon;
-
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={cn(
-                "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors",
-                isActive
-                  ? "bg-sidebar-accent text-sidebar-primary"
-                  : "text-sidebar-foreground hover:bg-sidebar-accent/50"
-              )}
-            >
-              <Icon className="w-5 h-5 shrink-0" strokeWidth={1.75} />
-              {!isCollapsed && <span>{item.label}</span>}
-            </Link>
-          );
-        })}
-      </nav>
-
-      {/* Bottom section: Theme toggle + User menu */}
-      <div className="border-t border-sidebar-border p-2 space-y-2">
+      {/* Right side: Theme toggle + User menu */}
+      <div className="flex items-center gap-1">
         {/* Theme toggle */}
         <button
           onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-          className={cn(
-            "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors w-full",
-            "text-sidebar-foreground hover:bg-sidebar-accent/50"
-          )}
+          className="relative p-2 rounded-lg hover:bg-muted transition-colors"
+          aria-label="Toggle theme"
         >
-          <Sun className="w-5 h-5 shrink-0 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" strokeWidth={1.75} />
-          <Moon className="w-5 h-5 shrink-0 absolute rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" strokeWidth={1.75} />
-          {!isCollapsed && <span>Toggle theme</span>}
+          <Sun className="w-5 h-5 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
+          <Moon className="absolute top-2 left-2 w-5 h-5 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
         </button>
 
         {/* User menu */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <button className={cn(
-              "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors w-full",
-              "text-sidebar-foreground hover:bg-sidebar-accent/50"
-            )}>
-              <Avatar className="w-7 h-7 border border-sidebar-border shrink-0">
+            <button className="flex items-center gap-2 rounded-lg p-1.5 hover:bg-muted transition-colors">
+              <Avatar className="w-8 h-8 border-2 border-primary/20">
                 {user?.profilePhotoUrl && (
                   <AvatarImage src={user.profilePhotoUrl} alt={displayName} />
                 )}
@@ -134,18 +85,9 @@ export function Sidebar({ navItems, isCollapsed = false }: SidebarProps) {
                   {initials}
                 </AvatarFallback>
               </Avatar>
-              {!isCollapsed && (
-                <div className="flex-1 text-left min-w-0">
-                  <p className="text-sm font-medium text-sidebar-foreground leading-tight truncate">{displayName}</p>
-                  <div className="flex items-center gap-1">
-                    <CurrentIcon className={`w-3 h-3 ${roleConfig[currentView].color}`} />
-                    <span className="text-xs text-muted-foreground">{roleConfig[currentView].label}</span>
-                  </div>
-                </div>
-              )}
             </button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent side="top" align="start" className="w-56">
+          <DropdownMenuContent align="end" className="w-56">
             {/* User Info Header */}
             <div className="px-3 py-2">
               <p className="text-sm font-medium">{displayName}</p>
@@ -192,6 +134,6 @@ export function Sidebar({ navItems, isCollapsed = false }: SidebarProps) {
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
-    </aside>
+    </header>
   );
 }

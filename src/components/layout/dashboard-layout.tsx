@@ -2,7 +2,7 @@
 
 import { Sidebar } from "./sidebar";
 import { MobileNav } from "./mobile-nav";
-import { Header } from "./header";
+import { MobileHeader } from "./mobile-header";
 import type { DashboardLayoutProps } from "./types";
 
 export function DashboardLayout({
@@ -17,8 +17,8 @@ export function DashboardLayout({
 
         {/* Main content area */}
         <div className="flex-1 flex flex-col min-h-screen">
-          {/* Header */}
-          <Header />
+          {/* Mobile header (logo + user menu) */}
+          <MobileHeader />
 
           {/* Main content */}
           <main className="flex-1 p-4 md:p-6 pb-20 md:pb-6">

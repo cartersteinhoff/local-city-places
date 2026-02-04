@@ -13,12 +13,47 @@ import {
   PanelLeft,
   Eye,
   EyeOff,
+  Monitor,
+  Tablet,
+  Smartphone,
+  ZoomIn,
+  ZoomOut,
+  Import,
 } from "lucide-react";
+import { ImportGoogleDialog } from "./_components/import-google-dialog";
 import { useUser } from "@/hooks/use-user";
 import { adminNavItems } from "../../../nav";
-import { formatPhoneNumber, stripPhoneNumber } from "@/lib/utils";
+import { formatPhoneNumber, stripPhoneNumber, cn } from "@/lib/utils";
 import { useManualSave } from "@/hooks/use-manual-save";
 import { ArtDecoVisualEditor } from "./_components/art-deco-visual-editor";
+
+// Device configurations for visual editor
+type DeviceType = "desktop" | "tablet" | "mobile";
+
+interface DeviceConfig {
+  id: DeviceType;
+  label: string;
+  icon: typeof Monitor;
+  width: number;
+}
+
+const DEVICES: DeviceConfig[] = [
+  { id: "desktop", label: "Desktop", icon: Monitor, width: 1280 },
+  { id: "tablet", label: "Tablet", icon: Tablet, width: 768 },
+  { id: "mobile", label: "Mobile", icon: Smartphone, width: 375 },
+];
+
+// Default zoom levels for each device
+const DEFAULT_ZOOM: Record<DeviceType, number> = {
+  desktop: 100,
+  tablet: 100,
+  mobile: 100,
+};
+
+interface Category {
+  id: string;
+  name: string;
+}
 
 interface Service {
   name: string;
@@ -89,10 +124,56 @@ export default function VisualEditorPage({ params }: { params: Promise<{ id: str
 
   const [formData, setFormData] = useState<FormData>(INITIAL_FORM_DATA);
   const [originalData, setOriginalData] = useState<FormData>(INITIAL_FORM_DATA);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
   const [showEditHints, setShowEditHints] = useState(true);
   const [isRebuilding, setIsRebuilding] = useState(false);
+  const [showImportDialog, setShowImportDialog] = useState(false);
+
+  // Device preview state
+  const [device, setDevice] = useState<DeviceType>("desktop");
+  const [zoom, setZoom] = useState(DEFAULT_ZOOM.desktop);
+
+  // Handler for device change that also adjusts zoom
+  const handleDeviceChange = useCallback((newDevice: DeviceType) => {
+    setDevice(newDevice);
+    setZoom(DEFAULT_ZOOM[newDevice]);
+  }, []);
+
+  // Handler for importing from Google Places
+  const handleImport = useCallback((data: {
+    businessName: string;
+    googlePlaceId: string;
+    streetAddress: string;
+    city: string;
+    state: string;
+    zipCode: string;
+    phone: string;
+    website: string;
+    hours: Hours;
+  }) => {
+    setFormData(prev => ({
+      ...prev,
+      businessName: data.businessName || prev.businessName,
+      googlePlaceId: data.googlePlaceId || prev.googlePlaceId,
+      streetAddress: data.streetAddress || prev.streetAddress,
+      city: data.city || prev.city,
+      state: data.state || prev.state,
+      zipCode: data.zipCode || prev.zipCode,
+      phone: data.phone ? formatPhoneNumber(data.phone) : prev.phone,
+      website: data.website || prev.website,
+      hours: {
+        monday: data.hours.monday || prev.hours.monday,
+        tuesday: data.hours.tuesday || prev.hours.tuesday,
+        wednesday: data.hours.wednesday || prev.hours.wednesday,
+        thursday: data.hours.thursday || prev.hours.thursday,
+        friday: data.hours.friday || prev.hours.friday,
+        saturday: data.hours.saturday || prev.hours.saturday,
+        sunday: data.hours.sunday || prev.hours.sunday,
+      },
+    }));
+  }, []);
 
   // Update a single field
   const updateField = useCallback(<K extends keyof FormData>(field: K, value: FormData[K]) => {
@@ -199,13 +280,18 @@ export default function VisualEditorPage({ params }: { params: Promise<{ id: str
     }
   }, [authLoading, isAuthenticated, user?.role, router]);
 
-  // Fetch merchant data
+  // Fetch merchant data and categories
   useEffect(() => {
-    async function fetchMerchant() {
+    async function fetchData() {
       try {
-        const res = await fetch(`/api/admin/merchant-pages/${id}`);
-        if (res.ok) {
-          const data = await res.json();
+        // Fetch merchant and categories in parallel
+        const [merchantRes, categoriesRes] = await Promise.all([
+          fetch(`/api/admin/merchant-pages/${id}`),
+          fetch("/api/admin/categories"),
+        ]);
+
+        if (merchantRes.ok) {
+          const data = await merchantRes.json();
           const m = data.merchant;
 
           const loadedData: FormData = {
@@ -236,8 +322,13 @@ export default function VisualEditorPage({ params }: { params: Promise<{ id: str
         } else {
           setError("Merchant not found");
         }
+
+        if (categoriesRes.ok) {
+          const catData = await categoriesRes.json();
+          setCategories(catData.categories || []);
+        }
       } catch (err) {
-        console.error("Error fetching merchant:", err);
+        console.error("Error fetching data:", err);
         setError("Failed to load merchant");
       } finally {
         setIsLoading(false);
@@ -245,9 +336,13 @@ export default function VisualEditorPage({ params }: { params: Promise<{ id: str
     }
 
     if (!authLoading && isAuthenticated && id) {
-      fetchMerchant();
+      fetchData();
     }
   }, [authLoading, isAuthenticated, id]);
+
+  // Calculate scale based on zoom and available container width
+  const deviceConfig = DEVICES.find(d => d.id === device) || DEVICES[0];
+  const scale = zoom / 100;
 
   return (
     <DashboardLayout navItems={adminNavItems}>
@@ -264,8 +359,8 @@ export default function VisualEditorPage({ params }: { params: Promise<{ id: str
         </div>
       ) : (
         <div className="flex flex-col h-[calc(100vh-4rem)]">
-          {/* Toolbar */}
-          <div className="flex items-center justify-between px-4 py-3 border-b bg-card">
+          {/* Top Toolbar - Navigation and Actions */}
+          <div className="flex items-center justify-between px-4 py-2 border-b bg-card">
             <div className="flex items-center gap-3">
               <Button variant="ghost" size="sm" asChild>
                 <Link href="/admin/merchants">
@@ -274,7 +369,9 @@ export default function VisualEditorPage({ params }: { params: Promise<{ id: str
                 </Link>
               </Button>
               <div className="h-6 w-px bg-border" />
-              <span className="font-medium">{formData.businessName || "Visual Editor"}</span>
+              <span className="font-medium truncate max-w-[200px]">
+                {formData.businessName || "Visual Editor"}
+              </span>
             </div>
 
             <div className="flex items-center gap-2">
@@ -288,6 +385,16 @@ export default function VisualEditorPage({ params }: { params: Promise<{ id: str
                 {showEditHints ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
               </Button>
 
+              {/* Import from Google */}
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowImportDialog(true)}
+              >
+                <Import className="w-4 h-4 mr-2" />
+                Import
+              </Button>
+
               {/* Switch to form editor */}
               <Button variant="outline" size="sm" asChild>
                 <Link href={`/admin/merchants/${id}/edit`}>
@@ -297,11 +404,15 @@ export default function VisualEditorPage({ params }: { params: Promise<{ id: str
               </Button>
 
               {/* Status indicator */}
-              <span className="text-sm text-muted-foreground">
+              <span className={cn(
+                "text-sm",
+                status === "error" ? "text-destructive" : "text-muted-foreground"
+              )}>
                 {status === "dirty" && "Unsaved changes"}
                 {status === "saving" && "Saving..."}
                 {status === "saved" && "Saved"}
                 {status === "clean" && "All saved"}
+                {status === "error" && "Save failed"}
               </span>
 
               {/* Save button */}
@@ -335,20 +446,117 @@ export default function VisualEditorPage({ params }: { params: Promise<{ id: str
             </div>
           </div>
 
+          {/* Device Preview Toolbar */}
+          <div className="flex items-center justify-center gap-6 px-4 py-2 border-b bg-muted/30">
+            {/* Device Selector */}
+            <div className="flex items-center gap-1 border rounded-md p-0.5 bg-background">
+              {DEVICES.map((d) => (
+                <Button
+                  key={d.id}
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => handleDeviceChange(d.id)}
+                  className={cn(
+                    "h-8 px-3 gap-2",
+                    device === d.id && "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground"
+                  )}
+                  title={`${d.label} (${d.width}px)`}
+                >
+                  <d.icon className="w-4 h-4" />
+                  <span className="text-xs hidden sm:inline">{d.label}</span>
+                </Button>
+              ))}
+            </div>
+
+            {/* Zoom Controls */}
+            <div className="flex items-center gap-1">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setZoom(Math.max(50, zoom - 25))}
+                disabled={zoom <= 50}
+                className="h-8 w-8 p-0"
+              >
+                <ZoomOut className="w-4 h-4" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setZoom(DEFAULT_ZOOM[device])}
+                className="h-8 px-2 text-xs text-muted-foreground hover:text-foreground"
+                title="Reset to default zoom"
+              >
+                {zoom}%
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setZoom(Math.min(150, zoom + 25))}
+                disabled={zoom >= 150}
+                className="h-8 w-8 p-0"
+              >
+                <ZoomIn className="w-4 h-4" />
+              </Button>
+            </div>
+
+            {/* Device Width Indicator */}
+            <div className="text-xs text-muted-foreground hidden sm:block">
+              {deviceConfig.width}px wide
+            </div>
+          </div>
+
           {/* Visual Editor Canvas */}
-          <div className="flex-1 overflow-auto bg-muted/50">
-            <div className="max-w-5xl mx-auto my-6 shadow-2xl">
-              <ArtDecoVisualEditor
-                data={formData}
-                onUpdate={updateField}
-                onPhotoUpload={handlePhotoUpload}
-                onLogoUpload={handleLogoUpload}
-                showEditHints={showEditHints}
-              />
+          <div className="flex-1 overflow-auto bg-[repeating-linear-gradient(45deg,transparent,transparent_10px,rgba(0,0,0,0.02)_10px,rgba(0,0,0,0.02)_20px)]">
+            <div className="flex justify-center py-8 px-4">
+              {/* Wrapper that contains the scaled content */}
+              <div
+                className="transition-all duration-300 origin-top"
+                style={{
+                  width: deviceConfig.width * scale,
+                }}
+              >
+                {/* Scaled content with device-appropriate styling */}
+                <div
+                  className={cn(
+                    "origin-top-left transition-all duration-300 shadow-2xl",
+                    device === "mobile" && "rounded-[24px] ring-8 ring-gray-800",
+                    device === "tablet" && "rounded-[16px] ring-4 ring-gray-700",
+                    device === "desktop" && "rounded-t-lg ring-1 ring-gray-300"
+                  )}
+                  style={{
+                    width: deviceConfig.width,
+                    transform: `scale(${scale})`,
+                  }}
+                >
+                  <div className={cn(
+                    "bg-white overflow-hidden",
+                    device === "mobile" && "rounded-[16px]",
+                    device === "tablet" && "rounded-[12px]",
+                    device === "desktop" && "rounded-t-md"
+                  )}>
+                    <ArtDecoVisualEditor
+                      data={formData}
+                      categories={categories}
+                      onUpdate={updateField}
+                      onPhotoUpload={handlePhotoUpload}
+                      onLogoUpload={handleLogoUpload}
+                      showEditHints={showEditHints}
+                      device={device}
+                    />
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
       )}
+
+      {/* Import from Google Dialog */}
+      <ImportGoogleDialog
+        open={showImportDialog}
+        onOpenChange={setShowImportDialog}
+        onImport={handleImport}
+      />
     </DashboardLayout>
   );
 }
