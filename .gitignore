@@ -38,8 +38,16 @@ yarn-error.log*
 
 # AI agent tools
 .agents/
+.agent/
 .codex/
 .playwright-mcp/
+.claude/skills/
+.cursor/skills/
+.gemini/
+.kiro/
+.opencode/
+.windsurf/
+skills/
 
 # typescript
 *.tsbuildinfo
