@@ -36,18 +36,18 @@ const raleway = Raleway({
   display: "swap",
 });
 import { extractVimeoId, getVimeoEmbedUrl } from "@/lib/vimeo";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { GoogleMapEmbed, getGoogleMapsDirectionsUrl, formatFullAddress } from "../google-map-embed";
 
 // =============================================================================
 // EDITABLE CONTACT FIELD
-// Handles contact info (phone, website, address) with inline editing
+// Handles contact info (phone, website, address) with popover editing
 // =============================================================================
 
 interface EditableContactFieldProps {
   field: string;
   value: string | null | undefined;
-  secondaryFields?: { city?: string | null; state?: string | null; zipCode?: string | null };
+  secondaryFields?: { city?: string | null; state?: string | null; zipCode?: string | null; googlePlaceId?: string | null };
   icon: React.ReactNode;
   label: string;
   displayValue?: string;
@@ -68,11 +68,134 @@ function EditableContactField({
   target,
 }: EditableContactFieldProps) {
   const { editable, onUpdate, showEditHints } = useEditor();
-  const [isEditing, setIsEditing] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
   const [localValue, setLocalValue] = useState(value || "");
   const [localCity, setLocalCity] = useState(secondaryFields?.city || "");
   const [localState, setLocalState] = useState(secondaryFields?.state || "");
   const [localZip, setLocalZip] = useState(secondaryFields?.zipCode || "");
+
+  // Google Places state
+  const [searchQuery, setSearchQuery] = useState("");
+  const [predictions, setPredictions] = useState<Array<{ place_id: string; description: string }>>([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const autocompleteService = useRef<google.maps.places.AutocompleteService | null>(null);
+  const placesService = useRef<google.maps.places.PlacesService | null>(null);
+  const dummyDiv = useRef<HTMLDivElement | null>(null);
+
+  // Sync local state when props change
+  useEffect(() => {
+    setLocalValue(value || "");
+    if (secondaryFields !== undefined) {
+      setLocalCity(secondaryFields?.city || "");
+      setLocalState(secondaryFields?.state || "");
+      setLocalZip(secondaryFields?.zipCode || "");
+    }
+  }, [value, secondaryFields]);
+
+  // Initialize Google Places
+  useEffect(() => {
+    if (secondaryFields === undefined) return; // Only for location field
+
+    if (!dummyDiv.current) {
+      dummyDiv.current = document.createElement("div");
+    }
+
+    const initServices = () => {
+      if (window.google?.maps?.places) {
+        autocompleteService.current = new window.google.maps.places.AutocompleteService();
+        if (dummyDiv.current) {
+          placesService.current = new window.google.maps.places.PlacesService(dummyDiv.current);
+        }
+      }
+    };
+
+    if (window.google?.maps?.places) {
+      initServices();
+    } else {
+      const checkLoaded = setInterval(() => {
+        if (window.google?.maps?.places) {
+          initServices();
+          clearInterval(checkLoaded);
+        }
+      }, 100);
+      return () => clearInterval(checkLoaded);
+    }
+  }, [secondaryFields]);
+
+  // Search for places
+  const handleSearch = (query: string) => {
+    setSearchQuery(query);
+    if (!query.trim() || !autocompleteService.current) {
+      setPredictions([]);
+      return;
+    }
+
+    setIsSearching(true);
+    autocompleteService.current.getPlacePredictions(
+      {
+        input: query,
+        types: ["address"],
+        componentRestrictions: { country: "us" },
+      },
+      (results, status) => {
+        setIsSearching(false);
+        if (status === "OK" && results) {
+          setPredictions(results.map(r => ({ place_id: r.place_id, description: r.description })));
+        } else {
+          setPredictions([]);
+        }
+      }
+    );
+  };
+
+  // Select a place from predictions
+  const handleSelectPlace = (placeId: string) => {
+    if (!placesService.current) return;
+
+    placesService.current.getDetails(
+      {
+        placeId,
+        fields: ["address_components", "formatted_address"],
+      },
+      (place, status) => {
+        if (status === "OK" && place?.address_components) {
+          let streetNumber = "";
+          let route = "";
+          let city = "";
+          let state = "";
+          let zipCode = "";
+
+          for (const component of place.address_components) {
+            if (component.types.includes("street_number")) {
+              streetNumber = component.long_name;
+            }
+            if (component.types.includes("route")) {
+              route = component.long_name;
+            }
+            if (component.types.includes("locality")) {
+              city = component.long_name;
+            }
+            if (component.types.includes("administrative_area_level_1")) {
+              state = component.short_name;
+            }
+            if (component.types.includes("postal_code")) {
+              zipCode = component.long_name;
+            }
+          }
+
+          setLocalValue([streetNumber, route].filter(Boolean).join(" "));
+          setLocalCity(city);
+          setLocalState(state);
+          setLocalZip(zipCode);
+          setSearchQuery("");
+          setPredictions([]);
+
+          // Also save the Google Place ID
+          onUpdate("googlePlaceId", placeId);
+        }
+      }
+    );
+  };
 
   const handleSave = () => {
     onUpdate(field, localValue || null);
@@ -81,17 +204,7 @@ function EditableContactField({
       onUpdate("state", localState || null);
       onUpdate("zipCode", localZip || null);
     }
-    setIsEditing(false);
-  };
-
-  const handleCancel = () => {
-    setLocalValue(value || "");
-    if (secondaryFields !== undefined) {
-      setLocalCity(secondaryFields?.city || "");
-      setLocalState(secondaryFields?.state || "");
-      setLocalZip(secondaryFields?.zipCode || "");
-    }
-    setIsEditing(false);
+    setIsOpen(false);
   };
 
   // Don't show if no value and not editable
@@ -99,118 +212,155 @@ function EditableContactField({
     return null;
   }
 
-  // Edit mode - show input
-  if (editable && isEditing) {
+  // View mode - normal link
+  if (!editable) {
+    if (!displayValue && !value) return null;
     return (
-      <div className="flex items-start gap-3 bg-[#0D1F22] text-[#F5F1E6] p-3 rounded-lg min-w-[200px]">
+      <a
+        href={href}
+        target={target}
+        rel={target === "_blank" ? "noopener noreferrer" : undefined}
+        className="flex items-center gap-3 hover:opacity-80 transition-opacity cursor-pointer"
+      >
         {icon}
-        <div className="flex-1 space-y-2">
+        <div>
           <p className="text-[10px] uppercase tracking-wider opacity-70">{label}</p>
+          <p className={`font-semibold whitespace-nowrap ${raleway.className}`}>
+            {displayValue || value}
+          </p>
+        </div>
+      </a>
+    );
+  }
+
+  // Edit mode with popover
+  return (
+    <Popover open={isOpen} onOpenChange={setIsOpen}>
+      <PopoverTrigger asChild>
+        <div
+          className={cn(
+            "flex items-center gap-3 cursor-pointer transition-all group",
+            showEditHints && "hover:bg-[#0D1F22]/20 rounded-lg px-3 py-2 -mx-3 -my-2"
+          )}
+        >
+          {icon}
+          <div>
+            <p className="text-[10px] uppercase tracking-wider opacity-70">{label}</p>
+            <p className={`font-semibold ${raleway.className} flex items-center gap-2`}>
+              {displayValue || value || <span className="opacity-50">{placeholder}</span>}
+              {showEditHints && <Pencil className="w-3 h-3 opacity-0 group-hover:opacity-70" />}
+            </p>
+          </div>
+        </div>
+      </PopoverTrigger>
+      <PopoverContent className="w-80 bg-[#1a2f33] border-[#D4AF37]/30 text-[#F5F1E6]">
+        <div className="space-y-4">
+          <div className="font-medium text-[#D4AF37]">{label}</div>
+
           {secondaryFields !== undefined ? (
-            // Address fields
-            <>
+            // Address fields with Google Places search
+            <div className="space-y-3">
+              {/* Google Places Search */}
+              <div className="relative">
+                <label className="text-xs text-[#D4AF37]/70 block mb-1">Search Address</label>
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => handleSearch(e.target.value)}
+                  placeholder="Search for address..."
+                  className="w-full bg-[#0D1F22] border border-[#D4AF37]/30 rounded px-3 py-2 text-sm focus:border-[#D4AF37] outline-none"
+                />
+                {predictions.length > 0 && (
+                  <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-[#0D1F22] border border-[#D4AF37]/30 rounded max-h-40 overflow-auto">
+                    {predictions.map((pred) => (
+                      <button
+                        key={pred.place_id}
+                        onClick={() => handleSelectPlace(pred.place_id)}
+                        className="w-full text-left px-3 py-2 text-sm hover:bg-[#D4AF37]/20 border-b border-[#D4AF37]/10 last:border-0"
+                      >
+                        {pred.description}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <div className="border-t border-[#D4AF37]/20 pt-3">
+                <label className="text-xs text-[#D4AF37]/70 block mb-1">Street Address</label>
+                <input
+                  type="text"
+                  value={localValue}
+                  onChange={(e) => setLocalValue(e.target.value)}
+                  placeholder="123 Main St"
+                  className="w-full bg-[#0D1F22] border border-[#D4AF37]/30 rounded px-3 py-2 text-sm focus:border-[#D4AF37] outline-none"
+                />
+              </div>
+              <div className="grid grid-cols-3 gap-2">
+                <div className="col-span-1">
+                  <label className="text-xs text-[#D4AF37]/70 block mb-1">City</label>
+                  <input
+                    type="text"
+                    value={localCity}
+                    onChange={(e) => setLocalCity(e.target.value)}
+                    placeholder="Denver"
+                    className="w-full bg-[#0D1F22] border border-[#D4AF37]/30 rounded px-3 py-2 text-sm focus:border-[#D4AF37] outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs text-[#D4AF37]/70 block mb-1">State</label>
+                  <input
+                    type="text"
+                    value={localState}
+                    onChange={(e) => setLocalState(e.target.value.toUpperCase())}
+                    placeholder="CO"
+                    maxLength={2}
+                    className="w-full bg-[#0D1F22] border border-[#D4AF37]/30 rounded px-3 py-2 text-sm focus:border-[#D4AF37] outline-none uppercase"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs text-[#D4AF37]/70 block mb-1">ZIP</label>
+                  <input
+                    type="text"
+                    value={localZip}
+                    onChange={(e) => setLocalZip(e.target.value)}
+                    placeholder="80202"
+                    className="w-full bg-[#0D1F22] border border-[#D4AF37]/30 rounded px-3 py-2 text-sm focus:border-[#D4AF37] outline-none"
+                  />
+                </div>
+              </div>
+            </div>
+          ) : (
+            // Single field (phone, website)
+            <div>
+              <label className="text-xs text-[#D4AF37]/70 block mb-1">{label}</label>
               <input
                 type="text"
                 value={localValue}
                 onChange={(e) => setLocalValue(e.target.value)}
-                placeholder="Street address"
-                className="w-full bg-transparent border-b border-[#D4AF37]/50 focus:border-[#D4AF37] outline-none text-sm"
+                placeholder={placeholder}
+                className="w-full bg-[#0D1F22] border border-[#D4AF37]/30 rounded px-3 py-2 text-sm focus:border-[#D4AF37] outline-none"
                 autoFocus
               />
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  value={localCity}
-                  onChange={(e) => setLocalCity(e.target.value)}
-                  placeholder="City"
-                  className="flex-1 bg-transparent border-b border-[#D4AF37]/50 focus:border-[#D4AF37] outline-none text-sm"
-                />
-                <input
-                  type="text"
-                  value={localState}
-                  onChange={(e) => setLocalState(e.target.value)}
-                  placeholder="ST"
-                  className="w-12 bg-transparent border-b border-[#D4AF37]/50 focus:border-[#D4AF37] outline-none text-sm"
-                  maxLength={2}
-                />
-                <input
-                  type="text"
-                  value={localZip}
-                  onChange={(e) => setLocalZip(e.target.value)}
-                  placeholder="ZIP"
-                  className="w-16 bg-transparent border-b border-[#D4AF37]/50 focus:border-[#D4AF37] outline-none text-sm"
-                />
-              </div>
-            </>
-          ) : (
-            // Single field (phone, website)
-            <input
-              type="text"
-              value={localValue}
-              onChange={(e) => setLocalValue(e.target.value)}
-              placeholder={placeholder}
-              className="w-full bg-transparent border-b border-[#D4AF37]/50 focus:border-[#D4AF37] outline-none text-sm"
-              autoFocus
-            />
+            </div>
           )}
-          <div className="flex gap-2 pt-1">
+
+          <div className="flex gap-2 pt-2">
             <button
               onClick={handleSave}
-              className="text-xs bg-[#D4AF37] text-[#0D1F22] py-1 px-3 rounded hover:bg-[#E5C97B]"
+              className="flex-1 bg-[#D4AF37] text-[#0D1F22] py-1.5 rounded text-sm font-medium hover:bg-[#E5C97B]"
             >
               Save
             </button>
             <button
-              onClick={handleCancel}
-              className="text-xs border border-[#D4AF37]/50 text-[#D4AF37] py-1 px-3 rounded hover:bg-[#D4AF37]/10"
+              onClick={() => setIsOpen(false)}
+              className="flex-1 border border-[#D4AF37]/50 text-[#D4AF37] py-1.5 rounded text-sm hover:bg-[#D4AF37]/10"
             >
               Cancel
             </button>
           </div>
         </div>
-      </div>
-    );
-  }
-
-  // Editable mode - show clickable to edit
-  if (editable) {
-    return (
-      <div
-        onClick={() => setIsEditing(true)}
-        className={cn(
-          "flex items-center gap-3 cursor-pointer transition-opacity",
-          showEditHints && "hover:opacity-80 hover:ring-2 hover:ring-[#0D1F22]/30 hover:ring-offset-2 rounded px-2 py-1 -mx-2 -my-1"
-        )}
-      >
-        {icon}
-        <div>
-          <p className="text-[10px] uppercase tracking-wider opacity-70">{label}</p>
-          <p className={`font-semibold ${raleway.className}`}>
-            {displayValue || value || <span className="opacity-50">{placeholder}</span>}
-          </p>
-        </div>
-      </div>
-    );
-  }
-
-  // View mode - normal link
-  if (!displayValue && !value) return null;
-
-  return (
-    <a
-      href={href}
-      target={target}
-      rel={target === "_blank" ? "noopener noreferrer" : undefined}
-      className="flex items-center gap-3 hover:opacity-80 transition-opacity cursor-pointer"
-    >
-      {icon}
-      <div>
-        <p className="text-[10px] uppercase tracking-wider opacity-70">{label}</p>
-        <p className={`font-semibold whitespace-nowrap ${raleway.className}`}>
-          {displayValue || value}
-        </p>
-      </div>
-    </a>
+      </PopoverContent>
+    </Popover>
   );
 }
 
@@ -1150,7 +1300,7 @@ export function ArtDecoDesign({
             <EditableContactField
               field="streetAddress"
               value={streetAddress}
-              secondaryFields={{ city, state, zipCode }}
+              secondaryFields={{ city, state, zipCode, googlePlaceId }}
               icon={<MapPin className="w-5 h-5" />}
               label="Location"
               displayValue={[streetAddress, city, state, zipCode].filter(Boolean).join(", ") || location}
