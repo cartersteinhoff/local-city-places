@@ -35,6 +35,181 @@ import { useState, useRef } from "react";
 import { GoogleMapEmbed, getGoogleMapsDirectionsUrl, formatFullAddress } from "../google-map-embed";
 
 // =============================================================================
+// EDITABLE CONTACT FIELD
+// Handles contact info (phone, website, address) with inline editing
+// =============================================================================
+
+interface EditableContactFieldProps {
+  field: string;
+  value: string | null | undefined;
+  secondaryFields?: { city?: string | null; state?: string | null; zipCode?: string | null };
+  icon: React.ReactNode;
+  label: string;
+  displayValue?: string;
+  placeholder: string;
+  href?: string;
+  target?: string;
+}
+
+function EditableContactField({
+  field,
+  value,
+  secondaryFields,
+  icon,
+  label,
+  displayValue,
+  placeholder,
+  href,
+  target,
+}: EditableContactFieldProps) {
+  const { editable, onUpdate, showEditHints } = useEditor();
+  const [isEditing, setIsEditing] = useState(false);
+  const [localValue, setLocalValue] = useState(value || "");
+  const [localCity, setLocalCity] = useState(secondaryFields?.city || "");
+  const [localState, setLocalState] = useState(secondaryFields?.state || "");
+  const [localZip, setLocalZip] = useState(secondaryFields?.zipCode || "");
+
+  const handleSave = () => {
+    onUpdate(field, localValue || null);
+    if (secondaryFields !== undefined) {
+      onUpdate("city", localCity || null);
+      onUpdate("state", localState || null);
+      onUpdate("zipCode", localZip || null);
+    }
+    setIsEditing(false);
+  };
+
+  const handleCancel = () => {
+    setLocalValue(value || "");
+    if (secondaryFields !== undefined) {
+      setLocalCity(secondaryFields?.city || "");
+      setLocalState(secondaryFields?.state || "");
+      setLocalZip(secondaryFields?.zipCode || "");
+    }
+    setIsEditing(false);
+  };
+
+  // Don't show if no value and not editable
+  if (!displayValue && !value && !editable) {
+    return null;
+  }
+
+  // Edit mode - show input
+  if (editable && isEditing) {
+    return (
+      <div className="flex items-start gap-3 bg-[#0D1F22] text-[#F5F1E6] p-3 rounded-lg min-w-[200px]">
+        {icon}
+        <div className="flex-1 space-y-2">
+          <p className="text-[10px] uppercase tracking-wider opacity-70">{label}</p>
+          {secondaryFields !== undefined ? (
+            // Address fields
+            <>
+              <input
+                type="text"
+                value={localValue}
+                onChange={(e) => setLocalValue(e.target.value)}
+                placeholder="Street address"
+                className="w-full bg-transparent border-b border-[#D4AF37]/50 focus:border-[#D4AF37] outline-none text-sm"
+                autoFocus
+              />
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={localCity}
+                  onChange={(e) => setLocalCity(e.target.value)}
+                  placeholder="City"
+                  className="flex-1 bg-transparent border-b border-[#D4AF37]/50 focus:border-[#D4AF37] outline-none text-sm"
+                />
+                <input
+                  type="text"
+                  value={localState}
+                  onChange={(e) => setLocalState(e.target.value)}
+                  placeholder="ST"
+                  className="w-12 bg-transparent border-b border-[#D4AF37]/50 focus:border-[#D4AF37] outline-none text-sm"
+                  maxLength={2}
+                />
+                <input
+                  type="text"
+                  value={localZip}
+                  onChange={(e) => setLocalZip(e.target.value)}
+                  placeholder="ZIP"
+                  className="w-16 bg-transparent border-b border-[#D4AF37]/50 focus:border-[#D4AF37] outline-none text-sm"
+                />
+              </div>
+            </>
+          ) : (
+            // Single field (phone, website)
+            <input
+              type="text"
+              value={localValue}
+              onChange={(e) => setLocalValue(e.target.value)}
+              placeholder={placeholder}
+              className="w-full bg-transparent border-b border-[#D4AF37]/50 focus:border-[#D4AF37] outline-none text-sm"
+              autoFocus
+            />
+          )}
+          <div className="flex gap-2 pt-1">
+            <button
+              onClick={handleSave}
+              className="text-xs bg-[#D4AF37] text-[#0D1F22] py-1 px-3 rounded hover:bg-[#E5C97B]"
+            >
+              Save
+            </button>
+            <button
+              onClick={handleCancel}
+              className="text-xs border border-[#D4AF37]/50 text-[#D4AF37] py-1 px-3 rounded hover:bg-[#D4AF37]/10"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Editable mode - show clickable to edit
+  if (editable) {
+    return (
+      <div
+        onClick={() => setIsEditing(true)}
+        className={cn(
+          "flex items-center gap-3 cursor-pointer transition-opacity",
+          showEditHints && "hover:opacity-80 hover:ring-2 hover:ring-[#0D1F22]/30 hover:ring-offset-2 rounded px-2 py-1 -mx-2 -my-1"
+        )}
+      >
+        {icon}
+        <div>
+          <p className="text-[10px] uppercase tracking-wider opacity-70">{label}</p>
+          <p className={`font-semibold ${raleway.className}`}>
+            {displayValue || value || <span className="opacity-50">{placeholder}</span>}
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // View mode - normal link
+  if (!displayValue && !value) return null;
+
+  return (
+    <a
+      href={href}
+      target={target}
+      rel={target === "_blank" ? "noopener noreferrer" : undefined}
+      className="flex items-center gap-3 hover:opacity-80 transition-opacity cursor-pointer"
+    >
+      {icon}
+      <div>
+        <p className="text-[10px] uppercase tracking-wider opacity-70">{label}</p>
+        <p className={`font-semibold whitespace-nowrap ${raleway.className}`}>
+          {displayValue || value}
+        </p>
+      </div>
+    </a>
+  );
+}
+
+// =============================================================================
 // EDITABLE VIDEO EMBED
 // Handles video display with URL editing in edit mode
 // =============================================================================
@@ -254,10 +429,10 @@ function EditableHours({ hours }: { hours: Hours }) {
               type="text"
               value={hours[day] || ""}
               onChange={(e) => handleUpdateDay(day, e.target.value)}
-              placeholder="e.g., 9:00 AM - 5:00 PM"
+              placeholder="9:00 AM - 5:00 PM"
               className={cn(
-                "bg-transparent border-b border-transparent focus:border-[#D4AF37]/50 outline-none text-right text-[#F5F1E6]/70 w-48",
-                showEditHints && "hover:border-[#D4AF37]/30",
+                "bg-[#D4AF37]/10 border border-[#D4AF37]/30 rounded px-2 py-1 focus:border-[#D4AF37] focus:bg-[#D4AF37]/20 outline-none text-right text-[#F5F1E6] w-48",
+                showEditHints && "hover:border-[#D4AF37]/50 hover:bg-[#D4AF37]/15",
                 raleway.className
               )}
             />
@@ -816,50 +991,36 @@ export function ArtDecoDesign({
       <div className="bg-gradient-to-r from-[#D4AF37] via-[#E5C97B] to-[#D4AF37] text-[#0D1F22]">
         <div className="max-w-6xl mx-auto px-4 py-4">
           <div className="flex flex-wrap items-center justify-center gap-6 sm:gap-10">
-            {phone && (
-              <a
-                href={`tel:${phone}`}
-                className="flex items-center gap-3 hover:opacity-80 transition-opacity cursor-pointer"
-              >
-                <Phone className="w-5 h-5" />
-                <div>
-                  <p className="text-[10px] uppercase tracking-wider opacity-70">Telephone</p>
-                  <p className={`font-semibold ${raleway.className}`}>{formatPhoneNumber(phone)}</p>
-                </div>
-              </a>
-            )}
-            {website && (
-              <a
-                href={website.startsWith("http") ? website : `https://${website}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-3 hover:opacity-80 transition-opacity cursor-pointer"
-              >
-                <Globe className="w-5 h-5" />
-                <div>
-                  <p className="text-[10px] uppercase tracking-wider opacity-70">Website</p>
-                  <p className={`font-semibold ${raleway.className}`}>
-                    {website.replace(/^https?:\/\//, "")}
-                  </p>
-                </div>
-              </a>
-            )}
-            {(fullAddress || location) && (
-              <a
-                href={directionsUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-3 hover:opacity-80 transition-opacity cursor-pointer"
-              >
-                <MapPin className="w-5 h-5" />
-                <div>
-                  <p className="text-[10px] uppercase tracking-wider opacity-70">Location</p>
-                  <p className={`font-semibold whitespace-nowrap ${raleway.className}`}>
-                    {[streetAddress, city, state, zipCode].filter(Boolean).join(", ") || location}
-                  </p>
-                </div>
-              </a>
-            )}
+            <EditableContactField
+              field="phone"
+              value={phone}
+              icon={<Phone className="w-5 h-5" />}
+              label="Telephone"
+              displayValue={phone ? formatPhoneNumber(phone) : undefined}
+              placeholder="(555) 555-5555"
+              href={phone ? `tel:${phone}` : undefined}
+            />
+            <EditableContactField
+              field="website"
+              value={website}
+              icon={<Globe className="w-5 h-5" />}
+              label="Website"
+              displayValue={website?.replace(/^https?:\/\//, "")}
+              placeholder="www.example.com"
+              href={website ? (website.startsWith("http") ? website : `https://${website}`) : undefined}
+              target="_blank"
+            />
+            <EditableContactField
+              field="streetAddress"
+              value={streetAddress}
+              secondaryFields={{ city, state, zipCode }}
+              icon={<MapPin className="w-5 h-5" />}
+              label="Location"
+              displayValue={[streetAddress, city, state, zipCode].filter(Boolean).join(", ") || location}
+              placeholder="123 Main St"
+              href={directionsUrl}
+              target="_blank"
+            />
           </div>
         </div>
       </div>
