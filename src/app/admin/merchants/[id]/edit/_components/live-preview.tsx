@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useState, useMemo } from "react";
 import { ArtDecoDesign } from "@/components/merchant-page/designs/art-deco";
 import { GatsbyGlamourDesign } from "@/components/merchant-page/designs/gatsby-glamour";
 import { VintageHollywoodDesign } from "@/components/merchant-page/designs/vintage-hollywood";

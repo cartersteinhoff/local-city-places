@@ -41,6 +41,7 @@ import {
   Eye,
   Save,
   RefreshCw,
+  Paintbrush,
 } from "lucide-react";
 import { useUser } from "@/hooks/use-user";
 import { adminNavItems } from "../../../nav";
@@ -479,12 +480,20 @@ export default function EditMerchantPage({ params }: { params: Promise<{ id: str
             {/* Header */}
             <div className="mb-6">
               <div className="flex items-center justify-between mb-4">
-                <Button variant="ghost" size="sm" asChild>
-                  <Link href="/admin/merchants">
-                    <ArrowLeft className="w-4 h-4 mr-2" />
-                    Back
-                  </Link>
-                </Button>
+                <div className="flex items-center gap-2">
+                  <Button variant="ghost" size="sm" asChild>
+                    <Link href="/admin/merchants">
+                      <ArrowLeft className="w-4 h-4 mr-2" />
+                      Back
+                    </Link>
+                  </Button>
+                  <Button variant="outline" size="sm" asChild>
+                    <Link href={`/admin/merchants/${id}/visual`}>
+                      <Paintbrush className="w-4 h-4 mr-2" />
+                      Visual Editor
+                    </Link>
+                  </Button>
+                </div>
                 <div className="flex items-center gap-2">
                   <Button
                     size="sm"
