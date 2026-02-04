@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { db } from "@/db";
 import { merchants, categories } from "@/db/schema";
 import { eq, and, ne } from "drizzle-orm";
@@ -301,6 +302,16 @@ export async function PATCH(
       ? getMerchantPageUrl(updated.city, updated.state, updated.slug)
       : null;
     const shortUrl = updated.phone ? getMerchantShortUrl(updated.phone) : null;
+
+    // Revalidate the merchant page cache so changes appear immediately
+    if (fullUrl) {
+      revalidatePath(fullUrl);
+    }
+    // Also revalidate old URL if slug changed
+    if (existing.slug && existing.slug !== updated.slug && existing.city && existing.state) {
+      const oldUrl = getMerchantPageUrl(existing.city, existing.state, existing.slug);
+      revalidatePath(oldUrl);
+    }
 
     return NextResponse.json({
       success: true,

@@ -5,8 +5,9 @@ import { merchants, categories } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { ArtDecoDesign } from "@/components/merchant-page/designs/art-deco";
 
-// Disable caching to always show fresh data
-export const dynamic = "force-dynamic";
+// Cache pages but revalidate on-demand when merchant is updated
+// Also revalidate every 60 seconds as a fallback
+export const revalidate = 60;
 
 interface PageProps {
   params: Promise<{
