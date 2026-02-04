@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/db";
 import { merchants, categories } from "@/db/schema";
-import { eq, desc, sql, like, or } from "drizzle-orm";
+import { eq, desc, asc, sql, and, isNull, isNotNull } from "drizzle-orm";
 import { getSession } from "@/lib/auth";
 import { isValidVimeoUrl } from "@/lib/vimeo";
 import {
@@ -24,9 +24,19 @@ export async function GET(request: NextRequest) {
     const limit = Math.min(100, Math.max(1, parseInt(searchParams.get("limit") || "20")));
     const offset = (page - 1) * limit;
     const search = searchParams.get("search") || "";
+    const categoryId = searchParams.get("categoryId") || "";
+    const completionFilter = searchParams.get("completion") || ""; // "complete", "incomplete", or ""
+    const sortBy = searchParams.get("sortBy") || "updatedAt"; // "name", "completion", "updatedAt", "createdAt"
+    const sortOrder = searchParams.get("sortOrder") || "desc"; // "asc" or "desc"
 
-    // Build where clause for public pages only
-    let whereClause = eq(merchants.isPublicPage, true);
+    // Build where clauses
+    const conditions = [eq(merchants.isPublicPage, true)];
+
+    if (categoryId) {
+      conditions.push(eq(merchants.categoryId, categoryId));
+    }
+
+    const whereClause = conditions.length > 1 ? and(...conditions) : conditions[0];
 
     // Count query
     const [{ count }] = await db
@@ -34,7 +44,22 @@ export async function GET(request: NextRequest) {
       .from(merchants)
       .where(whereClause);
 
-    // If search provided, filter by business name, city, or phone
+    // Determine sort column and direction
+    const getSortColumn = () => {
+      switch (sortBy) {
+        case "name": return merchants.businessName;
+        case "updatedAt": return merchants.updatedAt;
+        case "createdAt": return merchants.createdAt;
+        default: return merchants.updatedAt;
+      }
+    };
+    const orderByClause = sortOrder === "asc" ? asc(getSortColumn()) : desc(getSortColumn());
+
+    // For completion sorting, we need to fetch all and sort in memory
+    const needsCompletionSort = sortBy === "completion";
+    const queryLimit = needsCompletionSort || completionFilter ? 1000 : limit;
+    const queryOffset = needsCompletionSort || completionFilter ? 0 : offset;
+
     let query = db
       .select({
         id: merchants.id,
@@ -65,17 +90,64 @@ export async function GET(request: NextRequest) {
       .from(merchants)
       .leftJoin(categories, eq(merchants.categoryId, categories.id))
       .where(whereClause)
-      .orderBy(desc(merchants.createdAt))
-      .limit(limit)
-      .offset(offset);
+      .orderBy(orderByClause)
+      .limit(queryLimit)
+      .offset(queryOffset);
 
     const merchantList = await query;
 
-    // Apply search filter in application if provided
-    let filteredMerchants = merchantList;
+    // Transform merchants with completion calculation
+    let processedMerchants = merchantList.map((m) => {
+      const completion = calculateCompletion({
+        businessName: m.businessName,
+        categoryId: m.categoryId || undefined,
+        description: m.description || undefined,
+        aboutStory: m.aboutStory || undefined,
+        streetAddress: m.streetAddress || undefined,
+        city: m.city || undefined,
+        state: m.state || undefined,
+        zipCode: m.zipCode || undefined,
+        phone: m.phone || undefined,
+        website: m.website || undefined,
+        instagramUrl: m.instagramUrl || undefined,
+        facebookUrl: m.facebookUrl || undefined,
+        tiktokUrl: m.tiktokUrl || undefined,
+        hours: m.hours || undefined,
+        logoUrl: m.logoUrl || undefined,
+        vimeoUrl: m.vimeoUrl || undefined,
+        photos: m.photos || undefined,
+        services: m.services || undefined,
+      });
+
+      return {
+        id: m.id,
+        businessName: m.businessName,
+        streetAddress: m.streetAddress,
+        city: m.city,
+        state: m.state,
+        zipCode: m.zipCode,
+        phone: m.phone,
+        website: m.website,
+        vimeoUrl: m.vimeoUrl,
+        slug: m.slug,
+        categoryId: m.categoryId,
+        categoryName: m.categoryName,
+        description: m.description,
+        logoUrl: m.logoUrl,
+        createdAt: m.createdAt.toISOString(),
+        updatedAt: m.updatedAt.toISOString(),
+        completionPercentage: completion.percentage,
+        urls: {
+          full: m.city && m.state && m.slug ? getMerchantPageUrl(m.city, m.state, m.slug) : null,
+          short: m.phone ? getMerchantShortUrl(m.phone) : null,
+        },
+      };
+    });
+
+    // Apply search filter
     if (search) {
       const searchLower = search.toLowerCase();
-      filteredMerchants = merchantList.filter(
+      processedMerchants = processedMerchants.filter(
         (m) =>
           m.businessName.toLowerCase().includes(searchLower) ||
           m.city?.toLowerCase().includes(searchLower) ||
@@ -83,57 +155,34 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const totalPages = Math.ceil(Number(count) / limit);
+    // Apply completion filter
+    if (completionFilter === "complete") {
+      processedMerchants = processedMerchants.filter((m) => m.completionPercentage === 100);
+    } else if (completionFilter === "incomplete") {
+      processedMerchants = processedMerchants.filter((m) => m.completionPercentage < 100);
+    }
+
+    // Sort by completion if requested
+    if (sortBy === "completion") {
+      processedMerchants.sort((a, b) => {
+        const diff = a.completionPercentage - b.completionPercentage;
+        return sortOrder === "asc" ? diff : -diff;
+      });
+    }
+
+    // Calculate totals after filtering
+    const filteredTotal = processedMerchants.length;
+    const totalPages = Math.ceil(filteredTotal / limit);
+
+    // Apply pagination if we fetched all for sorting/filtering
+    if (needsCompletionSort || completionFilter) {
+      processedMerchants = processedMerchants.slice(offset, offset + limit);
+    }
 
     return NextResponse.json({
-      merchants: filteredMerchants.map((m) => {
-        const completion = calculateCompletion({
-          businessName: m.businessName,
-          categoryId: m.categoryId || undefined,
-          description: m.description || undefined,
-          aboutStory: m.aboutStory || undefined,
-          streetAddress: m.streetAddress || undefined,
-          city: m.city || undefined,
-          state: m.state || undefined,
-          zipCode: m.zipCode || undefined,
-          phone: m.phone || undefined,
-          website: m.website || undefined,
-          instagramUrl: m.instagramUrl || undefined,
-          facebookUrl: m.facebookUrl || undefined,
-          tiktokUrl: m.tiktokUrl || undefined,
-          hours: m.hours || undefined,
-          logoUrl: m.logoUrl || undefined,
-          vimeoUrl: m.vimeoUrl || undefined,
-          photos: m.photos || undefined,
-          services: m.services || undefined,
-        });
-
-        return {
-          id: m.id,
-          businessName: m.businessName,
-          streetAddress: m.streetAddress,
-          city: m.city,
-          state: m.state,
-          zipCode: m.zipCode,
-          phone: m.phone,
-          website: m.website,
-          vimeoUrl: m.vimeoUrl,
-          slug: m.slug,
-          categoryId: m.categoryId,
-          categoryName: m.categoryName,
-          description: m.description,
-          logoUrl: m.logoUrl,
-          createdAt: m.createdAt.toISOString(),
-          updatedAt: m.updatedAt.toISOString(),
-          completionPercentage: completion.percentage,
-          urls: {
-            full: m.city && m.state && m.slug ? getMerchantPageUrl(m.city, m.state, m.slug) : null,
-            short: m.phone ? getMerchantShortUrl(m.phone) : null,
-          },
-        };
-      }),
+      merchants: processedMerchants,
       pagination: {
-        total: Number(count),
+        total: filteredTotal,
         page,
         limit,
         totalPages,

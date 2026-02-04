@@ -37,10 +37,22 @@ import {
   Copy,
   Check,
 } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useUser } from "@/hooks/use-user";
 import { adminNavItems } from "../nav";
 import { formatPhoneNumber } from "@/lib/utils";
 import { cn } from "@/lib/utils";
+
+interface Category {
+  id: string;
+  name: string;
+}
 
 interface MerchantPageData {
   id: string;
@@ -65,6 +77,7 @@ export default function MerchantPagesPage() {
   const router = useRouter();
   const { user, isLoading: authLoading, isAuthenticated } = useUser();
   const [merchants, setMerchants] = useState<MerchantPageData[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
@@ -72,6 +85,12 @@ export default function MerchantPagesPage() {
   const [totalPages, setTotalPages] = useState(1);
   const [total, setTotal] = useState(0);
   const [copiedId, setCopiedId] = useState<string | null>(null);
+
+  // Filters and sorting
+  const [categoryFilter, setCategoryFilter] = useState("");
+  const [completionFilter, setCompletionFilter] = useState("");
+  const [sortBy, setSortBy] = useState("updatedAt");
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
 
   // Delete dialog
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -93,15 +112,39 @@ export default function MerchantPagesPage() {
     return () => clearTimeout(timer);
   }, [searchQuery]);
 
+  // Fetch categories
+  useEffect(() => {
+    async function fetchCategories() {
+      try {
+        const res = await fetch("/api/admin/categories");
+        if (res.ok) {
+          const data = await res.json();
+          setCategories(data.categories || []);
+        }
+      } catch (err) {
+        console.error("Error fetching categories:", err);
+      }
+    }
+    fetchCategories();
+  }, []);
+
   const fetchMerchants = useCallback(async () => {
     setIsLoading(true);
     try {
       const params = new URLSearchParams({
         page: page.toString(),
         limit: "20",
+        sortBy,
+        sortOrder,
       });
       if (debouncedSearch) {
         params.set("search", debouncedSearch);
+      }
+      if (categoryFilter) {
+        params.set("categoryId", categoryFilter);
+      }
+      if (completionFilter) {
+        params.set("completion", completionFilter);
       }
 
       const res = await fetch(`/api/admin/merchant-pages?${params}`);
@@ -116,13 +159,19 @@ export default function MerchantPagesPage() {
     } finally {
       setIsLoading(false);
     }
-  }, [page, debouncedSearch]);
+  }, [page, debouncedSearch, categoryFilter, completionFilter, sortBy, sortOrder]);
 
   useEffect(() => {
     if (!authLoading && isAuthenticated) {
       fetchMerchants();
     }
   }, [authLoading, isAuthenticated, fetchMerchants]);
+
+  // Reset page when filters change
+  const handleFilterChange = (setter: (value: string) => void) => (value: string) => {
+    setter(value === "all" ? "" : value);
+    setPage(1);
+  };
 
   const handleDelete = async () => {
     if (!selectedMerchant) return;
@@ -190,15 +239,63 @@ export default function MerchantPagesPage() {
             </div>
           </div>
 
-          {/* Search */}
-          <div className="relative mb-4">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <Input
-              placeholder="Search by business name, city, or phone..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-9 max-w-md"
-            />
+          {/* Search and Filters */}
+          <div className="flex flex-col sm:flex-row gap-3 mb-4">
+            <div className="relative flex-1 max-w-md">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input
+                placeholder="Search by business name, city, or phone..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-9"
+              />
+            </div>
+            <div className="flex gap-2 flex-wrap">
+              <Select value={categoryFilter || "all"} onValueChange={handleFilterChange(setCategoryFilter)}>
+                <SelectTrigger className="w-[150px]">
+                  <SelectValue placeholder="All categories" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All categories</SelectItem>
+                  {categories.map((cat) => (
+                    <SelectItem key={cat.id} value={cat.id}>{cat.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Select value={completionFilter || "all"} onValueChange={handleFilterChange(setCompletionFilter)}>
+                <SelectTrigger className="w-[140px]">
+                  <SelectValue placeholder="All status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All status</SelectItem>
+                  <SelectItem value="complete">Complete</SelectItem>
+                  <SelectItem value="incomplete">Incomplete</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select
+                value={`${sortBy}-${sortOrder}`}
+                onValueChange={(value) => {
+                  const [newSortBy, newSortOrder] = value.split("-");
+                  setSortBy(newSortBy);
+                  setSortOrder(newSortOrder as "asc" | "desc");
+                  setPage(1);
+                }}
+              >
+                <SelectTrigger className="w-[160px]">
+                  <SelectValue placeholder="Sort by" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="updatedAt-desc">Updated (newest)</SelectItem>
+                  <SelectItem value="updatedAt-asc">Updated (oldest)</SelectItem>
+                  <SelectItem value="createdAt-desc">Created (newest)</SelectItem>
+                  <SelectItem value="createdAt-asc">Created (oldest)</SelectItem>
+                  <SelectItem value="name-asc">Name (A-Z)</SelectItem>
+                  <SelectItem value="name-desc">Name (Z-A)</SelectItem>
+                  <SelectItem value="completion-desc">Completion (high)</SelectItem>
+                  <SelectItem value="completion-asc">Completion (low)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
           {merchants.length === 0 && !isLoading ? (
