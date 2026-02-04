@@ -56,6 +56,7 @@ export function GooglePlacesAutocomplete({
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isScriptLoaded, setIsScriptLoaded] = useState(false);
+  const [scriptError, setScriptError] = useState(false);
   const autocompleteService = useRef<any>(null);
   const placesService = useRef<any>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -67,6 +68,7 @@ export function GooglePlacesAutocomplete({
     const apiKey = process.env.NEXT_PUBLIC_GOOGLE_PLACES_API_KEY;
     if (!apiKey) {
       console.error("Google Places API key not configured");
+      setScriptError(true);
       return;
     }
 
@@ -92,7 +94,13 @@ export function GooglePlacesAutocomplete({
     // Check if script is already being loaded
     if (document.querySelector('script[src*="maps.googleapis.com"]')) {
       window.initGooglePlaces = initServices;
-      return;
+      // Set a timeout in case the script fails silently
+      const timeout = setTimeout(() => {
+        if (!window.google?.maps?.places) {
+          setScriptError(true);
+        }
+      }, 10000);
+      return () => clearTimeout(timeout);
     }
 
     // Load script
@@ -102,11 +110,17 @@ export function GooglePlacesAutocomplete({
     script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places&callback=initGooglePlaces`;
     script.async = true;
     script.defer = true;
+    script.onerror = () => setScriptError(true);
     document.head.appendChild(script);
 
-    return () => {
-      // Cleanup not needed as script should persist
-    };
+    // Timeout fallback if script loads but API fails (e.g., billing error)
+    const timeout = setTimeout(() => {
+      if (!window.google?.maps?.places) {
+        setScriptError(true);
+      }
+    }, 10000);
+
+    return () => clearTimeout(timeout);
   }, []);
 
   // Update input when value prop changes
@@ -250,15 +264,18 @@ export function GooglePlacesAutocomplete({
           onFocus={() => predictions.length > 0 && setIsOpen(true)}
           placeholder={placeholder}
           className={cn("pl-10", error && "border-destructive")}
-          disabled={!isScriptLoaded}
+          disabled={!isScriptLoaded || scriptError}
         />
         {isLoading && (
           <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 animate-spin text-muted-foreground" />
         )}
       </div>
 
-      {!isScriptLoaded && (
+      {!isScriptLoaded && !scriptError && (
         <p className="text-xs text-muted-foreground mt-1">Loading Google Places...</p>
+      )}
+      {scriptError && (
+        <p className="text-xs text-muted-foreground mt-1">Google Places unavailable - enter details manually below</p>
       )}
 
       {isOpen && predictions.length > 0 && (
