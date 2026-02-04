@@ -8,6 +8,7 @@ interface UseManualSaveOptions<T> {
   data: T;
   originalData: T;
   onSave: (data: T) => Promise<void>;
+  enabled?: boolean;
 }
 
 interface UseManualSaveReturn {
@@ -24,6 +25,7 @@ export function useManualSave<T>({
   data,
   originalData,
   onSave,
+  enabled = true,
 }: UseManualSaveOptions<T>): UseManualSaveReturn {
   const [status, setStatus] = useState<SaveStatus>("clean");
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
@@ -37,8 +39,8 @@ export function useManualSave<T>({
     dataRef.current = data;
   }, [data]);
 
-  // Check if data has changed from original
-  const isDirty = JSON.stringify(data) !== JSON.stringify(originalData);
+  // Check if data has changed from original (only if enabled)
+  const isDirty = enabled && JSON.stringify(data) !== JSON.stringify(originalData);
 
   // Update status based on dirty state
   useEffect(() => {
@@ -86,6 +88,8 @@ export function useManualSave<T>({
 
   // Warn before leaving with unsaved changes
   useEffect(() => {
+    if (!enabled) return;
+
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
       if (isDirty) {
         e.preventDefault();
@@ -96,7 +100,7 @@ export function useManualSave<T>({
 
     window.addEventListener("beforeunload", handleBeforeUnload);
     return () => window.removeEventListener("beforeunload", handleBeforeUnload);
-  }, [isDirty]);
+  }, [isDirty, enabled]);
 
   return {
     status,

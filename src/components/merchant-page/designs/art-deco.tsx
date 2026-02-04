@@ -13,7 +13,7 @@
  */
 
 import { Poiret_One, Raleway } from "next/font/google";
-import { MapPin, Phone, Globe, Share2, Gem, Navigation, Clock, Instagram, Facebook, Image as ImageIcon, Sparkles, Upload, Plus, Trash2, GripVertical, Pencil } from "lucide-react";
+import { MapPin, Phone, Globe, Share2, Gem, Navigation, Clock, Instagram, Facebook, Image as ImageIcon, Sparkles, Upload, Plus, Trash2, GripVertical, Pencil, X, ChevronLeft, ChevronRight, Star, Quote } from "lucide-react";
 import { formatPhoneNumber, formatHoursDisplay, cn } from "@/lib/utils";
 import { useEditor, useEditable } from "../editor-context";
 import { EditableText, EditableImage, EditableLink, PreventLink } from "../editable-primitives";
@@ -965,6 +965,30 @@ function EditablePhotoGallery({ photos, businessName }: { photos: string[]; busi
   const { editable, onUpdate, onPhotoUpload, showEditHints } = useEditor();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
+
+  // Keyboard navigation for lightbox
+  useEffect(() => {
+    if (lightboxIndex === null) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setLightboxIndex(null);
+      } else if (e.key === "ArrowLeft") {
+        setLightboxIndex((prev) => (prev !== null && prev > 0 ? prev - 1 : photos.length - 1));
+      } else if (e.key === "ArrowRight") {
+        setLightboxIndex((prev) => (prev !== null && prev < photos.length - 1 ? prev + 1 : 0));
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+    document.body.style.overflow = "hidden";
+
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+      document.body.style.overflow = "";
+    };
+  }, [lightboxIndex, photos.length]);
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -994,11 +1018,20 @@ function EditablePhotoGallery({ photos, businessName }: { photos: string[]; busi
     onUpdate("photos", newPhotos);
   };
 
+  const handlePhotoClick = (idx: number) => {
+    if (!editable) {
+      setLightboxIndex(idx);
+    }
+  };
+
   const renderPhotoItem = (photo: string, idx: number) => (
-    <div className={cn(
-      "relative aspect-square border-2 border-[#D4AF37]/30 overflow-hidden group",
-      editable && "cursor-grab"
-    )}>
+    <div
+      className={cn(
+        "relative aspect-square border-2 border-[#D4AF37]/30 overflow-hidden group",
+        editable ? "cursor-grab" : "cursor-pointer"
+      )}
+      onClick={() => handlePhotoClick(idx)}
+    >
       <img
         src={photo}
         alt={`${businessName} photo ${idx + 1}`}
@@ -1031,14 +1064,72 @@ function EditablePhotoGallery({ photos, businessName }: { photos: string[]; busi
     </div>
   );
 
+  // Lightbox modal
+  const lightbox = lightboxIndex !== null && (
+    <div
+      className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center"
+      onClick={() => setLightboxIndex(null)}
+    >
+      {/* Close button */}
+      <button
+        onClick={() => setLightboxIndex(null)}
+        className="absolute top-4 right-4 w-12 h-12 flex items-center justify-center text-white/70 hover:text-white transition-colors z-10"
+      >
+        <X className="w-8 h-8" />
+      </button>
+
+      {/* Previous button */}
+      {photos.length > 1 && (
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            setLightboxIndex((prev) => (prev !== null && prev > 0 ? prev - 1 : photos.length - 1));
+          }}
+          className="absolute left-4 top-1/2 -translate-y-1/2 w-12 h-12 flex items-center justify-center text-white/70 hover:text-white bg-black/30 hover:bg-black/50 rounded-full transition-all z-10"
+        >
+          <ChevronLeft className="w-8 h-8" />
+        </button>
+      )}
+
+      {/* Next button */}
+      {photos.length > 1 && (
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            setLightboxIndex((prev) => (prev !== null && prev < photos.length - 1 ? prev + 1 : 0));
+          }}
+          className="absolute right-4 top-1/2 -translate-y-1/2 w-12 h-12 flex items-center justify-center text-white/70 hover:text-white bg-black/30 hover:bg-black/50 rounded-full transition-all z-10"
+        >
+          <ChevronRight className="w-8 h-8" />
+        </button>
+      )}
+
+      {/* Image */}
+      <img
+        src={photos[lightboxIndex]}
+        alt={`${businessName} photo ${lightboxIndex + 1}`}
+        className="max-w-[90vw] max-h-[90vh] object-contain"
+        onClick={(e) => e.stopPropagation()}
+      />
+
+      {/* Image counter */}
+      <div className="absolute bottom-4 left-1/2 -translate-x-1/2 text-white/70 text-sm">
+        {lightboxIndex + 1} / {photos.length}
+      </div>
+    </div>
+  );
+
   // View mode - no drag and drop
   if (!editable) {
     return (
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-        {photos.map((photo, idx) => (
-          <div key={idx}>{renderPhotoItem(photo, idx)}</div>
-        ))}
-      </div>
+      <>
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+          {photos.map((photo, idx) => (
+            <div key={idx}>{renderPhotoItem(photo, idx)}</div>
+          ))}
+        </div>
+        {lightbox}
+      </>
     );
   }
 
@@ -1294,10 +1385,10 @@ export function ArtDecoDesign({
       <header className="relative border-b border-[#D4AF37]/30">
         <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 border-2 border-[#D4AF37] flex items-center justify-center rotate-45">
-              <Gem className="w-5 h-5 text-[#D4AF37] -rotate-45" />
+            <div className="w-7 h-7 border-2 border-[#D4AF37] flex items-center justify-center rotate-45">
+              <Gem className="w-3.5 h-3.5 text-[#D4AF37] -rotate-45" />
             </div>
-            <span className="text-xs tracking-[0.3em] uppercase text-[#D4AF37]/70 hidden sm:block">Local City Places</span>
+            <span className="text-base font-medium tracking-[0.3em] uppercase text-[#D4AF37]/70 hidden sm:block ml-2">Local City Places</span>
           </div>
           <button
             onClick={handleShare}
@@ -1313,6 +1404,11 @@ export function ArtDecoDesign({
       <nav className="bg-[#0D1F22]/95 border-b border-[#D4AF37]/20 sticky top-0 z-40 backdrop-blur-sm">
         <div className="max-w-6xl mx-auto px-4">
           <div className="flex items-center justify-center gap-1 sm:gap-2 py-2 overflow-x-auto scrollbar-hide">
+            {businessName === "Cobblestone Auto Spa" && (
+              <a href="#reviews" className={`px-3 py-2 text-[10px] sm:text-xs tracking-[0.15em] uppercase text-[#D4AF37]/70 hover:text-[#D4AF37] hover:bg-[#D4AF37]/10 transition-all whitespace-nowrap cursor-pointer ${raleway.className}`}>
+                Reviews
+              </a>
+            )}
             {aboutStory && (
               <a href="#story" className={`px-3 py-2 text-[10px] sm:text-xs tracking-[0.15em] uppercase text-[#D4AF37]/70 hover:text-[#D4AF37] hover:bg-[#D4AF37]/10 transition-all whitespace-nowrap cursor-pointer ${raleway.className}`}>
                 Story
@@ -1513,6 +1609,105 @@ export function ArtDecoDesign({
           <div className="w-32 h-px bg-gradient-to-l from-transparent to-[#D4AF37]/40" />
         </div>
 
+        {/* Reviews Section - Only for Cobblestone Auto Spa (test) */}
+        {businessName === "Cobblestone Auto Spa" && (
+          <>
+            <div id="reviews" className="max-w-6xl mx-auto px-4 py-12 scroll-mt-16">
+              <div className="flex items-center gap-4 mb-8">
+                <Star className="w-6 h-6 text-[#D4AF37] fill-[#D4AF37]" />
+                <h2 className={`text-2xl ${poiretOne.className}`}>Customer Reviews</h2>
+                <div className="flex-1 h-px bg-gradient-to-r from-[#D4AF37]/30 to-transparent" />
+              </div>
+
+              {/* Overall Rating */}
+              <div className="flex items-center gap-6 mb-8 p-6 border border-[#D4AF37]/20 bg-[#D4AF37]/5">
+                <div className="text-center">
+                  <div className={`text-5xl font-light text-[#D4AF37] ${poiretOne.className}`}>4.9</div>
+                  <div className="flex items-center gap-1 mt-2">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <Star key={star} className="w-4 h-4 text-[#D4AF37] fill-[#D4AF37]" />
+                    ))}
+                  </div>
+                  <p className={`text-sm text-[#F5F1E6]/50 mt-1 ${raleway.className}`}>127 reviews</p>
+                </div>
+                <div className="h-16 w-px bg-[#D4AF37]/20" />
+                <div className={`flex-1 text-[#F5F1E6]/70 ${raleway.className}`}>
+                  <p className="italic">&quot;Consistently exceptional service that keeps customers coming back.&quot;</p>
+                </div>
+              </div>
+
+              {/* Individual Reviews */}
+              <div className="grid md:grid-cols-2 gap-6">
+                {[
+                  {
+                    name: "Sarah M.",
+                    date: "2 weeks ago",
+                    rating: 5,
+                    text: "Absolutely incredible experience! The attention to detail is unmatched. My car looked better than when I first bought it. Will definitely be coming back regularly.",
+                    avatar: "SM"
+                  },
+                  {
+                    name: "James K.",
+                    date: "1 month ago",
+                    rating: 5,
+                    text: "Best auto detailing in Denver, hands down. The ceramic coating they applied has kept my car looking pristine for months. Worth every penny.",
+                    avatar: "JK"
+                  },
+                  {
+                    name: "Michelle R.",
+                    date: "1 month ago",
+                    rating: 5,
+                    text: "The team here really knows what they're doing. Professional, friendly, and the results speak for themselves. My SUV has never looked this good!",
+                    avatar: "MR"
+                  },
+                  {
+                    name: "David L.",
+                    date: "2 months ago",
+                    rating: 4,
+                    text: "Great service and fair pricing. The interior deep clean was exactly what my car needed after a long road trip. Highly recommend!",
+                    avatar: "DL"
+                  }
+                ].map((review, idx) => (
+                  <div key={idx} className="border border-[#D4AF37]/20 p-6 hover:border-[#D4AF37]/40 transition-colors">
+                    <div className="flex items-start gap-4 mb-4">
+                      <div className="w-12 h-12 bg-[#D4AF37]/20 border border-[#D4AF37]/30 flex items-center justify-center">
+                        <span className={`text-[#D4AF37] font-medium ${raleway.className}`}>{review.avatar}</span>
+                      </div>
+                      <div className="flex-1">
+                        <div className="flex items-center justify-between">
+                          <h4 className={`font-medium text-[#F5F1E6] ${raleway.className}`}>{review.name}</h4>
+                          <span className={`text-xs text-[#F5F1E6]/40 ${raleway.className}`}>{review.date}</span>
+                        </div>
+                        <div className="flex items-center gap-0.5 mt-1">
+                          {[1, 2, 3, 4, 5].map((star) => (
+                            <Star
+                              key={star}
+                              className={cn(
+                                "w-3.5 h-3.5",
+                                star <= review.rating ? "text-[#D4AF37] fill-[#D4AF37]" : "text-[#D4AF37]/30"
+                              )}
+                            />
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                    <Quote className="w-5 h-5 text-[#D4AF37]/30 mb-2" />
+                    <p className={`text-[#F5F1E6]/70 text-sm leading-relaxed ${raleway.className}`}>
+                      {review.text}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="flex items-center justify-center gap-4 py-4">
+              <div className="w-32 h-px bg-gradient-to-r from-transparent to-[#D4AF37]/40" />
+              <div className="w-3 h-3 rotate-45 border border-[#D4AF37]/50" />
+              <div className="w-32 h-px bg-gradient-to-l from-transparent to-[#D4AF37]/40" />
+            </div>
+          </>
+        )}
+
         {/* Map Section - only show if we have location data */}
         {(googlePlaceId || fullAddress) && (
           <div id="location" className="max-w-6xl mx-auto px-4 py-12 scroll-mt-16">
@@ -1655,10 +1850,9 @@ export function ArtDecoDesign({
             <div className="flex items-center justify-center gap-4">
               <Gem className="w-6 h-6 text-[#D4AF37]" />
               <div className="text-center">
-                <p className={`text-[#D4AF37] font-medium ${poiretOne.className}`}>
+                <p className={`text-lg text-[#D4AF37] font-medium ${poiretOne.className}`}>
                   Exclusive Partner Establishment
                 </p>
-                <p className="text-[#F5F1E6]/50 text-sm">Earn rewards with every visit</p>
               </div>
             </div>
           </div>
