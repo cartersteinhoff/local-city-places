@@ -120,7 +120,6 @@ function EditableContactField({
       autocompleteService.current = new window.google.maps.places.AutocompleteService();
       if (dummyDiv.current) {
         placesService.current = new window.google.maps.places.PlacesService(dummyDiv.current);
-        console.log("PlacesService initialized");
       }
       setIsScriptLoaded(true);
     };
@@ -171,20 +170,17 @@ function EditableContactField({
     }
 
     if (!autocompleteService.current) {
-      console.log("Google Places not loaded yet, isScriptLoaded:", isScriptLoaded);
       return;
     }
 
     setIsSearching(true);
     debounceRef.current = setTimeout(() => {
-      console.log("Searching for:", query);
       autocompleteService.current.getPlacePredictions(
         {
           input: query,
           componentRestrictions: { country: "us" },
         },
         (results: any[] | null, status: string) => {
-          console.log("Places API status:", status, "results:", results?.length);
           setIsSearching(false);
           if (status === "OK" && results) {
             setPredictions(results.map((r: any) => ({ place_id: r.place_id, description: r.description })));
@@ -198,7 +194,6 @@ function EditableContactField({
 
   // Select a place from predictions
   const handleSelectPlace = (placeId: string) => {
-    console.log("Selecting place:", placeId, "placesService:", !!placesService.current);
 
     if (!placesService.current) {
       console.error("PlacesService not initialized");
@@ -216,7 +211,6 @@ function EditableContactField({
         fields: ["address_components", "formatted_address"],
       },
       (place: any, status: string) => {
-        console.log("Place details status:", status, place);
         if (status === "OK" && place?.address_components) {
           let streetNumber = "";
           let route = "";
@@ -242,15 +236,19 @@ function EditableContactField({
             }
           }
 
-          console.log("Parsed address:", { streetNumber, route, city, state, zipCode });
-          setLocalValue([streetNumber, route].filter(Boolean).join(" "));
+          const streetAddress = [streetNumber, route].filter(Boolean).join(" ");
+          setLocalValue(streetAddress);
           setLocalCity(city);
           setLocalState(state);
           setLocalZip(zipCode);
           setSearchQuery("");
           setPredictions([]);
 
-          // Also save the Google Place ID
+          // Save all fields immediately to prevent reset from parent re-render
+          onUpdate(field, streetAddress || null);
+          onUpdate("city", city || null);
+          onUpdate("state", state || null);
+          onUpdate("zipCode", zipCode || null);
           onUpdate("googlePlaceId", placeId);
         }
       }

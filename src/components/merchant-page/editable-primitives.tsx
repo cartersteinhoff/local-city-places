@@ -5,7 +5,6 @@ import { useEditor } from "./editor-context";
 import { Pencil, Upload, Plus, Trash2, GripVertical } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import {
   Popover,
   PopoverContent,
@@ -41,18 +40,34 @@ export function EditableText({
   const { editable, onUpdate, showEditHints } = useEditor();
   const [isEditing, setIsEditing] = useState(false);
   const [localValue, setLocalValue] = useState(value);
-  const inputRef = useRef<HTMLInputElement | HTMLTextAreaElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
     setLocalValue(value);
   }, [value]);
 
+  // Auto-resize textarea to fit content
+  const adjustHeight = () => {
+    const textarea = textareaRef.current;
+    if (textarea) {
+      textarea.style.height = 'auto';
+      textarea.style.height = `${textarea.scrollHeight}px`;
+    }
+  };
+
   useEffect(() => {
-    if (isEditing && inputRef.current) {
-      inputRef.current.focus();
-      inputRef.current.select();
+    if (isEditing && textareaRef.current) {
+      textareaRef.current.focus();
+      textareaRef.current.select();
+      adjustHeight();
     }
   }, [isEditing]);
+
+  useEffect(() => {
+    if (isEditing) {
+      adjustHeight();
+    }
+  }, [localValue, isEditing]);
 
   const handleSave = () => {
     setIsEditing(false);
@@ -78,21 +93,21 @@ export function EditableText({
   }
 
   // Edit mode - editing state
+  // Always use textarea with auto-height so text wraps correctly (e.g., two-line titles)
   if (isEditing) {
-    const InputComponent = multiline ? Textarea : Input;
     return (
-      <InputComponent
-        ref={inputRef as any}
+      <textarea
+        ref={textareaRef}
         value={localValue}
         onChange={(e) => setLocalValue(e.target.value)}
         onBlur={handleSave}
         onKeyDown={handleKeyDown}
         placeholder={placeholder}
+        rows={1}
         className={cn(
-          "bg-transparent border-[#D4AF37]/50 focus:border-[#D4AF37] text-inherit font-inherit",
+          "w-full bg-transparent border-2 border-[#D4AF37]/50 focus:border-[#D4AF37] rounded-md px-2 py-1 outline-none resize-none overflow-hidden",
           inputClassName
         )}
-        rows={multiline ? 4 : undefined}
       />
     );
   }

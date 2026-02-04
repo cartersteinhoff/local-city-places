@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback, use } from "react";
+import { useEffect, useState, useCallback, use, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { DashboardLayout } from "@/components/layout";
@@ -25,7 +25,6 @@ import { useUser } from "@/hooks/use-user";
 import { adminNavItems } from "../../../nav";
 import { formatPhoneNumber, stripPhoneNumber, cn } from "@/lib/utils";
 import { useManualSave } from "@/hooks/use-manual-save";
-import { UnifiedVisualEditor } from "./_components/unified-visual-editor";
 
 // Device configurations for visual editor
 type DeviceType = "desktop" | "tablet" | "mobile";
@@ -135,10 +134,15 @@ export default function VisualEditorPage({ params }: { params: Promise<{ id: str
   const [device, setDevice] = useState<DeviceType>("desktop");
   const [zoom, setZoom] = useState(DEFAULT_ZOOM.desktop);
 
+  // Iframe preview state
+  const iframeRef = useRef<HTMLIFrameElement>(null);
+  const [iframeReady, setIframeReady] = useState(false);
+
   // Handler for device change that also adjusts zoom
   const handleDeviceChange = useCallback((newDevice: DeviceType) => {
     setDevice(newDevice);
     setZoom(DEFAULT_ZOOM[newDevice]);
+    setIframeReady(false); // Reset iframe ready state
   }, []);
 
   // Handler for importing from Google Places
@@ -340,6 +344,34 @@ export default function VisualEditorPage({ params }: { params: Promise<{ id: str
     }
   }, [authLoading, isAuthenticated, id]);
 
+  // Iframe communication
+  useEffect(() => {
+    const handleMessage = (event: MessageEvent) => {
+      if (event.origin !== window.location.origin) return;
+
+      if (event.data.type === "preview-ready") {
+        setIframeReady(true);
+      } else if (event.data.type === "preview-update") {
+        // Handle updates from the iframe preview
+        const { field, value } = event.data;
+        updateField(field as keyof FormData, value);
+      }
+    };
+
+    window.addEventListener("message", handleMessage);
+    return () => window.removeEventListener("message", handleMessage);
+  }, [updateField]);
+
+  // Send data to iframe when ready or when data changes
+  useEffect(() => {
+    if (iframeReady && iframeRef.current?.contentWindow) {
+      iframeRef.current.contentWindow.postMessage(
+        { type: "preview-data", data: formData, showEditHints },
+        window.location.origin
+      );
+    }
+  }, [iframeReady, formData, showEditHints]);
+
   // Calculate scale based on zoom and available container width
   const deviceConfig = DEVICES.find(d => d.id === device) || DEVICES[0];
   const scale = zoom / 100;
@@ -505,7 +537,7 @@ export default function VisualEditorPage({ params }: { params: Promise<{ id: str
             </div>
           </div>
 
-          {/* Visual Editor Canvas */}
+          {/* Visual Editor Canvas - Uses iframe for correct responsive breakpoints */}
           <div className="flex-1 overflow-auto bg-[repeating-linear-gradient(45deg,transparent,transparent_10px,rgba(0,0,0,0.02)_10px,rgba(0,0,0,0.02)_20px)]">
             <div className="flex justify-center py-8 px-4">
               {/* Wrapper that contains the scaled content */}
@@ -529,17 +561,18 @@ export default function VisualEditorPage({ params }: { params: Promise<{ id: str
                   }}
                 >
                   <div className={cn(
-                    "bg-white overflow-hidden",
+                    "overflow-hidden",
                     device === "mobile" && "rounded-[16px]",
                     device === "tablet" && "rounded-[12px]",
                     device === "desktop" && "rounded-t-md"
                   )}>
-                    <UnifiedVisualEditor
-                      data={formData}
-                      onUpdate={updateField}
-                      onPhotoUpload={handlePhotoUpload}
-                      onLogoUpload={handleLogoUpload}
-                      showEditHints={showEditHints}
+                    {/* Iframe for preview - CSS media queries respond to iframe width, not viewport */}
+                    <iframe
+                      ref={iframeRef}
+                      src={`/admin/merchants/${id}/visual/preview`}
+                      className="w-full border-0"
+                      style={{ height: "200vh" }}
+                      title="Page preview"
                     />
                   </div>
                 </div>
