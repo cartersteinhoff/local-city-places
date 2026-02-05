@@ -1388,7 +1388,7 @@ export function ArtDecoDesign({
             <div className="w-7 h-7 border-2 border-[#D4AF37] flex items-center justify-center rotate-45">
               <Gem className="w-3.5 h-3.5 text-[#D4AF37] -rotate-45" />
             </div>
-            <span className="text-base font-medium tracking-[0.3em] uppercase text-[#D4AF37]/70 hidden sm:block ml-2">Local City Places</span>
+            <span className="text-xs sm:text-base font-medium tracking-[0.2em] sm:tracking-[0.3em] uppercase text-[#D4AF37]/70 ml-1 sm:ml-2">Local City Places</span>
           </div>
           <button
             onClick={handleShare}
