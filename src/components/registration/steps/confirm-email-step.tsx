@@ -40,6 +40,10 @@ export function ConfirmEmailStep({ email, onNext, grcDetails }: ConfirmEmailStep
               <span className="text-muted-foreground text-sm">Duration</span>
               <span className="font-medium">{grcDetails.monthsRemaining} months</span>
             </div>
+            <div className="flex justify-between items-center">
+              <span className="text-muted-foreground text-sm">Monthly Rebate</span>
+              <span className="font-medium text-green-600 dark:text-green-400">$25/month</span>
+            </div>
             <div className="border-t pt-3">
               <div className="flex justify-between items-center">
                 <span className="text-muted-foreground text-sm">Total Rebates</span>
