@@ -14,7 +14,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Gift, ShoppingCart, Send, Copy, Check, ExternalLink } from "lucide-react";
+import { Gift, ShoppingCart, Send } from "lucide-react";
+import { toast } from "sonner";
 import { merchantNavItems } from "../nav";
 import { useUser } from "@/hooks/use-user";
 
@@ -22,14 +23,6 @@ interface InventoryItem {
   denomination: number;
   available: number;
   costPerCert: number;
-}
-
-interface IssuedGrc {
-  id: string;
-  denomination: number;
-  claimUrl: string;
-  recipientEmail: string;
-  recipientName: string | null;
 }
 
 export default function IssueGrcPage() {
@@ -45,10 +38,6 @@ export default function IssueGrcPage() {
   const [denomination, setDenomination] = useState<string>("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
-
-  // Success state
-  const [issuedGrc, setIssuedGrc] = useState<IssuedGrc | null>(null);
-  const [copied, setCopied] = useState(false);
 
   // Auth redirect
   useEffect(() => {
@@ -118,7 +107,9 @@ export default function IssueGrcPage() {
         return;
       }
 
-      setIssuedGrc(data.grc);
+      toast.success(`GRC sent to ${email}`);
+      setEmail("");
+      setRecipientName("");
       // Refresh inventory
       fetchInventory();
     } catch (err) {
@@ -128,72 +119,7 @@ export default function IssueGrcPage() {
     }
   };
 
-  const handleCopyLink = async () => {
-    if (issuedGrc?.claimUrl) {
-      await navigator.clipboard.writeText(issuedGrc.claimUrl);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    }
-  };
-
-  const handleIssueAnother = () => {
-    setIssuedGrc(null);
-    setEmail("");
-    setRecipientName("");
-    setCopied(false);
-  };
-
   const hasInventory = inventory.length > 0;
-
-  // Success view after issuing
-  if (issuedGrc) {
-    return (
-      <DashboardLayout navItems={merchantNavItems}>
-        <div className="flex flex-col items-center justify-center min-h-[60vh] text-center px-4">
-          <div className="w-20 h-20 rounded-full bg-green-100 flex items-center justify-center mb-6">
-            <Check className="w-10 h-10 text-green-600" />
-          </div>
-          <h1 className="text-2xl font-bold mb-2">GRC Sent!</h1>
-          <p className="text-muted-foreground mb-6 max-w-md">
-            A ${issuedGrc.denomination} GRC has been emailed to <strong className="text-foreground">{issuedGrc.recipientEmail}</strong> with
-            a link to claim their certificate.
-          </p>
-
-          <div className="w-full max-w-md mb-6">
-            <Label className="text-left block mb-2">Claim Link</Label>
-            <div className="flex gap-2">
-              <Input
-                value={issuedGrc.claimUrl}
-                readOnly
-                className="font-mono text-sm"
-              />
-              <Button variant="outline" onClick={handleCopyLink}>
-                {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-              </Button>
-              <Button variant="outline" asChild>
-                <a href={issuedGrc.claimUrl} target="_blank" rel="noopener noreferrer">
-                  <ExternalLink className="w-4 h-4" />
-                </a>
-              </Button>
-            </div>
-            <p className="text-xs text-muted-foreground mt-2 text-left">
-              You can also share this link directly if they don&apos;t see the email
-            </p>
-          </div>
-
-          <div className="flex gap-3">
-            <Button onClick={handleIssueAnother}>
-              <Send className="w-4 h-4 mr-2" />
-              Issue Another
-            </Button>
-            <Button variant="outline" asChild>
-              <a href="/merchant/grcs">View All GRCs</a>
-            </Button>
-          </div>
-        </div>
-      </DashboardLayout>
-    );
-  }
 
   // Wait for auth before showing anything
   if (loading) {
