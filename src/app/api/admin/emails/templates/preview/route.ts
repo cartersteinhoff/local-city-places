@@ -189,7 +189,7 @@ function generateGrcIssuedPreview(params: {
 <body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #f9fafb;">
   <div style="max-width: 600px; margin: 0 auto; padding: 40px 20px;">
     <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
-      <h1 style="color: #ff7a3c;">You've Received a GRC!</h1>
+      <h1 style="color: #ff7a3c;">You've Received a Grocery Rebate Certificate (GRC)!</h1>
       <p>${greeting},</p>
       <p><strong>${params.merchantName}</strong> has sent you a Grocery Rebate Certificate worth <strong>$${params.denomination}</strong>.</p>
 

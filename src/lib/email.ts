@@ -366,7 +366,7 @@ export async function sendGrcIssuedEmail({
   const subject = `${merchantName} sent you a $${denomination} Grocery Rebate Certificate!`;
   const html = `
     <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
-      <h1 style="color: #ff7a3c;">You've Received a GRC!</h1>
+      <h1 style="color: #ff7a3c;">You've Received a Grocery Rebate Certificate (GRC)!</h1>
       <p>${greeting},</p>
       <p><strong>${merchantName}</strong> has sent you a Grocery Rebate Certificate worth <strong>$${denomination}</strong>.</p>
 
