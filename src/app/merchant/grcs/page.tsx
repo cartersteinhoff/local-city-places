@@ -316,13 +316,11 @@ export default function MyGrcsPage() {
                     <div className="flex items-start justify-between gap-3 mb-3">
                       <div className="min-w-0">
                         <h3 className="font-semibold truncate">
-                          {grc.recipientName || grc.email || "—"}
+                          {grc.recipientName || "—"}
                         </h3>
-                        {grc.recipientName && grc.email && (
-                          <p className="text-sm text-muted-foreground truncate">
-                            {grc.email}
-                          </p>
-                        )}
+                        <p className="text-sm text-muted-foreground truncate">
+                          {grc.email || "—"}
+                        </p>
                       </div>
                       <span className={cn(
                         "text-xs px-2.5 py-1 rounded-full font-medium shrink-0",
@@ -397,13 +395,11 @@ export default function MyGrcsPage() {
                       <td className="px-4 py-3">
                         <div className="truncate">
                           <p className="font-medium truncate">
-                            {grc.recipientName || grc.email || "—"}
+                            {grc.recipientName || "—"}
                           </p>
-                          {grc.recipientName && grc.email && (
-                            <p className="text-sm text-muted-foreground truncate">
-                              {grc.email}
-                            </p>
-                          )}
+                          <p className="text-sm text-muted-foreground truncate">
+                            {grc.email || "—"}
+                          </p>
                         </div>
                       </td>
                       <td className="px-4 py-3 font-medium">
