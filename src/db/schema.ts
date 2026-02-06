@@ -147,6 +147,7 @@ export const grcs = pgTable("grcs", {
   groceryStore: varchar("grocery_store", { length: 255 }),
   groceryStorePlaceId: varchar("grocery_store_place_id", { length: 255 }),
   recipientEmail: varchar("recipient_email", { length: 255 }),
+  recipientName: varchar("recipient_name", { length: 255 }),
   status: grcStatusEnum("status").notNull().default("pending"),
   monthsRemaining: integer("months_remaining").notNull(),
   startMonth: integer("start_month"), // 1-12

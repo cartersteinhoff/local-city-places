@@ -44,6 +44,7 @@ export async function GET(request: NextRequest) {
         monthsRemaining: grcs.monthsRemaining,
         groceryStore: grcs.groceryStore,
         recipientEmail: grcs.recipientEmail,
+        grcRecipientName: grcs.recipientName,
         issuedAt: grcs.issuedAt,
         registeredAt: grcs.registeredAt,
         createdAt: grcs.createdAt,
@@ -67,6 +68,7 @@ export async function GET(request: NextRequest) {
         (g) =>
           g.memberEmail?.toLowerCase().includes(searchLower) ||
           g.recipientEmail?.toLowerCase().includes(searchLower) ||
+          g.grcRecipientName?.toLowerCase().includes(searchLower) ||
           g.memberFirstName?.toLowerCase().includes(searchLower) ||
           g.memberLastName?.toLowerCase().includes(searchLower)
       );
@@ -87,7 +89,7 @@ export async function GET(request: NextRequest) {
         email: g.memberEmail || g.recipientEmail || null,
         recipientName: g.memberFirstName && g.memberLastName
           ? `${g.memberFirstName} ${g.memberLastName}`
-          : null,
+          : g.grcRecipientName || null,
         denomination: g.denomination,
         status: g.status,
         monthsCompleted,

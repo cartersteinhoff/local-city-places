@@ -201,6 +201,7 @@ export async function POST(request: NextRequest) {
           denomination: recipient.denomination,
           costPerCert,
           recipientEmail: recipient.email,
+          recipientName: recipient.name || null,
           monthsRemaining,
           status: "pending",
           issuedAt: new Date(),
