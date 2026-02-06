@@ -110,6 +110,11 @@ export default function IssueGrcPage() {
       toast.success(`$${denomination} GRC sent to ${recipientName || email}`, {
         description: recipientName ? email : undefined,
         duration: 5000,
+        style: {
+          borderLeft: "4px solid #22c55e",
+          fontSize: "15px",
+          padding: "16px",
+        },
       });
       setEmail("");
       setRecipientName("");
