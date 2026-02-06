@@ -12,6 +12,7 @@ interface GRCDetails {
   merchantName: string;
   denomination: number;
   monthsRemaining: number;
+  recipientEmail: string | null;
 }
 
 export default function ClaimGRCPage({ params }: { params: Promise<{ grcId: string }> }) {
@@ -43,6 +44,9 @@ export default function ClaimGRCPage({ params }: { params: Promise<{ grcId: stri
         }
         const grcData = await grcRes.json();
         setGrcDetails(grcData);
+        if (grcData.recipientEmail) {
+          setEmail(grcData.recipientEmail);
+        }
 
         // Check auth status
         const authRes = await fetch("/api/auth/me", { cache: "no-store" });
@@ -201,7 +205,9 @@ export default function ClaimGRCPage({ params }: { params: Promise<{ grcId: stri
           ) : (
             <>
               <div className="text-center space-y-1">
-                <h2 className="text-lg font-semibold">Enter Your Email to Claim</h2>
+                <h2 className="text-lg font-semibold">
+                  {grcDetails?.recipientEmail ? "Confirm Your Email to Claim" : "Enter Your Email to Claim"}
+                </h2>
                 <p className="text-sm text-muted-foreground">
                   We&apos;ll send you a secure login link
                 </p>

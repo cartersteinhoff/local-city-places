@@ -33,6 +33,7 @@ export async function GET(
         startYear: grcs.startYear,
         issuedAt: grcs.issuedAt,
         registeredAt: grcs.registeredAt,
+        recipientEmail: grcs.recipientEmail,
         merchantName: merchants.businessName,
       })
       .from(grcs)
@@ -98,6 +99,7 @@ export async function GET(
       denomination: grc.denomination,
       status: grc.status,
       monthsRemaining: grc.monthsRemaining,
+      recipientEmail: grc.recipientEmail,
       survey: survey
         ? {
             id: survey.id,
