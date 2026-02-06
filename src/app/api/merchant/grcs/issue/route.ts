@@ -157,7 +157,7 @@ export async function POST(request: NextRequest) {
 
     // Generate claim URL
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
-    const claimUrl = `${baseUrl}/claim/${newGrc.id}`;
+    const claimUrl = `${baseUrl}/api/grc/${newGrc.id}/claim`;
 
     // Send email to recipient
     await sendGrcIssuedEmail({

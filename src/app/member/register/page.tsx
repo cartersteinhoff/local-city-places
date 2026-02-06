@@ -291,7 +291,7 @@ function MemberRegisterContent() {
       description={description}
     >
       {currentStep === 1 && (
-        <ConfirmEmailStep email={user.email} onNext={handleConfirmEmail} />
+        <ConfirmEmailStep email={user.email} onNext={handleConfirmEmail} grcDetails={grcDetails} />
       )}
 
       {currentStep === 2 && (

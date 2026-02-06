@@ -208,7 +208,7 @@ export async function POST(request: NextRequest) {
         })
         .returning();
 
-      const claimUrl = `${baseUrl}/claim/${newGrc.id}`;
+      const claimUrl = `${baseUrl}/api/grc/${newGrc.id}/claim`;
 
       issuedGrcs.push({
         email: recipient.email,

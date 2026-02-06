@@ -32,7 +32,7 @@ export function isValidCallbackUrl(url: string | null | undefined): boolean {
 }
 
 // Create a JWT token
-async function createJWT(userId: string, role: string): Promise<string> {
+export async function createJWT(userId: string, role: string): Promise<string> {
   return new SignJWT({ userId, role })
     .setProtectedHeader({ alg: "HS256" })
     .setIssuedAt()
