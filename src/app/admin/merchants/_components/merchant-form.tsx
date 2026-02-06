@@ -356,6 +356,20 @@ export function MerchantForm({
     }
   }, []);
 
+  // Address-only version: updates location fields without touching businessName
+  const handleAddressSelect = useCallback((_name: string, placeId: string, details?: PlaceDetails) => {
+    if (details) {
+      setFormData(prev => ({
+        ...prev,
+        googlePlaceId: placeId,
+        streetAddress: details.streetAddress || prev.streetAddress,
+        city: details.city || prev.city,
+        state: details.state || prev.state,
+        zipCode: details.zipCode || prev.zipCode,
+      }));
+    }
+  }, []);
+
   const copyToClipboard = async (text: string, type: string) => {
     try {
       const fullUrl = typeof window !== "undefined" ? `${window.location.origin}${text}` : text;
@@ -739,7 +753,7 @@ export function MerchantForm({
                 </p>
                 <GooglePlacesAutocomplete
                   value=""
-                  onChange={handlePlaceSelect}
+                  onChange={handleAddressSelect}
                   placeholder="Search for an address..."
                   types={["address"]}
                   fetchDetails={true}
