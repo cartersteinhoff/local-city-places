@@ -29,15 +29,9 @@ const GRC_PRICING: Record<number, number> = {
   425: 5.00, 450: 5.25, 475: 5.50, 500: 5.75,
 };
 
-// Calculate months based on denomination
+// Calculate months based on denomination ($25/month rebate)
 function getTotalMonths(denomination: number): number {
-  if (denomination <= 75) return 2;
-  if (denomination <= 125) return 3;
-  if (denomination <= 175) return 4;
-  if (denomination <= 250) return 5;
-  if (denomination <= 350) return 6;
-  if (denomination <= 450) return 8;
-  return 10;
+  return Math.floor(denomination / 25);
 }
 
 async function getInventory(merchantId: string) {
