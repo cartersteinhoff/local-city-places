@@ -200,18 +200,14 @@ function generateGrcIssuedPreview(params: {
             <td style="padding: 8px 0; text-align: right; font-weight: bold; font-size: 18px;">$${params.denomination}</td>
           </tr>
           <tr>
-            <td style="padding: 8px 0; color: #666;">Duration</td>
-            <td style="padding: 8px 0; text-align: right; font-weight: bold;">${params.totalMonths} months</td>
-          </tr>
-          <tr>
-            <td style="padding: 8px 0; color: #666;">Monthly Rebate</td>
-            <td style="padding: 8px 0; text-align: right; font-weight: bold; color: #22c55e;">~$${monthlyRebate}/month</td>
+            <td style="padding: 8px 0; color: #666;">From</td>
+            <td style="padding: 8px 0; text-align: right; font-weight: bold;">${params.merchantName}</td>
           </tr>
         </table>
       </div>
 
       <p><strong>How it works:</strong></p>
-      <ol style="color: #444; line-height: 1.8;">
+      <ol style="color: #444; line-height: 1.8; padding-left: 20px; margin: 8px 0;">
         <li>Click the button below to claim your GRC</li>
         <li>Choose your preferred grocery store</li>
         <li>Upload grocery receipts each month</li>
