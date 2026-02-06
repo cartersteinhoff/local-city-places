@@ -153,10 +153,10 @@ export default function IssueGrcPage() {
           <div className="w-20 h-20 rounded-full bg-green-100 flex items-center justify-center mb-6">
             <Check className="w-10 h-10 text-green-600" />
           </div>
-          <h1 className="text-2xl font-bold mb-2">GRC Issued Successfully!</h1>
+          <h1 className="text-2xl font-bold mb-2">GRC Sent!</h1>
           <p className="text-muted-foreground mb-6 max-w-md">
-            A ${issuedGrc.denomination} GRC has been created for {issuedGrc.recipientEmail}.
-            Share the claim link below so they can register their certificate.
+            A ${issuedGrc.denomination} GRC has been emailed to <strong className="text-foreground">{issuedGrc.recipientEmail}</strong> with
+            a link to claim their certificate.
           </p>
 
           <div className="w-full max-w-md mb-6">
@@ -177,7 +177,7 @@ export default function IssueGrcPage() {
               </Button>
             </div>
             <p className="text-xs text-muted-foreground mt-2 text-left">
-              Send this link to {issuedGrc.recipientEmail} so they can claim their GRC
+              You can also share this link directly if they don&apos;t see the email
             </p>
           </div>
 
