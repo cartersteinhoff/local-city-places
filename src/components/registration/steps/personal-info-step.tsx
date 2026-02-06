@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { personalInfoSchema, type PersonalInfo } from "@/lib/validations/member";
+import { formatPhoneNumber } from "@/lib/utils";
 
 interface PersonalInfoStepProps {
   data: Partial<PersonalInfo>;
@@ -25,6 +26,7 @@ export function PersonalInfoStep({ data, onNext, isLoading }: PersonalInfoStepPr
   const [formData, setFormData] = useState<PersonalInfo>({
     firstName: data.firstName || "",
     lastName: data.lastName || "",
+    phone: data.phone || "",
     address: data.address || "",
     city: data.city || "",
     state: data.state || "",
@@ -93,6 +95,25 @@ export function PersonalInfoStep({ data, onNext, isLoading }: PersonalInfoStepPr
             </p>
           )}
         </div>
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="phone">Mobile Phone *</Label>
+        <Input
+          id="phone"
+          type="tel"
+          value={formData.phone}
+          onChange={(e) => handleChange("phone", formatPhoneNumber(e.target.value))}
+          placeholder="(425) 451-8599"
+          disabled={isLoading}
+          className={errors.phone ? "border-destructive" : ""}
+        />
+        {errors.phone && (
+          <p className="text-sm text-destructive flex items-center gap-1">
+            <AlertCircle className="w-3 h-3" />
+            {errors.phone}
+          </p>
+        )}
       </div>
 
       <div className="space-y-2">

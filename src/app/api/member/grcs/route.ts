@@ -104,6 +104,22 @@ export async function GET() {
     // Check if member has an active GRC (can only have one at a time)
     const hasActiveGrc = activeGrcs.length > 0;
 
+    // Get completed GRCs (for dashboard banner)
+    const completedGrcs = await db
+      .select({
+        id: grcs.id,
+        merchantName: merchants.businessName,
+        denomination: grcs.denomination,
+      })
+      .from(grcs)
+      .leftJoin(merchants, eq(grcs.merchantId, merchants.id))
+      .where(
+        and(
+          eq(grcs.memberId, member.id),
+          eq(grcs.status, "completed")
+        )
+      );
+
     return NextResponse.json({
       hasActiveGrc,
       pending: sortedPendingGrcs.map((grc) => ({
@@ -124,6 +140,11 @@ export async function GET() {
         startYear: grc.startYear,
         registeredAt: grc.registeredAt,
         status: grc.status,
+      })),
+      completed: completedGrcs.map((grc) => ({
+        id: grc.id,
+        merchantName: grc.merchantName,
+        denomination: grc.denomination,
       })),
     });
   } catch (error) {

@@ -10,6 +10,10 @@ export const personalInfoSchema = z.object({
     .string()
     .min(1, "Last name is required")
     .max(100, "Last name must be less than 100 characters"),
+  phone: z
+    .string()
+    .min(1, "Phone number is required")
+    .max(20, "Phone number must be less than 20 characters"),
   address: z
     .string()
     .min(1, "Address is required")

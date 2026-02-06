@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/db";
-import { receipts, members, grcs, merchants, users, monthlyQualifications } from "@/db/schema";
+import { receipts, members, grcs, merchants, users, monthlyQualifications, surveys } from "@/db/schema";
 import { eq, and } from "drizzle-orm";
 import { getSession } from "@/lib/auth";
+import { checkAndCompleteGrc } from "@/lib/grc-lifecycle";
 
 export async function GET(
   request: NextRequest,
@@ -180,15 +181,54 @@ export async function PATCH(
           const currentTotal = parseFloat(existingQual[0].approvedTotal || "0");
           const newTotal = currentTotal + amount;
 
-          // Update approved total
+          let newStatus = existingQual[0].status;
+          if (newTotal >= 100 && (newStatus === "in_progress" || newStatus === "receipts_complete")) {
+            // Check if survey is already completed
+            const surveyDone = !!existingQual[0].surveyCompletedAt;
+
+            if (surveyDone) {
+              // Both conditions met — fully qualified
+              newStatus = "qualified";
+            } else {
+              // Check if merchant even has an active survey
+              const [grcData] = await db
+                .select({ merchantId: grcs.merchantId })
+                .from(grcs)
+                .where(eq(grcs.id, receipt.grcId))
+                .limit(1);
+
+              if (grcData) {
+                const [activeSurvey] = await db
+                  .select({ id: surveys.id })
+                  .from(surveys)
+                  .where(
+                    and(
+                      eq(surveys.merchantId, grcData.merchantId),
+                      eq(surveys.isActive, true)
+                    )
+                  )
+                  .limit(1);
+
+                // No active survey means auto-qualify on receipts alone
+                newStatus = activeSurvey ? "receipts_complete" : "qualified";
+              } else {
+                newStatus = "receipts_complete";
+              }
+            }
+          }
+
           await db
             .update(monthlyQualifications)
             .set({
               approvedTotal: newTotal.toFixed(2),
-              // If total >= 100, mark as receipts_complete (survey still needed for qualified)
-              status: newTotal >= 100 ? "receipts_complete" : existingQual[0].status,
+              status: newStatus,
             })
             .where(eq(monthlyQualifications.id, existingQual[0].id));
+
+          // If just qualified, check if GRC is fully complete
+          if (newStatus === "qualified") {
+            await checkAndCompleteGrc(receipt.memberId, receipt.grcId);
+          }
         }
       }
     } else {

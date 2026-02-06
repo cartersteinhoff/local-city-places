@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import { db, grcs, grcPurchases, merchants } from "@/db";
-import { eq, and, sql } from "drizzle-orm";
+import { eq, and, sql, inArray } from "drizzle-orm";
 import { z } from "zod";
 
 const bulkIssueSchema = z.object({
@@ -105,6 +105,25 @@ export async function POST(request: NextRequest) {
     const valid: typeof recipients = [];
     const requiredInventory = new Map<number, number>();
 
+    // Check for existing GRCs from this merchant to any of these emails
+    const recipientEmails = [...new Set(recipients.map((r) => r.email))];
+    const existingGrcs = recipientEmails.length > 0
+      ? await db
+          .select({ recipientEmail: grcs.recipientEmail })
+          .from(grcs)
+          .where(
+            and(
+              eq(grcs.merchantId, merchant.id),
+              inArray(grcs.recipientEmail, recipientEmails),
+              inArray(grcs.status, ["pending", "active"])
+            )
+          )
+      : [];
+    const existingEmailSet = new Set(existingGrcs.map((g) => g.recipientEmail));
+
+    // Track emails within this batch to detect intra-batch duplicates
+    const batchEmailSet = new Set<string>();
+
     recipients.forEach((r, index) => {
       // Check valid denomination
       if (!GRC_PRICING[r.denomination]) {
@@ -115,6 +134,27 @@ export async function POST(request: NextRequest) {
         });
         return;
       }
+
+      // Check for duplicate against existing DB records
+      if (existingEmailSet.has(r.email)) {
+        errors.push({
+          row: index + 1,
+          email: r.email,
+          message: "A GRC has already been issued to this email from your business",
+        });
+        return;
+      }
+
+      // Check for intra-batch duplicate
+      if (batchEmailSet.has(r.email)) {
+        errors.push({
+          row: index + 1,
+          email: r.email,
+          message: "Duplicate email in batch",
+        });
+        return;
+      }
+      batchEmailSet.add(r.email);
 
       // Track required inventory
       const current = requiredInventory.get(r.denomination) || 0;
@@ -166,6 +206,7 @@ export async function POST(request: NextRequest) {
           merchantId: merchant.id,
           denomination: recipient.denomination,
           costPerCert,
+          recipientEmail: recipient.email,
           monthsRemaining,
           status: "pending",
           issuedAt: new Date(),

@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/db";
-import { grcs, members, surveys, surveyResponses, reviews, monthlyQualifications } from "@/db/schema";
+import { grcs, members, surveys, surveyResponses, reviews, monthlyQualifications, merchants, users } from "@/db/schema";
 import { eq, and } from "drizzle-orm";
 import { getSession } from "@/lib/auth";
 import { grcRegistrationSchema, countWords, REVIEW_BONUS_MIN_WORDS } from "@/lib/validations/member";
+import { sendGrcActivatedEmail } from "@/lib/email";
 
 export async function POST(request: NextRequest) {
   try {
@@ -172,6 +173,35 @@ export async function POST(request: NextRequest) {
         status: "in_progress",
       });
     });
+
+    // Send welcome email (fire-and-forget)
+    try {
+      const [user] = await db
+        .select({ email: users.email })
+        .from(users)
+        .where(eq(users.id, session.user.id))
+        .limit(1);
+      const [merchant] = await db
+        .select({ businessName: merchants.businessName })
+        .from(merchants)
+        .where(eq(merchants.id, grc.merchantId))
+        .limit(1);
+
+      if (user && merchant) {
+        const dashboardUrl = `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/member`;
+        sendGrcActivatedEmail({
+          recipientEmail: user.email,
+          recipientName: `${member.firstName}`,
+          merchantName: merchant.businessName,
+          denomination: grc.denomination,
+          totalMonths,
+          groceryStore: groceryStore,
+          dashboardUrl,
+        }).catch((err) => console.error("Failed to send GRC activated email:", err));
+      }
+    } catch (emailErr) {
+      console.error("Failed to prepare GRC activated email:", emailErr);
+    }
 
     return NextResponse.json({
       success: true,

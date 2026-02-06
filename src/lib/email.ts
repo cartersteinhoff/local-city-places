@@ -736,3 +736,121 @@ Questions about how to use your GRCs? Reply to this email and our team will be h
 
   return sendEmail({ to: email, subject, html, text });
 }
+
+interface GrcActivatedEmailOptions {
+  recipientEmail: string;
+  recipientName: string;
+  merchantName: string;
+  denomination: number;
+  totalMonths: number;
+  groceryStore: string;
+  dashboardUrl: string;
+}
+
+export async function sendGrcActivatedEmail({
+  recipientEmail,
+  recipientName,
+  merchantName,
+  denomination,
+  totalMonths,
+  groceryStore,
+  dashboardUrl,
+}: GrcActivatedEmailOptions): Promise<boolean> {
+  const monthlyRebate = Math.round(denomination / totalMonths);
+
+  const subject = `Welcome to Local City Places! Your GRC from ${merchantName} is active`;
+  const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title>Your GRC is Active</title>
+  <style>
+    body { margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', sans-serif; background-color: #f9fafb; }
+    .email-wrapper { width: 100%; background: linear-gradient(180deg, #0f172a 0%, #020617 100%); padding: 48px 20px; }
+    .email-container { max-width: 700px; margin: 0 auto; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2); }
+    .email-header { background: #ffffff; padding: 24px 32px; text-align: center; border-bottom: 1px solid #e2e8f0; }
+    .email-content { background-color: #ffffff; padding: 40px 32px; }
+    .email-content h2 { color: #1e293b; margin: 0 0 16px 0; font-size: 24px; font-weight: 700; }
+    .email-content p { color: #334155; line-height: 1.6; margin: 0 0 16px 0; font-size: 16px; }
+    .details-box { background: #f0fdf4; border: 1px solid #22c55e; border-radius: 12px; padding: 20px; margin: 24px 0; }
+    .details-box p { margin: 5px 0; font-size: 14px; color: #166534; }
+    .details-box .label { font-weight: bold; color: #15803d; font-size: 16px; margin-bottom: 10px; }
+    .cta-button { text-align: center; margin: 30px 0; }
+    .cta-button a { display: inline-block; background: #007bff; color: white; padding: 14px 32px; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 600; }
+    .email-footer { background: #ffffff; padding: 32px 24px; text-align: center; border-top: 1px solid #e2e8f0; }
+    .email-footer p { color: #666666; font-size: 14px; margin: 0 0 12px 0; line-height: 1.6; }
+    .email-footer a { color: #2563eb; text-decoration: underline; }
+    .footer-divider { width: 40px; height: 1px; background: #e2e8f0; margin: 20px auto; }
+    .footer-legal { font-size: 12px; color: #999999; margin-top: 20px; }
+  </style>
+</head>
+<body>
+  <div class="email-wrapper">
+    <div class="email-container">
+      <div class="email-header">
+        <img src="${EMAIL_ASSETS_URL}/images/logo-horizontal.png" alt="Local City Places" style="max-width: 300px; height: auto;" />
+      </div>
+      <div class="email-content">
+        <h2>Welcome to Local City Places!</h2>
+        <p>Hi ${recipientName},</p>
+        <p>Your Grocery Rebate Certificate from <strong>${merchantName}</strong> is now active. Here's what you need to do each month to earn your rebate.</p>
+
+        <div class="details-box">
+          <p class="label">Your GRC Details</p>
+          <p>Certificate Value: <strong>$${denomination}</strong></p>
+          <p>Duration: <strong>${totalMonths} months</strong></p>
+          <p>Monthly Rebate: <strong>~$${monthlyRebate}/month</strong></p>
+          <p>Grocery Store: <strong>${groceryStore}</strong></p>
+        </div>
+
+        <p><strong>What to do each month:</strong></p>
+        <ol style="color: #444; line-height: 1.8;">
+          <li>Shop at <strong>${groceryStore}</strong> and spend at least $100</li>
+          <li>Upload your grocery receipts to your dashboard</li>
+          <li>Complete the monthly survey</li>
+          <li>Receive your rebate!</li>
+        </ol>
+
+        <div class="cta-button">
+          <a href="${dashboardUrl}">Go to Your Dashboard</a>
+        </div>
+      </div>
+      <div class="email-footer">
+        <p><strong>Need help?</strong><br><a href="mailto:support@localcityplaces.com">support@localcityplaces.com</a></p>
+        <div class="footer-divider"></div>
+        <p class="footer-legal">© 2025 Local City Places. All rights reserved.<br>954 E. County Down Drive, Chandler, AZ 85249</p>
+      </div>
+    </div>
+  </div>
+</body>
+</html>`;
+
+  const text = `Welcome to Local City Places!
+
+Hi ${recipientName},
+
+Your Grocery Rebate Certificate from ${merchantName} is now active.
+
+Your GRC Details:
+- Certificate Value: $${denomination}
+- Duration: ${totalMonths} months
+- Monthly Rebate: ~$${monthlyRebate}/month
+- Grocery Store: ${groceryStore}
+
+What to do each month:
+1. Shop at ${groceryStore} and spend at least $100
+2. Upload your grocery receipts to your dashboard
+3. Complete the monthly survey
+4. Receive your rebate!
+
+Go to your dashboard: ${dashboardUrl}
+
+Need help? support@localcityplaces.com
+
+© 2025 Local City Places. All rights reserved.
+954 E. County Down Drive, Chandler, AZ 85249`;
+
+  return sendEmail({ to: recipientEmail, subject, html, text });
+}

@@ -4,6 +4,7 @@ import { surveys, surveyResponses, members, monthlyQualifications } from "@/db/s
 import { eq, and } from "drizzle-orm";
 import { getSession } from "@/lib/auth";
 import { surveyResponseSchema } from "@/lib/validations/member";
+import { checkAndCompleteGrc } from "@/lib/grc-lifecycle";
 
 export async function POST(request: NextRequest) {
   try {
@@ -96,11 +97,10 @@ export async function POST(request: NextRequest) {
 
     // If this is a monthly survey, update the qualification record
     if (!isRegistration && month && year) {
-      await db
-        .update(monthlyQualifications)
-        .set({
-          surveyCompletedAt: new Date(),
-        })
+      // Fetch current qualification to check receipts status
+      const [qual] = await db
+        .select()
+        .from(monthlyQualifications)
         .where(
           and(
             eq(monthlyQualifications.memberId, member.id),
@@ -108,7 +108,32 @@ export async function POST(request: NextRequest) {
             eq(monthlyQualifications.month, month),
             eq(monthlyQualifications.year, year)
           )
-        );
+        )
+        .limit(1);
+
+      if (qual) {
+        const approvedTotal = parseFloat(qual.approvedTotal || "0");
+        const receiptsComplete = approvedTotal >= 100;
+
+        // Determine new status: if receipts already >= $100, auto-qualify
+        let newStatus = qual.status;
+        if (receiptsComplete && (qual.status === "in_progress" || qual.status === "receipts_complete")) {
+          newStatus = "qualified";
+        }
+
+        await db
+          .update(monthlyQualifications)
+          .set({
+            surveyCompletedAt: new Date(),
+            status: newStatus,
+          })
+          .where(eq(monthlyQualifications.id, qual.id));
+
+        // If just qualified, check if GRC is fully complete
+        if (newStatus === "qualified") {
+          await checkAndCompleteGrc(member.id, grcId);
+        }
+      }
     }
 
     return NextResponse.json({

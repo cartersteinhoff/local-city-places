@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import { db, grcs, grcPurchases, merchants } from "@/db";
-import { eq, and, sql } from "drizzle-orm";
+import { eq, and, sql, inArray } from "drizzle-orm";
 import { z } from "zod";
 import { sendGrcIssuedEmail } from "@/lib/email";
 
@@ -112,6 +112,26 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Check for duplicate: one GRC per merchant per email (only pending/active block)
+    const existingGrc = await db
+      .select({ id: grcs.id })
+      .from(grcs)
+      .where(
+        and(
+          eq(grcs.merchantId, merchant.id),
+          eq(grcs.recipientEmail, email),
+          inArray(grcs.status, ["pending", "active"])
+        )
+      )
+      .limit(1);
+
+    if (existingGrc.length > 0) {
+      return NextResponse.json(
+        { error: "A GRC has already been issued to this email from your business" },
+        { status: 400 }
+      );
+    }
+
     // Check inventory
     const inventory = await getInventory(merchant.id);
     const available = inventory.get(denomination) || 0;
@@ -133,6 +153,7 @@ export async function POST(request: NextRequest) {
         merchantId: merchant.id,
         denomination,
         costPerCert,
+        recipientEmail: email,
         monthsRemaining: totalMonths,
         status: "pending",
         issuedAt: new Date(),

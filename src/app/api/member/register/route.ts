@@ -4,6 +4,7 @@ import { members, users } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { getSession } from "@/lib/auth";
 import { memberRegistrationSchema } from "@/lib/validations/member";
+import { stripPhoneNumber } from "@/lib/utils";
 
 export async function POST(request: NextRequest) {
   try {
@@ -41,7 +42,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { firstName, lastName, address, city, state, zip } = result.data;
+    const { firstName, lastName, phone, address, city, state, zip } = result.data;
 
     // Create member profile
     const [newMember] = await db
@@ -57,6 +58,14 @@ export async function POST(request: NextRequest) {
         homeCity: city, // Set home city from registration city
       })
       .returning({ id: members.id });
+
+    // Save phone to users table
+    if (phone) {
+      await db
+        .update(users)
+        .set({ phone: stripPhoneNumber(phone) })
+        .where(eq(users.id, session.user.id));
+    }
 
     return NextResponse.json({
       success: true,

@@ -85,6 +85,23 @@ function MemberDashboardContent() {
   const [activeGrc, setActiveGrc] = useState<ActiveGRC | null>(null);
   const [pendingGrcCount, setPendingGrcCount] = useState(0);
 
+  // Completed GRC banner
+  const [completedGrcMerchant, setCompletedGrcMerchant] = useState<string | null>(null);
+
+  // Dashboard stats
+  const [dashboardStats, setDashboardStats] = useState<{
+    thisMonthReceipts: number;
+    amountRemaining: number;
+    totalEarned: number;
+    monthsQualified: number;
+    currentMonth: {
+      approvedTotal: string;
+      surveyCompletedAt: string | null;
+      status: string;
+    } | null;
+    hasSurvey: boolean;
+  } | null>(null);
+
   // Redirect if not authenticated or wrong role
   useEffect(() => {
     if (!loading && (!isAuthenticated || (user?.role !== "member" && user?.role !== "admin"))) {
@@ -119,22 +136,35 @@ function MemberDashboardContent() {
     fetchGRC();
   }, [grcId]);
 
-  // Fetch dashboard GRC data (active GRC + pending count)
+  // Fetch dashboard GRC data (active GRC + pending count) and stats
   useEffect(() => {
     if (loading || grcId) return;
 
     async function fetchDashboardData() {
       try {
-        const res = await fetch("/api/member/grcs");
-        if (res.ok) {
-          const data = await res.json();
+        const [grcsRes, statsRes] = await Promise.all([
+          fetch("/api/member/grcs"),
+          fetch("/api/member/dashboard"),
+        ]);
+
+        if (grcsRes.ok) {
+          const data = await grcsRes.json();
           if (data.active && data.active.length > 0) {
             setActiveGrc(data.active[0]);
           }
           setPendingGrcCount(data.pending?.length || 0);
+          // Check for completed GRCs (for banner)
+          if (data.completed && data.completed.length > 0 && (!data.active || data.active.length === 0)) {
+            setCompletedGrcMerchant(data.completed[0].merchantName);
+          }
+        }
+
+        if (statsRes.ok) {
+          const stats = await statsRes.json();
+          setDashboardStats(stats);
         }
       } catch (err) {
-        console.error("Failed to fetch dashboard GRC data:", err);
+        console.error("Failed to fetch dashboard data:", err);
       }
     }
 
@@ -424,26 +454,46 @@ function MemberDashboardContent() {
         description="Track your progress and earn grocery rebates"
       />
 
+      {/* Completed GRC Banner */}
+      {completedGrcMerchant && pendingGrcCount > 0 && (
+        <div className="bg-green-50 border border-green-200 rounded-xl p-4 mb-6 flex items-center justify-between gap-4">
+          <div>
+            <p className="font-semibold text-green-800">
+              Your GRC from {completedGrcMerchant} is complete!
+            </p>
+            <p className="text-sm text-green-700 mt-1">
+              You have {pendingGrcCount} more GRC{pendingGrcCount > 1 ? "s" : ""} ready to activate.
+            </p>
+          </div>
+          <a
+            href="/member/grcs"
+            className="px-4 py-2 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700 transition-colors shrink-0"
+          >
+            Activate Next GRC
+          </a>
+        </div>
+      )}
+
       {/* Stats Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         <StatCard
           label="This Month's Receipts"
-          value="$0.00"
+          value={`$${(dashboardStats?.thisMonthReceipts ?? 0).toFixed(2)}`}
           icon={Receipt}
         />
         <StatCard
           label="Amount Remaining"
-          value="$100.00"
+          value={`$${(dashboardStats?.amountRemaining ?? 100).toFixed(2)}`}
           icon={DollarSign}
         />
         <StatCard
           label="Total Earned"
-          value="$0.00"
+          value={`$${(dashboardStats?.totalEarned ?? 0).toFixed(2)}`}
           icon={DollarSign}
         />
         <StatCard
           label="Months Qualified"
-          value="0"
+          value={String(dashboardStats?.monthsQualified ?? 0)}
           icon={CheckCircle}
         />
       </div>
@@ -452,40 +502,68 @@ function MemberDashboardContent() {
       <div className="bg-card rounded-xl border border-border p-6 mb-6">
         <h2 className="text-lg font-semibold mb-4">Monthly Checklist</h2>
         <div className="space-y-4">
-          <div className="flex items-center justify-between p-4 rounded-lg border border-border">
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center">
-                <Receipt className="w-4 h-4 text-muted-foreground" />
+          {(() => {
+            const receiptsTotal = dashboardStats?.thisMonthReceipts ?? 0;
+            const receiptsComplete = receiptsTotal >= 100;
+            return (
+              <div className="flex items-center justify-between p-4 rounded-lg border border-border">
+                <div className="flex items-center gap-3">
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center ${receiptsComplete ? "bg-green-100" : "bg-muted"}`}>
+                    {receiptsComplete ? (
+                      <CheckCircle className="w-4 h-4 text-green-600" />
+                    ) : (
+                      <Receipt className="w-4 h-4 text-muted-foreground" />
+                    )}
+                  </div>
+                  <div>
+                    <p className="font-medium">Submit $100 in Receipts</p>
+                    <p className="text-sm text-muted-foreground">
+                      ${receiptsTotal.toFixed(2)} / $100 submitted
+                    </p>
+                  </div>
+                </div>
+                {!receiptsComplete && (
+                  <a
+                    href="/member/upload"
+                    className="px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors"
+                  >
+                    Upload Receipt
+                  </a>
+                )}
               </div>
-              <div>
-                <p className="font-medium">Submit $100 in Receipts</p>
-                <p className="text-sm text-muted-foreground">$0 / $100 submitted</p>
+            );
+          })()}
+          {(() => {
+            const surveyDone = !!dashboardStats?.currentMonth?.surveyCompletedAt;
+            const hasSurvey = dashboardStats?.hasSurvey !== false;
+            return (
+              <div className="flex items-center justify-between p-4 rounded-lg border border-border">
+                <div className="flex items-center gap-3">
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center ${surveyDone || !hasSurvey ? "bg-green-100" : "bg-muted"}`}>
+                    {surveyDone || !hasSurvey ? (
+                      <CheckCircle className="w-4 h-4 text-green-600" />
+                    ) : (
+                      <ClipboardList className="w-4 h-4 text-muted-foreground" />
+                    )}
+                  </div>
+                  <div>
+                    <p className="font-medium">Complete Monthly Survey</p>
+                    <p className="text-sm text-muted-foreground">
+                      {!hasSurvey ? "No survey required" : surveyDone ? "Completed" : "Not completed"}
+                    </p>
+                  </div>
+                </div>
+                {hasSurvey && !surveyDone && (
+                  <a
+                    href="/member/survey"
+                    className="px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors"
+                  >
+                    Take Survey
+                  </a>
+                )}
               </div>
-            </div>
-            <a
-              href="/member/upload"
-              className="px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors"
-            >
-              Upload Receipt
-            </a>
-          </div>
-          <div className="flex items-center justify-between p-4 rounded-lg border border-border">
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center">
-                <ClipboardList className="w-4 h-4 text-muted-foreground" />
-              </div>
-              <div>
-                <p className="font-medium">Complete Monthly Survey</p>
-                <p className="text-sm text-muted-foreground">Not completed</p>
-              </div>
-            </div>
-            <a
-              href="/member/survey"
-              className="px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors"
-            >
-              Take Survey
-            </a>
-          </div>
+            );
+          })()}
         </div>
       </div>
 
