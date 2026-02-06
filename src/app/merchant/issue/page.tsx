@@ -107,7 +107,10 @@ export default function IssueGrcPage() {
         return;
       }
 
-      toast.success(`GRC sent to ${email}`);
+      toast.success(`$${denomination} GRC sent to ${recipientName || email}`, {
+        description: recipientName ? email : undefined,
+        duration: 5000,
+      });
       setEmail("");
       setRecipientName("");
       // Refresh inventory
