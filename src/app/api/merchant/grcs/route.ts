@@ -43,6 +43,7 @@ export async function GET(request: NextRequest) {
         status: grcs.status,
         monthsRemaining: grcs.monthsRemaining,
         groceryStore: grcs.groceryStore,
+        recipientEmail: grcs.recipientEmail,
         issuedAt: grcs.issuedAt,
         registeredAt: grcs.registeredAt,
         createdAt: grcs.createdAt,
@@ -65,6 +66,7 @@ export async function GET(request: NextRequest) {
       allGrcs = allGrcs.filter(
         (g) =>
           g.memberEmail?.toLowerCase().includes(searchLower) ||
+          g.recipientEmail?.toLowerCase().includes(searchLower) ||
           g.memberFirstName?.toLowerCase().includes(searchLower) ||
           g.memberLastName?.toLowerCase().includes(searchLower)
       );
@@ -73,16 +75,8 @@ export async function GET(request: NextRequest) {
     const total = allGrcs.length;
     const paginatedGrcs = allGrcs.slice(offset, offset + limit);
 
-    // Calculate total months based on denomination
-    const getTotalMonths = (denomination: number) => {
-      if (denomination <= 75) return 2;
-      if (denomination <= 125) return 3;
-      if (denomination <= 175) return 4;
-      if (denomination <= 250) return 5;
-      if (denomination <= 350) return 6;
-      if (denomination <= 450) return 8;
-      return 10;
-    };
+    // Calculate total months based on denomination ($25/month rebate)
+    const getTotalMonths = (denomination: number) => Math.floor(denomination / 25);
 
     const formattedGrcs = paginatedGrcs.map((g) => {
       const totalMonths = getTotalMonths(g.denomination);
@@ -90,7 +84,7 @@ export async function GET(request: NextRequest) {
 
       return {
         id: g.id,
-        email: g.memberEmail || null,
+        email: g.memberEmail || g.recipientEmail || null,
         recipientName: g.memberFirstName && g.memberLastName
           ? `${g.memberFirstName} ${g.memberLastName}`
           : null,
