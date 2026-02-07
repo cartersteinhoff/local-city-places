@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Store, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { GooglePlacesAutocomplete } from "@/components/ui/google-places-autocomplete";
+import { GooglePlacesAutocomplete, type PlaceDetails } from "@/components/ui/google-places-autocomplete";
 import { GoogleMapEmbed } from "@/components/merchant-page/google-map-embed";
 import type { GroceryStore } from "@/lib/validations/member";
 
@@ -18,10 +18,13 @@ export function GroceryStoreStep({ data, onNext, isLoading }: GroceryStoreStepPr
     groceryStore: data.groceryStore || "",
     groceryStorePlaceId: data.groceryStorePlaceId || "",
   });
+  const [storeAddress, setStoreAddress] = useState("");
   const [error, setError] = useState("");
 
-  const handleStoreSelect = (name: string, placeId: string) => {
-    setStore({ groceryStore: name, groceryStorePlaceId: placeId });
+  const handleStoreSelect = (name: string, placeId: string, details?: PlaceDetails) => {
+    const storeName = details?.name || name;
+    setStore({ groceryStore: storeName, groceryStorePlaceId: placeId });
+    setStoreAddress(details?.formattedAddress || "");
     setError("");
   };
 
@@ -57,6 +60,7 @@ export function GroceryStoreStep({ data, onNext, isLoading }: GroceryStoreStepPr
           onChange={handleStoreSelect}
           placeholder="Search for a grocery store..."
           error={error}
+          fetchDetails={true}
         />
         {error && (
           <p className="text-sm text-destructive flex items-center gap-1">
@@ -75,6 +79,9 @@ export function GroceryStoreStep({ data, onNext, isLoading }: GroceryStoreStepPr
           />
           <div className="p-3 bg-muted">
             <p className="font-medium text-sm">{store.groceryStore}</p>
+            {storeAddress && (
+              <p className="text-sm text-muted-foreground">{storeAddress}</p>
+            )}
           </div>
         </div>
       )}
