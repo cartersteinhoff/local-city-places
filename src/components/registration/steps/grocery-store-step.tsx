@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Store, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { GooglePlacesAutocomplete } from "@/components/ui/google-places-autocomplete";
+import { GoogleMapEmbed } from "@/components/merchant-page/google-map-embed";
 import type { GroceryStore } from "@/lib/validations/member";
 
 interface GroceryStoreStepProps {
@@ -65,10 +66,16 @@ export function GroceryStoreStep({ data, onNext, isLoading }: GroceryStoreStepPr
         )}
       </div>
 
-      {store.groceryStore && (
-        <div className="p-4 bg-muted rounded-lg">
-          <p className="text-sm text-muted-foreground">Selected store:</p>
-          <p className="font-medium">{store.groceryStore}</p>
+      {store.groceryStore && store.groceryStorePlaceId && (
+        <div className="rounded-lg overflow-hidden border">
+          <GoogleMapEmbed
+            businessName={store.groceryStore}
+            googlePlaceId={store.groceryStorePlaceId}
+            height="200px"
+          />
+          <div className="p-3 bg-muted">
+            <p className="font-medium text-sm">{store.groceryStore}</p>
+          </div>
         </div>
       )}
 

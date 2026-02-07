@@ -71,7 +71,7 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const { denomination, quantity, paymentMethod, paymentInfo, saveBankInfo } = body;
+    const { denomination, quantity, paymentMethod, paymentInfo, saveBankInfo, totalOrderQuantity } = body;
 
     // Validate denomination
     if (!DENOMINATIONS.includes(denomination)) {
@@ -85,6 +85,14 @@ export async function POST(request: Request) {
     if (!quantity || quantity < 1 || quantity > 1000) {
       return NextResponse.json(
         { error: "Quantity must be between 1 and 1000" },
+        { status: 400 }
+      );
+    }
+
+    // Validate minimum order of 50 total GRCs
+    if (!totalOrderQuantity || totalOrderQuantity < 50) {
+      return NextResponse.json(
+        { error: "Minimum order is 50 GRCs" },
         { status: 400 }
       );
     }

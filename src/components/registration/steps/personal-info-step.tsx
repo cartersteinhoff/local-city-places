@@ -1,12 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { Loader2, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { personalInfoSchema, type PersonalInfo } from "@/lib/validations/member";
 import { formatPhoneNumber } from "@/lib/utils";
+import { GooglePlacesAutocomplete, type PlaceDetails } from "@/components/ui/google-places-autocomplete";
 
 interface PersonalInfoStepProps {
   data: Partial<PersonalInfo>;
@@ -33,6 +34,19 @@ export function PersonalInfoStep({ data, onNext, isLoading }: PersonalInfoStepPr
     zip: data.zip || "",
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  const handleAddressSelect = useCallback((_name: string, _placeId: string, details?: PlaceDetails) => {
+    if (details) {
+      setFormData(prev => ({
+        ...prev,
+        address: details.streetAddress || prev.address,
+        city: details.city || prev.city,
+        state: details.state || prev.state,
+        zip: details.zipCode || prev.zip,
+      }));
+      setErrors(prev => ({ ...prev, address: "", city: "", state: "", zip: "" }));
+    }
+  }, []);
 
   const handleChange = (field: keyof PersonalInfo, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -114,6 +128,17 @@ export function PersonalInfoStep({ data, onNext, isLoading }: PersonalInfoStepPr
             {errors.phone}
           </p>
         )}
+      </div>
+
+      <div className="space-y-2">
+        <Label>Search Address</Label>
+        <GooglePlacesAutocomplete
+          value=""
+          onChange={handleAddressSelect}
+          placeholder="Search for your address..."
+          types={["address"]}
+          fetchDetails={true}
+        />
       </div>
 
       <div className="space-y-2">

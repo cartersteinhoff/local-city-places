@@ -283,6 +283,7 @@ export default function PurchaseGrcsPage() {
           body: JSON.stringify({
             denomination,
             quantity,
+            totalOrderQuantity: getTotalItems(),
             paymentMethod,
             paymentInfo:
               paymentMethod === "zelle"
@@ -319,7 +320,8 @@ export default function PurchaseGrcsPage() {
     }
   };
 
-  const canCheckout = getCartItems().length > 0 && paymentMethod !== null && isPaymentInfoValid();
+  const MIN_ORDER_QUANTITY = 50;
+  const canCheckout = getTotalItems() >= MIN_ORDER_QUANTITY && paymentMethod !== null && isPaymentInfoValid();
 
   if (purchaseComplete) {
     return (
@@ -635,6 +637,11 @@ export default function PurchaseGrcsPage() {
                       <span className="font-semibold">Total ({getTotalItems()} GRCs)</span>
                       <span className="text-xl font-bold">${getTotalCost().toFixed(2)}</span>
                     </div>
+                    {getTotalItems() < MIN_ORDER_QUANTITY && (
+                      <p className="text-sm text-muted-foreground mt-2">
+                        Minimum order is {MIN_ORDER_QUANTITY} GRCs — add {MIN_ORDER_QUANTITY - getTotalItems()} more to checkout
+                      </p>
+                    )}
                   </div>
                 </div>
               )}
