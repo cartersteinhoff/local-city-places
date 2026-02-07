@@ -480,7 +480,7 @@ export default function PurchaseGrcsPage() {
             <div className="bg-card rounded-xl border border-border p-6">
               <h2 className="font-semibold mb-1">Add GRCs</h2>
               <p className="text-sm text-muted-foreground mb-4">
-                Select a denomination and quantity to add to your order
+                Select a denomination and quantity to add to your order (minimum {MIN_ORDER_QUANTITY} GRCs per order)
               </p>
 
               <div className="flex flex-col sm:flex-row gap-4">
@@ -638,9 +638,14 @@ export default function PurchaseGrcsPage() {
                       <span className="text-xl font-bold">${getTotalCost().toFixed(2)}</span>
                     </div>
                     {getTotalItems() < MIN_ORDER_QUANTITY && (
-                      <p className="text-sm text-muted-foreground mt-2">
-                        Minimum order is {MIN_ORDER_QUANTITY} GRCs — add {MIN_ORDER_QUANTITY - getTotalItems()} more to checkout
-                      </p>
+                      <div className="mt-3 p-3 rounded-lg bg-amber-50 border border-amber-200 text-amber-800 dark:bg-amber-950/50 dark:border-amber-800 dark:text-amber-200">
+                        <p className="text-sm font-medium">
+                          Minimum order: {MIN_ORDER_QUANTITY} GRCs
+                        </p>
+                        <p className="text-sm mt-0.5">
+                          Add {MIN_ORDER_QUANTITY - getTotalItems()} more GRC{MIN_ORDER_QUANTITY - getTotalItems() !== 1 ? "s" : ""} to continue to payment
+                        </p>
+                      </div>
                     )}
                   </div>
                 </div>
@@ -648,7 +653,7 @@ export default function PurchaseGrcsPage() {
             </div>
 
             {/* Payment Method */}
-            {getCartItems().length > 0 && (
+            {getTotalItems() >= MIN_ORDER_QUANTITY && (
               <div className="bg-card rounded-xl border border-border p-6">
                 <h3 className="font-semibold mb-4">Payment Method</h3>
 
@@ -1021,7 +1026,9 @@ export default function PurchaseGrcsPage() {
                   <p className="text-lg font-semibold">${getTotalCost().toFixed(2)}</p>
                 </div>
                 <p className="text-sm text-muted-foreground">
-                  Select payment method above
+                  {getTotalItems() < MIN_ORDER_QUANTITY
+                    ? `Add ${MIN_ORDER_QUANTITY - getTotalItems()} more for minimum`
+                    : "Select payment method above"}
                 </p>
               </div>
             </div>
