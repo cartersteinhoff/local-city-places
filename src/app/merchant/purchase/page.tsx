@@ -26,6 +26,7 @@ import {
   Upload,
   Copy,
   Check,
+  Lock,
   Image as ImageIcon,
 } from "lucide-react";
 import { merchantNavItems } from "../nav";
@@ -653,8 +654,16 @@ export default function PurchaseGrcsPage() {
             </div>
 
             {/* Payment Method */}
-            {getTotalItems() >= MIN_ORDER_QUANTITY && (
-              <div className="bg-card rounded-xl border border-border p-6">
+            {getCartItems().length > 0 && (
+              <div className="bg-card rounded-xl border border-border p-6 relative">
+                {getTotalItems() < MIN_ORDER_QUANTITY && (
+                  <div className="absolute inset-0 bg-card/80 backdrop-blur-[1px] rounded-xl z-10 flex flex-col items-center justify-center gap-2">
+                    <Lock className="w-5 h-5 text-muted-foreground" />
+                    <p className="text-sm font-medium text-muted-foreground">
+                      Add {MIN_ORDER_QUANTITY - getTotalItems()} more GRC{MIN_ORDER_QUANTITY - getTotalItems() !== 1 ? "s" : ""} to unlock payment
+                    </p>
+                  </div>
+                )}
                 <h3 className="font-semibold mb-4">Payment Method</h3>
 
                 <div className="space-y-3">
