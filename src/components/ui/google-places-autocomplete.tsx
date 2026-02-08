@@ -293,7 +293,9 @@ export function GooglePlacesAutocomplete({
                   {prediction.structured_formatting.main_text}
                 </p>
                 <p className="text-sm text-muted-foreground truncate">
-                  {prediction.structured_formatting.secondary_text}
+                  {prediction.description.startsWith(prediction.structured_formatting.main_text)
+                    ? prediction.description.slice(prediction.structured_formatting.main_text.length).replace(/^,\s*/, "")
+                    : prediction.description}
                 </p>
               </div>
             </button>
