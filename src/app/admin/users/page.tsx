@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Pagination } from "@/components/ui/pagination";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Label } from "@/components/ui/label";
 import {
   Dialog,
   DialogContent,
@@ -96,6 +97,12 @@ export default function AdminUsersPage() {
 
   // Invite dialog
   const [showInviteDialog, setShowInviteDialog] = useState(false);
+
+  // Add admin dialog
+  const [showAddAdminDialog, setShowAddAdminDialog] = useState(false);
+  const [adminEmail, setAdminEmail] = useState("");
+  const [addingAdmin, setAddingAdmin] = useState(false);
+  const [addAdminError, setAddAdminError] = useState("");
 
   useEffect(() => {
     if (!loading && (!isAuthenticated || user?.role !== "admin")) {
@@ -188,6 +195,31 @@ export default function AdminUsersPage() {
     }
   };
 
+  const handleAddAdmin = async () => {
+    if (!adminEmail) return;
+    setAddingAdmin(true);
+    setAddAdminError("");
+    try {
+      const res = await fetch("/api/admin/users", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: adminEmail, role: "admin", sendInvite: true }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setShowAddAdminDialog(false);
+        setAdminEmail("");
+        await fetchUsers();
+      } else {
+        setAddAdminError(data.error || "Failed to add admin");
+      }
+    } catch {
+      setAddAdminError("Failed to add admin");
+    } finally {
+      setAddingAdmin(false);
+    }
+  };
+
   const getUserName = (u: UserData): string => {
     if (u.memberFirstName && u.memberLastName) {
       return `${u.memberFirstName} ${u.memberLastName}`;
@@ -229,10 +261,16 @@ export default function AdminUsersPage() {
             title="Users"
             description="View and manage all user accounts"
             actions={
-              <Button onClick={() => setShowInviteDialog(true)}>
-                <UserPlus className="w-4 h-4 mr-2" />
-                Invite Merchant
-              </Button>
+              <div className="flex gap-2">
+                <Button variant="outline" onClick={() => setShowAddAdminDialog(true)}>
+                  <Shield className="w-4 h-4 mr-2" />
+                  Add Admin
+                </Button>
+                <Button onClick={() => setShowInviteDialog(true)}>
+                  <UserPlus className="w-4 h-4 mr-2" />
+                  Invite Merchant
+                </Button>
+              </div>
             }
           />
 
@@ -525,6 +563,46 @@ export default function AdminUsersPage() {
                 <Button variant="destructive" onClick={handleConfirmDelete} disabled={deleting}>
                   {deleting ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
                   Delete
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+
+          {/* Add Admin Dialog */}
+          <Dialog open={showAddAdminDialog} onOpenChange={(open) => {
+            setShowAddAdminDialog(open);
+            if (!open) { setAdminEmail(""); setAddAdminError(""); }
+          }}>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Add Admin User</DialogTitle>
+                <DialogDescription>
+                  Create a new admin user. They will receive an email with a login link.
+                </DialogDescription>
+              </DialogHeader>
+              <div>
+                <Label htmlFor="admin-email">Email *</Label>
+                <Input
+                  id="admin-email"
+                  type="email"
+                  placeholder="admin@example.com"
+                  value={adminEmail}
+                  onChange={(e) => setAdminEmail(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === "Enter" && adminEmail) handleAddAdmin(); }}
+                />
+              </div>
+              {addAdminError && (
+                <div className="bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800 rounded-lg p-3 text-red-700 dark:text-red-300 text-sm">
+                  {addAdminError}
+                </div>
+              )}
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setShowAddAdminDialog(false)}>
+                  Cancel
+                </Button>
+                <Button onClick={handleAddAdmin} disabled={addingAdmin || !adminEmail}>
+                  {addingAdmin ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Shield className="w-4 h-4 mr-2" />}
+                  {addingAdmin ? "Adding..." : "Add Admin"}
                 </Button>
               </DialogFooter>
             </DialogContent>
