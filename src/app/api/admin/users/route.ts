@@ -190,7 +190,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { email, role = "member", sendInvite = true } = body;
+    const { email, role = "member", sendInvite = true, firstName, lastName } = body;
 
     if (!email || typeof email !== "string") {
       return NextResponse.json({ error: "Email is required" }, { status: 400 });
@@ -228,6 +228,15 @@ export async function POST(request: NextRequest) {
         role: role as "member" | "merchant" | "admin",
       })
       .returning();
+
+    // Create member profile if name provided
+    if (firstName && lastName) {
+      await db.insert(members).values({
+        userId: newUser.id,
+        firstName: firstName.trim(),
+        lastName: lastName.trim(),
+      });
+    }
 
     // Send magic link invite if requested
     if (sendInvite) {
