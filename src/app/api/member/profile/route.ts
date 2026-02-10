@@ -42,8 +42,8 @@ export async function GET() {
           emailReminders: true,
           emailMarketing: false,
         },
-        firstName: member.firstName,
-        lastName: member.lastName,
+        firstName: user.firstName,
+        lastName: user.lastName,
         address: member.address,
         city: member.city,
         state: member.state,
@@ -115,8 +115,10 @@ export async function PATCH(request: NextRequest) {
       );
     }
 
-    // Update user table (phone, notification prefs, profile photo)
+    // Update user table (name, phone, notification prefs, profile photo)
     const userUpdates: Record<string, unknown> = {};
+    if (firstName !== undefined) userUpdates.firstName = firstName;
+    if (lastName !== undefined) userUpdates.lastName = lastName;
     if (phone !== undefined) userUpdates.phone = phone;
     if (notificationPrefs !== undefined) userUpdates.notificationPrefs = notificationPrefs;
     if (profilePhotoUrl) userUpdates.profilePhotoUrl = profilePhotoUrl;
@@ -128,10 +130,8 @@ export async function PATCH(request: NextRequest) {
         .where(eq(users.id, session.user.id));
     }
 
-    // Update member table (name, address)
+    // Update member table (address)
     const memberUpdates: Record<string, unknown> = {};
-    if (firstName !== undefined) memberUpdates.firstName = firstName;
-    if (lastName !== undefined) memberUpdates.lastName = lastName;
     if (address !== undefined) memberUpdates.address = address;
     if (city !== undefined) memberUpdates.city = city;
     if (state !== undefined) memberUpdates.state = state;

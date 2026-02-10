@@ -46,8 +46,8 @@ export async function POST(
           id: users.id,
           email: users.email,
           role: users.role,
-          memberFirstName: members.firstName,
-          memberLastName: members.lastName,
+          memberFirstName: users.firstName,
+          memberLastName: users.lastName,
           merchantBusinessName: merchants.businessName,
         })
         .from(users)
@@ -85,8 +85,8 @@ export async function POST(
             id: users.id,
             email: users.email,
             role: users.role,
-            memberFirstName: members.firstName,
-            memberLastName: members.lastName,
+            memberFirstName: users.firstName,
+            memberLastName: users.lastName,
             merchantBusinessName: merchants.businessName,
           })
           .from(users)

@@ -3,12 +3,13 @@ import useSWR from "swr";
 interface User {
   email: string;
   role: "admin" | "merchant" | "member";
+  firstName?: string | null;
+  lastName?: string | null;
   profilePhotoUrl?: string | null;
 }
 
 interface Member {
-  firstName: string;
-  lastName: string;
+  id: string;
 }
 
 interface Merchant {
@@ -39,8 +40,8 @@ export function useUser() {
     }
   );
 
-  const userName = data?.member
-    ? `${data.member.firstName} ${data.member.lastName}`
+  const userName = data?.user?.firstName && data?.user?.lastName
+    ? `${data.user.firstName} ${data.user.lastName}`
     : data?.merchant?.businessName || undefined;
 
   return {

@@ -108,14 +108,16 @@ export async function PATCH(
       return NextResponse.json({ error: "Cannot change your own role" }, { status: 400 });
     }
 
-    // Update user
-    if (userUpdate) {
+    // Update user (including name fields)
+    if (userUpdate || memberUpdate) {
       const [updatedUser] = await db
         .update(users)
         .set({
-          ...(userUpdate.email && { email: userUpdate.email }),
-          ...(userUpdate.phone !== undefined && { phone: userUpdate.phone }),
-          ...(userUpdate.role && { role: userUpdate.role }),
+          ...(userUpdate?.email && { email: userUpdate.email }),
+          ...(userUpdate?.phone !== undefined && { phone: userUpdate.phone }),
+          ...(userUpdate?.role && { role: userUpdate.role }),
+          ...(memberUpdate?.firstName && { firstName: memberUpdate.firstName }),
+          ...(memberUpdate?.lastName && { lastName: memberUpdate.lastName }),
           updatedAt: new Date(),
         })
         .where(eq(users.id, userId))
@@ -126,8 +128,8 @@ export async function PATCH(
       }
     }
 
-    // Update member if provided
-    if (memberUpdate) {
+    // Update member address fields if provided
+    if (memberUpdate && (memberUpdate.address !== undefined || memberUpdate.city !== undefined || memberUpdate.state !== undefined || memberUpdate.zip !== undefined || memberUpdate.homeCity !== undefined)) {
       const [existingMember] = await db
         .select()
         .from(members)
@@ -138,8 +140,6 @@ export async function PATCH(
         await db
           .update(members)
           .set({
-            ...(memberUpdate.firstName && { firstName: memberUpdate.firstName }),
-            ...(memberUpdate.lastName && { lastName: memberUpdate.lastName }),
             ...(memberUpdate.address !== undefined && { address: memberUpdate.address }),
             ...(memberUpdate.city !== undefined && { city: memberUpdate.city }),
             ...(memberUpdate.state !== undefined && { state: memberUpdate.state }),

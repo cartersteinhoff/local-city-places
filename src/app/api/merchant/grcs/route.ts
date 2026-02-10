@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
-import { db, grcs, members, merchants, grcPurchases } from "@/db";
+import { db, grcs, members, merchants, grcPurchases, users } from "@/db";
 import { eq, and, sql, desc, or, ilike } from "drizzle-orm";
 
 export async function GET(request: NextRequest) {
@@ -49,12 +49,13 @@ export async function GET(request: NextRequest) {
         registeredAt: grcs.registeredAt,
         createdAt: grcs.createdAt,
         memberId: grcs.memberId,
-        memberFirstName: members.firstName,
-        memberLastName: members.lastName,
-        memberEmail: sql<string>`(SELECT email FROM users WHERE id = ${members.userId})`,
+        memberFirstName: users.firstName,
+        memberLastName: users.lastName,
+        memberEmail: users.email,
       })
       .from(grcs)
       .leftJoin(members, eq(grcs.memberId, members.id))
+      .leftJoin(users, eq(members.userId, users.id))
       .where(and(...conditions))
       .orderBy(desc(grcs.createdAt));
 

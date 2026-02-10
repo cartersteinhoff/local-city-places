@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import { db } from "@/db";
-import { users, members, merchants } from "@/db/schema";
-import { or, ilike, isNotNull, and, eq, sql } from "drizzle-orm";
+import { users, merchants } from "@/db/schema";
+import { or, ilike, isNotNull, and, eq } from "drizzle-orm";
 
 export async function GET(request: NextRequest) {
   try {
@@ -18,26 +18,25 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ users: [] });
     }
 
-    // Search users with member/merchant info joined
+    // Search users with merchant info joined
     const results = await db
       .select({
         id: users.id,
         email: users.email,
         role: users.role,
-        memberFirstName: members.firstName,
-        memberLastName: members.lastName,
+        firstName: users.firstName,
+        lastName: users.lastName,
         merchantBusinessName: merchants.businessName,
       })
       .from(users)
-      .leftJoin(members, eq(users.id, members.userId))
       .leftJoin(merchants, eq(users.id, merchants.userId))
       .where(
         and(
           isNotNull(users.email),
           or(
             ilike(users.email, `%${query}%`),
-            ilike(members.firstName, `%${query}%`),
-            ilike(members.lastName, `%${query}%`),
+            ilike(users.firstName, `%${query}%`),
+            ilike(users.lastName, `%${query}%`),
             ilike(merchants.businessName, `%${query}%`)
           )
         )
@@ -49,8 +48,8 @@ export async function GET(request: NextRequest) {
       id: r.id,
       email: r.email,
       role: r.role,
-      name: r.memberFirstName && r.memberLastName
-        ? `${r.memberFirstName} ${r.memberLastName}`
+      name: r.firstName && r.lastName
+        ? `${r.firstName} ${r.lastName}`
         : r.merchantBusinessName || null,
     }));
 

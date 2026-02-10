@@ -74,7 +74,7 @@ async function seed() {
       if (existingUser.role !== "admin") {
         await db
           .update(users)
-          .set({ role: "admin" })
+          .set({ role: "admin", firstName: admin.firstName, lastName: admin.lastName })
           .where(eq(users.id, existingUser.id));
         console.log(`Updated ${admin.email} to admin role`);
       } else {
@@ -84,6 +84,8 @@ async function seed() {
       const [newUser] = await db.insert(users).values({
         email: admin.email,
         role: "admin",
+        firstName: admin.firstName,
+        lastName: admin.lastName,
       }).returning();
       userId = newUser.id;
       console.log(`Created admin user: ${admin.email}`);
@@ -99,8 +101,6 @@ async function seed() {
     if (!existingMember) {
       await db.insert(members).values({
         userId,
-        firstName: admin.firstName,
-        lastName: admin.lastName,
         city: admin.city,
         homeCity: admin.city,
       });

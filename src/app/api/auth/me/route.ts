@@ -24,13 +24,13 @@ export async function GET() {
         id: session.user.id,
         email: session.user.email,
         role: session.user.role,
+        firstName: session.user.firstName,
+        lastName: session.user.lastName,
         profilePhotoUrl: session.user.profilePhotoUrl,
       },
       member: session.member
         ? {
             id: session.member.id,
-            firstName: session.member.firstName,
-            lastName: session.member.lastName,
           }
         : null,
       merchant: session.merchant

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
-import { db, reviews, merchants, members } from "@/db";
+import { db, reviews, merchants, members, users } from "@/db";
 import { eq, desc, sql } from "drizzle-orm";
 
 export async function GET(request: NextRequest) {
@@ -42,11 +42,12 @@ export async function GET(request: NextRequest) {
         wordCount: reviews.wordCount,
         bonusMonthAwarded: reviews.bonusMonthAwarded,
         createdAt: reviews.createdAt,
-        memberFirstName: members.firstName,
-        memberLastName: members.lastName,
+        memberFirstName: users.firstName,
+        memberLastName: users.lastName,
       })
       .from(reviews)
       .leftJoin(members, eq(reviews.memberId, members.id))
+      .leftJoin(users, eq(members.userId, users.id))
       .where(eq(reviews.merchantId, merchant.id))
       .orderBy(desc(reviews.createdAt))
       .limit(limit)

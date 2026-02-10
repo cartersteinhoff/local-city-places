@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
-import { db, grcs, grcPurchases, reviews, members, merchants } from "@/db";
+import { db, grcs, grcPurchases, reviews, members, merchants, users } from "@/db";
 import { eq, and, sql, desc } from "drizzle-orm";
 
 export async function GET() {
@@ -109,15 +109,16 @@ export async function GET() {
       ? await db
           .select({
             id: members.id,
-            firstName: members.firstName,
-            lastName: members.lastName,
+            firstName: users.firstName,
+            lastName: users.lastName,
           })
           .from(members)
+          .innerJoin(users, eq(members.userId, users.id))
           .where(sql`${members.id} = ANY(${memberIds})`)
       : [];
 
     const memberMap = new Map(
-      memberNames.map((m) => [m.id, `${m.firstName} ${m.lastName.charAt(0)}.`])
+      memberNames.map((m) => [m.id, `${m.firstName || ""} ${(m.lastName || "").charAt(0)}.`])
     );
 
     // Get recent reviews
@@ -174,12 +175,13 @@ export async function GET() {
     for (const review of recentReviews) {
       const reviewMemberIds = [review.memberId];
       const reviewMembers = await db
-        .select({ id: members.id, firstName: members.firstName, lastName: members.lastName })
+        .select({ id: members.id, firstName: users.firstName, lastName: users.lastName })
         .from(members)
+        .innerJoin(users, eq(members.userId, users.id))
         .where(sql`${members.id} = ANY(${reviewMemberIds})`);
 
       const reviewMemberName = reviewMembers[0]
-        ? `${reviewMembers[0].firstName} ${reviewMembers[0].lastName.charAt(0)}.`
+        ? `${reviewMembers[0].firstName || ""} ${(reviewMembers[0].lastName || "").charAt(0)}.`
         : "Unknown";
 
       activity.push({

@@ -36,8 +36,8 @@ export async function GET(request: NextRequest) {
       conditions.push(
         or(
           ilike(users.email, `%${search}%`),
-          ilike(members.firstName, `%${search}%`),
-          ilike(members.lastName, `%${search}%`),
+          ilike(users.firstName, `%${search}%`),
+          ilike(users.lastName, `%${search}%`),
           ilike(merchants.businessName, `%${search}%`)
         )
       );
@@ -94,8 +94,8 @@ export async function GET(request: NextRequest) {
       role: "member" | "merchant" | "admin";
       profilePhotoUrl: string | null;
       createdAt: Date;
-      memberFirstName: string | null;
-      memberLastName: string | null;
+      firstName: string | null;
+      lastName: string | null;
       memberCity: string | null;
       merchantBusinessName: string | null;
       merchantCity: string | null;
@@ -111,8 +111,8 @@ export async function GET(request: NextRequest) {
           role: users.role,
           profilePhotoUrl: users.profilePhotoUrl,
           createdAt: users.createdAt,
-          memberFirstName: members.firstName,
-          memberLastName: members.lastName,
+          firstName: users.firstName,
+          lastName: users.lastName,
           memberCity: members.city,
           merchantBusinessName: merchants.businessName,
           merchantCity: merchants.city,
@@ -226,17 +226,10 @@ export async function POST(request: NextRequest) {
       .values({
         email: normalizedEmail,
         role: role as "member" | "merchant" | "admin",
+        ...(firstName && { firstName: firstName.trim() }),
+        ...(lastName && { lastName: lastName.trim() }),
       })
       .returning();
-
-    // Create member profile if name provided
-    if (firstName && lastName) {
-      await db.insert(members).values({
-        userId: newUser.id,
-        firstName: firstName.trim(),
-        lastName: lastName.trim(),
-      });
-    }
 
     // Send magic link invite if requested
     if (sendInvite) {

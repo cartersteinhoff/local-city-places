@@ -44,13 +44,22 @@ export async function POST(request: NextRequest) {
 
     const { firstName, lastName, phone, address, city, state, zip } = result.data;
 
-    // Create member profile
+    // Save firstName, lastName, and phone to users table
+    await db
+      .update(users)
+      .set({
+        firstName,
+        lastName,
+        ...(phone && { phone: stripPhoneNumber(phone) }),
+        updatedAt: new Date(),
+      })
+      .where(eq(users.id, session.user.id));
+
+    // Create member profile (address data only)
     const [newMember] = await db
       .insert(members)
       .values({
         userId: session.user.id,
-        firstName,
-        lastName,
         address,
         city,
         state,
@@ -58,14 +67,6 @@ export async function POST(request: NextRequest) {
         homeCity: city, // Set home city from registration city
       })
       .returning({ id: members.id });
-
-    // Save phone to users table
-    if (phone) {
-      await db
-        .update(users)
-        .set({ phone: stripPhoneNumber(phone) })
-        .where(eq(users.id, session.user.id));
-    }
 
     return NextResponse.json({
       success: true,

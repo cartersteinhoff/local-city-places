@@ -60,12 +60,13 @@ export async function GET() {
       .select({
         id: receipts.id,
         submittedAt: receipts.submittedAt,
-        memberFirstName: members.firstName,
-        memberLastName: members.lastName,
+        memberFirstName: users.firstName,
+        memberLastName: users.lastName,
         amount: receipts.amount,
       })
       .from(receipts)
       .innerJoin(members, eq(receipts.memberId, members.id))
+      .innerJoin(users, eq(members.userId, users.id))
       .orderBy(desc(receipts.submittedAt))
       .limit(5);
 
@@ -83,12 +84,13 @@ export async function GET() {
       .select({
         id: grcs.id,
         registeredAt: grcs.registeredAt,
-        memberFirstName: members.firstName,
-        memberLastName: members.lastName,
+        memberFirstName: users.firstName,
+        memberLastName: users.lastName,
         merchantBusinessName: merchants.businessName,
       })
       .from(grcs)
       .innerJoin(members, eq(grcs.memberId, members.id))
+      .innerJoin(users, eq(members.userId, users.id))
       .innerJoin(merchants, eq(grcs.merchantId, merchants.id))
       .where(isNotNull(grcs.registeredAt))
       .orderBy(desc(grcs.registeredAt))
@@ -110,17 +112,20 @@ export async function GET() {
       .select({
         id: receipts.id,
         reviewedAt: receipts.reviewedAt,
-        memberFirstName: members.firstName,
-        memberLastName: members.lastName,
-        adminFirstName: sql<string>`admin_member.first_name`,
-        adminLastName: sql<string>`admin_member.last_name`,
+        memberFirstName: sql<string>`member_user.first_name`,
+        memberLastName: sql<string>`member_user.last_name`,
+        adminFirstName: sql<string>`admin_user.first_name`,
+        adminLastName: sql<string>`admin_user.last_name`,
       })
       .from(receipts)
       .innerJoin(members, eq(receipts.memberId, members.id))
-      .leftJoin(users, eq(receipts.reviewedBy, users.id))
+      .innerJoin(
+        sql`users as member_user`,
+        sql`member_user.id = ${members.userId}`
+      )
       .leftJoin(
-        sql`members as admin_member`,
-        sql`admin_member.user_id = ${users.id}`
+        sql`users as admin_user`,
+        sql`admin_user.id = ${receipts.reviewedBy}`
       )
       .where(and(eq(receipts.status, "approved"), isNotNull(receipts.reviewedAt)))
       .orderBy(desc(receipts.reviewedAt))

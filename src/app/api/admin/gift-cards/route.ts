@@ -41,8 +41,8 @@ export async function GET(request: NextRequest) {
 
     if (search) {
       const searchCondition = or(
-        ilike(members.firstName, `%${search}%`),
-        ilike(members.lastName, `%${search}%`),
+        ilike(users.firstName, `%${search}%`),
+        ilike(users.lastName, `%${search}%`),
         ilike(users.email, `%${search}%`)
       );
       if (searchCondition) {
@@ -61,8 +61,8 @@ export async function GET(request: NextRequest) {
         rewardSentAt: monthlyQualifications.rewardSentAt,
         giftCardTrackingNumber: monthlyQualifications.giftCardTrackingNumber,
         memberId: members.id,
-        memberFirstName: members.firstName,
-        memberLastName: members.lastName,
+        memberFirstName: users.firstName,
+        memberLastName: users.lastName,
         memberEmail: users.email,
         memberAddress: members.address,
         memberCity: members.city,

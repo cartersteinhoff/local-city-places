@@ -38,6 +38,8 @@ import { adminNavItems } from "../../nav";
 interface UserDetail {
   id: string;
   email: string;
+  firstName: string | null;
+  lastName: string | null;
   phone: string | null;
   role: "member" | "merchant" | "admin";
   profilePhotoUrl: string | null;
@@ -47,8 +49,6 @@ interface UserDetail {
 
 interface MemberDetail {
   id: string;
-  firstName: string;
-  lastName: string;
   address: string | null;
   city: string | null;
   state: string | null;
@@ -140,8 +140,8 @@ export default function AdminUserEditPage() {
         email: data.user.email || "",
         phone: formatPhoneNumber(data.user.phone || ""),
         role: data.user.role || "member",
-        firstName: data.member?.firstName || "",
-        lastName: data.member?.lastName || "",
+        firstName: data.user.firstName || "",
+        lastName: data.user.lastName || "",
         address: data.member?.address || "",
         city: data.member?.city || "",
         state: data.member?.state || "",
@@ -177,15 +177,17 @@ export default function AdminUserEditPage() {
             phone: stripPhoneNumber(formData.phone) || null,
             role: formData.role,
           },
-          member: member ? {
+          member: {
             firstName: formData.firstName,
             lastName: formData.lastName,
-            address: formData.address || null,
-            city: formData.city || null,
-            state: formData.state || null,
-            zip: formData.zip || null,
-            homeCity: formData.homeCity || null,
-          } : null,
+            ...(member ? {
+              address: formData.address || null,
+              city: formData.city || null,
+              state: formData.state || null,
+              zip: formData.zip || null,
+              homeCity: formData.homeCity || null,
+            } : {}),
+          },
           merchant: merchant ? {
             businessName: formData.businessName,
             city: formData.merchantCity || null,
@@ -242,8 +244,8 @@ export default function AdminUserEditPage() {
   };
 
   const getInitials = (): string => {
-    if (member?.firstName && member?.lastName) {
-      return `${member.firstName[0]}${member.lastName[0]}`.toUpperCase();
+    if (user?.firstName && user?.lastName) {
+      return `${user.firstName[0]}${user.lastName[0]}`.toUpperCase();
     }
     if (merchant?.businessName) {
       return merchant.businessName.substring(0, 2).toUpperCase();
@@ -303,6 +305,24 @@ export default function AdminUserEditPage() {
                 </div>
               </CardHeader>
               <CardContent className="space-y-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="firstName">First Name</Label>
+                    <Input
+                      id="firstName"
+                      value={formData.firstName}
+                      onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="lastName">Last Name</Label>
+                    <Input
+                      id="lastName"
+                      value={formData.lastName}
+                      onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
+                    />
+                  </div>
+                </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="email">Email</Label>
@@ -365,24 +385,6 @@ export default function AdminUserEditPage() {
                   <CardDescription>Personal information and address</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="firstName">First Name</Label>
-                      <Input
-                        id="firstName"
-                        value={formData.firstName}
-                        onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="lastName">Last Name</Label>
-                      <Input
-                        id="lastName"
-                        value={formData.lastName}
-                        onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
-                      />
-                    </div>
-                  </div>
                   <div className="space-y-2">
                     <Label htmlFor="address">Address</Label>
                     <Input

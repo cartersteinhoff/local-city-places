@@ -177,7 +177,7 @@ export async function POST(request: NextRequest) {
     // Send welcome email (fire-and-forget)
     try {
       const [user] = await db
-        .select({ email: users.email })
+        .select({ email: users.email, firstName: users.firstName })
         .from(users)
         .where(eq(users.id, session.user.id))
         .limit(1);
@@ -191,7 +191,7 @@ export async function POST(request: NextRequest) {
         const dashboardUrl = `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/member`;
         sendGrcActivatedEmail({
           recipientEmail: user.email,
-          recipientName: `${member.firstName}`,
+          recipientName: user.firstName || "Member",
           merchantName: merchant.businessName,
           denomination: grc.denomination,
           totalMonths,

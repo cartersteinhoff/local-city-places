@@ -31,6 +31,8 @@ export const paymentStatusEnum = pgEnum("payment_status", ["pending", "confirmed
 export const users = pgTable("users", {
   id: uuid("id").primaryKey().defaultRandom(),
   email: varchar("email", { length: 255 }).notNull().unique(),
+  firstName: varchar("first_name", { length: 100 }),
+  lastName: varchar("last_name", { length: 100 }),
   phone: varchar("phone", { length: 20 }),
   role: userRoleEnum("role").notNull().default("member"),
   profilePhotoUrl: text("profile_photo_url"),
@@ -49,8 +51,6 @@ export const members = pgTable("members", {
   userId: uuid("user_id")
     .notNull()
     .references(() => users.id, { onDelete: "cascade" }),
-  firstName: varchar("first_name", { length: 100 }).notNull(),
-  lastName: varchar("last_name", { length: 100 }).notNull(),
   address: varchar("address", { length: 255 }),
   city: varchar("city", { length: 100 }),
   state: varchar("state", { length: 50 }),

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
-import { db, surveys, surveyResponses, merchants, members } from "@/db";
+import { db, surveys, surveyResponses, merchants, members, users } from "@/db";
 import { eq, and, desc, sql } from "drizzle-orm";
 
 export async function GET(
@@ -46,11 +46,12 @@ export async function GET(
         month: surveyResponses.month,
         year: surveyResponses.year,
         createdAt: surveyResponses.createdAt,
-        memberFirstName: members.firstName,
-        memberLastName: members.lastName,
+        memberFirstName: users.firstName,
+        memberLastName: users.lastName,
       })
       .from(surveyResponses)
       .leftJoin(members, eq(surveyResponses.memberId, members.id))
+      .leftJoin(users, eq(members.userId, users.id))
       .where(eq(surveyResponses.surveyId, id))
       .orderBy(desc(surveyResponses.createdAt));
 

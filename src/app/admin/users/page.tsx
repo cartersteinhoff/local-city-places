@@ -44,8 +44,8 @@ interface UserData {
   role: "member" | "merchant" | "admin";
   profilePhotoUrl: string | null;
   createdAt: string;
-  memberFirstName: string | null;
-  memberLastName: string | null;
+  firstName: string | null;
+  lastName: string | null;
   memberCity: string | null;
   merchantBusinessName: string | null;
   merchantCity: string | null;
@@ -231,8 +231,8 @@ export default function AdminUsersPage() {
   };
 
   const getUserName = (u: UserData): string => {
-    if (u.memberFirstName && u.memberLastName) {
-      return `${u.memberFirstName} ${u.memberLastName}`;
+    if (u.firstName && u.lastName) {
+      return `${u.firstName} ${u.lastName}`;
     }
     if (u.merchantBusinessName) {
       return u.merchantBusinessName;
@@ -241,8 +241,8 @@ export default function AdminUsersPage() {
   };
 
   const getInitials = (u: UserData): string => {
-    if (u.memberFirstName && u.memberLastName) {
-      return `${u.memberFirstName[0]}${u.memberLastName[0]}`.toUpperCase();
+    if (u.firstName && u.lastName) {
+      return `${u.firstName[0]}${u.lastName[0]}`.toUpperCase();
     }
     if (u.merchantBusinessName) {
       return u.merchantBusinessName.substring(0, 2).toUpperCase();
