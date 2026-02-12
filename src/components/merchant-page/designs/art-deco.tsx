@@ -1868,49 +1868,26 @@ export function ArtDecoDesign({
                         const claps = Math.floor(seededRandom(seed + 20) * 4);
                         const fires = Math.floor(seededRandom(seed + 30) * 4);
                         if (thumbs + hearts + claps + fires === 0) return null;
+                        const reactions = [
+                          { count: thumbs, icon: <ThumbsUp className="w-3.5 h-3.5" />, color: "text-[#D4AF37]" },
+                          { count: hearts, icon: <Heart className="w-3.5 h-3.5" />, color: "text-red-400" },
+                          { count: claps, icon: <span className="text-sm leading-none">👏</span>, color: "text-[#F5F1E6]" },
+                          { count: fires, icon: <span className="text-sm leading-none">🔥</span>, color: "text-orange-400" },
+                        ].filter(r => r.count > 0);
                         return (
                           <TooltipProvider>
-                          <div className={`flex items-center gap-4 mt-4 pt-3 border-t border-[#D4AF37]/20 text-sm ${raleway.className}`}>
-                            {thumbs > 0 && (
-                              <Tooltip>
+                          <div className={`flex items-center gap-2 mt-4 pt-3 border-t border-[#D4AF37]/10 ${raleway.className}`}>
+                            {reactions.map((r, i) => (
+                              <Tooltip key={i}>
                                 <TooltipTrigger asChild>
-                                  <span className="flex items-center gap-1.5 text-[#D4AF37]/70 hover:text-[#D4AF37] transition-colors cursor-pointer">
-                                    <ThumbsUp className="w-4 h-4" /> <span className="font-medium">{thumbs}</span>
+                                  <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-[#D4AF37]/15 bg-[#D4AF37]/5 ${r.color}/80 hover:${r.color} hover:bg-[#D4AF37]/10 hover:border-[#D4AF37]/30 transition-all cursor-pointer text-xs`}>
+                                    {r.icon}
+                                    <span className="font-medium">{r.count}</span>
                                   </span>
                                 </TooltipTrigger>
                                 <TooltipContent>Log in to react</TooltipContent>
                               </Tooltip>
-                            )}
-                            {hearts > 0 && (
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <span className="flex items-center gap-1.5 text-red-400/70 hover:text-red-400 transition-colors cursor-pointer">
-                                    <Heart className="w-4 h-4" /> <span className="font-medium">{hearts}</span>
-                                  </span>
-                                </TooltipTrigger>
-                                <TooltipContent>Log in to react</TooltipContent>
-                              </Tooltip>
-                            )}
-                            {claps > 0 && (
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <span className="flex items-center gap-1.5 text-[#F5F1E6]/60 hover:text-[#F5F1E6] transition-colors cursor-pointer">
-                                    <span className="text-base">👏</span> <span className="font-medium">{claps}</span>
-                                  </span>
-                                </TooltipTrigger>
-                                <TooltipContent>Log in to react</TooltipContent>
-                              </Tooltip>
-                            )}
-                            {fires > 0 && (
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <span className="flex items-center gap-1.5 text-orange-400/70 hover:text-orange-400 transition-colors cursor-pointer">
-                                    <span className="text-base">🔥</span> <span className="font-medium">{fires}</span>
-                                  </span>
-                                </TooltipTrigger>
-                                <TooltipContent>Log in to react</TooltipContent>
-                              </Tooltip>
-                            )}
+                            ))}
                           </div>
                           </TooltipProvider>
                         );
