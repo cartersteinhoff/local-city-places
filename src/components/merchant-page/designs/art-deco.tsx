@@ -1700,13 +1700,6 @@ export function ArtDecoDesign({
           </div>
         </div>
 
-        {/* Decorative divider */}
-        <div className="flex items-center justify-center gap-4 py-4">
-          <div className="w-32 h-px bg-gradient-to-r from-transparent to-[#D4AF37]/40" />
-          <div className="w-3 h-3 rotate-45 border border-[#D4AF37]/50" />
-          <div className="w-32 h-px bg-gradient-to-l from-transparent to-[#D4AF37]/40" />
-        </div>
-
         {/* Reviews Section */}
         {(allReviews.length > 0 || (isAuthenticated && member)) && (
           <>
