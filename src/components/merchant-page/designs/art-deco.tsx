@@ -1690,15 +1690,19 @@ export function ArtDecoDesign({
                   <Navigation className="w-5 h-5 text-[#D4AF37]" />
                   <span className={`${raleway.className} font-bold tracking-wide`}>Directions</span>
                 </a>
-                {allReviews.length > 0 && (
-                  <a
-                    href="#reviews"
-                    className="flex items-center justify-center gap-3 px-6 py-4 border border-[#D4AF37] hover:bg-[#D4AF37]/10 transition-colors cursor-pointer"
-                  >
-                    <Star className="w-5 h-5 text-[#D4AF37]" />
-                    <span className={`${raleway.className} font-bold tracking-wide`}>Reviews ({allReviews.length})</span>
-                  </a>
-                )}
+                {allReviews.length > 0 && (() => {
+                  const rated = allReviews.filter((r) => r.rating != null);
+                  const avg = rated.length > 0 ? Math.round(rated.reduce((sum, r) => sum + (r.rating || 0), 0) / rated.length * 10) / 10 : 0;
+                  return (
+                    <a
+                      href="#reviews"
+                      className="flex items-center justify-center gap-3 px-6 py-4 border border-[#D4AF37] hover:bg-[#D4AF37]/10 transition-colors cursor-pointer"
+                    >
+                      <Star className="w-5 h-5 text-[#D4AF37] fill-[#D4AF37]" />
+                      <span className={`${raleway.className} font-bold tracking-wide`}>{avg > 0 ? `${avg.toFixed(1)} ` : ""}Reviews ({allReviews.length})</span>
+                    </a>
+                  );
+                })()}
               </div>
             </div>
 
