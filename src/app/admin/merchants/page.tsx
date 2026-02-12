@@ -315,6 +315,20 @@ export default function MerchantPagesPage() {
             />
           ) : (
             <>
+              {/* Top Pagination */}
+              {totalPages > 1 && (
+                <div className="mb-4">
+                  <Pagination
+                    page={page}
+                    totalPages={totalPages}
+                    total={total}
+                    limit={20}
+                    onPageChange={setPage}
+                    disabled={isLoading}
+                  />
+                </div>
+              )}
+
               {/* Mobile cards */}
               <div className="md:hidden divide-y divide-border border rounded-lg">
                 {merchants.map((merchant) => (
