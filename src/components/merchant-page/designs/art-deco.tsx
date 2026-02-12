@@ -1699,7 +1699,7 @@ export function ArtDecoDesign({
                       className="flex items-center justify-center gap-3 px-6 py-4 border border-[#D4AF37] hover:bg-[#D4AF37]/10 transition-colors cursor-pointer"
                     >
                       <Star className="w-5 h-5 text-[#D4AF37] fill-[#D4AF37]" />
-                      <span className={`${raleway.className} font-bold tracking-wide`}>{avg > 0 ? `${avg.toFixed(1)} ` : ""}Reviews ({allReviews.length})</span>
+                      <span className={`${raleway.className} font-bold tracking-wide`}>{avg > 0 ? `${avg.toFixed(1)} Stars` : "Reviews"} · {allReviews.length} Review{allReviews.length !== 1 ? "s" : ""}</span>
                     </a>
                   );
                 })()}
