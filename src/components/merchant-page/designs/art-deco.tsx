@@ -1660,11 +1660,11 @@ export function ArtDecoDesign({
               )}
 
               {/* CTAs */}
-              <div className="flex flex-wrap gap-3 justify-center lg:justify-start">
+              <div className="grid grid-cols-2 gap-3 justify-center lg:justify-start">
                 {phone && (
                   <a
                     href={`tel:${phone}`}
-                    className="group flex-1 min-w-0 flex items-center justify-center gap-3 px-6 py-4 bg-gradient-to-r from-[#D4AF37] via-[#E5C97B] to-[#D4AF37] text-black font-bold tracking-wide cursor-pointer"
+                    className="flex items-center justify-center gap-3 px-6 py-4 bg-gradient-to-r from-[#D4AF37] via-[#E5C97B] to-[#D4AF37] text-black font-bold tracking-wide cursor-pointer"
                   >
                     <Phone className="w-5 h-5" />
                     <span className={`${raleway.className} font-bold tracking-wide`}>Call Now</span>
@@ -1675,7 +1675,7 @@ export function ArtDecoDesign({
                     href={website.startsWith("http") ? website : `https://${website}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex-1 min-w-0 flex items-center justify-center gap-3 px-6 py-4 border border-[#D4AF37] hover:bg-[#D4AF37]/10 transition-colors cursor-pointer"
+                    className="flex items-center justify-center gap-3 px-6 py-4 border border-[#D4AF37] hover:bg-[#D4AF37]/10 transition-colors cursor-pointer"
                   >
                     <Globe className="w-5 h-5 text-[#D4AF37]" />
                     <span className={`${raleway.className} font-bold tracking-wide`}>Visit Website</span>
@@ -1685,11 +1685,20 @@ export function ArtDecoDesign({
                   href={directionsUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex-1 min-w-0 flex items-center justify-center gap-3 px-6 py-4 border border-[#D4AF37] hover:bg-[#D4AF37]/10 transition-colors cursor-pointer"
+                  className="flex items-center justify-center gap-3 px-6 py-4 border border-[#D4AF37] hover:bg-[#D4AF37]/10 transition-colors cursor-pointer"
                 >
                   <Navigation className="w-5 h-5 text-[#D4AF37]" />
                   <span className={`${raleway.className} font-bold tracking-wide`}>Directions</span>
                 </a>
+                {allReviews.length > 0 && (
+                  <a
+                    href="#reviews"
+                    className="flex items-center justify-center gap-3 px-6 py-4 border border-[#D4AF37] hover:bg-[#D4AF37]/10 transition-colors cursor-pointer"
+                  >
+                    <Star className="w-5 h-5 text-[#D4AF37]" />
+                    <span className={`${raleway.className} font-bold tracking-wide`}>Reviews ({allReviews.length})</span>
+                  </a>
+                )}
               </div>
             </div>
 
