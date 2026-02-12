@@ -1487,6 +1487,11 @@ export function ArtDecoDesign({
                 Reviews
               </a>
             )}
+            {(googlePlaceId || city) && (
+              <a href="#location" className={`px-3 py-2 text-[10px] sm:text-xs tracking-[0.15em] uppercase text-[#D4AF37]/70 hover:text-[#D4AF37] hover:bg-[#D4AF37]/10 transition-all whitespace-nowrap cursor-pointer ${raleway.className}`}>
+                Location
+              </a>
+            )}
             {aboutStory && (
               <a href="#story" className={`px-3 py-2 text-[10px] sm:text-xs tracking-[0.15em] uppercase text-[#D4AF37]/70 hover:text-[#D4AF37] hover:bg-[#D4AF37]/10 transition-all whitespace-nowrap cursor-pointer ${raleway.className}`}>
                 Story
@@ -1495,11 +1500,6 @@ export function ArtDecoDesign({
             {hours && Object.values(hours).some(Boolean) && (
               <a href="#hours" className={`px-3 py-2 text-[10px] sm:text-xs tracking-[0.15em] uppercase text-[#D4AF37]/70 hover:text-[#D4AF37] hover:bg-[#D4AF37]/10 transition-all whitespace-nowrap cursor-pointer ${raleway.className}`}>
                 Hours
-              </a>
-            )}
-            {(googlePlaceId || city) && (
-              <a href="#location" className={`px-3 py-2 text-[10px] sm:text-xs tracking-[0.15em] uppercase text-[#D4AF37]/70 hover:text-[#D4AF37] hover:bg-[#D4AF37]/10 transition-all whitespace-nowrap cursor-pointer ${raleway.className}`}>
-                Location
               </a>
             )}
             {services && services.length > 0 && (
@@ -1826,7 +1826,7 @@ export function ArtDecoDesign({
                         <div className="flex-1">
                           <div className="flex items-center justify-between">
                             <h4 className={`font-medium text-[#F5F1E6] ${raleway.className}`}>{displayName}</h4>
-                            <span className={`text-xs text-[#F5F1E6]/40 ${raleway.className}`}>{timeAgo}</span>
+                            <span className={`text-sm text-[#F5F1E6]/50 ${raleway.className}`}>{timeAgo}</span>
                           </div>
                           {review.rating && (
                             <div className="flex items-center gap-0.5 mt-1">
@@ -1923,52 +1923,6 @@ export function ArtDecoDesign({
           </>
         )}
 
-        {/* About/Story Section */}
-        {(aboutStory || editable) && (
-          <>
-            <div className="flex items-center justify-center gap-4 py-4">
-              <div className="w-32 h-px bg-gradient-to-r from-transparent to-[#D4AF37]/40" />
-              <div className="w-3 h-3 rotate-45 border border-[#D4AF37]/50" />
-              <div className="w-32 h-px bg-gradient-to-l from-transparent to-[#D4AF37]/40" />
-            </div>
-            <div id="story" className="max-w-6xl mx-auto px-4 py-12 scroll-mt-16">
-              <div className="flex items-center gap-4 mb-8">
-                <h2 className={`text-2xl ${poiretOne.className}`}>Our Story</h2>
-                <div className="flex-1 h-px bg-gradient-to-r from-[#D4AF37]/30 to-transparent" />
-              </div>
-              <div className="border border-[#D4AF37]/20 p-8">
-                <EditableText
-                  field="aboutStory"
-                  value={aboutStory || ""}
-                  placeholder="Tell your story... What makes your business special?"
-                  as="p"
-                  className={`text-[#F5F1E6]/80 leading-relaxed whitespace-pre-line ${raleway.className}`}
-                  multiline
-                />
-              </div>
-            </div>
-          </>
-        )}
-
-        {/* Hours Section */}
-        {((hours && Object.values(hours).some(Boolean)) || editable) && (
-          <>
-            <div className="flex items-center justify-center gap-4 py-4">
-              <div className="w-32 h-px bg-gradient-to-r from-transparent to-[#D4AF37]/40" />
-              <div className="w-3 h-3 rotate-45 border border-[#D4AF37]/50" />
-              <div className="w-32 h-px bg-gradient-to-l from-transparent to-[#D4AF37]/40" />
-            </div>
-            <div id="hours" className="max-w-6xl mx-auto px-4 py-12 scroll-mt-16">
-              <div className="flex items-center gap-4 mb-8">
-                <Clock className="w-6 h-6 text-[#D4AF37]" />
-                <h2 className={`text-2xl ${poiretOne.className}`}>Hours of Operation</h2>
-                <div className="flex-1 h-px bg-gradient-to-r from-[#D4AF37]/30 to-transparent" />
-              </div>
-              <EditableHours hours={hours || {}} />
-            </div>
-          </>
-        )}
-
         {/* Map Section - only show if we have location data */}
         {(googlePlaceId || fullAddress) && (
           <>
@@ -2012,6 +1966,52 @@ export function ArtDecoDesign({
                   mapStyle="cool"
                 />
               </div>
+            </div>
+          </>
+        )}
+
+        {/* About/Story Section */}
+        {(aboutStory || editable) && (
+          <>
+            <div className="flex items-center justify-center gap-4 py-4">
+              <div className="w-32 h-px bg-gradient-to-r from-transparent to-[#D4AF37]/40" />
+              <div className="w-3 h-3 rotate-45 border border-[#D4AF37]/50" />
+              <div className="w-32 h-px bg-gradient-to-l from-transparent to-[#D4AF37]/40" />
+            </div>
+            <div id="story" className="max-w-6xl mx-auto px-4 py-12 scroll-mt-16">
+              <div className="flex items-center gap-4 mb-8">
+                <h2 className={`text-2xl ${poiretOne.className}`}>Our Story</h2>
+                <div className="flex-1 h-px bg-gradient-to-r from-[#D4AF37]/30 to-transparent" />
+              </div>
+              <div className="border border-[#D4AF37]/20 p-8">
+                <EditableText
+                  field="aboutStory"
+                  value={aboutStory || ""}
+                  placeholder="Tell your story... What makes your business special?"
+                  as="p"
+                  className={`text-[#F5F1E6]/80 leading-relaxed whitespace-pre-line ${raleway.className}`}
+                  multiline
+                />
+              </div>
+            </div>
+          </>
+        )}
+
+        {/* Hours Section */}
+        {((hours && Object.values(hours).some(Boolean)) || editable) && (
+          <>
+            <div className="flex items-center justify-center gap-4 py-4">
+              <div className="w-32 h-px bg-gradient-to-r from-transparent to-[#D4AF37]/40" />
+              <div className="w-3 h-3 rotate-45 border border-[#D4AF37]/50" />
+              <div className="w-32 h-px bg-gradient-to-l from-transparent to-[#D4AF37]/40" />
+            </div>
+            <div id="hours" className="max-w-6xl mx-auto px-4 py-12 scroll-mt-16">
+              <div className="flex items-center gap-4 mb-8">
+                <Clock className="w-6 h-6 text-[#D4AF37]" />
+                <h2 className={`text-2xl ${poiretOne.className}`}>Hours of Operation</h2>
+                <div className="flex-1 h-px bg-gradient-to-r from-[#D4AF37]/30 to-transparent" />
+              </div>
+              <EditableHours hours={hours || {}} />
             </div>
           </>
         )}
