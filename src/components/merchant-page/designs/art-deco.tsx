@@ -1538,8 +1538,6 @@ export function ArtDecoDesign({
               label="Location"
               displayValue={fullAddress || location}
               placeholder="123 Main St"
-              href={directionsUrl}
-              target="_blank"
             />
           </div>
         </div>
