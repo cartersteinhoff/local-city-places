@@ -1479,44 +1479,6 @@ export function ArtDecoDesign({
         </div>
       </header>
 
-      {/* Section Navigation */}
-      <nav className="bg-[#0D1F22]/95 border-b border-[#D4AF37]/20 sticky top-0 z-40 backdrop-blur-sm">
-        <div className="max-w-6xl mx-auto px-4">
-          <div className="flex items-center justify-center gap-1 sm:gap-2 py-2 overflow-x-auto scrollbar-hide">
-            {allReviews.length > 0 && (
-              <a href="#reviews" className={`px-3 py-2 text-[10px] sm:text-xs tracking-[0.15em] uppercase text-[#D4AF37]/70 hover:text-[#D4AF37] hover:bg-[#D4AF37]/10 transition-all whitespace-nowrap cursor-pointer ${raleway.className}`}>
-                Reviews
-              </a>
-            )}
-            {(googlePlaceId || city) && (
-              <a href="#location" className={`px-3 py-2 text-[10px] sm:text-xs tracking-[0.15em] uppercase text-[#D4AF37]/70 hover:text-[#D4AF37] hover:bg-[#D4AF37]/10 transition-all whitespace-nowrap cursor-pointer ${raleway.className}`}>
-                Location
-              </a>
-            )}
-            {aboutStory && (
-              <a href="#story" className={`px-3 py-2 text-[10px] sm:text-xs tracking-[0.15em] uppercase text-[#D4AF37]/70 hover:text-[#D4AF37] hover:bg-[#D4AF37]/10 transition-all whitespace-nowrap cursor-pointer ${raleway.className}`}>
-                Story
-              </a>
-            )}
-            {hours && Object.values(hours).some(Boolean) && (
-              <a href="#hours" className={`px-3 py-2 text-[10px] sm:text-xs tracking-[0.15em] uppercase text-[#D4AF37]/70 hover:text-[#D4AF37] hover:bg-[#D4AF37]/10 transition-all whitespace-nowrap cursor-pointer ${raleway.className}`}>
-                Hours
-              </a>
-            )}
-            {services && services.length > 0 && (
-              <a href="#services" className={`px-3 py-2 text-[10px] sm:text-xs tracking-[0.15em] uppercase text-[#D4AF37]/70 hover:text-[#D4AF37] hover:bg-[#D4AF37]/10 transition-all whitespace-nowrap cursor-pointer ${raleway.className}`}>
-                Services
-              </a>
-            )}
-            {photos && photos.length > 0 && (
-              <a href="#gallery" className={`px-3 py-2 text-[10px] sm:text-xs tracking-[0.15em] uppercase text-[#D4AF37]/70 hover:text-[#D4AF37] hover:bg-[#D4AF37]/10 transition-all whitespace-nowrap cursor-pointer ${raleway.className}`}>
-                Gallery
-              </a>
-            )}
-          </div>
-        </div>
-      </nav>
-
       {/* Contact Strip - Gold Bar */}
       <div className="bg-gradient-to-r from-[#D4AF37] via-[#E5C97B] to-[#D4AF37] text-[#0D1F22]">
         <div className="max-w-6xl mx-auto px-4 py-4">
