@@ -13,7 +13,7 @@
  */
 
 import { Poiret_One, Raleway } from "next/font/google";
-import { MapPin, Phone, Globe, Share2, Gem, Navigation, Clock, Instagram, Facebook, Image as ImageIcon, Sparkles, Upload, Plus, Trash2, GripVertical, Pencil, X, ChevronLeft, ChevronRight, Star, Quote, ThumbsUp, Heart } from "lucide-react";
+import { MapPin, Phone, Globe, Share2, Gem, Navigation, Clock, Instagram, Facebook, Image as ImageIcon, Sparkles, Upload, Plus, Trash2, GripVertical, Pencil, X, ChevronLeft, ChevronRight, Star, Quote, ThumbsUp, Heart, Copy, Check } from "lucide-react";
 import { formatPhoneNumber, formatHoursDisplay, cn } from "@/lib/utils";
 import { useEditor, useEditable } from "../editor-context";
 import { EditableText, EditableImage, EditableLink, PreventLink } from "../editable-primitives";
@@ -1373,6 +1373,7 @@ export function ArtDecoDesign({
   reviews: merchantReviews,
 }: MerchantPageProps) {
   const [copied, setCopied] = useState(false);
+  const [phoneCopied, setPhoneCopied] = useState(false);
   const [allReviews, setAllReviews] = useState(merchantReviews || []);
   const [showReviewForm, setShowReviewForm] = useState(false);
   const [reviewContent, setReviewContent] = useState("");
@@ -1662,13 +1663,26 @@ export function ArtDecoDesign({
               {/* CTAs */}
               <div className="grid grid-cols-2 gap-3 justify-center lg:justify-start">
                 {phone && (
-                  <a
-                    href={`tel:${phone}`}
-                    className="flex items-center justify-center gap-3 px-6 py-4 bg-gradient-to-r from-[#D4AF37] via-[#E5C97B] to-[#D4AF37] text-black font-bold tracking-wide cursor-pointer"
-                  >
-                    <Phone className="w-5 h-5" />
-                    <span className={`${raleway.className} font-bold tracking-wide`}>Call Now</span>
-                  </a>
+                  <div className="flex bg-gradient-to-r from-[#D4AF37] via-[#E5C97B] to-[#D4AF37]">
+                    <a
+                      href={`tel:${phone}`}
+                      className="flex-1 flex items-center justify-center gap-3 px-4 py-4 text-black font-bold tracking-wide cursor-pointer"
+                    >
+                      <Phone className="w-5 h-5" />
+                      <span className={`${raleway.className} font-bold tracking-wide`}>{formatPhoneNumber(phone)}</span>
+                    </a>
+                    <button
+                      onClick={() => {
+                        navigator.clipboard.writeText(formatPhoneNumber(phone));
+                        setPhoneCopied(true);
+                        setTimeout(() => setPhoneCopied(false), 2000);
+                      }}
+                      className="px-3 border-l border-black/20 text-black/70 hover:text-black transition-colors cursor-pointer"
+                      title="Copy phone number"
+                    >
+                      {phoneCopied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                    </button>
+                  </div>
                 )}
                 {website && (
                   <a
