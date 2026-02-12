@@ -1545,7 +1545,7 @@ export function ArtDecoDesign({
 
       {/* Main Content */}
       <div className="relative">
-        <div className="max-w-6xl mx-auto px-6 sm:px-8 lg:px-4 py-12 lg:py-16">
+        <div className="max-w-6xl mx-auto px-3 sm:px-6 lg:px-4 py-12 lg:py-16">
           <div className="grid lg:grid-cols-[3fr_2fr] gap-12 items-center">
             {/* Left - Business Info */}
             <div className="text-center lg:text-left">
