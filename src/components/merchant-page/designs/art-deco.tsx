@@ -1479,8 +1479,8 @@ export function ArtDecoDesign({
         </div>
       </header>
 
-      {/* Contact Strip - Gold Bar */}
-      <div className="bg-gradient-to-r from-[#D4AF37] via-[#E5C97B] to-[#D4AF37] text-[#0D1F22]">
+      {/* Contact Strip - Gold Bar (desktop only) */}
+      <div className="hidden sm:block bg-gradient-to-r from-[#D4AF37] via-[#E5C97B] to-[#D4AF37] text-[#0D1F22]">
         <div className="max-w-6xl mx-auto px-4 py-4">
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-10">
             <EditableContactField
