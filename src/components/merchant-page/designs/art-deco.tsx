@@ -1621,15 +1621,15 @@ export function ArtDecoDesign({
               )}
 
               {/* CTAs */}
-              <div className="grid grid-cols-2 gap-3 justify-center lg:justify-start">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 justify-center lg:justify-start">
                 {phone && (
                   <div className="flex bg-gradient-to-r from-[#D4AF37] via-[#E5C97B] to-[#D4AF37]">
                     <a
                       href={`tel:${phone}`}
-                      className="flex-1 flex items-center justify-center gap-3 px-4 py-4 text-black font-bold tracking-wide cursor-pointer"
+                      className="flex-1 flex items-center justify-center gap-2 px-3 py-3 text-black font-bold cursor-pointer"
                     >
-                      <Phone className="w-5 h-5" />
-                      <span className={`${raleway.className} font-bold tracking-wide`}>{formatPhoneNumber(phone)}</span>
+                      <Phone className="w-4 h-4" />
+                      <span className={`${raleway.className} text-sm font-bold tracking-wide`}>{formatPhoneNumber(phone)}</span>
                     </a>
                     <button
                       onClick={() => {
@@ -1637,10 +1637,10 @@ export function ArtDecoDesign({
                         setPhoneCopied(true);
                         setTimeout(() => setPhoneCopied(false), 2000);
                       }}
-                      className="px-3 border-l border-black/20 text-black/70 hover:text-black transition-colors cursor-pointer"
+                      className="px-2.5 border-l border-black/20 text-black/70 hover:text-black transition-colors cursor-pointer"
                       title="Copy phone number"
                     >
-                      {phoneCopied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                      {phoneCopied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
                     </button>
                   </div>
                 )}
@@ -1649,20 +1649,20 @@ export function ArtDecoDesign({
                     href={website.startsWith("http") ? website : `https://${website}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center justify-center gap-3 px-6 py-4 border border-[#D4AF37] hover:bg-[#D4AF37]/10 transition-colors cursor-pointer"
+                    className="flex items-center justify-center gap-2 px-3 py-3 border border-[#D4AF37] hover:bg-[#D4AF37]/10 transition-colors cursor-pointer"
                   >
-                    <Globe className="w-5 h-5 text-[#D4AF37]" />
-                    <span className={`${raleway.className} font-bold tracking-wide`}>Visit Website</span>
+                    <Globe className="w-4 h-4 text-[#D4AF37]" />
+                    <span className={`${raleway.className} text-sm font-bold tracking-wide`}>Visit Website</span>
                   </a>
                 )}
                 <a
                   href={directionsUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center justify-center gap-3 px-6 py-4 border border-[#D4AF37] hover:bg-[#D4AF37]/10 transition-colors cursor-pointer"
+                  className="flex items-center justify-center gap-2 px-3 py-3 border border-[#D4AF37] hover:bg-[#D4AF37]/10 transition-colors cursor-pointer"
                 >
-                  <Navigation className="w-5 h-5 text-[#D4AF37]" />
-                  <span className={`${raleway.className} font-bold tracking-wide`}>Directions</span>
+                  <Navigation className="w-4 h-4 text-[#D4AF37]" />
+                  <span className={`${raleway.className} text-sm font-bold tracking-wide`}>Directions</span>
                 </a>
                 {allReviews.length > 0 && (() => {
                   const rated = allReviews.filter((r) => r.rating != null);
@@ -1670,10 +1670,10 @@ export function ArtDecoDesign({
                   return (
                     <a
                       href="#reviews"
-                      className="flex items-center justify-center gap-3 px-6 py-4 border border-[#D4AF37] hover:bg-[#D4AF37]/10 transition-colors cursor-pointer"
+                      className="flex items-center justify-center gap-2 px-3 py-3 border border-[#D4AF37] hover:bg-[#D4AF37]/10 transition-colors cursor-pointer"
                     >
-                      <Star className="w-5 h-5 text-[#D4AF37] fill-[#D4AF37]" />
-                      <span className={`${raleway.className} font-bold tracking-wide`}>{avg > 0 ? `${avg.toFixed(1)} Stars` : "Reviews"} · {allReviews.length} Review{allReviews.length !== 1 ? "s" : ""}</span>
+                      <Star className="w-4 h-4 text-[#D4AF37] fill-[#D4AF37]" />
+                      <span className={`${raleway.className} text-sm font-bold tracking-wide`}>{avg > 0 ? `${avg.toFixed(1)} Stars` : "Reviews"} · {allReviews.length} Review{allReviews.length !== 1 ? "s" : ""}</span>
                     </a>
                   );
                 })()}
