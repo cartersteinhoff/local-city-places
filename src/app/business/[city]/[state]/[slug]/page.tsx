@@ -1,8 +1,8 @@
 import { notFound } from "next/navigation";
 import { Metadata } from "next";
 import { db } from "@/db";
-import { merchants, categories } from "@/db/schema";
-import { eq } from "drizzle-orm";
+import { merchants, categories, reviews, reviewPhotos } from "@/db/schema";
+import { eq, desc, inArray } from "drizzle-orm";
 import { ArtDecoDesign } from "@/components/merchant-page/designs/art-deco";
 
 // Cache pages, auto-revalidate every hour as fallback
@@ -17,7 +17,7 @@ interface PageProps {
   }>;
 }
 
-async function getMerchant(slug: string) {
+async function getMerchantBySlug(slug: string) {
   const [merchant] = await db
     .select({
       id: merchants.id,
@@ -50,9 +50,52 @@ async function getMerchant(slug: string) {
   return merchant;
 }
 
+async function getMerchantReviews(merchantId: string) {
+  const merchantReviews = await db
+    .select({
+      id: reviews.id,
+      content: reviews.content,
+      rating: reviews.rating,
+      reviewerFirstName: reviews.reviewerFirstName,
+      reviewerLastName: reviews.reviewerLastName,
+      reviewerPhotoUrl: reviews.reviewerPhotoUrl,
+      createdAt: reviews.createdAt,
+    })
+    .from(reviews)
+    .where(eq(reviews.merchantId, merchantId))
+    .orderBy(desc(reviews.createdAt));
+
+  const reviewIds = merchantReviews.map((r) => r.id);
+
+  const photos =
+    reviewIds.length > 0
+      ? await db
+          .select({
+            reviewId: reviewPhotos.reviewId,
+            url: reviewPhotos.url,
+            displayOrder: reviewPhotos.displayOrder,
+          })
+          .from(reviewPhotos)
+          .where(inArray(reviewPhotos.reviewId, reviewIds))
+      : [];
+
+  const photosByReview = new Map<string, { url: string; displayOrder: number | null }[]>();
+  for (const p of photos) {
+    if (!photosByReview.has(p.reviewId)) photosByReview.set(p.reviewId, []);
+    photosByReview.get(p.reviewId)!.push(p);
+  }
+
+  return merchantReviews.map((r) => ({
+    ...r,
+    photos: (photosByReview.get(r.id) || [])
+      .sort((a, b) => (a.displayOrder || 0) - (b.displayOrder || 0))
+      .map((p) => p.url),
+  }));
+}
+
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
-  const merchant = await getMerchant(slug);
+  const merchant = await getMerchantBySlug(slug);
 
   if (!merchant) {
     return {
@@ -78,14 +121,17 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
 export default async function MerchantPage({ params }: PageProps) {
   const { slug } = await params;
-  const merchant = await getMerchant(slug);
+  const merchant = await getMerchantBySlug(slug);
 
   if (!merchant) {
     notFound();
   }
 
+  const merchantReviews = await getMerchantReviews(merchant.id);
+
   return (
     <ArtDecoDesign
+      merchantId={merchant.id}
       businessName={merchant.businessName}
       streetAddress={merchant.streetAddress}
       city={merchant.city}
@@ -105,6 +151,7 @@ export default async function MerchantPage({ params }: PageProps) {
       photos={merchant.photos}
       services={merchant.services}
       aboutStory={merchant.aboutStory}
+      reviews={merchantReviews}
     />
   );
 }

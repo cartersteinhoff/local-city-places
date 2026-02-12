@@ -59,10 +59,26 @@ export const members = pgTable("members", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+// Review status enum
+export const reviewStatusEnum = pgEnum("review_status", ["pending", "approved", "rejected"]);
+
+// Category groups table
+export const categoryGroups = pgTable("category_groups", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  name: varchar("name", { length: 100 }).notNull(),
+  slug: varchar("slug", { length: 120 }).notNull(),
+  icon: varchar("icon", { length: 50 }),
+  color: varchar("color", { length: 20 }),
+  bgColor: varchar("bg_color", { length: 20 }),
+  displayOrder: integer("display_order").default(0),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
 // Categories table
 export const categories = pgTable("categories", {
   id: uuid("id").primaryKey().defaultRandom(),
   name: varchar("name", { length: 100 }).notNull().unique(),
+  groupId: uuid("group_id").references(() => categoryGroups.id),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
@@ -100,6 +116,8 @@ export const merchants = pgTable("merchants", {
   photos: jsonb("photos").$type<string[]>(), // Array of photo URLs
   services: jsonb("services").$type<{ name: string; description?: string; price?: string }[]>(), // Services/menu items
   aboutStory: text("about_story"), // Longer about/history section
+  googleRating: decimal("google_rating", { precision: 2, scale: 1 }),
+  googleReviewCount: integer("google_review_count"),
   verified: boolean("verified").default(false).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
@@ -265,11 +283,27 @@ export const reviews = pgTable("reviews", {
     .notNull()
     .references(() => merchants.id, { onDelete: "cascade" }),
   memberId: uuid("member_id")
-    .notNull()
     .references(() => members.id, { onDelete: "cascade" }),
   content: text("content").notNull(),
   wordCount: integer("word_count").notNull(),
+  rating: integer("rating"),
+  status: reviewStatusEnum("status").default("approved"),
+  // Denormalized reviewer info for imported v1 reviews (no user account)
+  reviewerFirstName: varchar("reviewer_first_name", { length: 100 }),
+  reviewerLastName: varchar("reviewer_last_name", { length: 100 }),
+  reviewerPhotoUrl: text("reviewer_photo_url"),
   bonusMonthAwarded: boolean("bonus_month_awarded").default(false),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+// Review photos table
+export const reviewPhotos = pgTable("review_photos", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  reviewId: uuid("review_id")
+    .notNull()
+    .references(() => reviews.id, { onDelete: "cascade" }),
+  url: text("url").notNull(),
+  displayOrder: integer("display_order").default(0),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
@@ -447,6 +481,17 @@ export const membersRelations = relations(members, ({ one, many }) => ({
   offerClaims: many(offerClaims),
 }));
 
+export const categoryGroupsRelations = relations(categoryGroups, ({ many }) => ({
+  categories: many(categories),
+}));
+
+export const categoriesRelations = relations(categories, ({ one }) => ({
+  group: one(categoryGroups, {
+    fields: [categories.groupId],
+    references: [categoryGroups.id],
+  }),
+}));
+
 export const merchantsRelations = relations(merchants, ({ one, many }) => ({
   user: one(users, {
     fields: [merchants.userId],
@@ -571,5 +616,12 @@ export const emailPreferencesRelations = relations(emailPreferences, ({ one }) =
   user: one(users, {
     fields: [emailPreferences.userId],
     references: [users.id],
+  }),
+}));
+
+export const reviewPhotosRelations = relations(reviewPhotos, ({ one }) => ({
+  review: one(reviews, {
+    fields: [reviewPhotos.reviewId],
+    references: [reviews.id],
   }),
 }));

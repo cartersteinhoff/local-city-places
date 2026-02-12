@@ -13,11 +13,12 @@
  */
 
 import { Poiret_One, Raleway } from "next/font/google";
-import { MapPin, Phone, Globe, Share2, Gem, Navigation, Clock, Instagram, Facebook, Image as ImageIcon, Sparkles, Upload, Plus, Trash2, GripVertical, Pencil, X, ChevronLeft, ChevronRight, Star, Quote } from "lucide-react";
+import { MapPin, Phone, Globe, Share2, Gem, Navigation, Clock, Instagram, Facebook, Image as ImageIcon, Sparkles, Upload, Plus, Trash2, GripVertical, Pencil, X, ChevronLeft, ChevronRight, Star, Quote, ThumbsUp, Heart } from "lucide-react";
 import { formatPhoneNumber, formatHoursDisplay, cn } from "@/lib/utils";
 import { useEditor, useEditable } from "../editor-context";
 import { EditableText, EditableImage, EditableLink, PreventLink } from "../editable-primitives";
 import { SortableGrid } from "@/components/ui/sortable-grid";
+import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from "@/components/ui/tooltip";
 import {
   Popover,
   PopoverContent,
@@ -38,6 +39,7 @@ const raleway = Raleway({
 import { extractVimeoId, getVimeoEmbedUrl } from "@/lib/vimeo";
 import { useState, useRef, useEffect } from "react";
 import { GoogleMapEmbed, getGoogleMapsDirectionsUrl, formatFullAddress } from "../google-map-embed";
+import { useUser } from "@/hooks/use-user";
 
 // =============================================================================
 // EDITABLE CONTACT FIELD
@@ -281,9 +283,9 @@ function EditableContactField({
         className="flex items-center gap-3 hover:opacity-80 transition-opacity cursor-pointer"
       >
         {icon}
-        <div>
+        <div className="min-w-0">
           <p className="text-[10px] uppercase tracking-wider opacity-70">{label}</p>
-          <p className={`font-semibold whitespace-nowrap ${raleway.className}`}>
+          <p className={`font-semibold truncate ${raleway.className}`}>
             {displayValue || value}
           </p>
         </div>
@@ -1291,7 +1293,22 @@ function EditableSocialLinks({
   );
 }
 
+// Seeded random so counts are stable across renders
+function seededRandom(seed: number): number {
+  const x = Math.sin(seed) * 10000;
+  return x - Math.floor(x);
+}
+
+function formatReviewDate(date: Date): string {
+  return new Date(date).toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+}
+
 interface MerchantPageProps {
+  merchantId?: string;
   businessName: string;
   streetAddress?: string | null;
   city?: string | null;
@@ -1320,9 +1337,20 @@ interface MerchantPageProps {
   photos?: string[] | null;
   services?: { name: string; description?: string; price?: string }[] | null;
   aboutStory?: string | null;
+  reviews?: {
+    id: string;
+    content: string;
+    rating: number | null;
+    reviewerFirstName: string | null;
+    reviewerLastName: string | null;
+    reviewerPhotoUrl: string | null;
+    createdAt: Date;
+    photos: string[];
+  }[];
 }
 
 export function ArtDecoDesign({
+  merchantId,
   businessName,
   streetAddress,
   city,
@@ -1342,8 +1370,29 @@ export function ArtDecoDesign({
   photos,
   services,
   aboutStory,
+  reviews: merchantReviews,
 }: MerchantPageProps) {
   const [copied, setCopied] = useState(false);
+  const [allReviews, setAllReviews] = useState(merchantReviews || []);
+  const [showReviewForm, setShowReviewForm] = useState(false);
+  const [reviewContent, setReviewContent] = useState("");
+  const [reviewRating, setReviewRating] = useState(0);
+  const [hoverRating, setHoverRating] = useState(0);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [reviewError, setReviewError] = useState("");
+  const [lightboxPhoto, setLightboxPhoto] = useState<{ photos: string[]; index: number } | null>(null);
+
+  useEffect(() => {
+    if (!lightboxPhoto) return;
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setLightboxPhoto(null);
+      if (e.key === "ArrowLeft") setLightboxPhoto(prev => prev ? { ...prev, index: (prev.index - 1 + prev.photos.length) % prev.photos.length } : null);
+      if (e.key === "ArrowRight") setLightboxPhoto(prev => prev ? { ...prev, index: (prev.index + 1) % prev.photos.length } : null);
+    };
+    window.addEventListener("keydown", handleKey);
+    return () => window.removeEventListener("keydown", handleKey);
+  }, [lightboxPhoto]);
+  const { isAuthenticated, member, user } = useUser();
   const { editable, onUpdate, showEditHints } = useEditor();
   const location = [city, state].filter(Boolean).join(", ");
   const fullAddress = formatFullAddress(streetAddress, city, state, zipCode);
@@ -1368,8 +1417,37 @@ export function ArtDecoDesign({
     }
   };
 
+  const handleSubmitReview = async () => {
+    if (!reviewContent.trim() || reviewRating === 0) {
+      setReviewError("Please write a review and select a rating.");
+      return;
+    }
+    setIsSubmitting(true);
+    setReviewError("");
+    try {
+      const res = await fetch("/api/reviews", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ merchantId, content: reviewContent, rating: reviewRating }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setReviewError(data.error || "Failed to submit review.");
+        return;
+      }
+      setAllReviews((prev) => [data.review, ...prev]);
+      setReviewContent("");
+      setReviewRating(0);
+      setShowReviewForm(false);
+    } catch {
+      setReviewError("Something went wrong. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-[#0D1F22] text-[#F5F1E6]">
+    <div className="min-h-screen bg-[#0D1F22] text-[#F5F1E6] overflow-x-hidden">
       {/* Art deco pattern overlay */}
       <div
         className="fixed inset-0 pointer-events-none opacity-[0.04]"
@@ -1404,7 +1482,7 @@ export function ArtDecoDesign({
       <nav className="bg-[#0D1F22]/95 border-b border-[#D4AF37]/20 sticky top-0 z-40 backdrop-blur-sm">
         <div className="max-w-6xl mx-auto px-4">
           <div className="flex items-center justify-center gap-1 sm:gap-2 py-2 overflow-x-auto scrollbar-hide">
-            {businessName === "Cobblestone Auto Spa" && (
+            {allReviews.length > 0 && (
               <a href="#reviews" className={`px-3 py-2 text-[10px] sm:text-xs tracking-[0.15em] uppercase text-[#D4AF37]/70 hover:text-[#D4AF37] hover:bg-[#D4AF37]/10 transition-all whitespace-nowrap cursor-pointer ${raleway.className}`}>
                 Reviews
               </a>
@@ -1438,10 +1516,38 @@ export function ArtDecoDesign({
         </div>
       </nav>
 
+      {/* Review Photos Slider */}
+      {(() => {
+        const allReviewPhotos = allReviews.flatMap((r) => r.photos);
+        if (allReviewPhotos.length === 0) return null;
+        return (
+          <div className="relative bg-black/30 overflow-hidden">
+            <div className="flex overflow-x-auto scrollbar-hide snap-x snap-mandatory">
+              {allReviewPhotos.map((photo, i) => (
+                <div
+                  key={i}
+                  className="snap-start shrink-0 w-48 h-36 sm:w-64 sm:h-48 relative cursor-pointer hover:opacity-90 transition-opacity"
+                  onClick={() => setLightboxPhoto({ photos: allReviewPhotos, index: i })}
+                >
+                  <img
+                    src={photo}
+                    alt=""
+                    className="w-full h-full object-cover"
+                    loading={i < 6 ? "eager" : "lazy"}
+                  />
+                </div>
+              ))}
+            </div>
+            <div className="absolute inset-y-0 left-0 w-8 bg-gradient-to-r from-[#0D1F22] to-transparent pointer-events-none" />
+            <div className="absolute inset-y-0 right-0 w-8 bg-gradient-to-l from-[#0D1F22] to-transparent pointer-events-none" />
+          </div>
+        );
+      })()}
+
       {/* Contact Strip - Gold Bar */}
       <div className="bg-gradient-to-r from-[#D4AF37] via-[#E5C97B] to-[#D4AF37] text-[#0D1F22]">
         <div className="max-w-6xl mx-auto px-4 py-4">
-          <div className="flex flex-wrap items-center justify-center gap-6 sm:gap-10">
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-10">
             <EditableContactField
               field="phone"
               value={phone}
@@ -1467,7 +1573,7 @@ export function ArtDecoDesign({
               secondaryFields={{ city, state, zipCode, googlePlaceId }}
               icon={<MapPin className="w-5 h-5" />}
               label="Location"
-              displayValue={[streetAddress, city, state, zipCode].filter(Boolean).join(", ") || location}
+              displayValue={fullAddress || location}
               placeholder="123 Main St"
               href={directionsUrl}
               target="_blank"
@@ -1479,7 +1585,7 @@ export function ArtDecoDesign({
       {/* Main Content */}
       <div className="relative">
         <div className="max-w-6xl mx-auto px-4 py-12 lg:py-16">
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
+          <div className="grid lg:grid-cols-[3fr_2fr] gap-12 items-center">
             {/* Left - Business Info */}
             <div className="text-center lg:text-left">
               {/* Logo with art deco frame */}
@@ -1514,15 +1620,7 @@ export function ArtDecoDesign({
               )}
 
               {/* Category */}
-              {categoryName && (
-                <div className="mb-4">
-                  <span className="inline-flex items-center gap-3 text-[10px] tracking-[0.3em] uppercase text-[#D4AF37]">
-                    <span className="w-8 h-px bg-[#D4AF37]/50" />
-                    {categoryName}
-                    <span className="w-8 h-px bg-[#D4AF37]/50" />
-                  </span>
-                </div>
-              )}
+              {/* Category name hidden for now */}
 
               {/* Business Name with Art Deco styling */}
               <div className="relative mb-8">
@@ -1562,14 +1660,14 @@ export function ArtDecoDesign({
               )}
 
               {/* CTAs */}
-              <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
+              <div className="flex flex-wrap gap-3 justify-center lg:justify-start">
                 {phone && (
                   <a
                     href={`tel:${phone}`}
-                    className="group flex items-center justify-center gap-3 px-8 py-4 bg-gradient-to-r from-[#D4AF37] via-[#E5C97B] to-[#D4AF37] text-[#0D1F22] font-medium cursor-pointer"
+                    className="group flex-1 min-w-0 flex items-center justify-center gap-3 px-6 py-4 bg-gradient-to-r from-[#D4AF37] via-[#E5C97B] to-[#D4AF37] text-black font-bold tracking-wide cursor-pointer"
                   >
                     <Phone className="w-5 h-5" />
-                    <span className={poiretOne.className}>Call Now</span>
+                    <span className={`${raleway.className} font-bold tracking-wide`}>Call Now</span>
                   </a>
                 )}
                 {website && (
@@ -1577,20 +1675,20 @@ export function ArtDecoDesign({
                     href={website.startsWith("http") ? website : `https://${website}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center justify-center gap-3 px-8 py-4 border border-[#D4AF37] hover:bg-[#D4AF37]/10 transition-colors cursor-pointer"
+                    className="flex-1 min-w-0 flex items-center justify-center gap-3 px-6 py-4 border border-[#D4AF37] hover:bg-[#D4AF37]/10 transition-colors cursor-pointer"
                   >
                     <Globe className="w-5 h-5 text-[#D4AF37]" />
-                    <span className={poiretOne.className}>Visit Website</span>
+                    <span className={`${raleway.className} font-bold tracking-wide`}>Visit Website</span>
                   </a>
                 )}
                 <a
                   href={directionsUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center justify-center gap-3 px-8 py-4 border border-[#D4AF37] hover:bg-[#D4AF37]/10 transition-colors cursor-pointer"
+                  className="flex-1 min-w-0 flex items-center justify-center gap-3 px-6 py-4 border border-[#D4AF37] hover:bg-[#D4AF37]/10 transition-colors cursor-pointer"
                 >
                   <Navigation className="w-5 h-5 text-[#D4AF37]" />
-                  <span className={poiretOne.className}>Directions</span>
+                  <span className={`${raleway.className} font-bold tracking-wide`}>Directions</span>
                 </a>
               </div>
             </div>
@@ -1649,8 +1747,8 @@ export function ArtDecoDesign({
           </div>
         )}
 
-        {/* Reviews Section - Only for Cobblestone Auto Spa (test) */}
-        {businessName === "Cobblestone Auto Spa" && (
+        {/* Reviews Section */}
+        {(allReviews.length > 0 || (isAuthenticated && member)) && (
           <>
             <div className="flex items-center justify-center gap-4 py-4">
               <div className="w-32 h-px bg-gradient-to-r from-transparent to-[#D4AF37]/40" />
@@ -1663,86 +1761,210 @@ export function ArtDecoDesign({
                 <Star className="w-6 h-6 text-[#D4AF37] fill-[#D4AF37]" />
                 <h2 className={`text-2xl ${poiretOne.className}`}>Customer Reviews</h2>
                 <div className="flex-1 h-px bg-gradient-to-r from-[#D4AF37]/30 to-transparent" />
+                {isAuthenticated && member && !showReviewForm && (
+                  <button
+                    onClick={() => setShowReviewForm(true)}
+                    className={`px-4 py-2 border border-[#D4AF37]/50 text-[#D4AF37] text-xs tracking-[0.15em] uppercase hover:bg-[#D4AF37]/10 transition-colors ${raleway.className}`}
+                  >
+                    Write a Review
+                  </button>
+                )}
               </div>
 
-              {/* Overall Rating */}
-              <div className="flex items-center gap-6 mb-8 p-6 border border-[#D4AF37]/20 bg-[#D4AF37]/5">
-                <div className="text-center">
-                  <div className={`text-5xl font-light text-[#D4AF37] ${poiretOne.className}`}>4.9</div>
-                  <div className="flex items-center gap-1 mt-2">
+              {/* Write Review Form */}
+              {showReviewForm && (
+                <div className="border border-[#D4AF37]/30 p-6 mb-8 bg-[#D4AF37]/5">
+                  <h3 className={`text-lg mb-4 ${poiretOne.className}`}>Write Your Review</h3>
+                  <div className="flex items-center gap-1 mb-4">
+                    <span className={`text-sm text-[#F5F1E6]/60 mr-2 ${raleway.className}`}>Rating:</span>
                     {[1, 2, 3, 4, 5].map((star) => (
-                      <Star key={star} className="w-4 h-4 text-[#D4AF37] fill-[#D4AF37]" />
+                      <button
+                        key={star}
+                        type="button"
+                        onMouseEnter={() => setHoverRating(star)}
+                        onMouseLeave={() => setHoverRating(0)}
+                        onClick={() => setReviewRating(star)}
+                        className="cursor-pointer"
+                      >
+                        <Star
+                          className={cn(
+                            "w-6 h-6 transition-colors",
+                            star <= (hoverRating || reviewRating) ? "text-[#D4AF37] fill-[#D4AF37]" : "text-[#D4AF37]/30"
+                          )}
+                        />
+                      </button>
                     ))}
                   </div>
-                  <p className={`text-sm text-[#F5F1E6]/50 mt-1 ${raleway.className}`}>127 reviews</p>
+                  <textarea
+                    value={reviewContent}
+                    onChange={(e) => setReviewContent(e.target.value)}
+                    placeholder="Share your experience..."
+                    rows={4}
+                    className={`w-full bg-[#0D1F22] border border-[#D4AF37]/30 text-[#F5F1E6] p-4 text-sm focus:outline-none focus:border-[#D4AF37]/60 placeholder-[#F5F1E6]/30 resize-none ${raleway.className}`}
+                  />
+                  {reviewError && (
+                    <p className={`text-red-400 text-sm mt-2 ${raleway.className}`}>{reviewError}</p>
+                  )}
+                  <div className="flex items-center justify-end gap-3 mt-4">
+                    <button
+                      onClick={() => { setShowReviewForm(false); setReviewError(""); }}
+                      className={`px-4 py-2 text-xs tracking-[0.15em] uppercase text-[#F5F1E6]/50 hover:text-[#F5F1E6] transition-colors ${raleway.className}`}
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={handleSubmitReview}
+                      disabled={isSubmitting}
+                      className={`px-6 py-2 bg-[#D4AF37] text-[#0D1F22] text-xs tracking-[0.15em] uppercase font-medium hover:bg-[#E5C97B] transition-colors disabled:opacity-50 ${raleway.className}`}
+                    >
+                      {isSubmitting ? "Submitting..." : "Submit Review"}
+                    </button>
+                  </div>
                 </div>
-                <div className="h-16 w-px bg-[#D4AF37]/20" />
-                <div className={`flex-1 text-[#F5F1E6]/70 ${raleway.className}`}>
-                  <p className="italic">&quot;Consistently exceptional service that keeps customers coming back.&quot;</p>
-                </div>
-              </div>
+              )}
+
+              {/* Overall Rating */}
+              {allReviews.length > 0 && (() => {
+                const rated = allReviews.filter((r) => r.rating != null);
+                const avg = rated.length > 0 ? rated.reduce((sum, r) => sum + (r.rating || 0), 0) / rated.length : 0;
+                const rounded = Math.round(avg * 10) / 10;
+                return (
+                  <div className="flex items-center gap-6 mb-8 p-6 border border-[#D4AF37]/20 bg-[#D4AF37]/5">
+                    <div className="text-center">
+                      <div className={`text-5xl font-light text-[#D4AF37] ${poiretOne.className}`}>{rounded.toFixed(1)}</div>
+                      <div className="flex items-center gap-1 mt-2">
+                        {[1, 2, 3, 4, 5].map((star) => (
+                          <Star key={star} className={cn("w-4 h-4", star <= Math.round(avg) ? "text-[#D4AF37] fill-[#D4AF37]" : "text-[#D4AF37]/30")} />
+                        ))}
+                      </div>
+                      <p className={`text-sm text-[#F5F1E6]/50 mt-1 ${raleway.className}`}>{allReviews.length} review{allReviews.length !== 1 ? "s" : ""}</p>
+                    </div>
+                    <div className="h-16 w-px bg-[#D4AF37]/20" />
+                    <div className={`flex-1 text-[#F5F1E6]/70 ${raleway.className}`}>
+                      <p className="italic">&quot;{allReviews[0].content.length > 120 ? allReviews[0].content.slice(0, 120) + "..." : allReviews[0].content}&quot;</p>
+                    </div>
+                  </div>
+                );
+              })()}
 
               {/* Individual Reviews */}
               <div className="grid md:grid-cols-2 gap-6">
-                {[
-                  {
-                    name: "Sarah M.",
-                    date: "2 weeks ago",
-                    rating: 5,
-                    text: "Absolutely incredible experience! The attention to detail is unmatched. My car looked better than when I first bought it. Will definitely be coming back regularly.",
-                    avatar: "SM"
-                  },
-                  {
-                    name: "James K.",
-                    date: "1 month ago",
-                    rating: 5,
-                    text: "Best auto detailing in Denver, hands down. The ceramic coating they applied has kept my car looking pristine for months. Worth every penny.",
-                    avatar: "JK"
-                  },
-                  {
-                    name: "Michelle R.",
-                    date: "1 month ago",
-                    rating: 5,
-                    text: "The team here really knows what they're doing. Professional, friendly, and the results speak for themselves. My SUV has never looked this good!",
-                    avatar: "MR"
-                  },
-                  {
-                    name: "David L.",
-                    date: "2 months ago",
-                    rating: 4,
-                    text: "Great service and fair pricing. The interior deep clean was exactly what my car needed after a long road trip. Highly recommend!",
-                    avatar: "DL"
-                  }
-                ].map((review, idx) => (
-                  <div key={idx} className="border border-[#D4AF37]/20 p-6 hover:border-[#D4AF37]/40 transition-colors">
-                    <div className="flex items-start gap-4 mb-4">
-                      <div className="w-12 h-12 bg-[#D4AF37]/20 border border-[#D4AF37]/30 flex items-center justify-center">
-                        <span className={`text-[#D4AF37] font-medium ${raleway.className}`}>{review.avatar}</span>
-                      </div>
-                      <div className="flex-1">
-                        <div className="flex items-center justify-between">
-                          <h4 className={`font-medium text-[#F5F1E6] ${raleway.className}`}>{review.name}</h4>
-                          <span className={`text-xs text-[#F5F1E6]/40 ${raleway.className}`}>{review.date}</span>
+                {allReviews.map((review) => {
+                  const firstName = review.reviewerFirstName || "";
+                  const lastName = review.reviewerLastName || "";
+                  const displayName = [firstName, lastName.charAt(0) ? `${lastName.charAt(0)}.` : ""].filter(Boolean).join(" ") || "Anonymous";
+                  const reviewInitials = [firstName.charAt(0), lastName.charAt(0)].filter(Boolean).join("").toUpperCase() || "?";
+                  const timeAgo = formatReviewDate(review.createdAt);
+
+                  return (
+                    <div key={review.id} className="border border-[#D4AF37]/20 p-6 hover:border-[#D4AF37]/40 transition-colors">
+                      <div className="flex items-start gap-4 mb-4">
+                        {review.reviewerPhotoUrl ? (
+                          <img
+                            src={review.reviewerPhotoUrl}
+                            alt={displayName}
+                            className="w-12 h-12 object-cover border border-[#D4AF37]/30"
+                          />
+                        ) : (
+                          <div className="w-12 h-12 bg-[#D4AF37]/20 border border-[#D4AF37]/30 flex items-center justify-center">
+                            <span className={`text-[#D4AF37] font-medium ${raleway.className}`}>{reviewInitials}</span>
+                          </div>
+                        )}
+                        <div className="flex-1">
+                          <div className="flex items-center justify-between">
+                            <h4 className={`font-medium text-[#F5F1E6] ${raleway.className}`}>{displayName}</h4>
+                            <span className={`text-xs text-[#F5F1E6]/40 ${raleway.className}`}>{timeAgo}</span>
+                          </div>
+                          {review.rating && (
+                            <div className="flex items-center gap-0.5 mt-1">
+                              {[1, 2, 3, 4, 5].map((star) => (
+                                <Star
+                                  key={star}
+                                  className={cn(
+                                    "w-3.5 h-3.5",
+                                    star <= review.rating! ? "text-[#D4AF37] fill-[#D4AF37]" : "text-[#D4AF37]/30"
+                                  )}
+                                />
+                              ))}
+                            </div>
+                          )}
                         </div>
-                        <div className="flex items-center gap-0.5 mt-1">
-                          {[1, 2, 3, 4, 5].map((star) => (
-                            <Star
-                              key={star}
-                              className={cn(
-                                "w-3.5 h-3.5",
-                                star <= review.rating ? "text-[#D4AF37] fill-[#D4AF37]" : "text-[#D4AF37]/30"
-                              )}
+                      </div>
+                      <Quote className="w-5 h-5 text-[#D4AF37]/30 mb-2" />
+                      <p className={`text-[#F5F1E6]/70 text-sm leading-relaxed ${raleway.className}`}>
+                        {review.content}
+                      </p>
+                      {review.photos.length > 0 && (
+                        <div className="flex gap-2 mt-4 overflow-x-auto">
+                          {review.photos.map((photo, i) => (
+                            <img
+                              key={i}
+                              src={photo}
+                              alt={`Review photo ${i + 1}`}
+                              className="w-32 h-32 object-cover border border-[#D4AF37]/20 flex-shrink-0 cursor-pointer hover:opacity-90 transition-opacity"
+                              onClick={() => setLightboxPhoto({ photos: review.photos, index: i })}
                             />
                           ))}
                         </div>
-                      </div>
+                      )}
+                      {/* Reactions */}
+                      {(() => {
+                        const seed = review.id.charCodeAt(0) * 31 + review.id.charCodeAt(1);
+                        const thumbs = Math.floor(seededRandom(seed) * 4);
+                        const hearts = Math.floor(seededRandom(seed + 10) * 4);
+                        const claps = Math.floor(seededRandom(seed + 20) * 4);
+                        const fires = Math.floor(seededRandom(seed + 30) * 4);
+                        if (thumbs + hearts + claps + fires === 0) return null;
+                        return (
+                          <TooltipProvider>
+                          <div className={`flex items-center gap-4 mt-4 pt-3 border-t border-[#D4AF37]/20 text-sm ${raleway.className}`}>
+                            {thumbs > 0 && (
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <span className="flex items-center gap-1.5 text-[#D4AF37]/70 hover:text-[#D4AF37] transition-colors cursor-pointer">
+                                    <ThumbsUp className="w-4 h-4" /> <span className="font-medium">{thumbs}</span>
+                                  </span>
+                                </TooltipTrigger>
+                                <TooltipContent>Log in to react</TooltipContent>
+                              </Tooltip>
+                            )}
+                            {hearts > 0 && (
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <span className="flex items-center gap-1.5 text-red-400/70 hover:text-red-400 transition-colors cursor-pointer">
+                                    <Heart className="w-4 h-4" /> <span className="font-medium">{hearts}</span>
+                                  </span>
+                                </TooltipTrigger>
+                                <TooltipContent>Log in to react</TooltipContent>
+                              </Tooltip>
+                            )}
+                            {claps > 0 && (
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <span className="flex items-center gap-1.5 text-[#F5F1E6]/60 hover:text-[#F5F1E6] transition-colors cursor-pointer">
+                                    <span className="text-base">👏</span> <span className="font-medium">{claps}</span>
+                                  </span>
+                                </TooltipTrigger>
+                                <TooltipContent>Log in to react</TooltipContent>
+                              </Tooltip>
+                            )}
+                            {fires > 0 && (
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <span className="flex items-center gap-1.5 text-orange-400/70 hover:text-orange-400 transition-colors cursor-pointer">
+                                    <span className="text-base">🔥</span> <span className="font-medium">{fires}</span>
+                                  </span>
+                                </TooltipTrigger>
+                                <TooltipContent>Log in to react</TooltipContent>
+                              </Tooltip>
+                            )}
+                          </div>
+                          </TooltipProvider>
+                        );
+                      })()}
                     </div>
-                    <Quote className="w-5 h-5 text-[#D4AF37]/30 mb-2" />
-                    <p className={`text-[#F5F1E6]/70 text-sm leading-relaxed ${raleway.className}`}>
-                      {review.text}
-                    </p>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           </>
@@ -1897,6 +2119,61 @@ export function ArtDecoDesign({
         </div>
       </div>
       <div className="h-20 lg:hidden" />
+
+
+      {/* Photo Lightbox */}
+      {lightboxPhoto && (
+        <div
+          className="fixed inset-0 z-[100] bg-black/95 flex items-center justify-center"
+          onClick={() => setLightboxPhoto(null)}
+        >
+          <button
+            onClick={() => setLightboxPhoto(null)}
+            className="absolute top-4 right-4 text-white/70 hover:text-white z-10 cursor-pointer"
+          >
+            <X className="w-8 h-8" />
+          </button>
+          {lightboxPhoto.photos.length > 1 && (
+            <>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setLightboxPhoto({
+                    photos: lightboxPhoto.photos,
+                    index: (lightboxPhoto.index - 1 + lightboxPhoto.photos.length) % lightboxPhoto.photos.length,
+                  });
+                }}
+                className="absolute left-4 text-white/70 hover:text-white z-10 cursor-pointer"
+              >
+                <ChevronLeft className="w-10 h-10" />
+              </button>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setLightboxPhoto({
+                    photos: lightboxPhoto.photos,
+                    index: (lightboxPhoto.index + 1) % lightboxPhoto.photos.length,
+                  });
+                }}
+                className="absolute right-4 text-white/70 hover:text-white z-10 cursor-pointer"
+              >
+                <ChevronRight className="w-10 h-10" />
+              </button>
+            </>
+          )}
+          <img
+            src={lightboxPhoto.photos[lightboxPhoto.index]}
+            alt=""
+            className="max-w-[90vw] max-h-[90vh] object-contain"
+            onClick={(e) => e.stopPropagation()}
+          />
+          {lightboxPhoto.photos.length > 1 && (
+            <p className="absolute bottom-4 text-white/50 text-sm">
+              {lightboxPhoto.index + 1} / {lightboxPhoto.photos.length}
+            </p>
+          )}
+        </div>
+      )}
     </div>
   );
 }
