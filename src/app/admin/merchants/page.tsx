@@ -67,6 +67,7 @@ interface MerchantPageData {
   createdAt: string;
   updatedAt: string;
   completionPercentage: number;
+  reviewCount: number;
   urls: {
     full: string | null;
     short: string | null;
@@ -338,6 +339,8 @@ export default function MerchantPagesPage() {
                     <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
                       {merchant.phone && <span>{formatPhoneNumber(merchant.phone)}</span>}
                       {merchant.phone && <span>·</span>}
+                      <span>{merchant.reviewCount} reviews</span>
+                      <span>·</span>
                       <span>Updated {new Date(merchant.updatedAt).toLocaleDateString()}</span>
                     </div>
 
@@ -399,6 +402,7 @@ export default function MerchantPagesPage() {
                     <TableRow>
                       <TableHead>Business</TableHead>
                       <TableHead className="w-[80px] text-center">Complete</TableHead>
+                      <TableHead className="w-[70px] text-center">Reviews</TableHead>
                       <TableHead className="w-[120px]">Location</TableHead>
                       <TableHead className="w-[180px]">Short URL</TableHead>
                       <TableHead className="w-[90px]">Updated</TableHead>
@@ -408,7 +412,7 @@ export default function MerchantPagesPage() {
                   <TableBody>
                     {!isLoading && merchants.length === 0 ? (
                       <TableRow>
-                        <TableCell colSpan={6} className="px-4 py-8 text-center text-muted-foreground">
+                        <TableCell colSpan={7} className="px-4 py-8 text-center text-muted-foreground">
                           No merchant pages found
                         </TableCell>
                       </TableRow>
@@ -430,6 +434,9 @@ export default function MerchantPagesPage() {
                             )}>
                               {merchant.completionPercentage}%
                             </span>
+                          </TableCell>
+                          <TableCell className="text-center text-muted-foreground">
+                            {merchant.reviewCount}
                           </TableCell>
                           <TableCell className="text-muted-foreground">
                             {[merchant.city, merchant.state].filter(Boolean).join(", ")}

@@ -46,7 +46,7 @@ export async function POST(request: NextRequest) {
         content,
         wordCount,
         rating,
-        status: "approved",
+        status: "pending",
         reviewerFirstName: session.user.firstName,
         reviewerLastName: session.user.lastName,
         reviewerPhotoUrl: session.user.profilePhotoUrl,

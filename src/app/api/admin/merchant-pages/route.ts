@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/db";
-import { merchants, categories } from "@/db/schema";
-import { eq, desc, asc, sql, and, isNull, isNotNull } from "drizzle-orm";
+import { merchants, categories, reviews } from "@/db/schema";
+import { eq, desc, asc, sql, and, isNull, isNotNull, ilike, or } from "drizzle-orm";
 import { getSession } from "@/lib/auth";
 import { isValidVimeoUrl } from "@/lib/vimeo";
 import {
@@ -30,10 +30,20 @@ export async function GET(request: NextRequest) {
     const sortOrder = searchParams.get("sortOrder") || "desc"; // "asc" or "desc"
 
     // Build where clauses
-    const conditions = [eq(merchants.isPublicPage, true)];
+    const conditions: any[] = [eq(merchants.isPublicPage, true)];
 
     if (categoryId) {
       conditions.push(eq(merchants.categoryId, categoryId));
+    }
+
+    if (search) {
+      conditions.push(
+        or(
+          ilike(merchants.businessName, `%${search}%`),
+          ilike(merchants.city, `%${search}%`),
+          sql`${merchants.phone} LIKE ${"%" + search.replace(/\D/g, "") + "%"}`
+        )
+      );
     }
 
     const whereClause = conditions.length > 1 ? and(...conditions) : conditions[0];
@@ -55,10 +65,19 @@ export async function GET(request: NextRequest) {
     };
     const orderByClause = sortOrder === "asc" ? asc(getSortColumn()) : desc(getSortColumn());
 
-    // For completion sorting, we need to fetch all and sort in memory
+    // For completion sorting/filtering, we need to fetch all and sort in memory
     const needsCompletionSort = sortBy === "completion";
-    const queryLimit = needsCompletionSort || completionFilter ? 1000 : limit;
-    const queryOffset = needsCompletionSort || completionFilter ? 0 : offset;
+    const needsAllRows = needsCompletionSort || !!completionFilter;
+
+    // Review count subquery
+    const reviewCountSq = db
+      .select({
+        merchantId: reviews.merchantId,
+        count: sql<number>`count(*)`.as("review_count"),
+      })
+      .from(reviews)
+      .groupBy(reviews.merchantId)
+      .as("review_counts");
 
     let query = db
       .select({
@@ -78,6 +97,7 @@ export async function GET(request: NextRequest) {
         logoUrl: merchants.logoUrl,
         createdAt: merchants.createdAt,
         updatedAt: merchants.updatedAt,
+        reviewCount: sql<number>`coalesce(${reviewCountSq.count}, 0)`.as("review_count"),
         // Additional fields for completion calculation
         aboutStory: merchants.aboutStory,
         hours: merchants.hours,
@@ -89,10 +109,13 @@ export async function GET(request: NextRequest) {
       })
       .from(merchants)
       .leftJoin(categories, eq(merchants.categoryId, categories.id))
+      .leftJoin(reviewCountSq, eq(merchants.id, reviewCountSq.merchantId))
       .where(whereClause)
-      .orderBy(orderByClause)
-      .limit(queryLimit)
-      .offset(queryOffset);
+      .orderBy(orderByClause);
+
+    if (!needsAllRows) {
+      query = query.limit(limit).offset(offset) as typeof query;
+    }
 
     const merchantList = await query;
 
@@ -137,23 +160,13 @@ export async function GET(request: NextRequest) {
         createdAt: m.createdAt.toISOString(),
         updatedAt: m.updatedAt.toISOString(),
         completionPercentage: completion.percentage,
+        reviewCount: Number(m.reviewCount) || 0,
         urls: {
           full: m.city && m.state && m.slug ? getMerchantPageUrl(m.city, m.state, m.slug) : null,
           short: m.phone ? getMerchantShortUrl(m.phone) : null,
         },
       };
     });
-
-    // Apply search filter
-    if (search) {
-      const searchLower = search.toLowerCase();
-      processedMerchants = processedMerchants.filter(
-        (m) =>
-          m.businessName.toLowerCase().includes(searchLower) ||
-          m.city?.toLowerCase().includes(searchLower) ||
-          m.phone?.includes(search)
-      );
-    }
 
     // Apply completion filter
     if (completionFilter === "complete") {
@@ -171,13 +184,14 @@ export async function GET(request: NextRequest) {
     }
 
     // Calculate totals after filtering
-    const filteredTotal = processedMerchants.length;
-    const totalPages = Math.ceil(filteredTotal / limit);
-
-    // Apply pagination if we fetched all for sorting/filtering
-    if (needsCompletionSort || completionFilter) {
+    let filteredTotal: number;
+    if (needsAllRows) {
+      filteredTotal = processedMerchants.length;
       processedMerchants = processedMerchants.slice(offset, offset + limit);
+    } else {
+      filteredTotal = Number(count);
     }
+    const totalPages = Math.ceil(filteredTotal / limit);
 
     return NextResponse.json({
       merchants: processedMerchants,
