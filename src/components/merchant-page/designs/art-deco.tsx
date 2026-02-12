@@ -1497,6 +1497,11 @@ export function ArtDecoDesign({
                 Hours
               </a>
             )}
+            {(googlePlaceId || city) && (
+              <a href="#location" className={`px-3 py-2 text-[10px] sm:text-xs tracking-[0.15em] uppercase text-[#D4AF37]/70 hover:text-[#D4AF37] hover:bg-[#D4AF37]/10 transition-all whitespace-nowrap cursor-pointer ${raleway.className}`}>
+                Location
+              </a>
+            )}
             {services && services.length > 0 && (
               <a href="#services" className={`px-3 py-2 text-[10px] sm:text-xs tracking-[0.15em] uppercase text-[#D4AF37]/70 hover:text-[#D4AF37] hover:bg-[#D4AF37]/10 transition-all whitespace-nowrap cursor-pointer ${raleway.className}`}>
                 Services
@@ -1505,11 +1510,6 @@ export function ArtDecoDesign({
             {photos && photos.length > 0 && (
               <a href="#gallery" className={`px-3 py-2 text-[10px] sm:text-xs tracking-[0.15em] uppercase text-[#D4AF37]/70 hover:text-[#D4AF37] hover:bg-[#D4AF37]/10 transition-all whitespace-nowrap cursor-pointer ${raleway.className}`}>
                 Gallery
-              </a>
-            )}
-{(googlePlaceId || city) && (
-              <a href="#location" className={`px-3 py-2 text-[10px] sm:text-xs tracking-[0.15em] uppercase text-[#D4AF37]/70 hover:text-[#D4AF37] hover:bg-[#D4AF37]/10 transition-all whitespace-nowrap cursor-pointer ${raleway.className}`}>
-                Location
               </a>
             )}
           </div>
@@ -1706,46 +1706,6 @@ export function ArtDecoDesign({
           <div className="w-3 h-3 rotate-45 border border-[#D4AF37]/50" />
           <div className="w-32 h-px bg-gradient-to-l from-transparent to-[#D4AF37]/40" />
         </div>
-
-        {/* Map Section - only show if we have location data */}
-        {(googlePlaceId || fullAddress) && (
-          <div id="location" className="max-w-6xl mx-auto px-4 py-12 scroll-mt-16">
-            <div className="flex items-center justify-between mb-8">
-              <div className="flex items-center gap-4">
-                <h2 className={`text-2xl ${poiretOne.className}`}>
-                  Our Location
-                </h2>
-                <div className="flex-1 h-px bg-gradient-to-r from-[#D4AF37]/30 to-transparent" />
-              </div>
-              <a
-                href={directionsUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-2 text-xs tracking-[0.2em] uppercase text-[#D4AF37] hover:text-[#E5C97B] transition-colors cursor-pointer"
-              >
-                <Navigation className="w-4 h-4" />
-                Get Directions
-              </a>
-            </div>
-            {fullAddress && (
-              <p className={`text-[#F5F1E6]/70 mb-6 ${raleway.className}`}>{fullAddress}</p>
-            )}
-            <div className="relative">
-              {/* Art deco frame for map */}
-              <div className="absolute -inset-2 border border-[#D4AF37]/30" />
-              <GoogleMapEmbed
-                businessName={businessName}
-                streetAddress={streetAddress}
-                city={city}
-                state={state}
-                zipCode={zipCode}
-                googlePlaceId={googlePlaceId}
-                height="300px"
-                mapStyle="cool"
-              />
-            </div>
-          </div>
-        )}
 
         {/* Reviews Section */}
         {(allReviews.length > 0 || (isAuthenticated && member)) && (
@@ -2012,6 +1972,53 @@ export function ArtDecoDesign({
                 <div className="flex-1 h-px bg-gradient-to-r from-[#D4AF37]/30 to-transparent" />
               </div>
               <EditableHours hours={hours || {}} />
+            </div>
+          </>
+        )}
+
+        {/* Map Section - only show if we have location data */}
+        {(googlePlaceId || fullAddress) && (
+          <>
+            <div className="flex items-center justify-center gap-4 py-4">
+              <div className="w-32 h-px bg-gradient-to-r from-transparent to-[#D4AF37]/40" />
+              <div className="w-3 h-3 rotate-45 border border-[#D4AF37]/50" />
+              <div className="w-32 h-px bg-gradient-to-l from-transparent to-[#D4AF37]/40" />
+            </div>
+            <div id="location" className="max-w-6xl mx-auto px-4 py-12 scroll-mt-16">
+              <div className="flex items-center justify-between mb-8">
+                <div className="flex items-center gap-4">
+                  <h2 className={`text-2xl ${poiretOne.className}`}>
+                    Our Location
+                  </h2>
+                  <div className="flex-1 h-px bg-gradient-to-r from-[#D4AF37]/30 to-transparent" />
+                </div>
+                <a
+                  href={directionsUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2 text-xs tracking-[0.2em] uppercase text-[#D4AF37] hover:text-[#E5C97B] transition-colors cursor-pointer"
+                >
+                  <Navigation className="w-4 h-4" />
+                  Get Directions
+                </a>
+              </div>
+              {fullAddress && (
+                <p className={`text-[#F5F1E6]/70 mb-6 ${raleway.className}`}>{fullAddress}</p>
+              )}
+              <div className="relative">
+                {/* Art deco frame for map */}
+                <div className="absolute -inset-2 border border-[#D4AF37]/30" />
+                <GoogleMapEmbed
+                  businessName={businessName}
+                  streetAddress={streetAddress}
+                  city={city}
+                  state={state}
+                  zipCode={zipCode}
+                  googlePlaceId={googlePlaceId}
+                  height="300px"
+                  mapStyle="cool"
+                />
+              </div>
             </div>
           </>
         )}
