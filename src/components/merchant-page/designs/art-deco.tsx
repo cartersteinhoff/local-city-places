@@ -1517,34 +1517,6 @@ export function ArtDecoDesign({
         </div>
       </nav>
 
-      {/* Review Photos Slider */}
-      {(() => {
-        const allReviewPhotos = allReviews.flatMap((r) => r.photos);
-        if (allReviewPhotos.length === 0) return null;
-        return (
-          <div className="relative bg-black/30 overflow-hidden">
-            <div className="flex overflow-x-auto scrollbar-hide snap-x snap-mandatory">
-              {allReviewPhotos.map((photo, i) => (
-                <div
-                  key={i}
-                  className="snap-start shrink-0 w-48 h-36 sm:w-64 sm:h-48 relative cursor-pointer hover:opacity-90 transition-opacity"
-                  onClick={() => setLightboxPhoto({ photos: allReviewPhotos, index: i })}
-                >
-                  <img
-                    src={photo}
-                    alt=""
-                    className="w-full h-full object-cover"
-                    loading={i < 6 ? "eager" : "lazy"}
-                  />
-                </div>
-              ))}
-            </div>
-            <div className="absolute inset-y-0 left-0 w-8 bg-gradient-to-r from-[#0D1F22] to-transparent pointer-events-none" />
-            <div className="absolute inset-y-0 right-0 w-8 bg-gradient-to-l from-[#0D1F22] to-transparent pointer-events-none" />
-          </div>
-        );
-      })()}
-
       {/* Contact Strip - Gold Bar */}
       <div className="bg-gradient-to-r from-[#D4AF37] via-[#E5C97B] to-[#D4AF37] text-[#0D1F22]">
         <div className="max-w-6xl mx-auto px-4 py-4">
@@ -1726,6 +1698,34 @@ export function ArtDecoDesign({
             )}
           </div>
         </div>
+
+        {/* Review Photos Slider */}
+        {(() => {
+          const allReviewPhotos = allReviews.flatMap((r) => r.photos);
+          if (allReviewPhotos.length === 0) return null;
+          return (
+            <div className="relative bg-black/30 overflow-hidden">
+              <div className="flex overflow-x-auto scrollbar-hide snap-x snap-mandatory">
+                {allReviewPhotos.map((photo, i) => (
+                  <div
+                    key={i}
+                    className="snap-start shrink-0 w-48 h-36 sm:w-64 sm:h-48 relative cursor-pointer hover:opacity-90 transition-opacity"
+                    onClick={() => setLightboxPhoto({ photos: allReviewPhotos, index: i })}
+                  >
+                    <img
+                      src={photo}
+                      alt=""
+                      className="w-full h-full object-cover"
+                      loading={i < 6 ? "eager" : "lazy"}
+                    />
+                  </div>
+                ))}
+              </div>
+              <div className="absolute inset-y-0 left-0 w-8 bg-gradient-to-r from-[#0D1F22] to-transparent pointer-events-none" />
+              <div className="absolute inset-y-0 right-0 w-8 bg-gradient-to-l from-[#0D1F22] to-transparent pointer-events-none" />
+            </div>
+          );
+        })()}
 
         {/* Reviews Section */}
         {(allReviews.length > 0 || (isAuthenticated && member)) && (
