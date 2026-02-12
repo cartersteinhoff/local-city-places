@@ -551,7 +551,7 @@ function EditableVideoEmbed({ vimeoUrl }: { vimeoUrl: string | null | undefined 
 
         {/* Video container */}
         <div
-          className="relative w-[260px] sm:w-[300px] border-2 border-[#D4AF37] bg-black overflow-hidden"
+          className="relative w-[260px] sm:w-[300px] max-h-[360px] sm:max-h-[420px] border-2 border-[#D4AF37] bg-black overflow-hidden"
           style={{ aspectRatio: '9/16' }}
         >
           <iframe
