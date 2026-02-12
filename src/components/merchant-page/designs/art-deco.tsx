@@ -1826,7 +1826,7 @@ export function ArtDecoDesign({
                         <div className="flex-1">
                           <div className="flex items-center justify-between">
                             <h4 className={`font-medium text-[#F5F1E6] ${raleway.className}`}>{displayName}</h4>
-                            <span className={`text-sm text-[#F5F1E6]/50 ${raleway.className}`}>{timeAgo}</span>
+                            <span className={`text-base text-[#F5F1E6]/60 ${raleway.className}`}>{timeAgo}</span>
                           </div>
                           {review.rating && (
                             <div className="flex items-center gap-0.5 mt-1">
