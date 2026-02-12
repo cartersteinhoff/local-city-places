@@ -1857,7 +1857,7 @@ export function ArtDecoDesign({
                         </div>
                       </div>
                       <Quote className="w-5 h-5 text-[#D4AF37]/30 mb-2" />
-                      <p className={`text-[#F5F1E6]/70 text-sm leading-relaxed ${raleway.className}`}>
+                      <p className={`text-[#F5F1E6]/70 text-base leading-relaxed ${raleway.className}`}>
                         {review.content}
                       </p>
                       {review.photos.length > 0 && (
