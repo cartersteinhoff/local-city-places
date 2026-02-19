@@ -460,6 +460,7 @@ function EditableVideoEmbed({ vimeoUrl }: { vimeoUrl: string | null | undefined 
     return (
       <div className="flex justify-center">
         <div className="relative">
+          {/* Label */}
           {/* Outer decorative frame */}
           <div className="absolute -inset-4 border border-[#D4AF37]/30" />
           <div className="absolute -inset-6 border border-[#D4AF37]/20" />
@@ -518,10 +519,6 @@ function EditableVideoEmbed({ vimeoUrl }: { vimeoUrl: string | null | undefined 
             )}
           </div>
 
-          {/* Label */}
-          <div className="absolute -bottom-12 left-1/2 -translate-x-1/2 text-center">
-            <p className="text-[10px] tracking-[0.3em] uppercase text-[#D4AF37]/70">Merchant Tracks</p>
-          </div>
         </div>
       </div>
     );
@@ -551,12 +548,11 @@ function EditableVideoEmbed({ vimeoUrl }: { vimeoUrl: string | null | undefined 
 
         {/* Video container */}
         <div
-          className="relative w-[260px] sm:w-[300px] max-h-[360px] sm:max-h-[420px] border-2 border-[#D4AF37] bg-black overflow-hidden"
-          style={{ aspectRatio: '9/16' }}
+          className="relative w-[260px] sm:w-[300px] h-[430px] sm:h-[500px] border-2 border-[#D4AF37] bg-black overflow-hidden"
         >
           <iframe
             src={`${getVimeoEmbedUrl(videoId!)}?background=0&autoplay=0&title=0&byline=0&portrait=0`}
-            className="absolute inset-0 w-full h-full"
+            className="absolute inset-0 w-full h-full scale-[1.15] origin-bottom"
             frameBorder="0"
             allow="autoplay; fullscreen; picture-in-picture"
             allowFullScreen
@@ -601,10 +597,6 @@ function EditableVideoEmbed({ vimeoUrl }: { vimeoUrl: string | null | undefined 
           )}
         </div>
 
-        {/* Label */}
-        <div className="absolute -bottom-12 left-1/2 -translate-x-1/2 text-center">
-          <p className="text-[10px] tracking-[0.3em] uppercase text-[#D4AF37]/70">Merchant Tracks</p>
-        </div>
       </div>
     </div>
   );
@@ -1682,7 +1674,10 @@ export function ArtDecoDesign({
 
             {/* Right - Vertical Video with Art Deco Frame */}
             {(videoId || editable) && (
-              <EditableVideoEmbed vimeoUrl={vimeoUrl} />
+              <div className="flex flex-col items-center">
+                <p className="text-sm tracking-[0.3em] uppercase text-[#D4AF37]/70 text-center mb-4 whitespace-nowrap">Merchant Tracks</p>
+                <EditableVideoEmbed vimeoUrl={vimeoUrl} />
+              </div>
             )}
           </div>
         </div>

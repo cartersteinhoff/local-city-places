@@ -14,26 +14,23 @@ export function HomeClient() {
     <div className="relative flex min-h-screen flex-col">
       <AnimatedFoodBackground />
 
-      <main className="relative z-10 flex flex-1 flex-col items-center justify-center px-4">
-        <div className="rounded-2xl bg-white/90 dark:bg-card/95 backdrop-blur-sm p-8 md:p-12 shadow-xl dark:border">
+      <main className="relative z-10 flex flex-1 flex-col items-center justify-center px-4 py-8">
+        <div className="flex flex-col items-center">
           <Image
-            src="/images/logo-horizontal.png"
-            alt="Local City Places"
-            width={400}
-            height={100}
-            priority
-            className="mb-8"
+            src="/images/lcp-growth-engine.png"
+            alt="The Engine Powering Local Commerce - Six Growth Engines"
+            width={500}
+            height={500}
+            className="max-w-[370px] md:max-w-[550px] drop-shadow-2xl mb-0"
           />
 
-          <div className="flex flex-col gap-4 w-full max-w-xs mx-auto">
-            <Button
-              size="lg"
-              className="w-full"
-              onClick={() => setLoginOpen(true)}
-            >
-              Login
-            </Button>
-          </div>
+          <Button
+            size="lg"
+            className="py-3 text-base w-full max-w-xs"
+            onClick={() => setLoginOpen(true)}
+          >
+            Login
+          </Button>
         </div>
       </main>
 
