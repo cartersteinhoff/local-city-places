@@ -141,7 +141,7 @@ export function FeaturedMarquee() {
   if (isLoading) {
     return (
       <section className="relative z-10 py-8">
-        <h2 className="text-center text-xs font-semibold uppercase tracking-[0.2em] text-white/60 mb-6">
+        <h2 className="text-center text-lg font-bold uppercase tracking-[0.15em] text-white/80 mb-6">
           Featured Merchants
         </h2>
         <div className="space-y-4">
