@@ -41,6 +41,7 @@ export async function GET(
         logoUrl: merchants.logoUrl,
         googlePlaceId: merchants.googlePlaceId,
         isPublicPage: merchants.isPublicPage,
+        featuredOnHomepage: merchants.featuredOnHomepage,
         // Extended fields
         hours: merchants.hours,
         instagramUrl: merchants.instagramUrl,
@@ -127,6 +128,7 @@ export async function PATCH(
       photos,
       services,
       aboutStory,
+      featuredOnHomepage,
     } = body;
 
     // Build update object
@@ -258,6 +260,10 @@ export async function PATCH(
 
     if (aboutStory !== undefined) {
       updates.aboutStory = aboutStory?.trim() || null;
+    }
+
+    if (featuredOnHomepage !== undefined) {
+      updates.featuredOnHomepage = Boolean(featuredOnHomepage);
     }
 
     // Handle custom slug or regenerate if business name changed and no custom slug

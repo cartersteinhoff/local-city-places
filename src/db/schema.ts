@@ -116,6 +116,7 @@ export const merchants = pgTable("merchants", {
   photos: jsonb("photos").$type<string[]>(), // Array of photo URLs
   services: jsonb("services").$type<{ name: string; description?: string; price?: string }[]>(), // Services/menu items
   aboutStory: text("about_story"), // Longer about/history section
+  featuredOnHomepage: boolean("featured_on_homepage").default(false).notNull(),
   googleRating: decimal("google_rating", { precision: 2, scale: 1 }),
   googleReviewCount: integer("google_review_count"),
   verified: boolean("verified").default(false).notNull(),

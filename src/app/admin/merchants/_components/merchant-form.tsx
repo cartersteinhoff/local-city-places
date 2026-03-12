@@ -6,6 +6,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
@@ -91,6 +92,7 @@ export interface FormData {
   photos: string[];
   services: Service[];
   slug: string;
+  featuredOnHomepage: boolean;
 }
 
 export const INITIAL_FORM_DATA: FormData = {
@@ -114,6 +116,7 @@ export const INITIAL_FORM_DATA: FormData = {
   photos: [],
   services: [],
   slug: "",
+  featuredOnHomepage: false,
 };
 
 const INITIAL_URLS = { full: null, short: null } as const;
@@ -231,6 +234,7 @@ export function MerchantForm({
           ? data.services.map(({ name, description, price }) => ({ name, description, price }))
           : null,
         aboutStory: data.aboutStory?.trim() || null,
+        featuredOnHomepage: data.featuredOnHomepage,
       }),
     });
 
@@ -298,6 +302,7 @@ export function MerchantForm({
             ? formData.services.map(({ name, description, price }) => ({ name, description, price }))
             : null,
           aboutStory: formData.aboutStory.trim() || null,
+          featuredOnHomepage: formData.featuredOnHomepage,
         }),
       });
 
@@ -1018,6 +1023,23 @@ export function MerchantForm({
                     </Button>
                   </>
                 )}
+              </div>
+
+              {/* Feature on Homepage */}
+              <div className="border-t pt-4">
+                <div className="flex items-center gap-3">
+                  <Checkbox
+                    id="featuredOnHomepage"
+                    checked={formData.featuredOnHomepage}
+                    onCheckedChange={(checked) => updateField("featuredOnHomepage", Boolean(checked))}
+                  />
+                  <Label htmlFor="featuredOnHomepage" className="mb-0 cursor-pointer">
+                    Feature on Homepage
+                  </Label>
+                </div>
+                <p className="text-xs text-muted-foreground mt-1 ml-7">
+                  Show this merchant in the homepage slider
+                </p>
               </div>
             </div>
           </div>

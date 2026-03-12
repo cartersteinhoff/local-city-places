@@ -85,6 +85,7 @@ export default function EditMerchantPage({ params }: { params: Promise<{ id: str
               id: `service-${i}-${Date.now()}`,
             })),
             slug: m.slug || "",
+            featuredOnHomepage: m.featuredOnHomepage || false,
           };
 
           setInitialData(loadedData);
