@@ -21,7 +21,7 @@ export function TopMarketsFooter() {
     <div className="relative z-10 mt-auto">
       {/* Top Markets */}
       <section className="bg-muted/80 dark:bg-zinc-900/90 backdrop-blur-md border-t border-border pt-8 pb-6 px-4">
-        <h2 className="text-center text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground mb-6">
+        <h2 className="text-center text-lg font-bold uppercase tracking-[0.15em] text-foreground/70 mb-6">
           Top Markets
         </h2>
         <div className="flex flex-wrap justify-center gap-6 max-w-3xl mx-auto">
