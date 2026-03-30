@@ -7,17 +7,18 @@ import { TopMarketsFooter } from "@/components/top-markets";
 
 export function HomeClient() {
   return (
-    <div className="relative flex min-h-screen flex-col">
+    <div className="relative min-h-screen overflow-x-hidden">
       <AnimatedFoodBackground />
 
-      <HomeHeader />
+      <div className="relative z-10 flex min-h-screen flex-col">
+        <HomeHeader />
 
-      {/* Spacer to push content down */}
-      <div className="flex-1" />
+        <main className="flex flex-1 items-center">
+          <FeaturedMarquee />
+        </main>
 
-      <FeaturedMarquee />
-
-      <TopMarketsFooter />
+        <TopMarketsFooter />
+      </div>
     </div>
   );
 }
