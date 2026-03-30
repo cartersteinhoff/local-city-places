@@ -88,93 +88,93 @@ export function LoginModal({ open, onOpenChange, callbackUrl }: LoginModalProps)
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <TooltipProvider>
-      <DialogContent className="sm:max-w-lg">
-        <DialogHeader>
-          <DialogTitle>Login</DialogTitle>
-          <DialogDescription>
-            Enter your email to receive a{" "}
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <span className="underline decoration-dotted cursor-help">
-                  magic link
-                </span>
-              </TooltipTrigger>
-              <TooltipContent side="top" sideOffset={4}>
-                A secure, password-free login link sent to your email. Just click it to sign in!
-              </TooltipContent>
-            </Tooltip>
-            .
-          </DialogDescription>
-        </DialogHeader>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Login</DialogTitle>
+            <DialogDescription>
+              Enter your email to receive a{" "}
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span className="underline decoration-dotted cursor-help">
+                    magic link
+                  </span>
+                </TooltipTrigger>
+                <TooltipContent side="top" sideOffset={4}>
+                  A secure, password-free login link sent to your email. Just click it to sign in!
+                </TooltipContent>
+              </Tooltip>
+              .
+            </DialogDescription>
+          </DialogHeader>
 
-        {status === "success" ? (
-          <div className="flex flex-col items-center py-8 text-center">
-            <CheckCircle className="w-16 h-16 text-success mb-6" />
-            <h3 className="font-bold text-2xl mb-3">
-              {devToken ? "Click to sign in" : "Check your email!"}
-            </h3>
-            <p className="text-muted-foreground text-base mb-2">
-              {devToken
-                ? "Dev mode - click the button below to complete sign in"
-                : <>We sent a sign-in link to <strong>{email}</strong></>
-              }
-            </p>
-            {!devToken && (
-              <>
-                <p className="text-muted-foreground text-base mb-6">
-                  A magic link is a secure, one-time login link — no password needed. Just click the link in your email to sign in.
-                </p>
-                <div className="w-full bg-yellow-50 dark:bg-yellow-950/30 border border-yellow-300 dark:border-yellow-800 rounded-lg px-4 py-3 text-base font-medium text-yellow-800 dark:text-yellow-300">
-                  You can close this tab.
-                </div>
-              </>
-            )}
-            {devToken && (
-              <Button
-                asChild
-                className="bg-primary-gradient hover:opacity-90 mt-4"
-              >
-                <a href={`/api/auth/verify?token=${devToken}`}>
-                  Sign In Now
-                </a>
-              </Button>
-            )}
-          </div>
-        ) : (
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="you@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                disabled={status === "loading"}
-              />
-            </div>
-
-            {status === "error" && (
-              <div className="flex items-center gap-2 text-destructive text-sm">
-                <AlertCircle className="w-4 h-4" />
-                <span>{errorMessage}</span>
-              </div>
-            )}
-
-            <Button type="submit" className="w-full" disabled={status === "loading"}>
-              {status === "loading" ? (
+          {status === "success" ? (
+            <div className="flex flex-col items-center py-8 text-center">
+              <CheckCircle className="w-16 h-16 text-success mb-6" />
+              <h3 className="font-bold text-2xl mb-3">
+                {devToken ? "Click to sign in" : "Check your email!"}
+              </h3>
+              <p className="text-muted-foreground text-base mb-2">
+                {devToken
+                  ? "Dev mode - click the button below to complete sign in"
+                  : <>We sent a sign-in link to <strong>{email}</strong></>
+                }
+              </p>
+              {!devToken && (
                 <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Sending...
+                  <p className="text-muted-foreground text-base mb-6">
+                    A magic link is a secure, one-time login link - no password needed. Just click the link in your email to sign in.
+                  </p>
+                  <div className="w-full bg-yellow-50 dark:bg-yellow-950/30 border border-yellow-300 dark:border-yellow-800 rounded-lg px-4 py-3 text-base font-medium text-yellow-800 dark:text-yellow-300">
+                    You can close this tab.
+                  </div>
                 </>
-              ) : (
-                "Send Magic Link"
               )}
-            </Button>
-          </form>
-        )}
-      </DialogContent>
+              {devToken && (
+                <Button
+                  asChild
+                  className="bg-primary-gradient hover:opacity-90 mt-4"
+                >
+                  <a href={`/api/auth/verify?token=${devToken}`}>
+                    Sign In Now
+                  </a>
+                </Button>
+              )}
+            </div>
+          ) : (
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="email">Email</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="you@example.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  disabled={status === "loading"}
+                />
+              </div>
+
+              {status === "error" && (
+                <div className="flex items-center gap-2 text-destructive text-sm">
+                  <AlertCircle className="w-4 h-4" />
+                  <span>{errorMessage}</span>
+                </div>
+              )}
+
+              <Button type="submit" className="w-full" disabled={status === "loading"}>
+                {status === "loading" ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Sending...
+                  </>
+                ) : (
+                  "Send Magic Link"
+                )}
+              </Button>
+            </form>
+          )}
+        </DialogContent>
       </TooltipProvider>
     </Dialog>
   )
