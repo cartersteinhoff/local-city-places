@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 
+import { LegalPageLayout } from "@/components/legal-page-layout";
+
 export const metadata: Metadata = {
   title: "Terms of Service | LOCAL City Places",
   description: "Terms of Service for LOCAL City Places.",
@@ -7,7 +9,7 @@ export const metadata: Metadata = {
 
 export default function TermsPage() {
   return (
-    <main className="mx-auto max-w-4xl px-4 py-12 sm:px-6 lg:px-8">
+    <LegalPageLayout>
       <h1 className="text-3xl font-bold tracking-tight">Terms of Service</h1>
       <p className="mt-2 text-sm text-muted-foreground">
         Effective Date: March 29, 2026
@@ -182,6 +184,6 @@ export default function TermsPage() {
           <p>Email: legal@localcityplaces.com</p>
         </section>
       </div>
-    </main>
+    </LegalPageLayout>
   );
 }
