@@ -3,6 +3,7 @@
 import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -277,14 +278,16 @@ function MerchantOnboardingContent() {
       <div className="relative z-10 max-w-xl mx-auto">
         {/* Header */}
         <div className="text-center mb-8">
-          <Image
-            src="/images/logo-horizontal.png"
-            alt="Local City Places"
-            width={220}
-            height={55}
-            priority
-            className="mx-auto mb-4"
-          />
+          <Link href="/" aria-label="Go to homepage" className="inline-block">
+            <Image
+              src="/images/logo-horizontal.png"
+              alt="Local City Places"
+              width={220}
+              height={55}
+              priority
+              className="mx-auto mb-4"
+            />
+          </Link>
           <h2 className="text-xl font-semibold text-white dark:text-foreground">Become a Merchant Partner</h2>
         </div>
 
