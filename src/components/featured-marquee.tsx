@@ -174,7 +174,7 @@ function GalleryRow({
     <div className={cn("relative overflow-hidden py-3 md:py-4", className)}>
       <div
         className={cn(
-          "gallery-lane-mask gallery-track flex w-max items-center gap-3 px-3 sm:gap-4 sm:px-5 md:gap-5 md:px-6 motion-reduce:animate-none",
+          "gallery-lane-mask gallery-track flex w-max items-center gap-5 px-4 sm:gap-6 sm:px-6 md:gap-8 md:px-8 lg:gap-10 lg:px-10 motion-reduce:animate-none",
           direction === "left"
             ? "animate-marquee-left"
             : "animate-marquee-right",
@@ -210,7 +210,7 @@ function GalleryRowSkeleton({
 
   return (
     <div className={cn("relative overflow-hidden py-3 md:py-4", className)}>
-      <div className="gallery-lane-mask flex w-max items-center gap-3 px-3 sm:gap-4 sm:px-5 md:gap-5 md:px-6">
+      <div className="gallery-lane-mask flex w-max items-center gap-5 px-4 sm:gap-6 sm:px-6 md:gap-8 md:px-8 lg:gap-10 lg:px-10">
         {keys.map((key) => (
           <MerchantCardSkeleton key={key} variant={variant} />
         ))}
@@ -224,50 +224,27 @@ function GalleryRows({ merchants }: { merchants: FeaturedMerchant[] }) {
     merchants,
     Math.max(1, Math.floor(merchants.length / 3)),
   );
-  const thirdRow = rotateMerchants(
-    merchants,
-    Math.max(1, Math.floor((merchants.length * 2) / 3)),
-  );
 
   return (
     <>
       <div className="md:hidden">
-        <GalleryRow
-          merchants={secondRow}
-          direction="left"
-          speed={90}
-          variant="lead"
-        />
-        <GalleryRow
-          merchants={thirdRow}
-          direction="right"
-          speed={110}
-          variant="compact"
-          className="-mt-2 opacity-78"
-        />
+        <GalleryRow merchants={secondRow} direction="left" speed={180} variant="lead" />
       </div>
 
       <div className="hidden md:block">
         <GalleryRow
           merchants={merchants}
           direction="left"
-          speed={125}
+          speed={210}
           variant="compact"
-          className="opacity-72"
+          className="opacity-55"
         />
         <GalleryRow
           merchants={secondRow}
-          direction="right"
-          speed={145}
-          variant="lead"
-          className="-mt-4"
-        />
-        <GalleryRow
-          merchants={thirdRow}
           direction="left"
-          speed={132}
-          variant="standard"
-          className="-mt-4 opacity-82"
+          speed={240}
+          variant="lead"
+          className="-mt-5"
         />
       </div>
     </>
@@ -279,13 +256,11 @@ function GallerySkeleton() {
     <>
       <div className="md:hidden">
         <GalleryRowSkeleton variant="lead" />
-        <GalleryRowSkeleton variant="compact" className="-mt-2 opacity-78" />
       </div>
 
       <div className="hidden md:block">
-        <GalleryRowSkeleton variant="compact" className="opacity-72" />
-        <GalleryRowSkeleton variant="lead" className="-mt-4" />
-        <GalleryRowSkeleton variant="standard" className="-mt-4 opacity-82" />
+        <GalleryRowSkeleton variant="compact" className="opacity-55" />
+        <GalleryRowSkeleton variant="lead" className="-mt-5" />
       </div>
     </>
   );
