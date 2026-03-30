@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 
+import { LegalPageLayout } from "@/components/legal-page-layout";
+
 export const metadata: Metadata = {
   title: "Privacy Policy | LOCAL City Places",
   description: "Privacy Policy for LOCAL City Places.",
@@ -7,7 +9,7 @@ export const metadata: Metadata = {
 
 export default function PrivacyPolicyPage() {
   return (
-    <main className="mx-auto max-w-4xl px-4 py-12 sm:px-6 lg:px-8">
+    <LegalPageLayout>
       <h1 className="text-3xl font-bold tracking-tight">Privacy Policy</h1>
       <p className="mt-2 text-sm text-muted-foreground">
         Effective Date: March 29, 2026
@@ -215,6 +217,6 @@ export default function PrivacyPolicyPage() {
           </ul>
         </section>
       </div>
-    </main>
+    </LegalPageLayout>
   );
 }
