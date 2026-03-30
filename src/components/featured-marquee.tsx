@@ -91,12 +91,12 @@ function MerchantCard({
 
   const cardStyle = {
     "--wave-height": `${waveHeight}px`,
-    "--wave-duration": `${14 + (sequence % 5) * 1.7}s`,
-    "--wave-delay": `${(sequence % 6) * 0.35}s`,
+    "--wave-duration": `${20 + (sequence % 5) * 2.2}s`,
+    "--wave-delay": `${(sequence % 6) * 0.45}s`,
     "--card-scale": baseScale,
     "--card-scale-bump": scaleBump,
     "--image-drift": `${imageDrift}px`,
-    "--image-duration": `${16 + (sequence % 4) * 2}s`,
+    "--image-duration": `${24 + (sequence % 4) * 2.4}s`,
   } as CSSProperties;
 
   const cardClassName = cn(
@@ -333,14 +333,14 @@ function GalleryRows({ merchants }: { merchants: FeaturedMerchant[] }) {
         <MarqueeRow
           merchants={heroLane}
           direction="left"
-          speed={30}
+          speed={56}
           variant="hero"
           laneClassName="gallery-lane-mobile-main"
         />
         <MarqueeRow
           merchants={supportLane}
           direction="right"
-          speed={38}
+          speed={68}
           variant="support"
           laneClassName="-mt-3 opacity-75"
         />
@@ -350,21 +350,21 @@ function GalleryRows({ merchants }: { merchants: FeaturedMerchant[] }) {
         <MarqueeRow
           merchants={merchants}
           direction="left"
-          speed={42}
+          speed={72}
           variant="support"
           laneClassName="gallery-lane-top opacity-80"
         />
         <MarqueeRow
           merchants={heroLane}
           direction="right"
-          speed={50}
+          speed={88}
           variant="hero"
           laneClassName="gallery-lane-center -mt-6"
         />
         <MarqueeRow
           merchants={supportLane}
           direction="left"
-          speed={45}
+          speed={78}
           variant="standard"
           laneClassName="gallery-lane-bottom -mt-5 opacity-90"
         />
@@ -430,22 +430,9 @@ export function FeaturedMarquee() {
   if (!isLoading && merchants.length === 0) return null;
 
   return (
-    <section className="relative z-10 w-full overflow-hidden py-12 md:py-16">
-      <div className="mx-auto mb-8 max-w-3xl px-4 text-center sm:mb-10">
-        <p className="text-xs font-semibold uppercase tracking-[0.35em] text-white/60">
-          Featured Merchants
-        </p>
-        <h2 className="mt-4 text-4xl font-semibold tracking-tight text-white sm:text-5xl md:text-6xl">
-          The local lineup never sits still.
-        </h2>
-        <p className="mx-auto mt-4 max-w-2xl text-sm text-white/72 sm:text-base">
-          Explore a flowing wall of standout businesses, with a lead lane that
-          swells through the center and supporting lanes that sweep around it.
-        </p>
-      </div>
-
-      <div className="pointer-events-none absolute inset-x-0 top-28 h-52 bg-[radial-gradient(circle_at_center,_rgba(255,255,255,0.18),_transparent_68%)] blur-3xl md:top-36 md:h-72" />
-      <div className="relative min-h-[450px] md:min-h-[720px]">
+    <section className="relative z-10 flex w-full items-center overflow-hidden py-6 md:py-10">
+      <div className="pointer-events-none absolute inset-x-0 top-1/2 h-52 -translate-y-1/2 bg-[radial-gradient(circle_at_center,_rgba(255,255,255,0.18),_transparent_68%)] blur-3xl md:h-72" />
+      <div className="relative min-h-[420px] w-full md:min-h-[660px]">
         {isLoading ? (
           <GallerySkeleton />
         ) : (
