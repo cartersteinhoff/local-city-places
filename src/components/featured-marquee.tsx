@@ -224,27 +224,43 @@ function GalleryRows({ merchants }: { merchants: FeaturedMerchant[] }) {
     merchants,
     Math.max(1, Math.floor(merchants.length / 3)),
   );
+  const thirdRow = rotateMerchants(
+    merchants,
+    Math.max(1, Math.floor((merchants.length * 2) / 3)),
+  );
 
   return (
     <>
       <div className="md:hidden">
-        <GalleryRow merchants={secondRow} direction="left" speed={180} variant="lead" />
+        <GalleryRow
+          merchants={secondRow}
+          direction="left"
+          speed={185}
+          variant="lead"
+        />
       </div>
 
       <div className="hidden md:block">
         <GalleryRow
           merchants={merchants}
           direction="left"
-          speed={210}
+          speed={300}
           variant="compact"
-          className="opacity-55"
+          className="opacity-42"
         />
         <GalleryRow
           merchants={secondRow}
           direction="left"
-          speed={240}
+          speed={340}
           variant="lead"
-          className="-mt-5"
+          className="-mt-7"
+        />
+        <GalleryRow
+          merchants={thirdRow}
+          direction="left"
+          speed={320}
+          variant="standard"
+          className="-mt-7 opacity-58"
         />
       </div>
     </>
@@ -259,8 +275,9 @@ function GallerySkeleton() {
       </div>
 
       <div className="hidden md:block">
-        <GalleryRowSkeleton variant="compact" className="opacity-55" />
-        <GalleryRowSkeleton variant="lead" className="-mt-5" />
+        <GalleryRowSkeleton variant="compact" className="opacity-42" />
+        <GalleryRowSkeleton variant="lead" className="-mt-7" />
+        <GalleryRowSkeleton variant="standard" className="-mt-7 opacity-58" />
       </div>
     </>
   );
@@ -291,9 +308,10 @@ export function FeaturedMarquee() {
   if (!isLoading && merchants.length === 0) return null;
 
   return (
-    <section className="relative z-10 flex w-full items-center overflow-hidden py-5 md:py-8">
-      <div className="pointer-events-none absolute inset-x-0 top-1/2 h-44 -translate-y-1/2 bg-[radial-gradient(circle_at_center,_rgba(255,255,255,0.12),_transparent_70%)] blur-3xl md:h-60" />
-      <div className="relative min-h-[390px] w-full md:min-h-[600px]">
+    <section className="relative z-10 flex w-full items-center overflow-hidden py-6 md:py-10">
+      <div className="pointer-events-none absolute inset-x-0 top-1/2 h-52 -translate-y-1/2 bg-[radial-gradient(circle_at_center,_rgba(255,255,255,0.1),_transparent_68%)] blur-3xl md:h-72" />
+      <div className="pointer-events-none absolute inset-x-0 top-1/2 h-px -translate-y-1/2 bg-white/8" />
+      <div className="relative min-h-[390px] w-full md:min-h-[660px]">
         {isLoading ? <GallerySkeleton /> : <GalleryRows merchants={merchants} />}
       </div>
     </section>
