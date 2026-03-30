@@ -28,12 +28,6 @@ export function Footer({ className }: FooterProps) {
           >
             Terms &amp; Conditions
           </Link>
-          <Link
-            href="/contact"
-            className="text-white/90 hover:text-white transition-colors underline-offset-2 hover:underline"
-          >
-            Contact
-          </Link>
         </div>
       </div>
     </footer>
