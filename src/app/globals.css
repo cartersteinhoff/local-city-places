@@ -219,65 +219,6 @@
   mask-image: linear-gradient(to right, transparent 0, black 10%, black 90%, transparent 100%);
 }
 
-.gallery-lane-top {
-  transform: perspective(1400px) rotateX(20deg) rotateZ(-1.4deg);
-  transform-origin: center;
-}
-
-.gallery-lane-center {
-  transform: perspective(1600px) rotateX(10deg);
-  transform-origin: center;
-}
-
-.gallery-lane-bottom {
-  transform: perspective(1400px) rotateX(18deg) rotateZ(1.2deg);
-  transform-origin: center;
-}
-
-.gallery-lane-mobile-main {
-  transform: perspective(1000px) rotateX(10deg);
-  transform-origin: center;
-}
-
-.gallery-card-shell {
-  animation: gallery-wave var(--wave-duration, 16s) ease-in-out var(--wave-delay, 0s) infinite;
-  will-change: transform;
-}
-
-.gallery-card-image {
-  animation: gallery-image-drift var(--image-duration, 18s) ease-in-out var(--wave-delay, 0s) infinite;
-  will-change: transform;
-}
-
-@keyframes gallery-wave {
-  0%,
-  100% {
-    transform: translate3d(0, 0, 0) scale(var(--card-scale, 1));
-  }
-  25% {
-    transform: translate3d(0, calc(var(--wave-height, 0px) * -0.55), 0)
-      scale(calc(var(--card-scale, 1) + var(--card-scale-bump, 0.03)));
-  }
-  50% {
-    transform: translate3d(0, var(--wave-height, 0px), 0)
-      scale(calc(var(--card-scale, 1) + (var(--card-scale-bump, 0.03) * 0.35)));
-  }
-  75% {
-    transform: translate3d(0, calc(var(--wave-height, 0px) * -0.2), 0)
-      scale(calc(var(--card-scale, 1) + (var(--card-scale-bump, 0.03) * 0.7)));
-  }
-}
-
-@keyframes gallery-image-drift {
-  0%,
-  100% {
-    transform: scale(1.08) translate3d(calc(var(--image-drift, 0px) * -0.45), 0, 0);
-  }
-  50% {
-    transform: scale(1.12) translate3d(var(--image-drift, 0px), -2%, 0);
-  }
-}
-
 @media (max-width: 767px) {
   .gallery-lane-mask {
     -webkit-mask-image: linear-gradient(to right, transparent 0, black 6%, black 94%, transparent 100%);
@@ -286,12 +227,8 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .gallery-card-shell,
-  .gallery-card-image,
-  .gallery-lane-top,
-  .gallery-lane-center,
-  .gallery-lane-bottom,
-  .gallery-lane-mobile-main {
+  .animate-marquee-left,
+  .animate-marquee-right {
     animation: none;
     transform: none;
   }
