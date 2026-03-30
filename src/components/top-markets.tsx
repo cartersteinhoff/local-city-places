@@ -37,8 +37,8 @@ export function TopMarketsFooter() {
                 <Image
                   src={market.logo}
                   alt={`${market.name} City Zine`}
-                  width={500}
-                  height={160}
+                  width={200}
+                  height={64}
                   className="h-auto w-[160px] sm:w-[200px]"
                 />
               </div>

@@ -16,22 +16,23 @@ const CRISP_WEBSITE_ID = "21060e4b-6619-41e1-a5c9-82f527807abf"
 
 export default function CrispChat() {
   const pathname = usePathname()
-  const { user, userName } = useUser()
-  const userEmail = user?.email || null
-  const [shouldLoad, setShouldLoad] = useState(false)
 
   const isDashboardPage =
     pathname.startsWith("/member") ||
     pathname.startsWith("/merchant") ||
     pathname.startsWith("/admin")
 
-  // Initialize Crisp globals immediately
+  const { user, userName } = useUser(isDashboardPage)
+  const userEmail = user?.email || null
+  const [shouldLoad, setShouldLoad] = useState(false)
+
+  // Initialize Crisp globals only on dashboard pages
   useEffect(() => {
-    if (typeof window !== "undefined") {
+    if (isDashboardPage && typeof window !== "undefined") {
       window.$crisp = window.$crisp || []
       window.CRISP_WEBSITE_ID = CRISP_WEBSITE_ID
     }
-  }, [])
+  }, [isDashboardPage])
 
   // Load script on dashboard pages
   useEffect(() => {

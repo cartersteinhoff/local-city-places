@@ -65,9 +65,9 @@ function MerchantCard({ merchant }: { merchant: FeaturedMerchant }) {
         <h3 className="text-white font-semibold text-sm leading-tight truncate">
           {merchant.businessName}
         </h3>
-        {merchant.categoryName && (
+        {(merchant.city || merchant.categoryName) && (
           <p className="text-white/70 text-xs mt-0.5 truncate">
-            {merchant.categoryName}
+            {[merchant.city && merchant.state ? `${merchant.city}, ${merchant.state}` : merchant.city, merchant.categoryName].filter(Boolean).join(" · ")}
           </p>
         )}
       </div>
