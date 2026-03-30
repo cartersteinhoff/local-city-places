@@ -11,6 +11,7 @@ import {
 import {
   Tooltip,
   TooltipContent,
+  TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
 import { Input } from "@/components/ui/input"
@@ -86,6 +87,7 @@ export function LoginModal({ open, onOpenChange, callbackUrl }: LoginModalProps)
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
+      <TooltipProvider>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>Login</DialogTitle>
@@ -173,6 +175,7 @@ export function LoginModal({ open, onOpenChange, callbackUrl }: LoginModalProps)
           </form>
         )}
       </DialogContent>
+      </TooltipProvider>
     </Dialog>
   )
 }
