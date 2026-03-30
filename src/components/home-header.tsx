@@ -2,6 +2,7 @@
 
 import { Moon, Sun } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
 import { useTheme } from "next-themes";
 import { useState } from "react";
 import { LoginModal } from "@/components/login-modal";
@@ -15,14 +16,16 @@ export function HomeHeader() {
     <header className="relative z-10">
       <div className="border-b border-white/10 bg-black/30 backdrop-blur-md">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6">
-          <Image
-            src="/images/logo-horizontal.png"
-            alt="Local City Places"
-            width={650}
-            height={286}
-            className="h-10 w-auto sm:h-12"
-            priority
-          />
+          <Link href="/" aria-label="Go to homepage">
+            <Image
+              src="/images/logo-horizontal.png"
+              alt="Local City Places"
+              width={650}
+              height={286}
+              className="h-10 w-auto sm:h-12"
+              priority
+            />
+          </Link>
           <div className="flex items-center gap-2">
             <Button
               size="sm"
