@@ -1,28 +1,41 @@
-import Link from "next/link"
-import { cn } from "@/lib/utils"
+import Link from "next/link";
+import { cn } from "@/lib/utils";
 
 interface FooterProps {
-  className?: string
+  className?: string;
 }
 
 export function Footer({ className }: FooterProps) {
   return (
     <footer className={cn("py-6 text-center text-sm", className)}>
       <div className="inline-block rounded-lg bg-black/20 px-6 py-3 backdrop-blur-sm">
-        <p className="text-white font-medium">&copy; 2026 LOCAL City Places&trade; LLC - All Rights Reserved</p>
-        <p className="text-white font-medium">Powered by CityPressMedia.Com, INC.</p>
+        <p className="text-white font-medium">
+          &copy; 2026 LOCAL City Places&trade; LLC - All Rights Reserved
+        </p>
+        <p className="text-white font-medium">
+          Powered by CityPressMedia.Com, INC.
+        </p>
         <div className="mt-2 flex justify-center gap-4">
-          <Link href="/privacy" className="text-white/90 hover:text-white transition-colors underline-offset-2 hover:underline">
+          <Link
+            href="/privacy"
+            className="text-white/90 hover:text-white transition-colors underline-offset-2 hover:underline"
+          >
             Privacy Policy
           </Link>
-          <Link href="/terms" className="text-white/90 hover:text-white transition-colors underline-offset-2 hover:underline">
-            Terms
+          <Link
+            href="/terms"
+            className="text-white/90 hover:text-white transition-colors underline-offset-2 hover:underline"
+          >
+            Terms &amp; Conditions
           </Link>
-          <Link href="/contact" className="text-white/90 hover:text-white transition-colors underline-offset-2 hover:underline">
+          <Link
+            href="/contact"
+            className="text-white/90 hover:text-white transition-colors underline-offset-2 hover:underline"
+          >
             Contact
           </Link>
         </div>
       </div>
     </footer>
-  )
+  );
 }
