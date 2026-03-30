@@ -29,9 +29,9 @@ const fetcher = async (url: string): Promise<AuthData | null> => {
   return res.json();
 };
 
-export function useUser() {
+export function useUser(enabled: boolean = true) {
   const { data, error, isLoading, mutate } = useSWR<AuthData | null>(
-    "/api/auth/me",
+    enabled ? "/api/auth/me" : null,
     fetcher,
     {
       revalidateOnFocus: false,

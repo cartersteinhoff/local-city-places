@@ -65,14 +65,14 @@ const foodIcons: FoodIcon[] = [
 export function AnimatedFoodBackground() {
   return (
     <div
-      className="fixed inset-0 overflow-hidden pointer-events-none z-0 bg-gradient-to-br from-[#ff7a3c] via-[#ff9f1c] to-[#ffd166] dark:from-slate-900 dark:via-slate-800 dark:to-slate-900"
+      className="fixed inset-0 overflow-hidden pointer-events-none z-0 bg-gradient-to-br from-[#ff7a3c] via-[#ff9f1c] to-[#ffd166] dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 motion-reduce:[&_*]:!animate-none"
     >
       {foodIcons.map((item, index) => {
         const { Icon, size, top, left, opacity, animation, duration, delay } = item
         return (
           <div
             key={index}
-            className="absolute"
+            className="absolute will-change-transform"
             style={{
               top,
               left,
