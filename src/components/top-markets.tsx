@@ -71,12 +71,6 @@ export function TopMarketsFooter() {
           >
             Terms &amp; Conditions
           </Link>
-          <Link
-            href="/contact"
-            className="text-xs text-muted-foreground hover:text-foreground transition-colors"
-          >
-            Contact
-          </Link>
         </div>
       </footer>
     </div>
