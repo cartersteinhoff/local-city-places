@@ -1,5 +1,5 @@
-import Image from "next/image"
-import Link from "next/link"
+import Image from "next/image";
+import Link from "next/link";
 
 const markets = [
   {
@@ -14,7 +14,7 @@ const markets = [
     url: "https://phoenixcityzine.com",
     logo: "/images/PhoenixCityZine-Logo.png",
   },
-]
+];
 
 export function TopMarketsFooter() {
   return (
@@ -59,17 +59,26 @@ export function TopMarketsFooter() {
           Powered by CityPressMedia.Com, INC.
         </p>
         <div className="mt-2 flex justify-center gap-4">
-          <Link href="/privacy" className="text-xs text-muted-foreground hover:text-foreground transition-colors">
+          <Link
+            href="/privacy"
+            className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+          >
             Privacy Policy
           </Link>
-          <Link href="/terms" className="text-xs text-muted-foreground hover:text-foreground transition-colors">
-            Terms
+          <Link
+            href="/terms"
+            className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+          >
+            Terms &amp; Conditions
           </Link>
-          <Link href="/contact" className="text-xs text-muted-foreground hover:text-foreground transition-colors">
+          <Link
+            href="/contact"
+            className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+          >
             Contact
           </Link>
         </div>
       </footer>
     </div>
-  )
+  );
 }
