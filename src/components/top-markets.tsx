@@ -71,6 +71,22 @@ export function TopMarketsFooter() {
           >
             Terms &amp; Conditions
           </Link>
+          <Link
+            href="https://ClaimMyGRC.Com"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+          >
+            ClaimMyGRC for Customers
+          </Link>
+          <Link
+            href="https://GRCRebates.Com"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+          >
+            GRC Rebates for Business
+          </Link>
         </div>
       </footer>
     </div>
