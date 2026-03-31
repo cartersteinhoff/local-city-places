@@ -312,8 +312,15 @@ export function FeaturedMarquee() {
       <div className="pointer-events-none absolute inset-x-0 top-[24%] h-44 bg-[radial-gradient(circle_at_center,_rgba(255,213,163,0.15),_transparent_65%)] blur-3xl md:h-56" />
       <div className="pointer-events-none absolute inset-x-0 top-1/2 h-64 -translate-y-1/2 bg-[radial-gradient(circle_at_center,_rgba(255,255,255,0.08),_transparent_68%)] blur-3xl md:h-80" />
       <div className="pointer-events-none absolute inset-x-0 bottom-6 h-40 bg-[linear-gradient(180deg,rgba(0,0,0,0),rgba(0,0,0,0.34))] blur-2xl md:bottom-10" />
-      <div className="relative min-h-[430px] w-full md:min-h-[700px]">
+      <div className="relative w-full">
+        <div className="px-6 pb-4 text-center md:px-10 md:pb-6">
+          <p className="text-[11px] uppercase tracking-[0.36em] text-white/62 md:text-xs">
+            Explore Local Merchants
+          </p>
+        </div>
+        <div className="relative min-h-[430px] w-full md:min-h-[700px]">
         {isLoading ? <GallerySkeleton /> : <GalleryRows merchants={merchants} />}
+        </div>
       </div>
     </section>
   );
