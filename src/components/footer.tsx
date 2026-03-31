@@ -28,6 +28,22 @@ export function Footer({ className }: FooterProps) {
           >
             Terms &amp; Conditions
           </Link>
+          <Link
+            href="https://ClaimMyGRC.Com"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-white/90 hover:text-white transition-colors underline-offset-2 hover:underline"
+          >
+            ClaimMyGRC for Customers
+          </Link>
+          <Link
+            href="https://GRCRebates.Com"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-white/90 hover:text-white transition-colors underline-offset-2 hover:underline"
+          >
+            GRC Rebates for Business
+          </Link>
         </div>
       </div>
     </footer>
