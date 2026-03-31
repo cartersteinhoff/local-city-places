@@ -118,7 +118,7 @@ export function FeaturedMarquee() {
           setMerchants(data.merchants)
         }
       } catch (err) {
-        console.error("Error fetching featured merchants:", err)
+        console.error("Error fetching Explore Local Merchants:", err)
       } finally {
         setIsLoading(false)
       }
@@ -142,7 +142,7 @@ export function FeaturedMarquee() {
     return (
       <section className="relative z-10 py-8">
         <h2 className="text-center text-lg font-bold uppercase tracking-[0.15em] text-white/80 mb-6">
-          Featured Merchants
+          Explore Local Merchants
         </h2>
         <div className="space-y-4">
           {[0, 1, 2].map((i) => (
@@ -167,7 +167,7 @@ export function FeaturedMarquee() {
   return (
     <section className="relative z-10 py-8">
       <h2 className="text-center text-lg font-bold uppercase tracking-[0.15em] text-white/80 mb-6">
-        Featured Merchants
+        Explore Local Merchants
       </h2>
       <div className="space-y-4">
         <MarqueeRow merchants={row1} direction="left" speed={40} />
