@@ -1,5 +1,6 @@
 import Image from "next/image";
-import Link from "next/link";
+
+import { Footer } from "@/components/footer";
 
 const markets = [
   {
@@ -49,46 +50,7 @@ export function TopMarketsFooter() {
           ))}
         </div>
       </section>
-
-      {/* Footer */}
-      <footer className="bg-zinc-100 dark:bg-zinc-950/95 backdrop-blur-md px-4 py-5 text-center border-t border-border">
-        <p className="text-xs text-foreground/70">
-          &copy; 2026 LOCAL City Places&trade; LLC - All Rights Reserved
-        </p>
-        <p className="text-xs text-muted-foreground mt-0.5">
-          Powered by CityPressMedia.Com, INC.
-        </p>
-        <div className="mt-2 flex justify-center gap-4">
-          <Link
-            href="/privacy"
-            className="text-xs text-muted-foreground hover:text-foreground transition-colors"
-          >
-            Privacy Policy
-          </Link>
-          <Link
-            href="/terms"
-            className="text-xs text-muted-foreground hover:text-foreground transition-colors"
-          >
-            Terms &amp; Conditions
-          </Link>
-          <Link
-            href="https://ClaimMyGRC.Com"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-xs text-muted-foreground hover:text-foreground transition-colors"
-          >
-            ClaimMyGRC for Customers
-          </Link>
-          <Link
-            href="https://GRCRebates.Com"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-xs text-muted-foreground hover:text-foreground transition-colors"
-          >
-            GRC Rebates for Business
-          </Link>
-        </div>
-      </footer>
+      <Footer variant="light" />
     </div>
   );
 }
