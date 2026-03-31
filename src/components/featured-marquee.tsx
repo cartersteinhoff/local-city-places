@@ -118,7 +118,7 @@ export function FeaturedMarquee() {
           setMerchants(data.merchants)
         }
       } catch (err) {
-        console.error("Error fetching Explore Local Merchants:", err)
+        console.error("Error fetching featured merchants:", err)
       } finally {
         setIsLoading(false)
       }
