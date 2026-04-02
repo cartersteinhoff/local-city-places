@@ -1339,6 +1339,15 @@ interface MerchantPageProps {
     createdAt: Date;
     photos: string[];
   }[];
+  favoriteMerchantTestimonials?: {
+    id: string;
+    content: string;
+    memberFirstName: string | null;
+    memberLastName: string | null;
+    memberPhotoUrl: string | null;
+    createdAt: Date;
+    photos: string[];
+  }[];
 }
 
 export function ArtDecoDesign({
@@ -1363,10 +1372,12 @@ export function ArtDecoDesign({
   services,
   aboutStory,
   reviews: merchantReviews,
+  favoriteMerchantTestimonials,
 }: MerchantPageProps) {
   const [copied, setCopied] = useState(false);
   const [phoneCopied, setPhoneCopied] = useState(false);
   const [allReviews, setAllReviews] = useState(merchantReviews || []);
+  const featuredTestimonials = favoriteMerchantTestimonials || [];
   const [showReviewForm, setShowReviewForm] = useState(false);
   const [reviewContent, setReviewContent] = useState("");
   const [reviewRating, setReviewRating] = useState(0);
@@ -1572,8 +1583,15 @@ export function ArtDecoDesign({
                 </div>
               )}
 
-              {/* Category */}
-              {/* Category name hidden for now */}
+              {categoryName && (
+                <div className="mb-6 flex justify-center lg:justify-start">
+                  <div className="inline-flex items-center gap-3 border border-[#D4AF37]/40 bg-[#D4AF37]/10 px-4 py-2 text-xs uppercase tracking-[0.3em] text-[#D4AF37]">
+                    <div className="h-px w-6 bg-[#D4AF37]/50" />
+                    <span className={raleway.className}>{categoryName}</span>
+                    <div className="h-px w-6 bg-[#D4AF37]/50" />
+                  </div>
+                </div>
+              )}
 
               {/* Business Name with Art Deco styling */}
               <div className="relative mb-8">
@@ -1681,6 +1699,102 @@ export function ArtDecoDesign({
             )}
           </div>
         </div>
+
+        {/* Favorite Merchant Sweepstakes Testimonials */}
+        {featuredTestimonials.length > 0 && (
+          <>
+            <div className="flex items-center justify-center gap-4 py-4">
+              <div className="w-32 h-px bg-gradient-to-r from-transparent to-[#D4AF37]/40" />
+              <div className="w-3 h-3 rotate-45 border border-[#D4AF37]/50" />
+              <div className="w-32 h-px bg-gradient-to-l from-transparent to-[#D4AF37]/40" />
+            </div>
+
+            <div id="favorite-merchant" className="max-w-6xl mx-auto px-4 py-12 scroll-mt-16">
+              <div className="flex items-center gap-4 mb-4">
+                <Sparkles className="w-6 h-6 text-[#D4AF37]" />
+                <h2 className={`text-2xl ${poiretOne.className}`}>Nominated As A Favorite Merchant</h2>
+                <div className="flex-1 h-px bg-gradient-to-r from-[#D4AF37]/30 to-transparent" />
+              </div>
+              <p className={`text-[#F5F1E6]/65 text-sm mb-8 max-w-3xl ${raleway.className}`}>
+                Members in the Favorite Merchant Sweepstakes nominated this business and shared why it stands out in the community.
+              </p>
+
+              <div className="grid md:grid-cols-2 gap-6">
+                {featuredTestimonials.map((testimonial) => {
+                  const firstName = testimonial.memberFirstName || "";
+                  const lastName = testimonial.memberLastName || "";
+                  const displayName =
+                    [firstName, lastName.charAt(0) ? `${lastName.charAt(0)}.` : ""]
+                      .filter(Boolean)
+                      .join(" ") || "Community Member";
+                  const initials =
+                    [firstName.charAt(0), lastName.charAt(0)]
+                      .filter(Boolean)
+                      .join("")
+                      .toUpperCase() || "FM";
+
+                  return (
+                    <div key={testimonial.id} className="border border-[#D4AF37]/20 p-6 bg-[#D4AF37]/5">
+                      <div className="flex items-start gap-4 mb-4">
+                        {testimonial.memberPhotoUrl ? (
+                          <img
+                            src={testimonial.memberPhotoUrl}
+                            alt={displayName}
+                            className="w-12 h-12 object-cover border border-[#D4AF37]/30"
+                          />
+                        ) : (
+                          <div className="w-12 h-12 bg-[#D4AF37]/20 border border-[#D4AF37]/30 flex items-center justify-center">
+                            <span className={`text-[#D4AF37] font-medium ${raleway.className}`}>{initials}</span>
+                          </div>
+                        )}
+                        <div className="flex-1">
+                          <div className="flex items-center justify-between gap-4">
+                            <h4 className={`font-medium text-[#F5F1E6] ${raleway.className}`}>{displayName}</h4>
+                            <span className={`text-base text-[#F5F1E6]/60 ${raleway.className}`}>
+                              {formatReviewDate(testimonial.createdAt)}
+                            </span>
+                          </div>
+                          <p className={`text-xs uppercase tracking-[0.15em] text-[#D4AF37]/80 mt-1 ${raleway.className}`}>
+                            Favorite Merchant Nomination
+                          </p>
+                        </div>
+                      </div>
+
+                      <Quote className="w-5 h-5 text-[#D4AF37]/30 mb-2" />
+                      <p className={`text-[#F5F1E6]/70 text-base leading-relaxed ${raleway.className}`}>
+                        {testimonial.content}
+                      </p>
+
+                      {testimonial.photos.length > 0 && (
+                        <div className="grid grid-cols-3 gap-3 mt-5">
+                          {testimonial.photos.slice(0, 3).map((photo, index) => (
+                            <button
+                              key={`${photo}-${index}`}
+                              type="button"
+                              onClick={() =>
+                                setLightboxPhoto({
+                                  photos: testimonial.photos,
+                                  index,
+                                })
+                              }
+                              className="relative h-24 overflow-hidden border border-[#D4AF37]/20"
+                            >
+                              <img
+                                src={photo}
+                                alt={`${businessName} favorite merchant photo ${index + 1}`}
+                                className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+                              />
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </>
+        )}
 
         {/* Reviews Section */}
         {(allReviews.length > 0 || (isAuthenticated && member)) && (
