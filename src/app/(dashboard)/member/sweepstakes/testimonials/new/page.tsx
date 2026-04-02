@@ -132,6 +132,7 @@ export default function FavoriteMerchantTestimonialsPage() {
   const [uploadingPhotos, setUploadingPhotos] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
 
   useEffect(() => {
@@ -289,8 +290,6 @@ export default function FavoriteMerchantTestimonialsPage() {
   }
 
   async function submit() {
-    if (!data?.confirmedEntryThisMonth)
-      return setFormError("Confirm this month's sweepstakes entry first.");
     if (!merchant) return setFormError("Choose a merchant first.");
     if (countWords(content) < 50)
       return setFormError("Write at least 50 words.");
@@ -299,6 +298,7 @@ export default function FavoriteMerchantTestimonialsPage() {
 
     setSubmitting(true);
     setFormError(null);
+    setSuccessMessage(null);
 
     try {
       const response = await fetch("/api/member/sweepstakes/testimonials", {
@@ -314,6 +314,10 @@ export default function FavoriteMerchantTestimonialsPage() {
       const json = await response.json();
       if (!response.ok)
         throw new Error(json.error || "Failed to submit nomination");
+      setSuccessMessage(
+        json.message ||
+          "Your favorite merchant nomination is now pending review.",
+      );
       resetForm();
       await loadPage();
     } catch (error) {
@@ -356,13 +360,16 @@ export default function FavoriteMerchantTestimonialsPage() {
             </div>
           </div>
 
+          {successMessage && (
+            <div className="rounded-xl border border-green-200 bg-green-50 p-4 mb-6 text-sm text-green-900">
+              {successMessage}
+            </div>
+          )}
+
           {!data?.confirmedEntryThisMonth && (
             <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 mb-6 text-sm text-amber-900">
-              Confirm this month&apos;s sweepstakes entry from{" "}
-              <a href="/member" className="font-medium underline">
-                your dashboard
-              </a>{" "}
-              before you submit a nomination.
+              Your first favorite merchant nomination this cycle also locks in
+              your sweepstakes entry.
             </div>
           )}
 
@@ -664,7 +671,7 @@ export default function FavoriteMerchantTestimonialsPage() {
                   <Button
                     type="button"
                     onClick={nextStep}
-                    disabled={!data?.confirmedEntryThisMonth || merchantLoading}
+                    disabled={merchantLoading}
                   >
                     Next
                     <ArrowRight className="w-4 h-4 ml-2" />
@@ -673,7 +680,7 @@ export default function FavoriteMerchantTestimonialsPage() {
                   <Button
                     type="button"
                     onClick={() => void submit()}
-                    disabled={!data?.confirmedEntryThisMonth || submitting}
+                    disabled={submitting}
                   >
                     {submitting ? (
                       <Loader2 className="w-4 h-4 mr-2 animate-spin" />

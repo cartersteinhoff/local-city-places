@@ -11,6 +11,7 @@ import {
 import { getSession } from "@/lib/auth";
 import {
   countWords,
+  createOrConfirmSweepstakesEntryFromTestimonial,
   ensureCurrentSweepstakesCycle,
   getSweepstakesLeaderboard,
 } from "@/lib/sweepstakes";
@@ -269,15 +270,25 @@ export async function POST(request: NextRequest) {
       )
       .limit(1);
 
-    if (!confirmedEntry) {
-      return NextResponse.json(
-        {
-          error:
-            "Confirm your current sweepstakes entry before submitting a favorite merchant testimonial.",
-        },
-        { status: 409 },
-      );
-    }
+    const maybeLockInSweepstakesEntry = async () => {
+      if (confirmedEntry) {
+        return false;
+      }
+
+      const entryName =
+        [session.user.firstName, session.user.lastName]
+          .filter(Boolean)
+          .join(" ")
+          .trim() || session.user.email;
+      const entryResult = await createOrConfirmSweepstakesEntryFromTestimonial({
+        userId: session.user.id,
+        memberId: member.id,
+        entryName,
+        entryEmail: session.user.email,
+      });
+
+      return !entryResult.alreadyEnteredThisCycle;
+    };
 
     const [merchant] = await db
       .select({
@@ -442,10 +453,14 @@ export async function POST(request: NextRequest) {
         );
       }
 
+      const createdSweepstakesEntry = await maybeLockInSweepstakesEntry();
+
       return NextResponse.json({
         success: true,
         testimonialId: existingTestimonial.id,
-        message: "Your testimonial has been resubmitted for review.",
+        message: createdSweepstakesEntry
+          ? "Your testimonial has been resubmitted for review, and your sweepstakes entry is now locked in."
+          : "Your testimonial has been resubmitted for review.",
       });
     }
 
@@ -519,10 +534,14 @@ export async function POST(request: NextRequest) {
       })),
     );
 
+    const createdSweepstakesEntry = await maybeLockInSweepstakesEntry();
+
     return NextResponse.json({
       success: true,
       testimonialId: createdTestimonial.id,
-      message: `Your favorite merchant nomination for ${merchant.businessName} is now pending review.`,
+      message: createdSweepstakesEntry
+        ? `Your favorite merchant nomination for ${merchant.businessName} is now pending review, and your sweepstakes entry is locked in.`
+        : `Your favorite merchant nomination for ${merchant.businessName} is now pending review.`,
     });
   } catch (error) {
     console.error("Error creating favorite merchant testimonial:", error);

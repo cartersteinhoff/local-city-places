@@ -1,6 +1,5 @@
 import { randomBytes, randomInt, randomUUID } from "crypto";
-import { and, desc, eq, inArray, lt, sql } from "drizzle-orm";
-import { sendSweepstakesPrizeEmail } from "@/lib/email";
+import { and, desc, eq, inArray, lt, ne, sql } from "drizzle-orm";
 import {
   db,
   memberReferrals,
@@ -12,6 +11,7 @@ import {
   sweepstakesWinners,
   users,
 } from "@/db";
+import { sendSweepstakesPrizeEmail } from "@/lib/email";
 
 export const SWEEPSTAKES_TIME_ZONE = "America/Phoenix";
 const PHOENIX_UTC_OFFSET_HOURS = 7;
@@ -51,7 +51,7 @@ function getDatePartsInTimeZone(date: Date, timeZone: string) {
   const map = Object.fromEntries(
     parts
       .filter((part) => part.type !== "literal")
-      .map((part) => [part.type, part.value])
+      .map((part) => [part.type, part.value]),
   );
 
   return {
@@ -75,13 +75,20 @@ export function getSweepstakesCycleName(year: number, month: number) {
 }
 
 export function getSweepstakesCycleBounds(year: number, month: number) {
-  const startsAt = new Date(Date.UTC(year, month - 1, 1, PHOENIX_UTC_OFFSET_HOURS, 0, 0, 0));
-  const endsAt = new Date(Date.UTC(year, month, 1, PHOENIX_UTC_OFFSET_HOURS - 1, 59, 59, 999));
+  const startsAt = new Date(
+    Date.UTC(year, month - 1, 1, PHOENIX_UTC_OFFSET_HOURS, 0, 0, 0),
+  );
+  const endsAt = new Date(
+    Date.UTC(year, month, 1, PHOENIX_UTC_OFFSET_HOURS - 1, 59, 59, 999),
+  );
 
   return { startsAt, endsAt };
 }
 
-export function getArizonaCycleYearMonthOffset(offset: number, date: Date = new Date()) {
+export function getArizonaCycleYearMonthOffset(
+  offset: number,
+  date: Date = new Date(),
+) {
   const { year, month } = getArizonaDateParts(date);
   const offsetDate = new Date(Date.UTC(year, month - 1 + offset, 1, 12, 0, 0));
   return {
@@ -99,7 +106,9 @@ export async function ensureSweepstakesCycle(year: number, month: number) {
   const [existingCycle] = await db
     .select()
     .from(sweepstakesCycles)
-    .where(and(eq(sweepstakesCycles.year, year), eq(sweepstakesCycles.month, month)))
+    .where(
+      and(eq(sweepstakesCycles.year, year), eq(sweepstakesCycles.month, month)),
+    )
     .limit(1);
 
   if (existingCycle) {
@@ -126,7 +135,9 @@ export async function ensureSweepstakesCycle(year: number, month: number) {
   const [cycleAfterConflict] = await db
     .select()
     .from(sweepstakesCycles)
-    .where(and(eq(sweepstakesCycles.year, year), eq(sweepstakesCycles.month, month)))
+    .where(
+      and(eq(sweepstakesCycles.year, year), eq(sweepstakesCycles.month, month)),
+    )
     .limit(1);
 
   if (!cycleAfterConflict) {
@@ -168,13 +179,14 @@ export function normalizeReferralCode(code: string | null | undefined) {
 }
 
 export function countWords(value: string) {
-  return value
-    .trim()
-    .split(/\s+/)
-    .filter(Boolean).length;
+  return value.trim().split(/\s+/).filter(Boolean).length;
 }
 
-function formatLeaderboardDisplayName(firstName: string | null, lastName: string | null, email: string) {
+function formatLeaderboardDisplayName(
+  firstName: string | null,
+  lastName: string | null,
+  email: string,
+) {
   const trimmedFirstName = firstName?.trim();
   const trimmedLastName = lastName?.trim();
 
@@ -227,7 +239,10 @@ export async function ensureSweepstakesReferralCode(memberId: string) {
   throw new Error("Failed to create a unique referral code");
 }
 
-export async function maybeAttachReferralToMember(memberId: string, referralCode: string | null | undefined) {
+export async function maybeAttachReferralToMember(
+  memberId: string,
+  referralCode: string | null | undefined,
+) {
   const normalizedCode = normalizeReferralCode(referralCode);
   if (!normalizedCode) {
     return null;
@@ -249,8 +264,8 @@ export async function maybeAttachReferralToMember(memberId: string, referralCode
     .where(
       and(
         eq(sweepstakesEntries.memberId, memberId),
-        eq(sweepstakesEntries.status, "confirmed")
-      )
+        eq(sweepstakesEntries.status, "confirmed"),
+      ),
     )
     .limit(1);
 
@@ -295,7 +310,12 @@ export async function confirmSweepstakesEntry(entryId: string, userId: string) {
   const [existingEntry] = await db
     .select()
     .from(sweepstakesEntries)
-    .where(and(eq(sweepstakesEntries.id, entryId), eq(sweepstakesEntries.userId, userId)))
+    .where(
+      and(
+        eq(sweepstakesEntries.id, entryId),
+        eq(sweepstakesEntries.userId, userId),
+      ),
+    )
     .limit(1);
 
   if (!existingEntry || existingEntry.status === "void") {
@@ -364,8 +384,8 @@ export async function createOrConfirmDashboardSweepstakesEntry({
     .where(
       and(
         eq(sweepstakesEntries.userId, userId),
-        eq(sweepstakesEntries.entryLocalDate, dateKey)
-      )
+        eq(sweepstakesEntries.entryLocalDate, dateKey),
+      ),
     )
     .limit(1);
 
@@ -393,8 +413,8 @@ export async function createOrConfirmDashboardSweepstakesEntry({
         .where(
           and(
             eq(sweepstakesEntries.userId, userId),
-            eq(sweepstakesEntries.entryLocalDate, dateKey)
-          )
+            eq(sweepstakesEntries.entryLocalDate, dateKey),
+          ),
         )
         .limit(1);
     }
@@ -417,6 +437,108 @@ export async function createOrConfirmDashboardSweepstakesEntry({
   return { entry: confirmedEntry, alreadyEnteredToday: false, cycle };
 }
 
+export async function createOrConfirmSweepstakesEntryFromTestimonial({
+  userId,
+  memberId,
+  entryName,
+  entryEmail,
+}: ConfirmDashboardEntryParams) {
+  const cycle = await ensureCurrentSweepstakesCycle();
+  const { dateKey } = getArizonaDateParts();
+
+  const [confirmedEntry] = await db
+    .select()
+    .from(sweepstakesEntries)
+    .where(
+      and(
+        eq(sweepstakesEntries.userId, userId),
+        eq(sweepstakesEntries.memberId, memberId),
+        eq(sweepstakesEntries.cycleId, cycle.id),
+        eq(sweepstakesEntries.status, "confirmed"),
+      ),
+    )
+    .orderBy(
+      desc(sweepstakesEntries.confirmedAt),
+      desc(sweepstakesEntries.createdAt),
+    )
+    .limit(1);
+
+  if (confirmedEntry) {
+    return { entry: confirmedEntry, alreadyEnteredThisCycle: true, cycle };
+  }
+
+  let [entry] = await db
+    .select()
+    .from(sweepstakesEntries)
+    .where(
+      and(
+        eq(sweepstakesEntries.userId, userId),
+        eq(sweepstakesEntries.memberId, memberId),
+        eq(sweepstakesEntries.cycleId, cycle.id),
+        ne(sweepstakesEntries.status, "void"),
+      ),
+    )
+    .orderBy(desc(sweepstakesEntries.createdAt))
+    .limit(1);
+
+  if (!entry) {
+    const [createdEntry] = await db
+      .insert(sweepstakesEntries)
+      .values({
+        cycleId: cycle.id,
+        userId,
+        memberId,
+        entryName,
+        entryEmail,
+        entryLocalDate: dateKey,
+        source: "dashboard",
+      })
+      .onConflictDoNothing()
+      .returning();
+
+    if (createdEntry) {
+      entry = createdEntry;
+    } else {
+      [entry] = await db
+        .select()
+        .from(sweepstakesEntries)
+        .where(
+          and(
+            eq(sweepstakesEntries.userId, userId),
+            eq(sweepstakesEntries.memberId, memberId),
+            eq(sweepstakesEntries.cycleId, cycle.id),
+            ne(sweepstakesEntries.status, "void"),
+          ),
+        )
+        .orderBy(desc(sweepstakesEntries.createdAt))
+        .limit(1);
+    }
+  }
+
+  if (!entry) {
+    throw new Error(
+      "Failed to create or load the testimonial-triggered sweepstakes entry",
+    );
+  }
+
+  const confirmedTestimonialEntry = await confirmSweepstakesEntry(
+    entry.id,
+    userId,
+  );
+
+  if (!confirmedTestimonialEntry) {
+    throw new Error(
+      "Failed to confirm the testimonial-triggered sweepstakes entry",
+    );
+  }
+
+  return {
+    entry: confirmedTestimonialEntry,
+    alreadyEnteredThisCycle: false,
+    cycle,
+  };
+}
+
 export async function getSweepstakesLeaderboard(cycleId: string) {
   const [regularCounts, referralCounts] = await Promise.all([
     db
@@ -428,8 +550,8 @@ export async function getSweepstakesLeaderboard(cycleId: string) {
       .where(
         and(
           eq(sweepstakesEntries.cycleId, cycleId),
-          eq(sweepstakesEntries.status, "confirmed")
-        )
+          eq(sweepstakesEntries.status, "confirmed"),
+        ),
       )
       .groupBy(sweepstakesEntries.memberId),
     db
@@ -494,7 +616,7 @@ export async function getSweepstakesLeaderboard(cycleId: string) {
         displayName: formatLeaderboardDisplayName(
           identity.firstName,
           identity.lastName,
-          identity.email
+          identity.email,
         ),
         email: identity.email,
         regularEntries: counts.regularEntries,
@@ -505,9 +627,12 @@ export async function getSweepstakesLeaderboard(cycleId: string) {
     })
     .filter((row): row is SweepstakesLeaderboardRow => !!row)
     .sort((a, b) => {
-      if (b.totalEntries !== a.totalEntries) return b.totalEntries - a.totalEntries;
-      if (b.regularEntries !== a.regularEntries) return b.regularEntries - a.regularEntries;
-      if (b.referralEntries !== a.referralEntries) return b.referralEntries - a.referralEntries;
+      if (b.totalEntries !== a.totalEntries)
+        return b.totalEntries - a.totalEntries;
+      if (b.regularEntries !== a.regularEntries)
+        return b.regularEntries - a.regularEntries;
+      if (b.referralEntries !== a.referralEntries)
+        return b.referralEntries - a.referralEntries;
       return a.displayName.localeCompare(b.displayName);
     })
     .map((row, index) => ({
@@ -538,8 +663,8 @@ export async function getActiveSweepstakesWinners(cycleId: string) {
     .where(
       and(
         eq(sweepstakesWinners.cycleId, cycleId),
-        eq(sweepstakesWinners.status, "active")
-      )
+        eq(sweepstakesWinners.status, "active"),
+      ),
     )
     .orderBy(sweepstakesWinners.createdAt);
 
@@ -548,7 +673,11 @@ export async function getActiveSweepstakesWinners(cycleId: string) {
       id: row.id,
       prizeTier: row.prizeTier,
       memberId: row.memberId,
-      displayName: formatLeaderboardDisplayName(row.firstName, row.lastName, row.email),
+      displayName: formatLeaderboardDisplayName(
+        row.firstName,
+        row.lastName,
+        row.email,
+      ),
       email: row.email,
       selectionMethod: row.selectionMethod,
       regularEntries: row.regularEntries,
@@ -569,7 +698,10 @@ export async function getActiveSweepstakesWinners(cycleId: string) {
 
 function pickWeightedGrandWinner(leaderboard: SweepstakesLeaderboardRow[]) {
   const eligibleRows = leaderboard.filter((row) => row.totalEntries > 0);
-  const totalTickets = eligibleRows.reduce((sum, row) => sum + row.totalEntries, 0);
+  const totalTickets = eligibleRows.reduce(
+    (sum, row) => sum + row.totalEntries,
+    0,
+  );
 
   if (totalTickets <= 0) {
     return null;
@@ -649,36 +781,54 @@ export async function drawSweepstakesWinners({
   }
 
   if (cycle.endsAt > new Date()) {
-    throw new Error("This sweepstakes cycle is still open and cannot be drawn yet");
+    throw new Error(
+      "This sweepstakes cycle is still open and cannot be drawn yet",
+    );
   }
 
   const leaderboard = await getSweepstakesLeaderboard(cycleId);
   const eligibleLeaderboard = leaderboard.filter((row) => row.totalEntries > 0);
 
   if (eligibleLeaderboard.length === 0) {
-    throw new Error("No eligible entries were found for this sweepstakes cycle");
+    throw new Error(
+      "No eligible entries were found for this sweepstakes cycle",
+    );
   }
 
   const grandWinner = forcedGrandWinnerMemberId
-    ? eligibleLeaderboard.find((row) => row.memberId === forcedGrandWinnerMemberId) || null
+    ? eligibleLeaderboard.find(
+        (row) => row.memberId === forcedGrandWinnerMemberId,
+      ) || null
     : pickWeightedGrandWinner(eligibleLeaderboard);
 
   if (!grandWinner) {
     throw new Error("Unable to determine a grand-prize winner for this cycle");
   }
 
-  const { tier1MemberId, tier2MemberId } = await getReferralChain(grandWinner.memberId);
+  const { tier1MemberId, tier2MemberId } = await getReferralChain(
+    grandWinner.memberId,
+  );
   const selectionGroupId = randomUUID();
-  const selectionMethod = forcedGrandWinnerMemberId ? "manual_override" : "draw";
+  const selectionMethod = forcedGrandWinnerMemberId
+    ? "manual_override"
+    : "draw";
   const now = new Date();
 
-  const tier1Identity = tier1MemberId ? await getMemberIdentity(tier1MemberId) : null;
-  const tier2Identity = tier2MemberId ? await getMemberIdentity(tier2MemberId) : null;
+  const tier1Identity = tier1MemberId
+    ? await getMemberIdentity(tier1MemberId)
+    : null;
+  const tier2Identity = tier2MemberId
+    ? await getMemberIdentity(tier2MemberId)
+    : null;
 
   const tier1Leaderboard =
-    (tier1MemberId && leaderboard.find((row) => row.memberId === tier1MemberId)) || null;
+    (tier1MemberId &&
+      leaderboard.find((row) => row.memberId === tier1MemberId)) ||
+    null;
   const tier2Leaderboard =
-    (tier2MemberId && leaderboard.find((row) => row.memberId === tier2MemberId)) || null;
+    (tier2MemberId &&
+      leaderboard.find((row) => row.memberId === tier2MemberId)) ||
+    null;
 
   await db
     .update(sweepstakesWinners)
@@ -689,8 +839,8 @@ export async function drawSweepstakesWinners({
     .where(
       and(
         eq(sweepstakesWinners.cycleId, cycleId),
-        eq(sweepstakesWinners.status, "active")
-      )
+        eq(sweepstakesWinners.status, "active"),
+      ),
     );
 
   const insertedWinners = await db
@@ -740,7 +890,7 @@ export async function drawSweepstakesWinners({
               notes: notes?.trim() || null,
             }
           : null,
-      ].filter(Boolean) as Array<typeof sweepstakesWinners.$inferInsert>
+      ].filter(Boolean) as Array<typeof sweepstakesWinners.$inferInsert>,
     )
     .returning({
       id: sweepstakesWinners.id,
@@ -757,25 +907,27 @@ export async function drawSweepstakesWinners({
     },
     tier1Identity
       ? {
-          rowId: insertedWinners.find((row) => row.prizeTier === "tier1_match")?.id,
+          rowId: insertedWinners.find((row) => row.prizeTier === "tier1_match")
+            ?.id,
           tier: "tier1_match" as const,
           email: tier1Identity.email,
           name: formatLeaderboardDisplayName(
             tier1Identity.firstName,
             tier1Identity.lastName,
-            tier1Identity.email
+            tier1Identity.email,
           ),
         }
       : null,
     tier2Identity
       ? {
-          rowId: insertedWinners.find((row) => row.prizeTier === "tier2_match")?.id,
+          rowId: insertedWinners.find((row) => row.prizeTier === "tier2_match")
+            ?.id,
           tier: "tier2_match" as const,
           email: tier2Identity.email,
           name: formatLeaderboardDisplayName(
             tier2Identity.firstName,
             tier2Identity.lastName,
-            tier2Identity.email
+            tier2Identity.email,
           ),
         }
       : null,

@@ -1,11 +1,9 @@
-import { and, eq } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { type NextRequest, NextResponse } from "next/server";
-import { db, members, sweepstakesEntries, users } from "@/db";
+import { db, members, users } from "@/db";
 import { createMagicLinkToken } from "@/lib/auth";
 import { sendMagicLinkEmail } from "@/lib/email";
 import {
-  ensureCurrentSweepstakesCycle,
-  getArizonaDateParts,
   maybeAttachReferralToMember,
   normalizeReferralCode,
 } from "@/lib/sweepstakes";
@@ -28,11 +26,6 @@ export async function POST(request: NextRequest) {
     const normalizedEmail = email.toLowerCase().trim();
     const normalizedPhone = phone ? stripPhoneNumber(phone) : "";
     const referralCodeUsed = normalizeReferralCode(referredBy);
-    const entryName = `${firstName.trim()} ${lastName.trim()}`.trim();
-
-    const cycle = await ensureCurrentSweepstakesCycle();
-    const { dateKey } = getArizonaDateParts();
-
     let [user] = await db
       .select()
       .from(users)
@@ -44,7 +37,7 @@ export async function POST(request: NextRequest) {
         {
           code: "login_required",
           error:
-            "This email already has an account. Please log in and enter from your member dashboard.",
+            "This email already has an account. Please log in from your member dashboard to submit a favorite merchant nomination.",
           loginUrl: "/favorite-merchant-sweepstakes",
         },
         { status: 409 },
@@ -94,54 +87,7 @@ export async function POST(request: NextRequest) {
 
     await maybeAttachReferralToMember(member.id, referralCodeUsed);
 
-    let [entry] = await db
-      .select()
-      .from(sweepstakesEntries)
-      .where(
-        and(
-          eq(sweepstakesEntries.userId, user.id),
-          eq(sweepstakesEntries.entryLocalDate, dateKey),
-        ),
-      )
-      .limit(1);
-
-    if (!entry) {
-      const [createdEntry] = await db
-        .insert(sweepstakesEntries)
-        .values({
-          cycleId: cycle.id,
-          userId: user.id,
-          memberId: member.id,
-          entryName,
-          entryEmail: normalizedEmail,
-          entryLocalDate: dateKey,
-          source: "campaign_page",
-          referralCodeUsed,
-        })
-        .onConflictDoNothing()
-        .returning();
-
-      if (createdEntry) {
-        entry = createdEntry;
-      } else {
-        [entry] = await db
-          .select()
-          .from(sweepstakesEntries)
-          .where(
-            and(
-              eq(sweepstakesEntries.userId, user.id),
-              eq(sweepstakesEntries.entryLocalDate, dateKey),
-            ),
-          )
-          .limit(1);
-      }
-    }
-
-    if (!entry) {
-      throw new Error("Failed to create or load the sweepstakes entry");
-    }
-
-    const callbackUrl = `/member?sweepstakes=entry-confirmed&sweepstakesEntryId=${entry.id}`;
+    const callbackUrl = "/member?sweepstakes=account-created";
     const token = await createMagicLinkToken(normalizedEmail, callbackUrl);
     const emailSent = await sendMagicLinkEmail(normalizedEmail, token);
 
@@ -152,19 +98,15 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const alreadyEnteredToday = entry.status === "confirmed";
-
     return NextResponse.json({
       success: true,
-      alreadyEnteredToday,
-      message: alreadyEnteredToday
-        ? "Today's entry is already confirmed. Check your email for your sign-in link."
-        : "Check your email to finish account setup and confirm today's entry.",
+      message:
+        "Check your email to finish account setup. Once you're in, submit a favorite merchant nomination to lock in your sweepstakes entry.",
     });
   } catch (error) {
-    console.error("Sweepstakes entry error:", error);
+    console.error("Favorite merchant member signup error:", error);
     return NextResponse.json(
-      { error: "Failed to submit sweepstakes entry" },
+      { error: "Failed to create member account" },
       { status: 500 },
     );
   }

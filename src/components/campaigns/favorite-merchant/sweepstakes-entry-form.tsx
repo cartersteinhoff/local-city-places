@@ -1,12 +1,7 @@
 "use client";
 
-import {
-  ArrowRight,
-  Clock3,
-  MailCheck,
-  ShieldCheck,
-  Sparkles,
-} from "lucide-react";
+import { ArrowRight, Clock3, ShieldCheck } from "lucide-react";
+import Image from "next/image";
 import { useSearchParams } from "next/navigation";
 import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -27,12 +22,7 @@ export function SweepstakesEntryForm({
   const referralCode = searchParams.get("ref") ?? "";
 
   const [status, setStatus] = useState<
-    | "idle"
-    | "submitting"
-    | "success"
-    | "already-entered"
-    | "login-required"
-    | "error"
+    "idle" | "submitting" | "success" | "login-required" | "error"
   >("idle");
   const [responseMessage, setResponseMessage] = useState("");
   const [formValues, setFormValues] = useState({
@@ -47,35 +37,29 @@ export function SweepstakesEntryForm({
     if (status === "success") {
       return (
         responseMessage ||
-        "Check your email to finish account setup and confirm today's sweepstakes entry."
-      );
-    }
-
-    if (status === "already-entered") {
-      return (
-        responseMessage ||
-        "Today's entry is already confirmed. Check your email for your sign-in link."
+        "Check your email to finish account setup. Once you're in, submit a favorite merchant nomination to lock in your sweepstakes entry."
       );
     }
 
     if (status === "login-required") {
       return (
         responseMessage ||
-        "This email already has an account. Log in and enter from your member dashboard."
+        "This email already has an account. Log in from your member dashboard to submit a favorite merchant nomination."
       );
     }
 
     if (status === "error") {
       return (
-        responseMessage || "We couldn't submit your entry. Please try again."
+        responseMessage ||
+        "We couldn't create your member account. Please try again."
       );
     }
 
     if (status === "submitting") {
-      return "Submitting your entry and preparing your account-setup link...";
+      return "Creating your member account and preparing your setup link...";
     }
 
-    return "First visit? Submit once to create your account. After that, enter daily from your member dashboard. Monthly drawing closes at 11:59 PM Arizona time on the last day of the month.";
+    return "Start here to create your member account. Once you're in, your first favorite merchant nomination locks in your sweepstakes entry for the current cycle.";
   }, [responseMessage, status]);
 
   function handleChange(field: keyof typeof formValues, value: string) {
@@ -106,27 +90,30 @@ export function SweepstakesEntryForm({
           setStatus("login-required");
           setResponseMessage(
             data.error ||
-              "This email already has an account. Log in and enter from your member dashboard.",
+              "This email already has an account. Log in from your member dashboard to submit a favorite merchant nomination.",
           );
           return;
         }
 
         setStatus("error");
         setResponseMessage(
-          data.error || "We couldn't submit your entry. Please try again.",
+          data.error ||
+            "We couldn't create your member account. Please try again.",
         );
         return;
       }
 
-      setStatus(data.alreadyEnteredToday ? "already-entered" : "success");
+      setStatus("success");
       setResponseMessage(
         data.message ||
-          "Check your email to finish account setup and confirm today's sweepstakes entry.",
+          "Check your email to finish account setup. Once you're in, submit a favorite merchant nomination to lock in your sweepstakes entry.",
       );
     } catch (error) {
       console.error("Failed to submit sweepstakes entry:", error);
       setStatus("error");
-      setResponseMessage("We couldn't submit your entry. Please try again.");
+      setResponseMessage(
+        "We couldn't create your member account. Please try again.",
+      );
     }
   }
 
@@ -142,29 +129,17 @@ export function SweepstakesEntryForm({
     >
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,168,65,0.24),transparent_42%)]" />
       <div className="relative">
-        <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
-          <div className="space-y-2">
-            <span className="inline-flex items-center gap-2 rounded-full bg-[#ffedd2] px-3 py-1 text-[0.7rem] font-semibold uppercase tracking-[0.24em] text-[#8f4d12]">
-              <Sparkles className="h-3.5 w-3.5" />
-              Daily Entry Form
-            </span>
-            <div>
-              <h2 className="text-2xl font-semibold tracking-tight sm:text-[2rem]">
-                Enter today. Bring your people with you.
-              </h2>
-              <p className="mt-2 max-w-md text-sm leading-6 text-[#6d5443]">
-                First-time entrants finish account setup by email. After that,
-                the member dashboard handles daily entries and matching-prize
-                referrals.
-              </p>
-            </div>
-          </div>
-
-          <div className="min-h-[32px]">
-            <span className="inline-flex items-center gap-2 rounded-full border border-[#efcfaa] bg-white/80 px-3 py-1 text-xs font-medium text-[#7a5738]">
-              <MailCheck className="h-3.5 w-3.5" />
-              First-time email setup
-            </span>
+        <div className="-mx-5 -mt-5 mb-6 overflow-hidden border-b border-[#efcfaa] sm:-mx-7 sm:-mt-7 sm:mb-7">
+          <div className="bg-[#0e2c6b]">
+            <Image
+              src="/images/gas-grocery-gift-card.png"
+              alt="$500 gas and grocery gift card prize"
+              width={1368}
+              height={865}
+              className="h-auto w-full"
+              priority
+              sizes="(min-width: 1024px) 30rem, 100vw"
+            />
           </div>
         </div>
 
@@ -243,7 +218,7 @@ export function SweepstakesEntryForm({
             <div className="min-h-[32px]">
               <span className="inline-flex items-center gap-2">
                 <Clock3 className="h-4 w-4 text-[#b86a1b]" />
-                One confirmed entry per day
+                One-time member setup
               </span>
             </div>
             <div className="min-h-[32px]">
@@ -262,8 +237,8 @@ export function SweepstakesEntryForm({
               disabled={status === "submitting"}
             >
               {status === "submitting"
-                ? "Submitting Entry..."
-                : "Enter the Sweepstakes"}
+                ? "Creating Account..."
+                : "Create Your Member Account"}
               <ArrowRight className="h-4 w-4" />
             </Button>
             {status === "login-required" && (

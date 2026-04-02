@@ -11,7 +11,6 @@ import {
   UserPlus,
 } from "lucide-react";
 import { Playfair_Display, Space_Grotesk } from "next/font/google";
-import Image from "next/image";
 import { useState } from "react";
 import { FeaturedMarquee } from "@/components/featured-marquee";
 import { HomeHeader } from "@/components/home-header";
@@ -36,51 +35,53 @@ const sans = Space_Grotesk({
 const campaignRhythm = [
   {
     step: "01",
-    title: "Enter once per day",
-    cue: "Daily habit",
+    title: "Create your member account",
+    cue: "Start here",
     description:
-      "Come back each Arizona day for another shot at the monthly prize and keep your name in the drawing.",
-    icon: Trophy,
+      "Use the landing page form once, then finish setup from the email link so your member profile is ready for referrals and merchant nominations.",
+    icon: MailCheck,
   },
   {
     step: "02",
-    title: "Create your account",
-    cue: "One-time setup",
+    title: "Submit your first nomination",
+    cue: "Lock in entry",
     description:
-      "Your first visit ends with an email link so you can finish account setup and open the member dashboard. After that, daily entries happen from the dashboard.",
-    icon: MailCheck,
+      "Your first favorite merchant nomination of the cycle creates your sweepstakes entry and puts you into the drawing.",
+    icon: Trophy,
   },
   {
     step: "03",
     title: "Share your referral link",
     cue: "Grow your chain",
     description:
-      "Invite friends with your link so one winning entry can create matching winners above it.",
+      "Invite friends with your link so their qualifying nominations can activate matching-prize entries above them.",
     icon: UserPlus,
   },
   {
     step: "04",
-    title: "Nominate favorite merchants",
-    cue: "Champion local",
+    title: "Keep championing local",
+    cue: "Five per cycle",
     description:
-      "Inside the dashboard, tell us which local business deserves the spotlight and why the community should back them.",
+      "Keep submitting favorite merchant stories and photos throughout the cycle, and approved nominations can still unlock the $25 reward path.",
     icon: Store,
   },
 ];
 
 const heroHighlights = [
   {
-    title: "Daily entry window",
-    description: "One confirmed entry per Arizona day.",
+    title: "Member signup first",
+    description:
+      "This page creates your member account and saves your referral code.",
+  },
+  {
+    title: "Entry via nomination",
+    description:
+      "Your first favorite merchant nomination locks in your sweepstakes entry.",
   },
   {
     title: "Matching prize chain",
     description:
-      "First-tier and second-tier matches can pay out above a winner.",
-  },
-  {
-    title: "Favorite merchant reward",
-    description: "Approved nominations can unlock a $25 reward.",
+      "Referral matches activate when invited members submit nominations.",
   },
 ];
 
@@ -96,20 +97,20 @@ const nextSteps = [
   {
     title: "Finish account setup",
     description:
-      "On your first visit, use the email link in your inbox to finish account setup and open your dashboard. After that, daily entries happen there.",
+      "Use the email link from your first visit to finish account setup and open your member dashboard.",
     icon: MailCheck,
+  },
+  {
+    title: "Submit your first nomination",
+    description:
+      "Your first favorite merchant nomination for the cycle locks in your sweepstakes entry.",
+    icon: Trophy,
   },
   {
     title: "Share your referral link",
     description:
-      "Invite friends so your chain has a shot at creating matching winners above the grand prize entry.",
+      "Invite friends so their qualifying nominations can activate matching winners above them in the chain.",
     icon: UserPlus,
-  },
-  {
-    title: "Nominate a merchant",
-    description:
-      "Tell us which local business deserves the spotlight and why it matters to your neighborhood.",
-    icon: Store,
   },
 ];
 
@@ -187,10 +188,10 @@ export function FavoriteMerchantLandingPage() {
                     Bring people with you.
                   </span>
                 </h1>
-                <p className="max-w-2xl text-lg leading-8 text-white/82 sm:text-[1.35rem] sm:leading-9">
-                  First-time entrants finish account setup by email. After that,
-                  use your member dashboard for daily entries, referrals, and
-                  favorite-merchant nominations.
+                <p className="max-w-2xl text-lg leading-8 text-white/82 sm:text-[1.2rem] sm:leading-8">
+                  Start by creating your member account. Once you are in, your
+                  first favorite merchant nomination locks in your sweepstakes
+                  entry for the current cycle.
                 </p>
               </div>
 
@@ -208,20 +209,6 @@ export function FavoriteMerchantLandingPage() {
                     </p>
                   </div>
                 ))}
-              </div>
-
-              <div className="relative max-w-[25rem] sm:max-w-[28rem]">
-                <div className="absolute inset-x-6 top-6 bottom-4 rounded-full bg-[#ffcf8b]/18 blur-3xl" />
-                <div className="relative overflow-hidden rounded-[1.8rem] border border-white/18 bg-[#0e2c6b]/88 shadow-[0_24px_70px_rgba(0,0,0,0.3)]">
-                  <Image
-                    src="/images/gas-grocery-gift-card.png"
-                    alt="$500 gas and grocery gift card prize"
-                    width={1368}
-                    height={865}
-                    className="h-auto w-full"
-                    priority
-                  />
-                </div>
               </div>
             </div>
 
@@ -349,12 +336,12 @@ export function FavoriteMerchantLandingPage() {
               <h2
                 className={`max-w-xl text-balance text-4xl leading-tight text-[#1f1510] sm:text-5xl ${display.className}`}
               >
-                One daily entry can turn into a referral chain and a merchant
-                spotlight.
+                Start as a member, then turn one nomination into a referral
+                chain and a merchant spotlight.
               </h2>
               <p className="max-w-lg text-lg leading-8 text-[#645347]">
                 The campaign works best when people can understand it in four
-                beats: enter, confirm, share, and champion a local merchant.
+                beats: join, nominate, share, and champion a local merchant.
               </p>
             </div>
 
@@ -524,7 +511,8 @@ export function FavoriteMerchantLandingPage() {
                     </p>
                     <p className="mt-2 text-base leading-7 text-white/72">
                       Use the first email link to finish account setup and open
-                      the dashboard. Future daily entries happen there.
+                      the dashboard. Your first nomination there locks in the
+                      cycle entry.
                     </p>
                   </div>
                   <div>
@@ -623,23 +611,23 @@ export function FavoriteMerchantLandingPage() {
           <div className="grid gap-8 rounded-[2rem] border border-[#e7d7c8] bg-white px-6 py-8 shadow-[0_16px_50px_rgba(66,37,18,0.08)] lg:grid-cols-[1fr_auto] lg:items-center lg:px-8">
             <div className="space-y-4">
               <p className="text-sm font-semibold uppercase tracking-[0.28em] text-[#ab6731]">
-                Enter today
+                Start as a member
               </p>
               <h2
                 className={`max-w-2xl text-balance text-4xl leading-tight text-[#1f1510] sm:text-5xl ${display.className}`}
               >
-                Take today's entry, then start your referral chain.
+                Create your account, then come back with a merchant story.
               </h2>
               <p className="max-w-2xl text-lg leading-8 text-[#645347]">
-                One clear prize, one clear action, and a fast path into the
-                dashboard where the merchant story begins.
+                This page starts the membership. The sweepstakes entry happens
+                when a member submits a favorite merchant nomination.
               </p>
             </div>
 
             <div className="flex flex-col gap-3 sm:flex-row lg:flex-col">
               <Button asChild size="lg" className="h-12 rounded-full px-7">
                 <a href="#entry-form">
-                  Enter the sweepstakes
+                  Create your member account
                   <ArrowRight className="h-4 w-4" />
                 </a>
               </Button>
@@ -650,7 +638,7 @@ export function FavoriteMerchantLandingPage() {
                 className="h-12 rounded-full border-[#dbc4ac] bg-transparent px-7 text-[#1f1510] hover:bg-[#f5ede2]"
               >
                 <a href="#how-it-works">
-                  Review the flow
+                  See nomination flow
                   <ShieldCheck className="h-4 w-4" />
                 </a>
               </Button>
@@ -659,7 +647,7 @@ export function FavoriteMerchantLandingPage() {
         </div>
       </section>
 
-      <TopMarketsFooter />
+      <TopMarketsFooter showSweepstakesPromo={false} />
     </div>
   );
 }

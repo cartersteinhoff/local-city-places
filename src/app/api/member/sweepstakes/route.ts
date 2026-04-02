@@ -1,20 +1,19 @@
+import { and, desc, eq, sql } from "drizzle-orm";
 import { NextResponse } from "next/server";
-import { and, eq, sql } from "drizzle-orm";
-import { getSession } from "@/lib/auth";
-import {
-  buildSweepstakesReferralLink,
-  ensureCurrentSweepstakesCycle,
-  ensureSweepstakesReferralCode,
-  getActiveSweepstakesWinners,
-  getArizonaDateParts,
-  getSweepstakesLeaderboard,
-} from "@/lib/sweepstakes";
 import {
   db,
   members,
   sweepstakesEntries,
   sweepstakesReferralActivations,
 } from "@/db";
+import { getSession } from "@/lib/auth";
+import {
+  buildSweepstakesReferralLink,
+  ensureCurrentSweepstakesCycle,
+  ensureSweepstakesReferralCode,
+  getActiveSweepstakesWinners,
+  getSweepstakesLeaderboard,
+} from "@/lib/sweepstakes";
 
 export async function GET() {
   try {
@@ -36,9 +35,8 @@ export async function GET() {
 
     const cycle = await ensureCurrentSweepstakesCycle();
     const referralCode = await ensureSweepstakesReferralCode(member.id);
-    const { dateKey } = getArizonaDateParts();
 
-    const [todayEntry] = await db
+    const [cycleEntry] = await db
       .select({
         id: sweepstakesEntries.id,
         status: sweepstakesEntries.status,
@@ -48,8 +46,13 @@ export async function GET() {
       .where(
         and(
           eq(sweepstakesEntries.memberId, member.id),
-          eq(sweepstakesEntries.entryLocalDate, dateKey)
-        )
+          eq(sweepstakesEntries.cycleId, cycle.id),
+          eq(sweepstakesEntries.status, "confirmed"),
+        ),
+      )
+      .orderBy(
+        desc(sweepstakesEntries.confirmedAt),
+        desc(sweepstakesEntries.createdAt),
       )
       .limit(1);
 
@@ -60,8 +63,8 @@ export async function GET() {
         and(
           eq(sweepstakesEntries.memberId, member.id),
           eq(sweepstakesEntries.cycleId, cycle.id),
-          eq(sweepstakesEntries.status, "confirmed")
-        )
+          eq(sweepstakesEntries.status, "confirmed"),
+        ),
       );
 
     const [activatedReferralsResult] = await db
@@ -70,8 +73,8 @@ export async function GET() {
       .where(
         and(
           eq(sweepstakesReferralActivations.referrerMemberId, member.id),
-          eq(sweepstakesReferralActivations.cycleId, cycle.id)
-        )
+          eq(sweepstakesReferralActivations.cycleId, cycle.id),
+        ),
       );
 
     const leaderboard = await getSweepstakesLeaderboard(cycle.id);
@@ -87,11 +90,11 @@ export async function GET() {
         endsAt: cycle.endsAt?.toISOString?.() ?? null,
         grandPrizeLabel: cycle.grandPrizeLabel,
       },
-      todayEntry: todayEntry
+      cycleEntry: cycleEntry
         ? {
-            id: todayEntry.id,
-            status: todayEntry.status,
-            confirmedAt: todayEntry.confirmedAt?.toISOString() ?? null,
+            id: cycleEntry.id,
+            status: cycleEntry.status,
+            confirmedAt: cycleEntry.confirmedAt?.toISOString() ?? null,
           }
         : null,
       confirmedEntriesThisMonth: entryCountResult?.count ?? 0,
@@ -108,7 +111,7 @@ export async function GET() {
     console.error("Error fetching member sweepstakes data:", error);
     return NextResponse.json(
       { error: "Failed to fetch sweepstakes data" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
