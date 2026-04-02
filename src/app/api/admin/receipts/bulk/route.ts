@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/db";
-import { receipts, grcs, monthlyQualifications } from "@/db/schema";
+import { receipts, grcs, monthlyQualifications, surveys } from "@/db/schema";
 import { eq, and, inArray } from "drizzle-orm";
 import { getSession } from "@/lib/auth";
+import { syncFavoriteMerchantRewardStatusForGrc } from "@/lib/favorite-merchant";
+import { checkAndCompleteGrc } from "@/lib/grc-lifecycle";
 
 export async function POST(request: NextRequest) {
   try {
@@ -102,14 +104,54 @@ export async function POST(request: NextRequest) {
             if (existingQual[0]) {
               const currentTotal = parseFloat(existingQual[0].approvedTotal || "0");
               const newTotal = currentTotal + amount;
+              let newStatus = existingQual[0].status;
+
+              if (newTotal >= 100 && (newStatus === "in_progress" || newStatus === "receipts_complete")) {
+                const surveyDone = !!existingQual[0].surveyCompletedAt;
+
+                if (surveyDone) {
+                  newStatus = "qualified";
+                } else {
+                  const [grcData] = await db
+                    .select({ merchantId: grcs.merchantId })
+                    .from(grcs)
+                    .where(eq(grcs.id, receipt.grcId))
+                    .limit(1);
+
+                  if (grcData) {
+                    const [activeSurvey] = await db
+                      .select({ id: surveys.id })
+                      .from(surveys)
+                      .where(
+                        and(
+                          eq(surveys.merchantId, grcData.merchantId),
+                          eq(surveys.isActive, true)
+                        )
+                      )
+                      .limit(1);
+
+                    newStatus = activeSurvey ? "receipts_complete" : "qualified";
+                  } else {
+                    newStatus = "receipts_complete";
+                  }
+                }
+              }
 
               await db
                 .update(monthlyQualifications)
                 .set({
                   approvedTotal: newTotal.toFixed(2),
-                  status: newTotal >= 100 ? "receipts_complete" : existingQual[0].status,
+                  status: newStatus,
                 })
                 .where(eq(monthlyQualifications.id, existingQual[0].id));
+
+              if (newStatus === "qualified") {
+                await checkAndCompleteGrc(receipt.memberId, receipt.grcId);
+              }
+
+              await syncFavoriteMerchantRewardStatusForGrc(receipt.grcId).catch((error) => {
+                console.error("Failed to sync favorite merchant reward status after bulk receipt approval:", error);
+              });
             }
           }
           updated++;

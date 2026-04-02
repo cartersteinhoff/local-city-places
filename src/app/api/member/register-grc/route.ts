@@ -3,6 +3,7 @@ import { db } from "@/db";
 import { grcs, members, surveys, surveyResponses, reviews, monthlyQualifications, merchants, users } from "@/db/schema";
 import { eq, and } from "drizzle-orm";
 import { getSession } from "@/lib/auth";
+import { syncFavoriteMerchantRewardStatusForGrc } from "@/lib/favorite-merchant";
 import { grcRegistrationSchema, countWords, REVIEW_BONUS_MIN_WORDS } from "@/lib/validations/member";
 import { sendGrcActivatedEmail } from "@/lib/email";
 
@@ -202,6 +203,10 @@ export async function POST(request: NextRequest) {
     } catch (emailErr) {
       console.error("Failed to prepare GRC activated email:", emailErr);
     }
+
+    await syncFavoriteMerchantRewardStatusForGrc(grcId).catch((error) => {
+      console.error("Failed to sync favorite merchant reward status after GRC registration:", error);
+    });
 
     return NextResponse.json({
       success: true,

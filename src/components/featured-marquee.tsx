@@ -105,7 +105,11 @@ function MarqueeRow({
   )
 }
 
-export function FeaturedMarquee() {
+interface FeaturedMarqueeProps {
+  showHeading?: boolean
+}
+
+export function FeaturedMarquee({ showHeading = true }: FeaturedMarqueeProps) {
   const [merchants, setMerchants] = useState<FeaturedMerchant[]>([])
   const [isLoading, setIsLoading] = useState(true)
 
@@ -141,9 +145,11 @@ export function FeaturedMarquee() {
   if (isLoading) {
     return (
       <section className="relative z-10 py-8">
-        <h2 className="text-center text-lg font-bold uppercase tracking-[0.15em] text-white/80 mb-6">
-          Explore Local Merchants
-        </h2>
+        {showHeading && (
+          <h2 className="text-center text-lg font-bold uppercase tracking-[0.15em] text-white/80 mb-6">
+            Explore Local Merchants
+          </h2>
+        )}
         <div className="space-y-4">
           {[0, 1, 2].map((i) => (
             <div key={i} className="flex gap-4 overflow-hidden px-4">
@@ -166,9 +172,11 @@ export function FeaturedMarquee() {
 
   return (
     <section className="relative z-10 py-8">
-      <h2 className="text-center text-lg font-bold uppercase tracking-[0.15em] text-white/80 mb-6">
-        Explore Local Merchants
-      </h2>
+      {showHeading && (
+        <h2 className="text-center text-lg font-bold uppercase tracking-[0.15em] text-white/80 mb-6">
+          Explore Local Merchants
+        </h2>
+      )}
       <div className="space-y-4">
         <MarqueeRow merchants={row1} direction="left" speed={40} />
         <MarqueeRow merchants={row2} direction="right" speed={50} />

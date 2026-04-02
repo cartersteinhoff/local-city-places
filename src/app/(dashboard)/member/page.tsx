@@ -11,17 +11,21 @@ import { SurveyStep } from "@/components/registration/steps/survey-step";
 import { ReviewOfferStep } from "@/components/registration/steps/review-offer-step";
 import { StartDateStep } from "@/components/registration/steps/start-date-step";
 import type { GroceryStore, SurveyAnswers, StartDate } from "@/lib/validations/member";
+import { cn } from "@/lib/utils";
 import {
   DollarSign,
   Receipt,
   CheckCircle,
   Gift,
+  Copy,
   Loader2,
   ArrowLeft,
   ChevronRight,
   Store,
   Calendar,
   ClipboardList,
+  Ticket,
+  Users,
 } from "lucide-react";
 import { memberNavItems } from "./nav";
 import { useUser } from "@/hooks/use-user";
@@ -56,6 +60,51 @@ interface ActiveGRC {
   startYear: number | null;
 }
 
+interface SweepstakesDashboardData {
+  cycle: {
+    id: string;
+    name: string;
+    year: number;
+    month: number;
+    endsAt: string | null;
+    grandPrizeLabel: string;
+  };
+  todayEntry: {
+    id: string;
+    status: string;
+    confirmedAt: string | null;
+  } | null;
+  confirmedEntriesThisMonth: number;
+  activatedReferrals: number;
+  combinedEntriesThisMonth: number;
+  referralCode: string;
+  referralLink: string;
+  currentStanding: {
+    memberId: string;
+    displayName: string;
+    regularEntries: number;
+    referralEntries: number;
+    totalEntries: number;
+    rank: number;
+  } | null;
+  leaderboardPreview: Array<{
+    memberId: string;
+    displayName: string;
+    regularEntries: number;
+    referralEntries: number;
+    totalEntries: number;
+    rank: number;
+  }>;
+  winners: Array<{
+    id: string;
+    prizeTier: "grand_prize" | "tier1_match" | "tier2_match";
+    memberId: string;
+    displayName: string;
+    selectionMethod: "draw" | "manual_override";
+    emailSentAt: string | null;
+  }>;
+}
+
 const MONTH_NAMES = [
   "January", "February", "March", "April", "May", "June",
   "July", "August", "September", "October", "November", "December"
@@ -65,6 +114,7 @@ function MemberDashboardContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const grcId = searchParams.get("grc");
+  const sweepstakesStatus = searchParams.get("sweepstakes");
 
   const { user, userName, isLoading: loading, isAuthenticated } = useUser();
 
@@ -84,6 +134,11 @@ function MemberDashboardContent() {
   // Dashboard data
   const [activeGrc, setActiveGrc] = useState<ActiveGRC | null>(null);
   const [pendingGrcCount, setPendingGrcCount] = useState(0);
+  const [sweepstakesData, setSweepstakesData] = useState<SweepstakesDashboardData | null>(null);
+  const [copiedReferralLink, setCopiedReferralLink] = useState(false);
+  const [isSweepstakesEntrySubmitting, setIsSweepstakesEntrySubmitting] = useState(false);
+  const [sweepstakesActionMessage, setSweepstakesActionMessage] = useState<string | null>(null);
+  const [sweepstakesActionError, setSweepstakesActionError] = useState<string | null>(null);
 
   // Completed GRC banner
   const [completedGrcMerchant, setCompletedGrcMerchant] = useState<string | null>(null);
@@ -142,9 +197,10 @@ function MemberDashboardContent() {
 
     async function fetchDashboardData() {
       try {
-        const [grcsRes, statsRes] = await Promise.all([
+        const [grcsRes, statsRes, sweepstakesRes] = await Promise.all([
           fetch("/api/member/grcs"),
           fetch("/api/member/dashboard"),
+          fetch("/api/member/sweepstakes"),
         ]);
 
         if (grcsRes.ok) {
@@ -162,6 +218,11 @@ function MemberDashboardContent() {
         if (statsRes.ok) {
           const stats = await statsRes.json();
           setDashboardStats(stats);
+        }
+
+        if (sweepstakesRes.ok) {
+          const sweepstakes = await sweepstakesRes.json();
+          setSweepstakesData(sweepstakes);
         }
       } catch (err) {
         console.error("Failed to fetch dashboard data:", err);
@@ -269,6 +330,53 @@ function MemberDashboardContent() {
 
   const handleCancelOnboarding = () => {
     router.push("/member");
+  };
+
+  const handleCopyReferralLink = async () => {
+    if (!sweepstakesData?.referralLink) return;
+
+    try {
+      await navigator.clipboard.writeText(sweepstakesData.referralLink);
+      setCopiedReferralLink(true);
+      window.setTimeout(() => setCopiedReferralLink(false), 2000);
+    } catch (error) {
+      console.error("Failed to copy referral link:", error);
+    }
+  };
+
+  const handleEnterSweepstakesToday = async () => {
+    setIsSweepstakesEntrySubmitting(true);
+    setSweepstakesActionMessage(null);
+    setSweepstakesActionError(null);
+
+    try {
+      const response = await fetch("/api/member/sweepstakes/enter", {
+        method: "POST",
+      });
+      const data = await response.json();
+
+      if (!response.ok) {
+        setSweepstakesActionError(
+          data.error || "We couldn't confirm today's sweepstakes entry."
+        );
+        return;
+      }
+
+      setSweepstakesActionMessage(
+        data.message || "Today's Favorite Merchant Sweepstakes entry is confirmed."
+      );
+
+      const summaryResponse = await fetch("/api/member/sweepstakes");
+      if (summaryResponse.ok) {
+        const summary = await summaryResponse.json();
+        setSweepstakesData(summary);
+      }
+    } catch (error) {
+      console.error("Failed to confirm dashboard sweepstakes entry:", error);
+      setSweepstakesActionError("We couldn't confirm today's sweepstakes entry.");
+    } finally {
+      setIsSweepstakesEntrySubmitting(false);
+    }
   };
 
   // Show GRC onboarding flow if grcId is present
@@ -471,6 +579,207 @@ function MemberDashboardContent() {
           >
             Activate Next GRC
           </a>
+        </div>
+      )}
+
+      {sweepstakesStatus === "entry-confirmed" && (
+        <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-6">
+          <p className="font-semibold text-amber-900">
+            Today's Favorite Merchant Sweepstakes entry is confirmed.
+          </p>
+          <p className="text-sm text-amber-800 mt-1">
+            Share your referral link and keep building your matching-prize chain.
+          </p>
+        </div>
+      )}
+
+      {sweepstakesData && (
+        <div className="bg-card rounded-xl border border-border p-6 mb-6">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+            <div>
+              <h2 className="text-lg font-semibold">Favorite Merchant Sweepstakes</h2>
+              <p className="text-sm text-muted-foreground mt-1">
+                {sweepstakesData.cycle.name} - {sweepstakesData.cycle.grandPrizeLabel}
+              </p>
+            </div>
+            {sweepstakesData.todayEntry?.status === "confirmed" ? (
+              <span className="inline-flex items-center rounded-full bg-green-50 px-3 py-1 text-sm font-medium text-green-700">
+                Today's entry confirmed
+              </span>
+            ) : (
+              <Button
+                type="button"
+                onClick={handleEnterSweepstakesToday}
+                disabled={isSweepstakesEntrySubmitting}
+              >
+                {isSweepstakesEntrySubmitting ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Confirming...
+                  </>
+                ) : (
+                  "Enter Today's Sweepstakes"
+                )}
+              </Button>
+            )}
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mt-6">
+            <StatCard
+              label="Today's Entry"
+              value={
+                sweepstakesData.todayEntry?.status === "confirmed"
+                  ? "Confirmed"
+                  : sweepstakesData.todayEntry?.status === "pending"
+                    ? "Pending"
+                    : "Ready"
+              }
+              icon={Ticket}
+            />
+            <StatCard
+              label="Entries This Month"
+              value={sweepstakesData.confirmedEntriesThisMonth}
+              icon={Gift}
+            />
+            <StatCard
+              label="Activated Referrals"
+              value={sweepstakesData.activatedReferrals}
+              icon={Users}
+            />
+            <StatCard
+              label="Combined Entries"
+              value={sweepstakesData.combinedEntriesThisMonth}
+              icon={Ticket}
+            />
+          </div>
+
+          <div className="rounded-xl border border-border bg-muted/30 p-4 mt-6">
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+              <div className="min-w-0">
+                <p className="text-sm font-medium">Your referral link</p>
+                <p className="text-sm text-muted-foreground mt-1 break-all">
+                  {sweepstakesData.referralLink}
+                </p>
+              </div>
+              <Button
+                type="button"
+                variant="outline"
+                className="shrink-0"
+                onClick={handleCopyReferralLink}
+              >
+                <Copy className="w-4 h-4 mr-2" />
+                {copiedReferralLink ? "Copied" : "Copy Link"}
+              </Button>
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-3 mt-4 lg:flex-row lg:items-center lg:justify-between">
+            <p className="text-sm text-muted-foreground">
+              Next step: nominate your favorite merchant, then share your link so referrals can activate under your name.
+            </p>
+            <a
+              href="/member/sweepstakes/testimonials/new"
+              className="inline-flex items-center justify-center rounded-md border px-4 py-2 text-sm font-medium hover:bg-muted transition-colors"
+            >
+              Nominate a Favorite Merchant
+            </a>
+          </div>
+          {sweepstakesActionMessage && (
+            <p className="text-sm text-green-700 mt-3">{sweepstakesActionMessage}</p>
+          )}
+          {sweepstakesActionError && (
+            <p className="text-sm text-red-700 mt-3">{sweepstakesActionError}</p>
+          )}
+
+          {sweepstakesData.winners.length > 0 && (
+            <div className="rounded-xl border border-border bg-muted/20 p-4 mt-6">
+              <p className="text-sm font-medium">Current recorded winners</p>
+              <div className="grid gap-3 md:grid-cols-3 mt-4">
+                {sweepstakesData.winners.map((winner) => (
+                  <div key={winner.id} className="rounded-lg border bg-background p-3">
+                    <p className="text-xs uppercase tracking-[0.15em] text-muted-foreground">
+                      {winner.prizeTier === "grand_prize"
+                        ? "Grand Prize"
+                        : winner.prizeTier === "tier1_match"
+                          ? "Tier 1 Match"
+                          : "Tier 2 Match"}
+                    </p>
+                    <p className="font-medium mt-2">{winner.displayName}</p>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      {winner.selectionMethod === "manual_override" ? "Manual override" : "Random draw"}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {sweepstakesData.currentStanding && (
+            <div className="rounded-xl border border-border bg-muted/20 p-4 mt-6">
+              <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                <div>
+                  <p className="text-sm font-medium">Your leaderboard standing</p>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Rank #{sweepstakesData.currentStanding.rank} this cycle
+                  </p>
+                </div>
+                <div className="grid grid-cols-3 gap-3 text-sm">
+                  <div className="rounded-lg bg-background border px-3 py-2 text-center">
+                    <p className="text-muted-foreground">Regular</p>
+                    <p className="font-semibold mt-1">{sweepstakesData.currentStanding.regularEntries}</p>
+                  </div>
+                  <div className="rounded-lg bg-background border px-3 py-2 text-center">
+                    <p className="text-muted-foreground">Referral</p>
+                    <p className="font-semibold mt-1">{sweepstakesData.currentStanding.referralEntries}</p>
+                  </div>
+                  <div className="rounded-lg bg-background border px-3 py-2 text-center">
+                    <p className="text-muted-foreground">Total</p>
+                    <p className="font-semibold mt-1">{sweepstakesData.currentStanding.totalEntries}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {sweepstakesData.leaderboardPreview.length > 0 && (
+            <div className="rounded-xl border border-border bg-muted/20 p-4 mt-6">
+              <p className="text-sm font-medium">Leaderboard</p>
+              <p className="text-sm text-muted-foreground mt-1">
+                Regular entries and activated referral entries both count toward your odds.
+              </p>
+
+              <div className="overflow-x-auto mt-4">
+                <table className="w-full text-sm">
+                  <thead className="text-muted-foreground">
+                    <tr className="border-b">
+                      <th className="text-left py-2 pr-3">Rank</th>
+                      <th className="text-left py-2 pr-3">Member</th>
+                      <th className="text-right py-2 pr-3">Regular</th>
+                      <th className="text-right py-2 pr-3">Referral</th>
+                      <th className="text-right py-2">Total</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {sweepstakesData.leaderboardPreview.map((row) => (
+                      <tr
+                        key={row.memberId}
+                        className={cn(
+                          "border-b last:border-0",
+                          sweepstakesData.currentStanding?.memberId === row.memberId && "bg-amber-50"
+                        )}
+                      >
+                        <td className="py-3 pr-3 font-medium">#{row.rank}</td>
+                        <td className="py-3 pr-3">{row.displayName}</td>
+                        <td className="py-3 pr-3 text-right">{row.regularEntries}</td>
+                        <td className="py-3 pr-3 text-right">{row.referralEntries}</td>
+                        <td className="py-3 text-right font-medium">{row.totalEntries}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
         </div>
       )}
 

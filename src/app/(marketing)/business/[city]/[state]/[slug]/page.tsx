@@ -1,8 +1,17 @@
 import { notFound } from "next/navigation";
 import { Metadata } from "next";
 import { db } from "@/db";
-import { merchants, categories, reviews, reviewPhotos } from "@/db/schema";
-import { eq, desc, inArray } from "drizzle-orm";
+import {
+  merchants,
+  categories,
+  reviews,
+  reviewPhotos,
+  favoriteMerchantTestimonials,
+  favoriteMerchantTestimonialPhotos,
+  members,
+  users,
+} from "@/db/schema";
+import { and, eq, desc, inArray } from "drizzle-orm";
 import { ArtDecoDesign } from "@/components/merchant-page/designs/art-deco";
 
 // Cache pages, auto-revalidate every hour as fallback
@@ -93,6 +102,57 @@ async function getMerchantReviews(merchantId: string) {
   }));
 }
 
+async function getFavoriteMerchantNominations(merchantId: string) {
+  const approvedNominations = await db
+    .select({
+      id: favoriteMerchantTestimonials.id,
+      content: favoriteMerchantTestimonials.content,
+      createdAt: favoriteMerchantTestimonials.createdAt,
+      memberFirstName: users.firstName,
+      memberLastName: users.lastName,
+      memberPhotoUrl: users.profilePhotoUrl,
+    })
+    .from(favoriteMerchantTestimonials)
+    .innerJoin(members, eq(favoriteMerchantTestimonials.memberId, members.id))
+    .innerJoin(users, eq(members.userId, users.id))
+    .where(
+      and(
+        eq(favoriteMerchantTestimonials.merchantId, merchantId),
+        eq(favoriteMerchantTestimonials.status, "approved")
+      )
+    )
+    .orderBy(desc(favoriteMerchantTestimonials.createdAt));
+
+  const nominationIds = approvedNominations.map((nomination) => nomination.id);
+
+  const photos =
+    nominationIds.length > 0
+      ? await db
+          .select({
+            testimonialId: favoriteMerchantTestimonialPhotos.testimonialId,
+            url: favoriteMerchantTestimonialPhotos.url,
+            displayOrder: favoriteMerchantTestimonialPhotos.displayOrder,
+          })
+          .from(favoriteMerchantTestimonialPhotos)
+          .where(inArray(favoriteMerchantTestimonialPhotos.testimonialId, nominationIds))
+      : [];
+
+  const photosByNomination = new Map<string, { url: string; displayOrder: number }[]>();
+  for (const photo of photos) {
+    if (!photosByNomination.has(photo.testimonialId)) {
+      photosByNomination.set(photo.testimonialId, []);
+    }
+    photosByNomination.get(photo.testimonialId)?.push(photo);
+  }
+
+  return approvedNominations.map((nomination) => ({
+    ...nomination,
+    photos: (photosByNomination.get(nomination.id) || [])
+      .sort((a, b) => (a.displayOrder || 0) - (b.displayOrder || 0))
+      .map((photo) => photo.url),
+  }));
+}
+
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
   const merchant = await getMerchantBySlug(slug);
@@ -127,7 +187,10 @@ export default async function MerchantPage({ params }: PageProps) {
     notFound();
   }
 
-  const merchantReviews = await getMerchantReviews(merchant.id);
+  const [merchantReviews, merchantNominations] = await Promise.all([
+    getMerchantReviews(merchant.id),
+    getFavoriteMerchantNominations(merchant.id),
+  ]);
 
   return (
     <ArtDecoDesign
@@ -152,6 +215,7 @@ export default async function MerchantPage({ params }: PageProps) {
       services={merchant.services}
       aboutStory={merchant.aboutStory}
       reviews={merchantReviews}
+      favoriteMerchantTestimonials={merchantNominations}
     />
   );
 }

@@ -9,6 +9,7 @@ import {
   varchar,
   decimal,
   pgEnum,
+  index,
   uniqueIndex,
 } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
@@ -16,6 +17,10 @@ import { relations } from "drizzle-orm";
 // Enums
 export const userRoleEnum = pgEnum("user_role", ["member", "merchant", "admin"]);
 export const grcStatusEnum = pgEnum("grc_status", ["pending", "active", "completed", "expired"]);
+export const grcSourceTypeEnum = pgEnum("grc_source_type", [
+  "merchant_issue",
+  "favorite_merchant_testimonial",
+]);
 export const receiptStatusEnum = pgEnum("receipt_status", ["pending", "approved", "rejected"]);
 export const qualificationStatusEnum = pgEnum("qualification_status", [
   "in_progress",
@@ -26,6 +31,41 @@ export const qualificationStatusEnum = pgEnum("qualification_status", [
 ]);
 export const paymentMethodEnum = pgEnum("payment_method", ["bank_account", "zelle", "business_check"]);
 export const paymentStatusEnum = pgEnum("payment_status", ["pending", "confirmed", "failed"]);
+export const sweepstakesCycleStatusEnum = pgEnum("sweepstakes_cycle_status", [
+  "open",
+  "closed",
+  "drawn",
+]);
+export const sweepstakesEntryStatusEnum = pgEnum("sweepstakes_entry_status", [
+  "pending",
+  "confirmed",
+  "void",
+]);
+export const sweepstakesEntrySourceEnum = pgEnum("sweepstakes_entry_source", [
+  "campaign_page",
+  "dashboard",
+]);
+export const sweepstakesWinnerTierEnum = pgEnum("sweepstakes_winner_tier", [
+  "grand_prize",
+  "tier1_match",
+  "tier2_match",
+]);
+export const sweepstakesWinnerStatusEnum = pgEnum("sweepstakes_winner_status", [
+  "active",
+  "superseded",
+]);
+export const sweepstakesWinnerSelectionMethodEnum = pgEnum(
+  "sweepstakes_winner_selection_method",
+  ["draw", "manual_override"]
+);
+export const favoriteMerchantTestimonialStatusEnum = pgEnum(
+  "favorite_merchant_testimonial_status",
+  ["submitted", "changes_requested", "approved", "rejected"]
+);
+export const favoriteMerchantRewardStatusEnum = pgEnum(
+  "favorite_merchant_reward_status",
+  ["not_created", "registration_required", "qualifying", "qualified", "fulfilled", "void"]
+);
 
 // Users table
 export const users = pgTable("users", {
@@ -56,6 +96,177 @@ export const members = pgTable("members", {
   state: varchar("state", { length: 50 }),
   zip: varchar("zip", { length: 20 }),
   homeCity: varchar("home_city", { length: 100 }),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+// Sweepstakes cycles table
+export const sweepstakesCycles = pgTable("sweepstakes_cycles", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  year: integer("year").notNull(),
+  month: integer("month").notNull(), // 1-12 in Arizona time
+  name: varchar("name", { length: 120 }).notNull(),
+  startsAt: timestamp("starts_at").notNull(),
+  endsAt: timestamp("ends_at").notNull(),
+  status: sweepstakesCycleStatusEnum("status").notNull().default("open"),
+  grandPrizeLabel: varchar("grand_prize_label", { length: 255 })
+    .notNull()
+    .default("500 in Gas or Groceries"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => [
+  uniqueIndex("sweepstakes_cycles_year_month_idx").on(table.year, table.month),
+]);
+
+// Sweepstakes referral codes table
+export const sweepstakesReferralCodes = pgTable("sweepstakes_referral_codes", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  memberId: uuid("member_id")
+    .notNull()
+    .references(() => members.id, { onDelete: "cascade" }),
+  code: varchar("code", { length: 32 }).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => [
+  uniqueIndex("sweepstakes_referral_codes_member_idx").on(table.memberId),
+  uniqueIndex("sweepstakes_referral_codes_code_idx").on(table.code),
+]);
+
+// Sweepstakes referral relationships table
+export const memberReferrals = pgTable("member_referrals", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  referrerMemberId: uuid("referrer_member_id")
+    .notNull()
+    .references(() => members.id, { onDelete: "cascade" }),
+  referredMemberId: uuid("referred_member_id")
+    .notNull()
+    .references(() => members.id, { onDelete: "cascade" }),
+  referralCodeUsed: varchar("referral_code_used", { length: 32 }),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => [
+  uniqueIndex("member_referrals_referred_member_idx").on(table.referredMemberId),
+]);
+
+// Sweepstakes entries table
+export const sweepstakesEntries = pgTable("sweepstakes_entries", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  cycleId: uuid("cycle_id")
+    .notNull()
+    .references(() => sweepstakesCycles.id, { onDelete: "cascade" }),
+  userId: uuid("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  memberId: uuid("member_id")
+    .notNull()
+    .references(() => members.id, { onDelete: "cascade" }),
+  entryName: varchar("entry_name", { length: 255 }).notNull(),
+  entryEmail: varchar("entry_email", { length: 255 }).notNull(),
+  entryLocalDate: varchar("entry_local_date", { length: 10 }).notNull(), // YYYY-MM-DD in Arizona time
+  status: sweepstakesEntryStatusEnum("status").notNull().default("pending"),
+  source: sweepstakesEntrySourceEnum("source").notNull().default("campaign_page"),
+  referralCodeUsed: varchar("referral_code_used", { length: 32 }),
+  confirmedAt: timestamp("confirmed_at"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => [
+  uniqueIndex("sweepstakes_entries_user_local_date_idx").on(table.userId, table.entryLocalDate),
+]);
+
+// Sweepstakes referral activations table
+export const sweepstakesReferralActivations = pgTable("sweepstakes_referral_activations", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  cycleId: uuid("cycle_id")
+    .notNull()
+    .references(() => sweepstakesCycles.id, { onDelete: "cascade" }),
+  referrerMemberId: uuid("referrer_member_id")
+    .notNull()
+    .references(() => members.id, { onDelete: "cascade" }),
+  referredMemberId: uuid("referred_member_id")
+    .notNull()
+    .references(() => members.id, { onDelete: "cascade" }),
+  activatingEntryId: uuid("activating_entry_id")
+    .notNull()
+    .references(() => sweepstakesEntries.id, { onDelete: "cascade" }),
+  activatedAt: timestamp("activated_at").defaultNow().notNull(),
+}, (table) => [
+  uniqueIndex("sweepstakes_referral_activations_unique_idx").on(
+    table.cycleId,
+    table.referrerMemberId,
+    table.referredMemberId
+  ),
+]);
+
+// Sweepstakes winners table
+export const sweepstakesWinners = pgTable("sweepstakes_winners", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  cycleId: uuid("cycle_id")
+    .notNull()
+    .references(() => sweepstakesCycles.id, { onDelete: "cascade" }),
+  selectionGroupId: uuid("selection_group_id").notNull(),
+  prizeTier: sweepstakesWinnerTierEnum("prize_tier").notNull(),
+  winnerMemberId: uuid("winner_member_id")
+    .notNull()
+    .references(() => members.id, { onDelete: "cascade" }),
+  grandWinnerMemberId: uuid("grand_winner_member_id").references(() => members.id, {
+    onDelete: "set null",
+  }),
+  selectedByUserId: uuid("selected_by_user_id").references(() => users.id, {
+    onDelete: "set null",
+  }),
+  selectionMethod: sweepstakesWinnerSelectionMethodEnum("selection_method").notNull(),
+  status: sweepstakesWinnerStatusEnum("status").notNull().default("active"),
+  regularEntryCount: integer("regular_entry_count").notNull().default(0),
+  referralEntryCount: integer("referral_entry_count").notNull().default(0),
+  totalEntries: integer("total_entries").notNull().default(0),
+  notes: text("notes"),
+  emailSentAt: timestamp("email_sent_at"),
+  emailSentTo: varchar("email_sent_to", { length: 255 }),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => [
+  index("sweepstakes_winners_cycle_status_idx").on(table.cycleId, table.status),
+  index("sweepstakes_winners_cycle_tier_status_idx").on(table.cycleId, table.prizeTier, table.status),
+  index("sweepstakes_winners_cycle_group_idx").on(table.cycleId, table.selectionGroupId),
+]);
+
+// Favorite merchant testimonials table
+export const favoriteMerchantTestimonials = pgTable("favorite_merchant_testimonials", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  cycleId: uuid("cycle_id")
+    .notNull()
+    .references(() => sweepstakesCycles.id, { onDelete: "cascade" }),
+  memberId: uuid("member_id")
+    .notNull()
+    .references(() => members.id, { onDelete: "cascade" }),
+  merchantId: uuid("merchant_id")
+    .notNull()
+    .references(() => merchants.id, { onDelete: "cascade" }),
+  content: text("content").notNull(),
+  wordCount: integer("word_count").notNull(),
+  status: favoriteMerchantTestimonialStatusEnum("status").notNull().default("submitted"),
+  moderationNotes: text("moderation_notes"),
+  approvedAt: timestamp("approved_at"),
+  approvedBy: uuid("approved_by").references(() => users.id),
+  rewardStatus: favoriteMerchantRewardStatusEnum("reward_status")
+    .notNull()
+    .default("not_created"),
+  rewardReferenceId: uuid("reward_reference_id"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => [
+  index("favorite_merchant_testimonials_member_cycle_merchant_idx").on(
+    table.memberId,
+    table.cycleId,
+    table.merchantId
+  ),
+]);
+
+// Favorite merchant testimonial photos table
+export const favoriteMerchantTestimonialPhotos = pgTable("favorite_merchant_testimonial_photos", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  testimonialId: uuid("testimonial_id")
+    .notNull()
+    .references(() => favoriteMerchantTestimonials.id, { onDelete: "cascade" }),
+  url: text("url").notNull(),
+  displayOrder: integer("display_order").default(0).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
@@ -165,6 +376,8 @@ export const grcs = pgTable("grcs", {
   costPerCert: decimal("cost_per_cert", { precision: 5, scale: 2 }).notNull(),
   groceryStore: varchar("grocery_store", { length: 255 }),
   groceryStorePlaceId: varchar("grocery_store_place_id", { length: 255 }),
+  sourceType: grcSourceTypeEnum("source_type").notNull().default("merchant_issue"),
+  sourceReferenceId: uuid("source_reference_id"),
   recipientEmail: varchar("recipient_email", { length: 255 }),
   recipientName: varchar("recipient_name", { length: 255 }),
   status: grcStatusEnum("status").notNull().default("pending"),
@@ -479,6 +692,7 @@ export const membersRelations = relations(members, ({ one, many }) => ({
   monthlyQualifications: many(monthlyQualifications),
   surveyResponses: many(surveyResponses),
   reviews: many(reviews),
+  favoriteMerchantTestimonials: many(favoriteMerchantTestimonials),
   offerClaims: many(offerClaims),
 }));
 
@@ -510,6 +724,7 @@ export const merchantsRelations = relations(merchants, ({ one, many }) => ({
   grcPurchases: many(grcPurchases),
   surveys: many(surveys),
   reviews: many(reviews),
+  favoriteMerchantTestimonials: many(favoriteMerchantTestimonials),
   marketplaceOffers: many(marketplaceOffers),
 }));
 
@@ -624,5 +839,57 @@ export const reviewPhotosRelations = relations(reviewPhotos, ({ one }) => ({
   review: one(reviews, {
     fields: [reviewPhotos.reviewId],
     references: [reviews.id],
+  }),
+}));
+
+export const favoriteMerchantTestimonialsRelations = relations(
+  favoriteMerchantTestimonials,
+  ({ one, many }) => ({
+    cycle: one(sweepstakesCycles, {
+      fields: [favoriteMerchantTestimonials.cycleId],
+      references: [sweepstakesCycles.id],
+    }),
+    member: one(members, {
+      fields: [favoriteMerchantTestimonials.memberId],
+      references: [members.id],
+    }),
+    merchant: one(merchants, {
+      fields: [favoriteMerchantTestimonials.merchantId],
+      references: [merchants.id],
+    }),
+    approvedByUser: one(users, {
+      fields: [favoriteMerchantTestimonials.approvedBy],
+      references: [users.id],
+    }),
+    photos: many(favoriteMerchantTestimonialPhotos),
+  })
+);
+
+export const favoriteMerchantTestimonialPhotosRelations = relations(
+  favoriteMerchantTestimonialPhotos,
+  ({ one }) => ({
+    testimonial: one(favoriteMerchantTestimonials, {
+      fields: [favoriteMerchantTestimonialPhotos.testimonialId],
+      references: [favoriteMerchantTestimonials.id],
+    }),
+  })
+);
+
+export const sweepstakesWinnersRelations = relations(sweepstakesWinners, ({ one }) => ({
+  cycle: one(sweepstakesCycles, {
+    fields: [sweepstakesWinners.cycleId],
+    references: [sweepstakesCycles.id],
+  }),
+  winnerMember: one(members, {
+    fields: [sweepstakesWinners.winnerMemberId],
+    references: [members.id],
+  }),
+  grandWinnerMember: one(members, {
+    fields: [sweepstakesWinners.grandWinnerMemberId],
+    references: [members.id],
+  }),
+  selectedByUser: one(users, {
+    fields: [sweepstakesWinners.selectedByUserId],
+    references: [users.id],
   }),
 }));

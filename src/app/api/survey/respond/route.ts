@@ -3,6 +3,7 @@ import { db } from "@/db";
 import { surveys, surveyResponses, members, monthlyQualifications } from "@/db/schema";
 import { eq, and } from "drizzle-orm";
 import { getSession } from "@/lib/auth";
+import { syncFavoriteMerchantRewardStatusForGrc } from "@/lib/favorite-merchant";
 import { surveyResponseSchema } from "@/lib/validations/member";
 import { checkAndCompleteGrc } from "@/lib/grc-lifecycle";
 
@@ -133,6 +134,10 @@ export async function POST(request: NextRequest) {
         if (newStatus === "qualified") {
           await checkAndCompleteGrc(member.id, grcId);
         }
+
+        await syncFavoriteMerchantRewardStatusForGrc(grcId).catch((error) => {
+          console.error("Failed to sync favorite merchant reward status after survey response:", error);
+        });
       }
     }
 

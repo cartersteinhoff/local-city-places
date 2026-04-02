@@ -11,6 +11,7 @@ import {
   getMerchantShortUrl,
 } from "@/lib/utils";
 import { calculateCompletion } from "@/lib/merchant-completion";
+import { revalidateMerchantPublicPaths } from "@/lib/merchant-public-revalidation";
 
 export async function GET(request: NextRequest) {
   try {
@@ -231,6 +232,15 @@ export async function POST(request: NextRequest) {
       description,
       vimeoUrl,
       googlePlaceId,
+      logoUrl,
+      hours,
+      instagramUrl,
+      facebookUrl,
+      tiktokUrl,
+      photos,
+      services,
+      aboutStory,
+      featuredOnHomepage,
     } = body;
 
     // Validate required fields
@@ -309,6 +319,15 @@ export async function POST(request: NextRequest) {
         description: description?.trim() || null,
         vimeoUrl: vimeoUrl?.trim() || null,
         googlePlaceId: googlePlaceId || null,
+        logoUrl: logoUrl?.trim() || null,
+        hours: hours || null,
+        instagramUrl: instagramUrl?.trim() || null,
+        facebookUrl: facebookUrl?.trim() || null,
+        tiktokUrl: tiktokUrl?.trim() || null,
+        photos: Array.isArray(photos) ? photos.filter(Boolean) : null,
+        services: Array.isArray(services) ? services : null,
+        aboutStory: aboutStory?.trim() || null,
+        featuredOnHomepage: Boolean(featuredOnHomepage),
         isPublicPage: true,
         verified: false,
       })
@@ -323,6 +342,12 @@ export async function POST(request: NextRequest) {
 
     const fullUrl = getMerchantPageUrl(newMerchant.city!, newMerchant.state!, slug);
     const shortUrl = getMerchantShortUrl(strippedPhone);
+
+    revalidateMerchantPublicPaths({
+      city: newMerchant.city,
+      state: newMerchant.state,
+      slug,
+    });
 
     return NextResponse.json({
       success: true,

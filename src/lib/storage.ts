@@ -301,3 +301,30 @@ export async function uploadEmailImage(
 
   return blob.url;
 }
+
+/**
+ * Upload a favorite merchant testimonial photo to Vercel Blob storage
+ */
+export async function uploadFavoriteMerchantTestimonialPhoto(
+  file: File,
+  memberId: string
+): Promise<string | null> {
+  if (!process.env.BLOB_READ_WRITE_TOKEN) {
+    console.warn("BLOB_READ_WRITE_TOKEN not configured, skipping testimonial photo upload");
+    return null;
+  }
+
+  const buffer = Buffer.from(await file.arrayBuffer());
+  const timestamp = Date.now();
+  const ext = file.name.split(".").pop() || "jpg";
+  const uniqueFileName = `favorite-merchants/${memberId}/${timestamp}-${Math.random()
+    .toString(36)
+    .slice(2)}.${ext}`;
+
+  const blob = await put(uniqueFileName, buffer, {
+    access: "public",
+    contentType: file.type || "image/jpeg",
+  });
+
+  return blob.url;
+}

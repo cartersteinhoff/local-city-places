@@ -845,3 +845,80 @@ Need help? support@localcityplaces.com
 
   return sendEmail({ to: recipientEmail, subject, html, text });
 }
+
+interface SweepstakesPrizeEmailOptions {
+  recipientEmail: string;
+  recipientName: string;
+  cycleName: string;
+  prizeLabel: string;
+  winnerTier: "grand_prize" | "tier1_match" | "tier2_match";
+}
+
+export async function sendSweepstakesPrizeEmail({
+  recipientEmail,
+  recipientName,
+  cycleName,
+  prizeLabel,
+  winnerTier,
+}: SweepstakesPrizeEmailOptions): Promise<boolean> {
+  const subjectMap = {
+    grand_prize: `You won the Favorite Merchant Sweepstakes`,
+    tier1_match: `Your referral won and unlocked a matching prize`,
+    tier2_match: `Your referral chain unlocked a matching prize`,
+  } as const;
+
+  const headlineMap = {
+    grand_prize: "You are the grand-prize winner!",
+    tier1_match: "You won the direct referral matching prize!",
+    tier2_match: "You won the second-tier matching prize!",
+  } as const;
+
+  const bodyMap = {
+    grand_prize: `Your entries for ${cycleName} were selected for the grand prize.`,
+    tier1_match: `Someone you referred was selected as the grand-prize winner for ${cycleName}, so you also won the matching prize.`,
+    tier2_match: `Someone in your referral chain was selected as the grand-prize winner for ${cycleName}, so you also won the second-tier matching prize.`,
+  } as const;
+
+  const dashboardUrl = `${APP_URL}/member`;
+  const subject = subjectMap[winnerTier];
+  const headline = headlineMap[winnerTier];
+  const body = bodyMap[winnerTier];
+
+  const html = `
+    <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
+      <h1 style="color: #ff7a3c;">${headline}</h1>
+      <p>Hi ${recipientName},</p>
+      <p>${body}</p>
+
+      <div style="background: #fff7ed; border: 1px solid #fdba74; border-radius: 12px; padding: 20px; margin: 24px 0;">
+        <p style="margin: 0; color: #9a3412; font-weight: bold; font-size: 18px;">Prize: ${prizeLabel}</p>
+        <p style="margin: 8px 0 0 0; color: #c2410c;">Cycle: ${cycleName}</p>
+      </div>
+
+      <p>We&apos;ll follow up with next steps to confirm and claim your prize.</p>
+
+      <div style="text-align: center; margin: 32px 0;">
+        <a href="${dashboardUrl}" style="display: inline-block; background: linear-gradient(135deg, #ff7a3c, #ff9f1c); color: white; padding: 16px 32px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 16px;">
+          Open Your Dashboard
+        </a>
+      </div>
+
+      <p style="color: #666; font-size: 14px;">If you have questions, reply to this email and our team will help you with the next step.</p>
+    </div>
+  `;
+
+  const text = `${headline}
+
+Hi ${recipientName},
+
+${body}
+
+Prize: ${prizeLabel}
+Cycle: ${cycleName}
+
+We will follow up with next steps to confirm and claim your prize.
+
+Dashboard: ${dashboardUrl}`;
+
+  return sendEmail({ to: recipientEmail, subject, html, text });
+}

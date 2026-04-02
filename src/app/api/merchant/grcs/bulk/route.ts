@@ -89,7 +89,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { recipients } = parsed.data;
+    const recipients = parsed.data.recipients.map((recipient) => ({
+      ...recipient,
+      email: recipient.email.toLowerCase(),
+    }));
 
     // Get current inventory
     const inventory = await getInventory(merchant.id);

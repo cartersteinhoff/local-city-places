@@ -42,7 +42,8 @@ export async function GET() {
       .where(
         and(
           eq(grcs.status, "pending"),
-          isNull(grcs.memberId)
+          isNull(grcs.memberId),
+          eq(grcs.recipientEmail, session.user.email.toLowerCase())
         )
       );
 
