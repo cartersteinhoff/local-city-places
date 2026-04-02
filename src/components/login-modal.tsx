@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import {
   Dialog,
   DialogContent,
@@ -24,15 +24,23 @@ interface LoginModalProps {
   onOpenChange: (open: boolean) => void
   /** URL to redirect to after login. Defaults to current page. */
   callbackUrl?: string
+  /** Optional email to prefill when opening the modal. */
+  defaultEmail?: string
 }
 
 type Status = "idle" | "loading" | "success" | "error"
 
-export function LoginModal({ open, onOpenChange, callbackUrl }: LoginModalProps) {
-  const [email, setEmail] = useState("")
+export function LoginModal({ open, onOpenChange, callbackUrl, defaultEmail }: LoginModalProps) {
+  const [email, setEmail] = useState(defaultEmail ?? "")
   const [status, setStatus] = useState<Status>("idle")
   const [errorMessage, setErrorMessage] = useState("")
   const [devToken, setDevToken] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (open) {
+      setEmail(defaultEmail ?? "")
+    }
+  }, [defaultEmail, open])
 
   // Use provided callbackUrl or default to current page
   const getCallbackUrl = () => {

@@ -16,6 +16,10 @@ import { relations } from "drizzle-orm";
 // Enums
 export const userRoleEnum = pgEnum("user_role", ["member", "merchant", "admin"]);
 export const grcStatusEnum = pgEnum("grc_status", ["pending", "active", "completed", "expired"]);
+export const grcSourceTypeEnum = pgEnum("grc_source_type", [
+  "merchant_issue",
+  "favorite_merchant_testimonial",
+]);
 export const receiptStatusEnum = pgEnum("receipt_status", ["pending", "approved", "rejected"]);
 export const qualificationStatusEnum = pgEnum("qualification_status", [
   "in_progress",
@@ -26,6 +30,20 @@ export const qualificationStatusEnum = pgEnum("qualification_status", [
 ]);
 export const paymentMethodEnum = pgEnum("payment_method", ["bank_account", "zelle", "business_check"]);
 export const paymentStatusEnum = pgEnum("payment_status", ["pending", "confirmed", "failed"]);
+export const sweepstakesCycleStatusEnum = pgEnum("sweepstakes_cycle_status", [
+  "open",
+  "closed",
+  "drawn",
+]);
+export const sweepstakesEntryStatusEnum = pgEnum("sweepstakes_entry_status", [
+  "pending",
+  "confirmed",
+  "void",
+]);
+export const sweepstakesEntrySourceEnum = pgEnum("sweepstakes_entry_source", [
+  "campaign_page",
+  "dashboard",
+]);
 
 // Users table
 export const users = pgTable("users", {
@@ -58,6 +76,101 @@ export const members = pgTable("members", {
   homeCity: varchar("home_city", { length: 100 }),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
+
+// Sweepstakes cycles table
+export const sweepstakesCycles = pgTable("sweepstakes_cycles", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  year: integer("year").notNull(),
+  month: integer("month").notNull(), // 1-12 in Arizona time
+  name: varchar("name", { length: 120 }).notNull(),
+  startsAt: timestamp("starts_at").notNull(),
+  endsAt: timestamp("ends_at").notNull(),
+  status: sweepstakesCycleStatusEnum("status").notNull().default("open"),
+  grandPrizeLabel: varchar("grand_prize_label", { length: 255 })
+    .notNull()
+    .default("500 in Gas or Groceries"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => [
+  uniqueIndex("sweepstakes_cycles_year_month_idx").on(table.year, table.month),
+]);
+
+// Sweepstakes referral codes table
+export const sweepstakesReferralCodes = pgTable("sweepstakes_referral_codes", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  memberId: uuid("member_id")
+    .notNull()
+    .references(() => members.id, { onDelete: "cascade" }),
+  code: varchar("code", { length: 32 }).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => [
+  uniqueIndex("sweepstakes_referral_codes_member_idx").on(table.memberId),
+  uniqueIndex("sweepstakes_referral_codes_code_idx").on(table.code),
+]);
+
+// Sweepstakes referral relationships table
+export const memberReferrals = pgTable("member_referrals", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  referrerMemberId: uuid("referrer_member_id")
+    .notNull()
+    .references(() => members.id, { onDelete: "cascade" }),
+  referredMemberId: uuid("referred_member_id")
+    .notNull()
+    .references(() => members.id, { onDelete: "cascade" }),
+  referralCodeUsed: varchar("referral_code_used", { length: 32 }),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => [
+  uniqueIndex("member_referrals_referred_member_idx").on(table.referredMemberId),
+]);
+
+// Sweepstakes entries table
+export const sweepstakesEntries = pgTable("sweepstakes_entries", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  cycleId: uuid("cycle_id")
+    .notNull()
+    .references(() => sweepstakesCycles.id, { onDelete: "cascade" }),
+  userId: uuid("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  memberId: uuid("member_id")
+    .notNull()
+    .references(() => members.id, { onDelete: "cascade" }),
+  entryName: varchar("entry_name", { length: 255 }).notNull(),
+  entryEmail: varchar("entry_email", { length: 255 }).notNull(),
+  entryLocalDate: varchar("entry_local_date", { length: 10 }).notNull(), // YYYY-MM-DD in Arizona time
+  status: sweepstakesEntryStatusEnum("status").notNull().default("pending"),
+  source: sweepstakesEntrySourceEnum("source").notNull().default("campaign_page"),
+  referralCodeUsed: varchar("referral_code_used", { length: 32 }),
+  confirmedAt: timestamp("confirmed_at"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => [
+  uniqueIndex("sweepstakes_entries_user_local_date_idx").on(table.userId, table.entryLocalDate),
+]);
+
+// Sweepstakes referral activations table
+export const sweepstakesReferralActivations = pgTable("sweepstakes_referral_activations", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  cycleId: uuid("cycle_id")
+    .notNull()
+    .references(() => sweepstakesCycles.id, { onDelete: "cascade" }),
+  referrerMemberId: uuid("referrer_member_id")
+    .notNull()
+    .references(() => members.id, { onDelete: "cascade" }),
+  referredMemberId: uuid("referred_member_id")
+    .notNull()
+    .references(() => members.id, { onDelete: "cascade" }),
+  activatingEntryId: uuid("activating_entry_id")
+    .notNull()
+    .references(() => sweepstakesEntries.id, { onDelete: "cascade" }),
+  activatedAt: timestamp("activated_at").defaultNow().notNull(),
+}, (table) => [
+  uniqueIndex("sweepstakes_referral_activations_unique_idx").on(
+    table.cycleId,
+    table.referrerMemberId,
+    table.referredMemberId
+  ),
+]);
 
 // Review status enum
 export const reviewStatusEnum = pgEnum("review_status", ["pending", "approved", "rejected"]);
@@ -165,6 +278,8 @@ export const grcs = pgTable("grcs", {
   costPerCert: decimal("cost_per_cert", { precision: 5, scale: 2 }).notNull(),
   groceryStore: varchar("grocery_store", { length: 255 }),
   groceryStorePlaceId: varchar("grocery_store_place_id", { length: 255 }),
+  sourceType: grcSourceTypeEnum("source_type").notNull().default("merchant_issue"),
+  sourceReferenceId: uuid("source_reference_id"),
   recipientEmail: varchar("recipient_email", { length: 255 }),
   recipientName: varchar("recipient_name", { length: 255 }),
   status: grcStatusEnum("status").notNull().default("pending"),

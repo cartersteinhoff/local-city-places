@@ -16,12 +16,15 @@ import {
   Receipt,
   CheckCircle,
   Gift,
+  Copy,
   Loader2,
   ArrowLeft,
   ChevronRight,
   Store,
   Calendar,
   ClipboardList,
+  Ticket,
+  Users,
 } from "lucide-react";
 import { memberNavItems } from "./nav";
 import { useUser } from "@/hooks/use-user";
@@ -56,6 +59,26 @@ interface ActiveGRC {
   startYear: number | null;
 }
 
+interface SweepstakesDashboardData {
+  cycle: {
+    id: string;
+    name: string;
+    year: number;
+    month: number;
+    endsAt: string | null;
+    grandPrizeLabel: string;
+  };
+  todayEntry: {
+    id: string;
+    status: string;
+    confirmedAt: string | null;
+  } | null;
+  confirmedEntriesThisMonth: number;
+  activatedReferrals: number;
+  referralCode: string;
+  referralLink: string;
+}
+
 const MONTH_NAMES = [
   "January", "February", "March", "April", "May", "June",
   "July", "August", "September", "October", "November", "December"
@@ -65,6 +88,7 @@ function MemberDashboardContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const grcId = searchParams.get("grc");
+  const sweepstakesStatus = searchParams.get("sweepstakes");
 
   const { user, userName, isLoading: loading, isAuthenticated } = useUser();
 
@@ -84,6 +108,11 @@ function MemberDashboardContent() {
   // Dashboard data
   const [activeGrc, setActiveGrc] = useState<ActiveGRC | null>(null);
   const [pendingGrcCount, setPendingGrcCount] = useState(0);
+  const [sweepstakesData, setSweepstakesData] = useState<SweepstakesDashboardData | null>(null);
+  const [copiedReferralLink, setCopiedReferralLink] = useState(false);
+  const [isSweepstakesEntrySubmitting, setIsSweepstakesEntrySubmitting] = useState(false);
+  const [sweepstakesActionMessage, setSweepstakesActionMessage] = useState<string | null>(null);
+  const [sweepstakesActionError, setSweepstakesActionError] = useState<string | null>(null);
 
   // Completed GRC banner
   const [completedGrcMerchant, setCompletedGrcMerchant] = useState<string | null>(null);
@@ -142,9 +171,10 @@ function MemberDashboardContent() {
 
     async function fetchDashboardData() {
       try {
-        const [grcsRes, statsRes] = await Promise.all([
+        const [grcsRes, statsRes, sweepstakesRes] = await Promise.all([
           fetch("/api/member/grcs"),
           fetch("/api/member/dashboard"),
+          fetch("/api/member/sweepstakes"),
         ]);
 
         if (grcsRes.ok) {
@@ -162,6 +192,11 @@ function MemberDashboardContent() {
         if (statsRes.ok) {
           const stats = await statsRes.json();
           setDashboardStats(stats);
+        }
+
+        if (sweepstakesRes.ok) {
+          const sweepstakes = await sweepstakesRes.json();
+          setSweepstakesData(sweepstakes);
         }
       } catch (err) {
         console.error("Failed to fetch dashboard data:", err);
@@ -269,6 +304,53 @@ function MemberDashboardContent() {
 
   const handleCancelOnboarding = () => {
     router.push("/member");
+  };
+
+  const handleCopyReferralLink = async () => {
+    if (!sweepstakesData?.referralLink) return;
+
+    try {
+      await navigator.clipboard.writeText(sweepstakesData.referralLink);
+      setCopiedReferralLink(true);
+      window.setTimeout(() => setCopiedReferralLink(false), 2000);
+    } catch (error) {
+      console.error("Failed to copy referral link:", error);
+    }
+  };
+
+  const handleEnterSweepstakesToday = async () => {
+    setIsSweepstakesEntrySubmitting(true);
+    setSweepstakesActionMessage(null);
+    setSweepstakesActionError(null);
+
+    try {
+      const response = await fetch("/api/member/sweepstakes/enter", {
+        method: "POST",
+      });
+      const data = await response.json();
+
+      if (!response.ok) {
+        setSweepstakesActionError(
+          data.error || "We couldn't confirm today's sweepstakes entry."
+        );
+        return;
+      }
+
+      setSweepstakesActionMessage(
+        data.message || "Today's Favorite Merchant Sweepstakes entry is confirmed."
+      );
+
+      const summaryResponse = await fetch("/api/member/sweepstakes");
+      if (summaryResponse.ok) {
+        const summary = await summaryResponse.json();
+        setSweepstakesData(summary);
+      }
+    } catch (error) {
+      console.error("Failed to confirm dashboard sweepstakes entry:", error);
+      setSweepstakesActionError("We couldn't confirm today's sweepstakes entry.");
+    } finally {
+      setIsSweepstakesEntrySubmitting(false);
+    }
   };
 
   // Show GRC onboarding flow if grcId is present
@@ -471,6 +553,104 @@ function MemberDashboardContent() {
           >
             Activate Next GRC
           </a>
+        </div>
+      )}
+
+      {sweepstakesStatus === "entry-confirmed" && (
+        <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-6">
+          <p className="font-semibold text-amber-900">
+            Today's Favorite Merchant Sweepstakes entry is confirmed.
+          </p>
+          <p className="text-sm text-amber-800 mt-1">
+            Share your referral link and keep building your matching-prize chain.
+          </p>
+        </div>
+      )}
+
+      {sweepstakesData && (
+        <div className="bg-card rounded-xl border border-border p-6 mb-6">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+            <div>
+              <h2 className="text-lg font-semibold">Favorite Merchant Sweepstakes</h2>
+              <p className="text-sm text-muted-foreground mt-1">
+                {sweepstakesData.cycle.name} • {sweepstakesData.cycle.grandPrizeLabel}
+              </p>
+            </div>
+            {sweepstakesData.todayEntry?.status === "confirmed" ? (
+              <span className="inline-flex items-center rounded-full bg-green-50 px-3 py-1 text-sm font-medium text-green-700">
+                Today's entry confirmed
+              </span>
+            ) : (
+              <Button
+                type="button"
+                onClick={handleEnterSweepstakesToday}
+                disabled={isSweepstakesEntrySubmitting}
+              >
+                {isSweepstakesEntrySubmitting ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Confirming...
+                  </>
+                ) : (
+                  "Enter Today's Sweepstakes"
+                )}
+              </Button>
+            )}
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-6">
+            <StatCard
+              label="Today's Entry"
+              value={
+                sweepstakesData.todayEntry?.status === "confirmed"
+                  ? "Confirmed"
+                  : sweepstakesData.todayEntry?.status === "pending"
+                    ? "Pending"
+                    : "Ready"
+              }
+              icon={Ticket}
+            />
+            <StatCard
+              label="Entries This Month"
+              value={sweepstakesData.confirmedEntriesThisMonth}
+              icon={Gift}
+            />
+            <StatCard
+              label="Activated Referrals"
+              value={sweepstakesData.activatedReferrals}
+              icon={Users}
+            />
+          </div>
+
+          <div className="rounded-xl border border-border bg-muted/30 p-4 mt-6">
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+              <div className="min-w-0">
+                <p className="text-sm font-medium">Your referral link</p>
+                <p className="text-sm text-muted-foreground mt-1 break-all">
+                  {sweepstakesData.referralLink}
+                </p>
+              </div>
+              <Button
+                type="button"
+                variant="outline"
+                className="shrink-0"
+                onClick={handleCopyReferralLink}
+              >
+                <Copy className="w-4 h-4 mr-2" />
+                {copiedReferralLink ? "Copied" : "Copy Link"}
+              </Button>
+            </div>
+          </div>
+
+          <p className="text-sm text-muted-foreground mt-4">
+            Next step: nominate your favorite merchant, then share your link so referrals can activate under your name.
+          </p>
+          {sweepstakesActionMessage && (
+            <p className="text-sm text-green-700 mt-3">{sweepstakesActionMessage}</p>
+          )}
+          {sweepstakesActionError && (
+            <p className="text-sm text-red-700 mt-3">{sweepstakesActionError}</p>
+          )}
         </div>
       )}
 

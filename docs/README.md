@@ -1,4 +1,4 @@
-# Product & Functional Documentation
+# Product And Functional Documentation
 
 This directory contains Product Requirements Documents (PRDs) and Functional Requirements Documents (FRDs) for the Local City Places platform.
 
@@ -12,8 +12,9 @@ This directory contains Product Requirements Documents (PRDs) and Functional Req
 | Feature | PRD | FRD | Status |
 |---------|-----|-----|--------|
 | [GRC System](./features/grc-system/) | [PRD](./features/grc-system/prd.md) | [FRD](./features/grc-system/frd.md) | Implemented |
+| [Favorite Merchant Sweepstakes](./features/favorite-merchant-sweepstakes/) | [Plan](./favorite-merchant-sweepstakes-plan.md) | [FRD](./features/favorite-merchant-sweepstakes/frd.md) | Active |
 
-## When to Create Documentation
+## When To Create Documentation
 
 ### Create a PRD when:
 - Starting a new feature that affects users
@@ -34,32 +35,32 @@ This directory contains Product Requirements Documents (PRDs) and Functional Req
 
 ## Document Lifecycle
 
-```
-1. Draft    → Initial creation, gathering requirements
-2. Review   → Stakeholder feedback incorporated
-3. Approved → Ready for implementation
-4. Active   → Currently being implemented
-5. Complete → Feature shipped, doc serves as reference
+```text
+1. Draft    -> Initial creation, gathering requirements
+2. Review   -> Stakeholder feedback incorporated
+3. Approved -> Ready for implementation
+4. Active   -> Currently being implemented
+5. Complete -> Feature shipped, doc serves as reference
 ```
 
 ## Best Practices
 
-1. **Keep docs updated** - Update the FRD when implementation diverges from spec
-2. **Link to code** - Reference specific file paths and line numbers
-3. **Be specific** - Vague requirements lead to misaligned implementations
-4. **Include examples** - Show sample API requests/responses, UI mockups
-5. **Document decisions** - Capture why choices were made, not just what
+1. **Keep docs updated** - Update the FRD when implementation diverges from spec.
+2. **Link to code** - Reference specific file paths and line numbers.
+3. **Be specific** - Vague requirements lead to misaligned implementations.
+4. **Include examples** - Show sample API requests, responses, and UI expectations.
+5. **Document decisions** - Capture why choices were made, not just what.
 
 ## Directory Structure
 
-```
+```text
 /docs
-├── README.md                 # This file
-├── templates/
-│   ├── prd-template.md       # PRD template
-│   └── frd-template.md       # FRD template
-└── features/
-    └── {feature-name}/
-        ├── prd.md            # Product requirements
-        └── frd.md            # Functional requirements
+|-- README.md                 # This file
+|-- templates/
+|   |-- prd-template.md       # PRD template
+|   `-- frd-template.md       # FRD template
+`-- features/
+    `-- {feature-name}/
+        |-- prd.md            # Product requirements
+        `-- frd.md            # Functional requirements
 ```
