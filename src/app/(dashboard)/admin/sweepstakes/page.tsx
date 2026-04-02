@@ -1,14 +1,5 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import { DashboardLayout } from "@/components/layout";
-import { PageHeader } from "@/components/ui/page-header";
-import { StatCard } from "@/components/ui/stat-card";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import { useUser } from "@/hooks/use-user";
-import { adminNavItems } from "../nav";
 import {
   Crown,
   Gift,
@@ -18,6 +9,15 @@ import {
   Trophy,
   Users,
 } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useCallback, useEffect, useState } from "react";
+import { DashboardLayout } from "@/components/layout";
+import { Button } from "@/components/ui/button";
+import { PageHeader } from "@/components/ui/page-header";
+import { StatCard } from "@/components/ui/stat-card";
+import { Textarea } from "@/components/ui/textarea";
+import { useUser } from "@/hooks/use-user";
+import { adminNavItems } from "../nav";
 
 interface LeaderboardRow {
   memberId: string;
@@ -97,9 +97,12 @@ export default function AdminSweepstakesPage() {
       const params = new URLSearchParams();
       if (cycleId) params.set("cycleId", cycleId);
 
-      const response = await fetch(`/api/admin/sweepstakes?${params.toString()}`);
+      const response = await fetch(
+        `/api/admin/sweepstakes?${params.toString()}`,
+      );
       const json = await response.json();
-      if (!response.ok) throw new Error(json.error || "Failed to fetch sweepstakes data");
+      if (!response.ok)
+        throw new Error(json.error || "Failed to fetch sweepstakes data");
 
       setData(json);
       setSelectedCycleId(json.cycle.id);
@@ -159,8 +162,14 @@ export default function AdminSweepstakesPage() {
                 >
                   Open Merchant Nominations
                 </a>
-                <Button variant="outline" onClick={() => void fetchData(selectedCycleId)} disabled={isLoading}>
-                  <RefreshCw className={`w-4 h-4 mr-2 ${isLoading ? "animate-spin" : ""}`} />
+                <Button
+                  variant="outline"
+                  onClick={() => void fetchData(selectedCycleId)}
+                  disabled={isLoading}
+                >
+                  <RefreshCw
+                    className={`w-4 h-4 mr-2 ${isLoading ? "animate-spin" : ""}`}
+                  />
                   Refresh
                 </Button>
               </>
@@ -168,10 +177,26 @@ export default function AdminSweepstakesPage() {
           />
 
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4 mb-6">
-            <StatCard label="Participants" value={data.stats.participants} icon={Users} />
-            <StatCard label="Regular Entries" value={data.stats.regularEntries} icon={Gift} />
-            <StatCard label="Referral Entries" value={data.stats.referralEntries} icon={Sparkles} />
-            <StatCard label="Total Entries" value={data.stats.totalEntries} icon={Trophy} />
+            <StatCard
+              label="Participants"
+              value={data.stats.participants}
+              icon={Users}
+            />
+            <StatCard
+              label="Regular Entries"
+              value={data.stats.regularEntries}
+              icon={Gift}
+            />
+            <StatCard
+              label="Referral Entries"
+              value={data.stats.referralEntries}
+              icon={Sparkles}
+            />
+            <StatCard
+              label="Total Entries"
+              value={data.stats.totalEntries}
+              icon={Trophy}
+            />
           </div>
 
           <div className="rounded-xl border bg-card p-4 mb-6">
@@ -215,7 +240,11 @@ export default function AdminSweepstakesPage() {
                   </p>
                   <Button
                     onClick={() => void draw()}
-                    disabled={!data.cycle.hasEnded || processing !== null || data.leaderboard.length === 0}
+                    disabled={
+                      !data.cycle.hasEnded ||
+                      processing !== null ||
+                      data.leaderboard.length === 0
+                    }
                   >
                     {processing === "draw" ? (
                       <>
@@ -239,13 +268,18 @@ export default function AdminSweepstakesPage() {
               <h2 className="text-lg font-semibold mb-4">Active winner set</h2>
               <div className="grid gap-4 md:grid-cols-3">
                 {data.winners.map((winner) => (
-                  <div key={winner.id} className="rounded-xl border bg-muted/20 p-4">
+                  <div
+                    key={winner.id}
+                    className="rounded-xl border bg-muted/20 p-4"
+                  >
                     <p className="text-xs uppercase tracking-[0.15em] text-muted-foreground">
                       {prizeTierLabel(winner.prizeTier)}
                     </p>
                     <p className="font-semibold mt-2">{winner.displayName}</p>
                     <p className="text-sm text-muted-foreground mt-1">
-                      {winner.selectionMethod === "manual_override" ? "Manual override" : "Random draw"}
+                      {winner.selectionMethod === "manual_override"
+                        ? "Manual override"
+                        : "Random draw"}
                     </p>
                     <p className="text-sm text-muted-foreground mt-1">
                       {winner.emailSentAt
@@ -262,7 +296,8 @@ export default function AdminSweepstakesPage() {
             <div className="px-4 py-4 border-b">
               <h2 className="text-lg font-semibold">Leaderboard</h2>
               <p className="text-sm text-muted-foreground mt-1">
-                Regular entries, referral entries, and combined totals for the selected cycle.
+                Regular entries, referral entries, and combined totals for the
+                selected cycle.
               </p>
             </div>
 
@@ -281,7 +316,10 @@ export default function AdminSweepstakesPage() {
                 <tbody>
                   {data.leaderboard.length === 0 ? (
                     <tr>
-                      <td colSpan={6} className="px-4 py-10 text-center text-muted-foreground">
+                      <td
+                        colSpan={6}
+                        className="px-4 py-10 text-center text-muted-foreground"
+                      >
                         No leaderboard data yet for this cycle.
                       </td>
                     </tr>
@@ -290,15 +328,23 @@ export default function AdminSweepstakesPage() {
                       <tr key={row.memberId} className="border-t">
                         <td className="px-4 py-3 font-medium">#{row.rank}</td>
                         <td className="px-4 py-3">{row.displayName}</td>
-                        <td className="px-4 py-3 text-right">{row.regularEntries}</td>
-                        <td className="px-4 py-3 text-right">{row.referralEntries}</td>
-                        <td className="px-4 py-3 text-right font-medium">{row.totalEntries}</td>
+                        <td className="px-4 py-3 text-right">
+                          {row.regularEntries}
+                        </td>
+                        <td className="px-4 py-3 text-right">
+                          {row.referralEntries}
+                        </td>
+                        <td className="px-4 py-3 text-right font-medium">
+                          {row.totalEntries}
+                        </td>
                         <td className="px-4 py-3 text-right">
                           <Button
                             size="sm"
                             variant="outline"
                             onClick={() => void draw(row.memberId)}
-                            disabled={!data.cycle.hasEnded || processing !== null}
+                            disabled={
+                              !data.cycle.hasEnded || processing !== null
+                            }
                           >
                             {processing === row.memberId ? (
                               <>

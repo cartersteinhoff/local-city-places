@@ -1,19 +1,30 @@
 "use client";
 
+import {
+  ArrowRight,
+  ImageIcon,
+  Loader2,
+  RefreshCw,
+  Search,
+} from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
-import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useCallback, useEffect, useState } from "react";
 import { DashboardLayout } from "@/components/layout";
-import { PageHeader } from "@/components/ui/page-header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PageHeader } from "@/components/ui/page-header";
 import { Pagination } from "@/components/ui/pagination";
 import { useUser } from "@/hooks/use-user";
-import { adminNavItems } from "../../nav";
 import { cn } from "@/lib/utils";
-import { ArrowRight, ImageIcon, Loader2, RefreshCw, Search } from "lucide-react";
+import { adminNavItems } from "../../nav";
 
-type TestimonialStatus = "submitted" | "changes_requested" | "approved" | "rejected";
+type TestimonialStatus =
+  | "submitted"
+  | "changes_requested"
+  | "approved"
+  | "rejected";
 type PhotoStatus = "pending" | "approved" | "rejected";
 
 interface AdminTestimonial {
@@ -36,7 +47,12 @@ interface AdminTestimonial {
   pendingPhotoCount: number;
   approvedPhotoCount: number;
   rejectedPhotoCount: number;
-  photos: Array<{ id: string; url: string; displayOrder: number; status: PhotoStatus }>;
+  photos: Array<{
+    id: string;
+    url: string;
+    displayOrder: number;
+    status: PhotoStatus;
+  }>;
 }
 
 interface Stats {
@@ -134,9 +150,12 @@ export default function AdminMerchantNominationsPage() {
       if (statusFilter !== "all") params.set("status", statusFilter);
       if (debouncedSearch) params.set("search", debouncedSearch);
 
-      const response = await fetch(`/api/admin/sweepstakes/testimonials?${params.toString()}`);
+      const response = await fetch(
+        `/api/admin/sweepstakes/testimonials?${params.toString()}`,
+      );
       const json = await response.json();
-      if (!response.ok) throw new Error(json.error || "Failed to fetch merchant nominations");
+      if (!response.ok)
+        throw new Error(json.error || "Failed to fetch merchant nominations");
 
       setTestimonials(json.testimonials);
       setStats(json.stats);
@@ -147,7 +166,7 @@ export default function AdminMerchantNominationsPage() {
       setError(
         fetchError instanceof Error
           ? fetchError.message
-          : "We couldn't load the merchant nominations queue."
+          : "We couldn't load the merchant nominations queue.",
       );
     } finally {
       setIsLoading(false);
@@ -184,7 +203,9 @@ export default function AdminMerchantNominationsPage() {
                   onClick={() => void fetchTestimonials()}
                   disabled={isLoading}
                 >
-                  <RefreshCw className={cn("w-4 h-4 mr-2", isLoading && "animate-spin")} />
+                  <RefreshCw
+                    className={cn("w-4 h-4 mr-2", isLoading && "animate-spin")}
+                  />
                   Refresh
                 </Button>
               </>
@@ -193,19 +214,29 @@ export default function AdminMerchantNominationsPage() {
 
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4 mb-6">
             <div className="bg-card border rounded-lg p-3 sm:p-4">
-              <p className="text-xs sm:text-sm text-muted-foreground mb-1">Submitted</p>
+              <p className="text-xs sm:text-sm text-muted-foreground mb-1">
+                Submitted
+              </p>
               <p className="text-lg sm:text-2xl font-bold">{stats.submitted}</p>
             </div>
             <div className="bg-card border rounded-lg p-3 sm:p-4">
-              <p className="text-xs sm:text-sm text-muted-foreground mb-1">Changes Requested</p>
-              <p className="text-lg sm:text-2xl font-bold">{stats.changesRequested}</p>
+              <p className="text-xs sm:text-sm text-muted-foreground mb-1">
+                Changes Requested
+              </p>
+              <p className="text-lg sm:text-2xl font-bold">
+                {stats.changesRequested}
+              </p>
             </div>
             <div className="bg-card border rounded-lg p-3 sm:p-4">
-              <p className="text-xs sm:text-sm text-muted-foreground mb-1">Approved</p>
+              <p className="text-xs sm:text-sm text-muted-foreground mb-1">
+                Approved
+              </p>
               <p className="text-lg sm:text-2xl font-bold">{stats.approved}</p>
             </div>
             <div className="bg-card border rounded-lg p-3 sm:p-4">
-              <p className="text-xs sm:text-sm text-muted-foreground mb-1">Rejected</p>
+              <p className="text-xs sm:text-sm text-muted-foreground mb-1">
+                Rejected
+              </p>
               <p className="text-lg sm:text-2xl font-bold">{stats.rejected}</p>
             </div>
           </div>
@@ -224,7 +255,10 @@ export default function AdminMerchantNominationsPage() {
             {[
               { key: "all", label: `All (${stats.total})` },
               { key: "submitted", label: `Submitted (${stats.submitted})` },
-              { key: "changes_requested", label: `Changes (${stats.changesRequested})` },
+              {
+                key: "changes_requested",
+                label: `Changes (${stats.changesRequested})`,
+              },
               { key: "approved", label: `Approved (${stats.approved})` },
               { key: "rejected", label: `Rejected (${stats.rejected})` },
             ].map((filter) => (
@@ -268,15 +302,20 @@ export default function AdminMerchantNominationsPage() {
               </div>
             ) : (
               testimonials.map((testimonial) => (
-                <div key={testimonial.id} className="rounded-xl border bg-card p-4">
+                <div
+                  key={testimonial.id}
+                  className="rounded-xl border bg-card p-4"
+                >
                   <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
                     <div className="min-w-0">
                       <div className="flex flex-wrap items-center gap-2">
-                        <h3 className="font-semibold">{testimonial.merchantName}</h3>
+                        <h3 className="font-semibold">
+                          {testimonial.merchantName}
+                        </h3>
                         <span
                           className={cn(
                             "rounded-full px-2.5 py-1 text-xs font-medium capitalize",
-                            statusClasses(testimonial.status)
+                            statusClasses(testimonial.status),
                           )}
                         >
                           {testimonial.status.replace("_", " ")}
@@ -284,7 +323,8 @@ export default function AdminMerchantNominationsPage() {
                         <span className="rounded-full bg-muted px-2.5 py-1 text-xs font-medium text-muted-foreground">
                           {readinessLabel(testimonial)}
                         </span>
-                        {testimonial.rewardStatus === "registration_required" && (
+                        {testimonial.rewardStatus ===
+                          "registration_required" && (
                           <span className="rounded-full bg-green-100 px-2.5 py-1 text-xs font-medium text-green-700">
                             $25 created
                           </span>
@@ -292,7 +332,10 @@ export default function AdminMerchantNominationsPage() {
                       </div>
 
                       <p className="text-sm text-muted-foreground mt-2">
-                        {[testimonial.memberFirstName, testimonial.memberLastName]
+                        {[
+                          testimonial.memberFirstName,
+                          testimonial.memberLastName,
+                        ]
                           .filter(Boolean)
                           .join(" ") || "Member"}{" "}
                         | {testimonial.memberEmail}
@@ -316,7 +359,9 @@ export default function AdminMerchantNominationsPage() {
                           {testimonial.rejectedPhotoCount} rejected
                         </span>
                       </div>
-                      <p className="text-sm mt-4 line-clamp-3">{testimonial.content}</p>
+                      <p className="text-sm mt-4 line-clamp-3">
+                        {testimonial.content}
+                      </p>
                       {testimonial.moderationNotes && (
                         <p className="text-sm text-muted-foreground mt-3">
                           Notes: {testimonial.moderationNotes}
@@ -328,16 +373,22 @@ export default function AdminMerchantNominationsPage() {
                       {testimonial.photos.length > 0 && (
                         <div className="grid grid-cols-3 gap-2 min-h-[80px]">
                           {testimonial.photos.slice(0, 3).map((photo) => (
-                            <div key={photo.id} className="relative overflow-hidden rounded-lg border">
-                              <img
+                            <div
+                              key={photo.id}
+                              className="relative overflow-hidden rounded-lg border"
+                            >
+                              <Image
                                 src={photo.url}
                                 alt={testimonial.merchantName}
+                                width={320}
+                                height={160}
+                                unoptimized
                                 className="h-20 w-full object-cover"
                               />
                               <span
                                 className={cn(
                                   "absolute left-2 top-2 rounded-full px-2 py-1 text-[11px] font-medium capitalize",
-                                  photoStatusClasses(photo.status)
+                                  photoStatusClasses(photo.status),
                                 )}
                               >
                                 {photo.status}
