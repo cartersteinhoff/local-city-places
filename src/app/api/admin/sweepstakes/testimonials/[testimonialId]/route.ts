@@ -1,9 +1,5 @@
-import { NextRequest, NextResponse } from "next/server";
 import { and, eq, sql } from "drizzle-orm";
-import { getSession } from "@/lib/auth";
-import { issueFavoriteMerchantReward } from "@/lib/favorite-merchant";
-import { revalidateMerchantPublicPaths } from "@/lib/merchant-public-revalidation";
-import { favoriteMerchantModerationSchema } from "@/lib/validations/sweepstakes";
+import { type NextRequest, NextResponse } from "next/server";
 import {
   db,
   favoriteMerchantTestimonialPhotos,
@@ -12,6 +8,10 @@ import {
   merchants,
   users,
 } from "@/db";
+import { getSession } from "@/lib/auth";
+import { issueFavoriteMerchantReward } from "@/lib/favorite-merchant";
+import { revalidateMerchantPublicPaths } from "@/lib/merchant-public-revalidation";
+import { favoriteMerchantModerationSchema } from "@/lib/validations/sweepstakes";
 
 async function getAdminTestimonialDetail(testimonialId: string) {
   const [testimonial] = await db
@@ -40,7 +40,10 @@ async function getAdminTestimonialDetail(testimonialId: string) {
     .from(favoriteMerchantTestimonials)
     .innerJoin(members, eq(favoriteMerchantTestimonials.memberId, members.id))
     .innerJoin(users, eq(members.userId, users.id))
-    .innerJoin(merchants, eq(favoriteMerchantTestimonials.merchantId, merchants.id))
+    .innerJoin(
+      merchants,
+      eq(favoriteMerchantTestimonials.merchantId, merchants.id),
+    )
     .where(eq(favoriteMerchantTestimonials.id, testimonialId))
     .limit(1);
 
@@ -74,7 +77,9 @@ async function getAdminTestimonialDetail(testimonialId: string) {
     ...testimonial,
     createdAt: testimonial.createdAt.toISOString(),
     updatedAt: testimonial.updatedAt.toISOString(),
-    approvedAt: testimonial.approvedAt ? testimonial.approvedAt.toISOString() : null,
+    approvedAt: testimonial.approvedAt
+      ? testimonial.approvedAt.toISOString()
+      : null,
     photos: photos.map((photo) => ({
       ...photo,
       moderatedAt: photo.moderatedAt ? photo.moderatedAt.toISOString() : null,
@@ -90,7 +95,7 @@ async function getAdminTestimonialDetail(testimonialId: string) {
 
 export async function GET(
   _request: NextRequest,
-  { params }: { params: Promise<{ testimonialId: string }> }
+  { params }: { params: Promise<{ testimonialId: string }> },
 ) {
   try {
     const session = await getSession();
@@ -103,7 +108,10 @@ export async function GET(
     const testimonial = await getAdminTestimonialDetail(testimonialId);
 
     if (!testimonial) {
-      return NextResponse.json({ error: "Testimonial not found" }, { status: 404 });
+      return NextResponse.json(
+        { error: "Testimonial not found" },
+        { status: 404 },
+      );
     }
 
     return NextResponse.json({ testimonial });
@@ -111,14 +119,14 @@ export async function GET(
     console.error("Error fetching favorite merchant testimonial:", error);
     return NextResponse.json(
       { error: "Failed to fetch favorite merchant testimonial" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: Promise<{ testimonialId: string }> }
+  { params }: { params: Promise<{ testimonialId: string }> },
 ) {
   try {
     const session = await getSession();
@@ -134,14 +142,17 @@ export async function PUT(
     if (!parsed.success) {
       return NextResponse.json(
         { error: "Invalid moderation data", details: parsed.error.flatten() },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     const testimonial = await getAdminTestimonialDetail(testimonialId);
 
     if (!testimonial) {
-      return NextResponse.json({ error: "Testimonial not found" }, { status: 404 });
+      return NextResponse.json(
+        { error: "Testimonial not found" },
+        { status: 404 },
+      );
     }
 
     const { action, notes } = parsed.data;
@@ -153,7 +164,7 @@ export async function PUT(
           error:
             "Approved testimonials cannot be moved back to another moderation state because the reward certificate has already been issued.",
         },
-        { status: 409 }
+        { status: 409 },
       );
     }
 
@@ -164,7 +175,7 @@ export async function PUT(
             error:
               "Review every photo before approving this nomination. Each photo needs its own approve or reject decision.",
           },
-          { status: 409 }
+          { status: 409 },
         );
       }
 
@@ -174,11 +185,14 @@ export async function PUT(
             error:
               "Approve at least 2 photos before approving this nomination so the merchant page has an accepted photo set.",
           },
-          { status: 409 }
+          { status: 409 },
         );
       }
 
-      const memberDisplayName = [testimonial.memberFirstName, testimonial.memberLastName]
+      const memberDisplayName = [
+        testimonial.memberFirstName,
+        testimonial.memberLastName,
+      ]
         .filter(Boolean)
         .join(" ")
         .trim();
@@ -238,8 +252,8 @@ export async function PUT(
       .where(
         and(
           eq(favoriteMerchantTestimonials.id, testimonial.id),
-          eq(favoriteMerchantTestimonials.status, testimonial.status)
-        )
+          eq(favoriteMerchantTestimonials.status, testimonial.status),
+        ),
       )
       .returning({
         id: favoriteMerchantTestimonials.id,
@@ -259,7 +273,7 @@ export async function PUT(
     console.error("Error moderating favorite merchant testimonial:", error);
     return NextResponse.json(
       { error: "Failed to moderate favorite merchant testimonial" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

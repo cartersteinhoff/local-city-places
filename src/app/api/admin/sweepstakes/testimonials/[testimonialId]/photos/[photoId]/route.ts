@@ -1,12 +1,12 @@
-import { NextRequest, NextResponse } from "next/server";
 import { and, eq } from "drizzle-orm";
-import { getSession } from "@/lib/auth";
-import { favoriteMerchantPhotoModerationSchema } from "@/lib/validations/sweepstakes";
+import { type NextRequest, NextResponse } from "next/server";
 import {
   db,
   favoriteMerchantTestimonialPhotos,
   favoriteMerchantTestimonials,
 } from "@/db";
+import { getSession } from "@/lib/auth";
+import { favoriteMerchantPhotoModerationSchema } from "@/lib/validations/sweepstakes";
 
 export async function PUT(
   request: NextRequest,
@@ -14,7 +14,7 @@ export async function PUT(
     params,
   }: {
     params: Promise<{ testimonialId: string; photoId: string }>;
-  }
+  },
 ) {
   try {
     const session = await getSession();
@@ -29,8 +29,11 @@ export async function PUT(
 
     if (!parsed.success) {
       return NextResponse.json(
-        { error: "Invalid photo moderation data", details: parsed.error.flatten() },
-        { status: 400 }
+        {
+          error: "Invalid photo moderation data",
+          details: parsed.error.flatten(),
+        },
+        { status: 400 },
       );
     }
 
@@ -44,13 +47,16 @@ export async function PUT(
       .from(favoriteMerchantTestimonialPhotos)
       .innerJoin(
         favoriteMerchantTestimonials,
-        eq(favoriteMerchantTestimonialPhotos.testimonialId, favoriteMerchantTestimonials.id)
+        eq(
+          favoriteMerchantTestimonialPhotos.testimonialId,
+          favoriteMerchantTestimonials.id,
+        ),
       )
       .where(
         and(
           eq(favoriteMerchantTestimonialPhotos.id, photoId),
-          eq(favoriteMerchantTestimonialPhotos.testimonialId, testimonialId)
-        )
+          eq(favoriteMerchantTestimonialPhotos.testimonialId, testimonialId),
+        ),
       )
       .limit(1);
 
@@ -64,7 +70,7 @@ export async function PUT(
           error:
             "This nomination is already approved. Photo decisions are locked once the testimonial has been published.",
         },
-        { status: 409 }
+        { status: 409 },
       );
     }
 
@@ -98,7 +104,7 @@ export async function PUT(
     console.error("Error moderating favorite merchant photo:", error);
     return NextResponse.json(
       { error: "Failed to moderate favorite merchant photo" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

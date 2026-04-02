@@ -65,8 +65,12 @@ export const favoriteMerchantPhotoModerationSchema = z.object({
   action: z.enum(["approve", "reject"]),
 });
 
-export type FavoriteMerchantTestimonialInput = z.infer<typeof favoriteMerchantTestimonialSchema>;
-export type FavoriteMerchantModerationInput = z.infer<typeof favoriteMerchantModerationSchema>;
+export type FavoriteMerchantTestimonialInput = z.infer<
+  typeof favoriteMerchantTestimonialSchema
+>;
+export type FavoriteMerchantModerationInput = z.infer<
+  typeof favoriteMerchantModerationSchema
+>;
 export type FavoriteMerchantPhotoModerationInput = z.infer<
   typeof favoriteMerchantPhotoModerationSchema
 >;

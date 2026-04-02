@@ -1,18 +1,18 @@
+import { and, desc, eq, inArray } from "drizzle-orm";
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { Metadata } from "next";
+import { ArtDecoDesign } from "@/components/merchant-page/designs/art-deco";
 import { db } from "@/db";
 import {
-  merchants,
   categories,
-  reviews,
-  reviewPhotos,
-  favoriteMerchantTestimonials,
   favoriteMerchantTestimonialPhotos,
+  favoriteMerchantTestimonials,
   members,
+  merchants,
+  reviewPhotos,
+  reviews,
   users,
 } from "@/db/schema";
-import { and, eq, desc, inArray } from "drizzle-orm";
-import { ArtDecoDesign } from "@/components/merchant-page/designs/art-deco";
 
 // Cache pages, auto-revalidate every hour as fallback
 // Admin can manually trigger rebuild for instant updates
@@ -88,10 +88,13 @@ async function getMerchantReviews(merchantId: string) {
           .where(inArray(reviewPhotos.reviewId, reviewIds))
       : [];
 
-  const photosByReview = new Map<string, { url: string; displayOrder: number | null }[]>();
+  const photosByReview = new Map<
+    string,
+    { url: string; displayOrder: number | null }[]
+  >();
   for (const p of photos) {
     if (!photosByReview.has(p.reviewId)) photosByReview.set(p.reviewId, []);
-    photosByReview.get(p.reviewId)!.push(p);
+    photosByReview.get(p.reviewId)?.push(p);
   }
 
   return merchantReviews.map((r) => ({
@@ -118,8 +121,8 @@ async function getFavoriteMerchantNominations(merchantId: string) {
     .where(
       and(
         eq(favoriteMerchantTestimonials.merchantId, merchantId),
-        eq(favoriteMerchantTestimonials.status, "approved")
-      )
+        eq(favoriteMerchantTestimonials.status, "approved"),
+      ),
     )
     .orderBy(desc(favoriteMerchantTestimonials.createdAt));
 
@@ -136,7 +139,12 @@ async function getFavoriteMerchantNominations(merchantId: string) {
             moderatedAt: favoriteMerchantTestimonialPhotos.moderatedAt,
           })
           .from(favoriteMerchantTestimonialPhotos)
-          .where(inArray(favoriteMerchantTestimonialPhotos.testimonialId, nominationIds))
+          .where(
+            inArray(
+              favoriteMerchantTestimonialPhotos.testimonialId,
+              nominationIds,
+            ),
+          )
       : [];
 
   const photosByNomination = new Map<
@@ -158,21 +166,25 @@ async function getFavoriteMerchantNominations(merchantId: string) {
   return approvedNominations.map((nomination) => ({
     ...nomination,
     photos: (() => {
-      const nominationPhotos = (photosByNomination.get(nomination.id) || []).sort(
-        (a, b) => (a.displayOrder || 0) - (b.displayOrder || 0)
-      );
+      const nominationPhotos = (
+        photosByNomination.get(nomination.id) || []
+      ).sort((a, b) => (a.displayOrder || 0) - (b.displayOrder || 0));
       const hasReviewedPhotos = nominationPhotos.some(
-        (photo) => photo.status !== "pending" || photo.moderatedAt !== null
+        (photo) => photo.status !== "pending" || photo.moderatedAt !== null,
       );
 
       return nominationPhotos
-        .filter((photo) => (hasReviewedPhotos ? photo.status === "approved" : true))
+        .filter((photo) =>
+          hasReviewedPhotos ? photo.status === "approved" : true,
+        )
         .map((photo) => photo.url);
     })(),
   }));
 }
 
-export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+export async function generateMetadata({
+  params,
+}: PageProps): Promise<Metadata> {
   const { slug } = await params;
   const merchant = await getMerchantBySlug(slug);
 
@@ -189,10 +201,12 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
   return {
     title,
-    description: merchant.description || `Visit ${merchant.businessName} in ${location}`,
+    description:
+      merchant.description || `Visit ${merchant.businessName} in ${location}`,
     openGraph: {
       title,
-      description: merchant.description || `Visit ${merchant.businessName} in ${location}`,
+      description:
+        merchant.description || `Visit ${merchant.businessName} in ${location}`,
       type: "website",
     },
   };

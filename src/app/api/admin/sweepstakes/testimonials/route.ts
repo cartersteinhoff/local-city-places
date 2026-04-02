@@ -1,6 +1,5 @@
-import { NextRequest, NextResponse } from "next/server";
 import { and, desc, eq, ilike, inArray, or, sql } from "drizzle-orm";
-import { getSession } from "@/lib/auth";
+import { type NextRequest, NextResponse } from "next/server";
 import {
   db,
   favoriteMerchantTestimonialPhotos,
@@ -9,6 +8,7 @@ import {
   merchants,
   users,
 } from "@/db";
+import { getSession } from "@/lib/auth";
 
 export async function GET(request: NextRequest) {
   try {
@@ -19,8 +19,11 @@ export async function GET(request: NextRequest) {
     }
 
     const { searchParams } = new URL(request.url);
-    const page = Math.max(1, parseInt(searchParams.get("page") || "1"));
-    const limit = Math.min(100, Math.max(1, parseInt(searchParams.get("limit") || "20")));
+    const page = Math.max(1, parseInt(searchParams.get("page") || "1", 10));
+    const limit = Math.min(
+      100,
+      Math.max(1, parseInt(searchParams.get("limit") || "20", 10)),
+    );
     const offset = (page - 1) * limit;
     const status = searchParams.get("status") || "";
     const search = searchParams.get("search") || "";
@@ -31,8 +34,8 @@ export async function GET(request: NextRequest) {
       conditions.push(
         eq(
           favoriteMerchantTestimonials.status,
-          status as "submitted" | "changes_requested" | "approved" | "rejected"
-        )
+          status as "submitted" | "changes_requested" | "approved" | "rejected",
+        ),
       );
     }
 
@@ -43,8 +46,8 @@ export async function GET(request: NextRequest) {
           ilike(merchants.businessName, `%${search}%`),
           ilike(users.firstName, `%${search}%`),
           ilike(users.lastName, `%${search}%`),
-          ilike(users.email, `%${search}%`)
-        )
+          ilike(users.email, `%${search}%`),
+        ),
       );
     }
 
@@ -56,15 +59,15 @@ export async function GET(request: NextRequest) {
         count: sql<number>`count(*)`.as("photo_count"),
         pendingCount:
           sql<number>`count(*) filter (where ${favoriteMerchantTestimonialPhotos.status} = 'pending')`.as(
-            "pending_count"
+            "pending_count",
           ),
         approvedCount:
           sql<number>`count(*) filter (where ${favoriteMerchantTestimonialPhotos.status} = 'approved')`.as(
-            "approved_count"
+            "approved_count",
           ),
         rejectedCount:
           sql<number>`count(*) filter (where ${favoriteMerchantTestimonialPhotos.status} = 'rejected')`.as(
-            "rejected_count"
+            "rejected_count",
           ),
       })
       .from(favoriteMerchantTestimonialPhotos)
@@ -76,7 +79,10 @@ export async function GET(request: NextRequest) {
       .from(favoriteMerchantTestimonials)
       .innerJoin(members, eq(favoriteMerchantTestimonials.memberId, members.id))
       .innerJoin(users, eq(members.userId, users.id))
-      .innerJoin(merchants, eq(favoriteMerchantTestimonials.merchantId, merchants.id))
+      .innerJoin(
+        merchants,
+        eq(favoriteMerchantTestimonials.merchantId, merchants.id),
+      )
       .where(whereClause);
 
     const totalPages = Math.max(1, Math.ceil(Number(count) / limit));
@@ -106,8 +112,14 @@ export async function GET(request: NextRequest) {
       .from(favoriteMerchantTestimonials)
       .innerJoin(members, eq(favoriteMerchantTestimonials.memberId, members.id))
       .innerJoin(users, eq(members.userId, users.id))
-      .innerJoin(merchants, eq(favoriteMerchantTestimonials.merchantId, merchants.id))
-      .leftJoin(photoCountSq, eq(favoriteMerchantTestimonials.id, photoCountSq.testimonialId))
+      .innerJoin(
+        merchants,
+        eq(favoriteMerchantTestimonials.merchantId, merchants.id),
+      )
+      .leftJoin(
+        photoCountSq,
+        eq(favoriteMerchantTestimonials.id, photoCountSq.testimonialId),
+      )
       .where(whereClause)
       .orderBy(desc(favoriteMerchantTestimonials.createdAt))
       .limit(limit)
@@ -126,10 +138,15 @@ export async function GET(request: NextRequest) {
               status: favoriteMerchantTestimonialPhotos.status,
             })
             .from(favoriteMerchantTestimonialPhotos)
-            .where(inArray(favoriteMerchantTestimonialPhotos.testimonialId, testimonialIds))
+            .where(
+              inArray(
+                favoriteMerchantTestimonialPhotos.testimonialId,
+                testimonialIds,
+              ),
+            )
             .orderBy(
               favoriteMerchantTestimonialPhotos.testimonialId,
-              favoriteMerchantTestimonialPhotos.displayOrder
+              favoriteMerchantTestimonialPhotos.displayOrder,
             )
         : [];
 
@@ -195,7 +212,7 @@ export async function GET(request: NextRequest) {
     console.error("Error fetching favorite merchant testimonials:", error);
     return NextResponse.json(
       { error: "Failed to fetch favorite merchant testimonials" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

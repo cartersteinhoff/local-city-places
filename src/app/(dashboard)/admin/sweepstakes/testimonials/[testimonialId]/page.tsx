@@ -1,15 +1,5 @@
 "use client";
 
-import Link from "next/link";
-import { useCallback, useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
-import { DashboardLayout } from "@/components/layout";
-import { PageHeader } from "@/components/ui/page-header";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import { useUser } from "@/hooks/use-user";
-import { adminNavItems } from "../../../nav";
-import { cn } from "@/lib/utils";
 import {
   ArrowLeft,
   CheckCircle2,
@@ -19,8 +9,23 @@ import {
   RefreshCw,
   XCircle,
 } from "lucide-react";
+import Image from "next/image";
+import Link from "next/link";
+import { useParams, useRouter } from "next/navigation";
+import { useCallback, useEffect, useState } from "react";
+import { DashboardLayout } from "@/components/layout";
+import { Button } from "@/components/ui/button";
+import { PageHeader } from "@/components/ui/page-header";
+import { Textarea } from "@/components/ui/textarea";
+import { useUser } from "@/hooks/use-user";
+import { cn } from "@/lib/utils";
+import { adminNavItems } from "../../../nav";
 
-type TestimonialStatus = "submitted" | "changes_requested" | "approved" | "rejected";
+type TestimonialStatus =
+  | "submitted"
+  | "changes_requested"
+  | "approved"
+  | "rejected";
 type PhotoStatus = "pending" | "approved" | "rejected";
 
 interface PhotoRecord {
@@ -92,7 +97,9 @@ export default function AdminMerchantNominationDetailPage() {
   const router = useRouter();
   const { user, isLoading: authLoading, isAuthenticated } = useUser();
 
-  const [testimonial, setTestimonial] = useState<TestimonialDetail | null>(null);
+  const [testimonial, setTestimonial] = useState<TestimonialDetail | null>(
+    null,
+  );
   const [loading, setLoading] = useState(true);
   const [notes, setNotes] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -111,9 +118,12 @@ export default function AdminMerchantNominationDetailPage() {
     setError(null);
 
     try {
-      const response = await fetch(`/api/admin/sweepstakes/testimonials/${testimonialId}`);
+      const response = await fetch(
+        `/api/admin/sweepstakes/testimonials/${testimonialId}`,
+      );
       const json = await response.json();
-      if (!response.ok) throw new Error(json.error || "Failed to load merchant nomination");
+      if (!response.ok)
+        throw new Error(json.error || "Failed to load merchant nomination");
 
       setTestimonial(json.testimonial);
       setNotes(json.testimonial.moderationNotes || "");
@@ -122,7 +132,7 @@ export default function AdminMerchantNominationDetailPage() {
       setError(
         detailError instanceof Error
           ? detailError.message
-          : "We couldn't load this merchant nomination."
+          : "We couldn't load this merchant nomination.",
       );
     } finally {
       setLoading(false);
@@ -130,7 +140,12 @@ export default function AdminMerchantNominationDetailPage() {
   }, [testimonialId]);
 
   useEffect(() => {
-    if (!authLoading && isAuthenticated && user?.role === "admin" && testimonialId) {
+    if (
+      !authLoading &&
+      isAuthenticated &&
+      user?.role === "admin" &&
+      testimonialId
+    ) {
       void loadDetail();
     }
   }, [authLoading, isAuthenticated, loadDetail, testimonialId, user?.role]);
@@ -147,39 +162,49 @@ export default function AdminMerchantNominationDetailPage() {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ action }),
-        }
+        },
       );
       const json = await response.json();
       if (!response.ok) throw new Error(json.error || "Failed to update photo");
       await loadDetail();
     } catch (photoError) {
       console.error("Failed to moderate nomination photo:", photoError);
-      setError(photoError instanceof Error ? photoError.message : "Failed to update photo.");
+      setError(
+        photoError instanceof Error
+          ? photoError.message
+          : "Failed to update photo.",
+      );
     } finally {
       setProcessingAction(null);
     }
   }
 
-  async function moderateTestimonial(action: "approve" | "reject" | "request_changes") {
+  async function moderateTestimonial(
+    action: "approve" | "reject" | "request_changes",
+  ) {
     if (!testimonial) return;
     setProcessingAction(`testimonial:${action}`);
     setError(null);
 
     try {
-      const response = await fetch(`/api/admin/sweepstakes/testimonials/${testimonial.id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action, notes }),
-      });
+      const response = await fetch(
+        `/api/admin/sweepstakes/testimonials/${testimonial.id}`,
+        {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ action, notes }),
+        },
+      );
       const json = await response.json();
-      if (!response.ok) throw new Error(json.error || "Failed to update nomination");
+      if (!response.ok)
+        throw new Error(json.error || "Failed to update nomination");
       await loadDetail();
     } catch (moderationError) {
       console.error("Failed to moderate nomination:", moderationError);
       setError(
         moderationError instanceof Error
           ? moderationError.message
-          : "Failed to update the nomination."
+          : "Failed to update the nomination.",
       );
     } finally {
       setProcessingAction(null);
@@ -206,8 +231,14 @@ export default function AdminMerchantNominationDetailPage() {
                   <ArrowLeft className="w-4 h-4 mr-2" />
                   Back to Queue
                 </Link>
-                <Button variant="outline" onClick={() => void loadDetail()} disabled={loading}>
-                  <RefreshCw className={cn("w-4 h-4 mr-2", loading && "animate-spin")} />
+                <Button
+                  variant="outline"
+                  onClick={() => void loadDetail()}
+                  disabled={loading}
+                >
+                  <RefreshCw
+                    className={cn("w-4 h-4 mr-2", loading && "animate-spin")}
+                  />
                   Refresh
                 </Button>
               </>
@@ -218,11 +249,13 @@ export default function AdminMerchantNominationDetailPage() {
             <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
               <div>
                 <div className="flex flex-wrap items-center gap-2">
-                  <h2 className="text-2xl font-semibold">{testimonial.merchantName}</h2>
+                  <h2 className="text-2xl font-semibold">
+                    {testimonial.merchantName}
+                  </h2>
                   <span
                     className={cn(
                       "rounded-full px-2.5 py-1 text-xs font-medium capitalize",
-                      testimonialStatusClasses(testimonial.status)
+                      testimonialStatusClasses(testimonial.status),
                     )}
                   >
                     {testimonial.status.replace("_", " ")}
@@ -241,15 +274,17 @@ export default function AdminMerchantNominationDetailPage() {
                 </p>
                 <p className="text-sm text-muted-foreground mt-1">
                   {testimonial.wordCount} words · submitted{" "}
-                  {new Date(testimonial.createdAt).toLocaleDateString()} · updated{" "}
-                  {new Date(testimonial.updatedAt).toLocaleDateString()}
+                  {new Date(testimonial.createdAt).toLocaleDateString()} ·
+                  updated {new Date(testimonial.updatedAt).toLocaleDateString()}
                 </p>
               </div>
 
               <div className="grid grid-cols-2 gap-2 xl:w-[360px]">
                 <div className="rounded-lg border bg-muted/20 p-3">
                   <p className="text-xs text-muted-foreground">Photos</p>
-                  <p className="text-xl font-semibold mt-1">{testimonial.photoStats.total}</p>
+                  <p className="text-xl font-semibold mt-1">
+                    {testimonial.photoStats.total}
+                  </p>
                 </div>
                 <div className="rounded-lg border bg-blue-50 p-3">
                   <p className="text-xs text-blue-700">Pending</p>
@@ -287,7 +322,9 @@ export default function AdminMerchantNominationDetailPage() {
                   <h3 className="text-lg font-semibold">Story</h3>
                 </div>
                 <div className="rounded-xl border bg-muted/20 p-4">
-                  <p className="whitespace-pre-wrap text-sm leading-7">{testimonial.content}</p>
+                  <p className="whitespace-pre-wrap text-sm leading-7">
+                    {testimonial.content}
+                  </p>
                 </div>
               </div>
 
@@ -296,8 +333,9 @@ export default function AdminMerchantNominationDetailPage() {
                   <div>
                     <h3 className="text-lg font-semibold">Photo Review</h3>
                     <p className="text-sm text-muted-foreground mt-1">
-                      Decide each photo first. Final testimonial approval stays locked until every
-                      photo is reviewed and at least 2 photos are approved.
+                      Decide each photo first. Final testimonial approval stays
+                      locked until every photo is reviewed and at least 2 photos
+                      are approved.
                     </p>
                   </div>
                 </div>
@@ -308,17 +346,23 @@ export default function AdminMerchantNominationDetailPage() {
                     const rejectKey = `photo:${photo.id}:reject`;
 
                     return (
-                      <div key={photo.id} className="rounded-xl border overflow-hidden">
+                      <div
+                        key={photo.id}
+                        className="rounded-xl border overflow-hidden"
+                      >
                         <div className="relative">
-                          <img
+                          <Image
                             src={photo.url}
-                            alt={`${testimonial.merchantName} nomination photo`}
+                            alt={`${testimonial.merchantName} nomination`}
+                            width={768}
+                            height={512}
+                            unoptimized
                             className="h-64 w-full object-cover"
                           />
                           <span
                             className={cn(
                               "absolute left-3 top-3 rounded-full px-2.5 py-1 text-xs font-medium capitalize",
-                              photoStatusClasses(photo.status)
+                              photoStatusClasses(photo.status),
                             )}
                           >
                             {photo.status}
@@ -335,11 +379,18 @@ export default function AdminMerchantNominationDetailPage() {
                             <Button
                               type="button"
                               className="flex-1"
-                              variant={photo.status === "approved" ? "default" : "outline"}
-                              disabled={
-                                processingAction !== null || testimonial.status === "approved"
+                              variant={
+                                photo.status === "approved"
+                                  ? "default"
+                                  : "outline"
                               }
-                              onClick={() => void moderatePhoto(photo.id, "approve")}
+                              disabled={
+                                processingAction !== null ||
+                                testimonial.status === "approved"
+                              }
+                              onClick={() =>
+                                void moderatePhoto(photo.id, "approve")
+                              }
                             >
                               {processingAction === approveKey ? (
                                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
@@ -353,9 +404,12 @@ export default function AdminMerchantNominationDetailPage() {
                               className="flex-1"
                               variant="outline"
                               disabled={
-                                processingAction !== null || testimonial.status === "approved"
+                                processingAction !== null ||
+                                testimonial.status === "approved"
                               }
-                              onClick={() => void moderatePhoto(photo.id, "reject")}
+                              onClick={() =>
+                                void moderatePhoto(photo.id, "reject")
+                              }
                             >
                               {processingAction === rejectKey ? (
                                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
@@ -377,8 +431,8 @@ export default function AdminMerchantNominationDetailPage() {
               <div className="rounded-xl border bg-card p-5">
                 <h3 className="text-lg font-semibold">Moderator Notes</h3>
                 <p className="text-sm text-muted-foreground mt-1">
-                  Use this for the story-level decision. If photos were rejected, mention what the
-                  member should replace or reshoot.
+                  Use this for the story-level decision. If photos were
+                  rejected, mention what the member should replace or reshoot.
                 </p>
                 <Textarea
                   value={notes}
@@ -389,11 +443,16 @@ export default function AdminMerchantNominationDetailPage() {
               </div>
 
               <div className="rounded-xl border bg-card p-5">
-                <h3 className="text-lg font-semibold">Final Testimonial Decision</h3>
+                <h3 className="text-lg font-semibold">
+                  Final Testimonial Decision
+                </h3>
                 <div className="rounded-xl border bg-muted/20 p-4 mt-4 text-sm text-muted-foreground">
-                  <p>Approve the nomination only after every photo is reviewed.</p>
+                  <p>
+                    Approve the nomination only after every photo is reviewed.
+                  </p>
                   <p className="mt-2">
-                    This nomination currently has {testimonial.photoStats.approved} approved photo
+                    This nomination currently has{" "}
+                    {testimonial.photoStats.approved} approved photo
                     {testimonial.photoStats.approved === 1 ? "" : "s"} and{" "}
                     {testimonial.photoStats.pending} pending photo
                     {testimonial.photoStats.pending === 1 ? "" : "s"}.
@@ -404,7 +463,10 @@ export default function AdminMerchantNominationDetailPage() {
                   <Button
                     type="button"
                     variant="outline"
-                    disabled={processingAction !== null || testimonial.status === "approved"}
+                    disabled={
+                      processingAction !== null ||
+                      testimonial.status === "approved"
+                    }
                     onClick={() => void moderateTestimonial("request_changes")}
                   >
                     {processingAction === "testimonial:request_changes" ? (
@@ -418,7 +480,10 @@ export default function AdminMerchantNominationDetailPage() {
                     type="button"
                     variant="outline"
                     className="border-red-200 text-red-700 hover:bg-red-50"
-                    disabled={processingAction !== null || testimonial.status === "approved"}
+                    disabled={
+                      processingAction !== null ||
+                      testimonial.status === "approved"
+                    }
                     onClick={() => void moderateTestimonial("reject")}
                   >
                     {processingAction === "testimonial:reject" ? (
