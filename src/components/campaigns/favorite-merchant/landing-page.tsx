@@ -12,11 +12,11 @@ import {
 } from "lucide-react";
 import { Playfair_Display, Space_Grotesk } from "next/font/google";
 import Image from "next/image";
-import Link from "next/link";
 import { useState } from "react";
 import { FeaturedMarquee } from "@/components/featured-marquee";
-import { Footer } from "@/components/footer";
+import { HomeHeader } from "@/components/home-header";
 import { LoginModal } from "@/components/login-modal";
+import { TopMarketsFooter } from "@/components/top-markets";
 import { Button } from "@/components/ui/button";
 import { MerchantSpotlightGrid } from "./merchant-spotlight-grid";
 import { SweepstakesEntryForm } from "./sweepstakes-entry-form";
@@ -44,10 +44,10 @@ const campaignRhythm = [
   },
   {
     step: "02",
-    title: "Confirm by magic link",
-    cue: "Quick confirmation",
+    title: "Create your account",
+    cue: "One-time setup",
     description:
-      "A quick email confirmation locks in today's entry and sends you straight into your member dashboard.",
+      "Your first visit ends with an email link so you can finish account setup and open the member dashboard. After that, daily entries happen from the dashboard.",
     icon: MailCheck,
   },
   {
@@ -94,9 +94,9 @@ const relayScript = [
 
 const nextSteps = [
   {
-    title: "Confirm your entry",
+    title: "Finish account setup",
     description:
-      "Use the magic link in your inbox to lock in today's entry and land in your dashboard.",
+      "On your first visit, use the email link in your inbox to finish account setup and open your dashboard. After that, daily entries happen there.",
     icon: MailCheck,
   },
   {
@@ -148,59 +148,21 @@ export function FavoriteMerchantLandingPage() {
     <div
       className={`min-h-screen bg-[#f5efe7] text-[#1f1510] ${sans.className}`}
     >
-      <header className="sticky top-0 z-30">
-        <div className="border-b border-white/10 bg-[#120b08]/78 text-white backdrop-blur-xl">
-          <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3 sm:px-6 lg:px-8">
-            <Link href="/" aria-label="Back to Local City Places">
-              <Image
-                src="/images/logo-horizontal.png"
-                alt="Local City Places"
-                width={650}
-                height={286}
-                className="h-10 w-auto sm:h-11"
-                priority
-              />
-            </Link>
-
-            <div className="hidden items-center gap-6 text-sm font-medium text-white/74 lg:flex">
-              <a
-                href="#how-it-works"
-                className="transition-colors hover:text-white"
-              >
-                How It Works
-              </a>
-              <a
-                href="#entry-form"
-                className="transition-colors hover:text-white"
-              >
-                Enter Today
-              </a>
-            </div>
-
-            <Button
-              size="sm"
-              className="rounded-full bg-white px-5 font-semibold text-zinc-900 shadow-lg hover:bg-white/90"
-              onClick={() => {
-                setLoginEmail("");
-                setLoginOpen(true);
-              }}
-            >
-              Login
-            </Button>
-          </div>
-        </div>
-
-        <LoginModal
-          open={loginOpen}
-          onOpenChange={setLoginOpen}
-          defaultEmail={loginEmail}
-        />
-      </header>
+      <LoginModal
+        open={loginOpen}
+        onOpenChange={setLoginOpen}
+        defaultEmail={loginEmail}
+      />
 
       <section className="relative overflow-hidden bg-[#1b100b] text-white">
+        <div className="absolute inset-x-0 top-0 h-24 bg-[linear-gradient(180deg,#b66a29_0%,#8f531f_35%,rgba(27,16,11,0)_100%)]" />
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,162,70,0.38),transparent_36%),radial-gradient(circle_at_80%_12%,rgba(118,181,79,0.16),transparent_28%),linear-gradient(180deg,#1b100b_0%,#28160f_48%,#120b08_100%)]" />
         <div className="absolute -left-24 top-20 h-64 w-64 rounded-full bg-[#ff9d4d]/20 blur-3xl animate-drift-soft" />
         <div className="absolute right-0 top-8 h-72 w-72 rounded-full bg-[#76b54f]/14 blur-3xl animate-drift-soft-reverse" />
+
+        <div className="relative z-20">
+          <HomeHeader />
+        </div>
 
         <div className="relative mx-auto max-w-7xl px-4 pb-14 pt-8 sm:px-6 sm:pb-18 lg:px-8 lg:pb-22 lg:pt-10">
           <div className="grid gap-8 lg:grid-cols-[minmax(0,1.08fr)_minmax(24rem,30rem)] lg:items-start">
@@ -226,9 +188,9 @@ export function FavoriteMerchantLandingPage() {
                   </span>
                 </h1>
                 <p className="max-w-2xl text-lg leading-8 text-white/82 sm:text-[1.35rem] sm:leading-9">
-                  Enter once per day, confirm by magic link, and head into your
-                  dashboard to share referrals and champion the local merchant
-                  you want to see win.
+                  First-time entrants finish account setup by email. After that,
+                  use your member dashboard for daily entries, referrals, and
+                  favorite-merchant nominations.
                 </p>
               </div>
 
@@ -248,56 +210,31 @@ export function FavoriteMerchantLandingPage() {
                 ))}
               </div>
 
-              <div className="flex flex-col gap-3 sm:flex-row">
-                <Button
-                  asChild
-                  size="lg"
-                  className="h-12 rounded-full bg-[#ffcf8b] px-7 text-[#1b100b] hover:bg-[#ffd9a7]"
-                >
-                  <a href="#entry-form">
-                    Enter today
-                    <ArrowRight className="h-4 w-4" />
-                  </a>
-                </Button>
-                <Button
-                  asChild
-                  size="lg"
-                  variant="outline"
-                  className="h-12 rounded-full border-white/18 bg-white/6 px-7 text-white hover:bg-white/12"
-                >
-                  <a href="#how-it-works">See how it works</a>
-                </Button>
+              <div className="relative max-w-[25rem] sm:max-w-[28rem]">
+                <div className="absolute inset-x-6 top-6 bottom-4 rounded-full bg-[#ffcf8b]/18 blur-3xl" />
+                <div className="relative overflow-hidden rounded-[1.8rem] border border-white/18 bg-[#0e2c6b]/88 shadow-[0_24px_70px_rgba(0,0,0,0.3)]">
+                  <Image
+                    src="/images/gas-grocery-gift-card.png"
+                    alt="$500 gas and grocery gift card prize"
+                    width={1368}
+                    height={865}
+                    className="h-auto w-full"
+                    priority
+                  />
+                </div>
               </div>
             </div>
 
             <div
-              className="animate-rise-in space-y-4 lg:space-y-0"
+              className="animate-rise-in lg:pl-4"
               style={{ animationDelay: "120ms" }}
             >
-              <div className="relative mx-auto max-w-[25rem] sm:max-w-[30rem] lg:-ml-[4.5rem] lg:mr-[-2.5rem] lg:mb-[-7rem] lg:max-w-[35rem]">
-                <div className="absolute inset-x-8 -top-2 bottom-4 rounded-full bg-[#ffcf8b]/22 blur-3xl" />
-                <div className="relative rotate-[-4deg] lg:rotate-[-6deg]">
-                  <div className="overflow-hidden rounded-[1.8rem] border border-white/18 bg-[#0e2c6b]/88 shadow-[0_26px_80px_rgba(0,0,0,0.34)]">
-                    <Image
-                      src="/images/gas-grocery-gift-card.png"
-                      alt="$500 gas and grocery gift card prize"
-                      width={1368}
-                      height={865}
-                      className="h-auto w-full"
-                      priority
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <div className="relative z-10 lg:-mt-12 lg:pl-10">
-                <SweepstakesEntryForm
-                  onRequireLogin={(email) => {
-                    setLoginEmail(email);
-                    setLoginOpen(true);
-                  }}
-                />
-              </div>
+              <SweepstakesEntryForm
+                onRequireLogin={(email) => {
+                  setLoginEmail(email);
+                  setLoginOpen(true);
+                }}
+              />
             </div>
           </div>
 
@@ -565,7 +502,7 @@ export function FavoriteMerchantLandingPage() {
               <div className="relative space-y-8">
                 <div className="space-y-4">
                   <p className="text-base font-semibold uppercase tracking-[0.22em] text-[#ffcf8b]">
-                    After you confirm
+                    After account setup
                   </p>
                   <h2
                     className={`max-w-2xl text-balance text-4xl leading-tight sm:text-5xl ${display.className}`}
@@ -583,11 +520,11 @@ export function FavoriteMerchantLandingPage() {
                   <div>
                     <MailCheck className="h-5 w-5 text-[#ffcf8b]" />
                     <p className="mt-3 text-sm font-semibold uppercase tracking-[0.18em] text-[#ffcf8b]">
-                      Confirm first
+                      Finish setup once
                     </p>
                     <p className="mt-2 text-base leading-7 text-white/72">
-                      The magic link should take members straight into this next
-                      step without extra friction.
+                      Use the first email link to finish account setup and open
+                      the dashboard. Future daily entries happen there.
                     </p>
                   </div>
                   <div>
@@ -722,7 +659,7 @@ export function FavoriteMerchantLandingPage() {
         </div>
       </section>
 
-      <Footer variant="light" />
+      <TopMarketsFooter />
     </div>
   );
 }

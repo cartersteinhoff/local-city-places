@@ -1,5 +1,6 @@
-import { NextRequest, NextResponse } from "next/server";
 import { and, eq } from "drizzle-orm";
+import { type NextRequest, NextResponse } from "next/server";
+import { db, members, sweepstakesEntries, users } from "@/db";
 import { createMagicLinkToken } from "@/lib/auth";
 import { sendMagicLinkEmail } from "@/lib/email";
 import {
@@ -10,7 +11,6 @@ import {
 } from "@/lib/sweepstakes";
 import { stripPhoneNumber } from "@/lib/utils";
 import { sweepstakesEntrySchema } from "@/lib/validations/sweepstakes";
-import { db, members, sweepstakesEntries, users } from "@/db";
 
 export async function POST(request: NextRequest) {
   try {
@@ -20,7 +20,7 @@ export async function POST(request: NextRequest) {
     if (!result.success) {
       return NextResponse.json(
         { error: "Invalid data", details: result.error.flatten() },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -43,10 +43,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         {
           code: "login_required",
-          error: "This email already has an account. Please log in to continue.",
+          error:
+            "This email already has an account. Please log in and enter from your member dashboard.",
           loginUrl: "/favorite-merchant-sweepstakes",
         },
-        { status: 409 }
+        { status: 409 },
       );
     }
 
@@ -99,8 +100,8 @@ export async function POST(request: NextRequest) {
       .where(
         and(
           eq(sweepstakesEntries.userId, user.id),
-          eq(sweepstakesEntries.entryLocalDate, dateKey)
-        )
+          eq(sweepstakesEntries.entryLocalDate, dateKey),
+        ),
       )
       .limit(1);
 
@@ -129,8 +130,8 @@ export async function POST(request: NextRequest) {
           .where(
             and(
               eq(sweepstakesEntries.userId, user.id),
-              eq(sweepstakesEntries.entryLocalDate, dateKey)
-            )
+              eq(sweepstakesEntries.entryLocalDate, dateKey),
+            ),
           )
           .limit(1);
       }
@@ -147,7 +148,7 @@ export async function POST(request: NextRequest) {
     if (!emailSent) {
       return NextResponse.json(
         { error: "Failed to send confirmation email" },
-        { status: 500 }
+        { status: 500 },
       );
     }
 
@@ -157,14 +158,14 @@ export async function POST(request: NextRequest) {
       success: true,
       alreadyEnteredToday,
       message: alreadyEnteredToday
-        ? "You've already confirmed today's entry. Check your email for your sign-in link."
-        : "Check your email to confirm today's sweepstakes entry.",
+        ? "Today's entry is already confirmed. Check your email for your sign-in link."
+        : "Check your email to finish account setup and confirm today's entry.",
     });
   } catch (error) {
     console.error("Sweepstakes entry error:", error);
     return NextResponse.json(
       { error: "Failed to submit sweepstakes entry" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

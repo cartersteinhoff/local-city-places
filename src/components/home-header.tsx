@@ -14,7 +14,7 @@ export function HomeHeader() {
 
   return (
     <header className="relative z-10">
-      <div className="border-b border-white/10 bg-black/30 backdrop-blur-md">
+      <div className="border-b border-white/10 bg-[#9a5d22]">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6">
           <Link href="/" aria-label="Go to homepage">
             <Image

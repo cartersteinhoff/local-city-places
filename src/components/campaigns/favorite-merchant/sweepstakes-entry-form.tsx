@@ -1,8 +1,14 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import {
+  ArrowRight,
+  Clock3,
+  MailCheck,
+  ShieldCheck,
+  Sparkles,
+} from "lucide-react";
 import { useSearchParams } from "next/navigation";
-import { ArrowRight, Clock3, MailCheck, ShieldCheck, Sparkles } from "lucide-react";
+import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -21,7 +27,12 @@ export function SweepstakesEntryForm({
   const referralCode = searchParams.get("ref") ?? "";
 
   const [status, setStatus] = useState<
-    "idle" | "submitting" | "success" | "already-entered" | "login-required" | "error"
+    | "idle"
+    | "submitting"
+    | "success"
+    | "already-entered"
+    | "login-required"
+    | "error"
   >("idle");
   const [responseMessage, setResponseMessage] = useState("");
   const [formValues, setFormValues] = useState({
@@ -34,29 +45,37 @@ export function SweepstakesEntryForm({
 
   const helperText = useMemo(() => {
     if (status === "success") {
-      return responseMessage || "Check your email to confirm today's sweepstakes entry.";
+      return (
+        responseMessage ||
+        "Check your email to finish account setup and confirm today's sweepstakes entry."
+      );
     }
 
     if (status === "already-entered") {
-      return responseMessage || "You've already confirmed today's entry. Check your email for your sign-in link.";
+      return (
+        responseMessage ||
+        "Today's entry is already confirmed. Check your email for your sign-in link."
+      );
     }
 
     if (status === "login-required") {
       return (
         responseMessage ||
-        "This email already has an account. Log in to continue from your member dashboard."
+        "This email already has an account. Log in and enter from your member dashboard."
       );
     }
 
     if (status === "error") {
-      return responseMessage || "We couldn't submit your entry. Please try again.";
+      return (
+        responseMessage || "We couldn't submit your entry. Please try again."
+      );
     }
 
     if (status === "submitting") {
-      return "Submitting your entry and preparing your confirmation link...";
+      return "Submitting your entry and preparing your account-setup link...";
     }
 
-    return "One confirmed entry per day. Runs monthly and closes at 11:59 PM Arizona time on the last day of the month.";
+    return "First visit? Submit once to create your account. After that, enter daily from your member dashboard. Monthly drawing closes at 11:59 PM Arizona time on the last day of the month.";
   }, [responseMessage, status]);
 
   function handleChange(field: keyof typeof formValues, value: string) {
@@ -87,19 +106,22 @@ export function SweepstakesEntryForm({
           setStatus("login-required");
           setResponseMessage(
             data.error ||
-              "This email already has an account. Log in to continue from your member dashboard."
+              "This email already has an account. Log in and enter from your member dashboard.",
           );
           return;
         }
 
         setStatus("error");
-        setResponseMessage(data.error || "We couldn't submit your entry. Please try again.");
+        setResponseMessage(
+          data.error || "We couldn't submit your entry. Please try again.",
+        );
         return;
       }
 
       setStatus(data.alreadyEnteredToday ? "already-entered" : "success");
       setResponseMessage(
-        data.message || "Check your email to confirm today's sweepstakes entry."
+        data.message ||
+          "Check your email to finish account setup and confirm today's sweepstakes entry.",
       );
     } catch (error) {
       console.error("Failed to submit sweepstakes entry:", error);
@@ -131,7 +153,9 @@ export function SweepstakesEntryForm({
                 Enter today. Bring your people with you.
               </h2>
               <p className="mt-2 max-w-md text-sm leading-6 text-[#6d5443]">
-                Confirm with a magic link, unlock your member dashboard, and start building matching-prize referrals.
+                First-time entrants finish account setup by email. After that,
+                the member dashboard handles daily entries and matching-prize
+                referrals.
               </p>
             </div>
           </div>
@@ -139,7 +163,7 @@ export function SweepstakesEntryForm({
           <div className="min-h-[32px]">
             <span className="inline-flex items-center gap-2 rounded-full border border-[#efcfaa] bg-white/80 px-3 py-1 text-xs font-medium text-[#7a5738]">
               <MailCheck className="h-3.5 w-3.5" />
-              Magic link confirmation
+              First-time email setup
             </span>
           </div>
         </div>
@@ -151,7 +175,9 @@ export function SweepstakesEntryForm({
               <Input
                 id="firstName"
                 value={formValues.firstName}
-                onChange={(event) => handleChange("firstName", event.target.value)}
+                onChange={(event) =>
+                  handleChange("firstName", event.target.value)
+                }
                 placeholder="Carter"
                 required
                 className="h-11 rounded-xl border-[#e7ccb0] bg-white/90"
@@ -162,7 +188,9 @@ export function SweepstakesEntryForm({
               <Input
                 id="lastName"
                 value={formValues.lastName}
-                onChange={(event) => handleChange("lastName", event.target.value)}
+                onChange={(event) =>
+                  handleChange("lastName", event.target.value)
+                }
                 placeholder="Steinhoff"
                 required
                 className="h-11 rounded-xl border-[#e7ccb0] bg-white/90"
@@ -202,7 +230,9 @@ export function SweepstakesEntryForm({
               <Input
                 id="referredBy"
                 value={formValues.referredBy}
-                onChange={(event) => handleChange("referredBy", event.target.value)}
+                onChange={(event) =>
+                  handleChange("referredBy", event.target.value)
+                }
                 placeholder="ABC123"
                 className="h-11 rounded-xl border-[#e7ccb0] bg-white/90"
               />
@@ -231,7 +261,9 @@ export function SweepstakesEntryForm({
               className="h-12 w-full rounded-full bg-[#21130d] text-white hover:bg-[#3b2418]"
               disabled={status === "submitting"}
             >
-              {status === "submitting" ? "Submitting Entry..." : "Enter the Sweepstakes"}
+              {status === "submitting"
+                ? "Submitting Entry..."
+                : "Enter the Sweepstakes"}
               <ArrowRight className="h-4 w-4" />
             </Button>
             {status === "login-required" && (
