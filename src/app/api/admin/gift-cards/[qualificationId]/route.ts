@@ -3,6 +3,7 @@ import { db } from "@/db";
 import { monthlyQualifications } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { getSession } from "@/lib/auth";
+import { syncFavoriteMerchantRewardStatusForGrc } from "@/lib/favorite-merchant";
 
 export async function PATCH(
   request: NextRequest,
@@ -51,6 +52,10 @@ export async function PATCH(
         giftCardTrackingNumber: trackingNumber || null,
       })
       .where(eq(monthlyQualifications.id, qualificationId));
+
+    await syncFavoriteMerchantRewardStatusForGrc(qualification[0].grcId).catch((error) => {
+      console.error("Failed to sync favorite merchant reward status after gift card fulfillment:", error);
+    });
 
     return NextResponse.json({ success: true });
   } catch (error) {

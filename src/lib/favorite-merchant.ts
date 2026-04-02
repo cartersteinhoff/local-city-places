@@ -1,5 +1,11 @@
-import { and, eq } from "drizzle-orm";
-import { db, grcs, merchants } from "@/db";
+import { and, desc, eq } from "drizzle-orm";
+import {
+  db,
+  favoriteMerchantTestimonials,
+  grcs,
+  merchants,
+  monthlyQualifications,
+} from "@/db";
 import { sendGrcIssuedEmail } from "@/lib/email";
 import { slugify } from "@/lib/utils";
 
@@ -112,4 +118,59 @@ export async function issueFavoriteMerchantReward({
     rewardClaimUrl: `${appUrl}/api/grc/${rewardGrcId}/claim`,
     emailSent,
   };
+}
+
+export async function syncFavoriteMerchantRewardStatusForGrc(grcId: string) {
+  const [rewardGrc] = await db
+    .select({
+      id: grcs.id,
+      status: grcs.status,
+      sourceType: grcs.sourceType,
+      sourceReferenceId: grcs.sourceReferenceId,
+    })
+    .from(grcs)
+    .where(eq(grcs.id, grcId))
+    .limit(1);
+
+  if (
+    !rewardGrc ||
+    rewardGrc.sourceType !== "favorite_merchant_testimonial" ||
+    !rewardGrc.sourceReferenceId
+  ) {
+    return null;
+  }
+
+  const [qualification] = await db
+    .select({
+      status: monthlyQualifications.status,
+      rewardSentAt: monthlyQualifications.rewardSentAt,
+    })
+    .from(monthlyQualifications)
+    .where(eq(monthlyQualifications.grcId, rewardGrc.id))
+    .orderBy(desc(monthlyQualifications.year), desc(monthlyQualifications.month))
+    .limit(1);
+
+  let nextRewardStatus: typeof favoriteMerchantTestimonials.$inferInsert.rewardStatus =
+    "registration_required";
+
+  if (rewardGrc.status === "expired") {
+    nextRewardStatus = "void";
+  } else if (qualification?.rewardSentAt) {
+    nextRewardStatus = "fulfilled";
+  } else if (qualification?.status === "qualified") {
+    nextRewardStatus = "qualified";
+  } else if (rewardGrc.status === "active" || rewardGrc.status === "completed") {
+    nextRewardStatus = "qualifying";
+  }
+
+  await db
+    .update(favoriteMerchantTestimonials)
+    .set({
+      rewardStatus: nextRewardStatus,
+      rewardReferenceId: rewardGrc.id,
+      updatedAt: new Date(),
+    })
+    .where(eq(favoriteMerchantTestimonials.id, rewardGrc.sourceReferenceId));
+
+  return nextRewardStatus;
 }

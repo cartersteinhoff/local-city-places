@@ -5,7 +5,9 @@ import {
   buildSweepstakesReferralLink,
   ensureCurrentSweepstakesCycle,
   ensureSweepstakesReferralCode,
+  getActiveSweepstakesWinners,
   getArizonaDateParts,
+  getSweepstakesLeaderboard,
 } from "@/lib/sweepstakes";
 import {
   db,
@@ -72,6 +74,10 @@ export async function GET() {
         )
       );
 
+    const leaderboard = await getSweepstakesLeaderboard(cycle.id);
+    const currentStanding =
+      leaderboard.find((row) => row.memberId === member.id) || null;
+
     return NextResponse.json({
       cycle: {
         id: cycle.id,
@@ -90,8 +96,13 @@ export async function GET() {
         : null,
       confirmedEntriesThisMonth: entryCountResult?.count ?? 0,
       activatedReferrals: activatedReferralsResult?.count ?? 0,
+      combinedEntriesThisMonth:
+        (entryCountResult?.count ?? 0) + (activatedReferralsResult?.count ?? 0),
       referralCode: referralCode.code,
       referralLink: buildSweepstakesReferralLink(referralCode.code),
+      leaderboardPreview: leaderboard.slice(0, 10),
+      currentStanding,
+      winners: await getActiveSweepstakesWinners(cycle.id),
     });
   } catch (error) {
     console.error("Error fetching member sweepstakes data:", error);

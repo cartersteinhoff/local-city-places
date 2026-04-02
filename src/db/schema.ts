@@ -45,6 +45,19 @@ export const sweepstakesEntrySourceEnum = pgEnum("sweepstakes_entry_source", [
   "campaign_page",
   "dashboard",
 ]);
+export const sweepstakesWinnerTierEnum = pgEnum("sweepstakes_winner_tier", [
+  "grand_prize",
+  "tier1_match",
+  "tier2_match",
+]);
+export const sweepstakesWinnerStatusEnum = pgEnum("sweepstakes_winner_status", [
+  "active",
+  "superseded",
+]);
+export const sweepstakesWinnerSelectionMethodEnum = pgEnum(
+  "sweepstakes_winner_selection_method",
+  ["draw", "manual_override"]
+);
 export const favoriteMerchantTestimonialStatusEnum = pgEnum(
   "favorite_merchant_testimonial_status",
   ["submitted", "changes_requested", "approved", "rejected"]
@@ -179,6 +192,39 @@ export const sweepstakesReferralActivations = pgTable("sweepstakes_referral_acti
     table.referrerMemberId,
     table.referredMemberId
   ),
+]);
+
+// Sweepstakes winners table
+export const sweepstakesWinners = pgTable("sweepstakes_winners", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  cycleId: uuid("cycle_id")
+    .notNull()
+    .references(() => sweepstakesCycles.id, { onDelete: "cascade" }),
+  selectionGroupId: uuid("selection_group_id").notNull(),
+  prizeTier: sweepstakesWinnerTierEnum("prize_tier").notNull(),
+  winnerMemberId: uuid("winner_member_id")
+    .notNull()
+    .references(() => members.id, { onDelete: "cascade" }),
+  grandWinnerMemberId: uuid("grand_winner_member_id").references(() => members.id, {
+    onDelete: "set null",
+  }),
+  selectedByUserId: uuid("selected_by_user_id").references(() => users.id, {
+    onDelete: "set null",
+  }),
+  selectionMethod: sweepstakesWinnerSelectionMethodEnum("selection_method").notNull(),
+  status: sweepstakesWinnerStatusEnum("status").notNull().default("active"),
+  regularEntryCount: integer("regular_entry_count").notNull().default(0),
+  referralEntryCount: integer("referral_entry_count").notNull().default(0),
+  totalEntries: integer("total_entries").notNull().default(0),
+  notes: text("notes"),
+  emailSentAt: timestamp("email_sent_at"),
+  emailSentTo: varchar("email_sent_to", { length: 255 }),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => [
+  index("sweepstakes_winners_cycle_status_idx").on(table.cycleId, table.status),
+  index("sweepstakes_winners_cycle_tier_status_idx").on(table.cycleId, table.prizeTier, table.status),
+  index("sweepstakes_winners_cycle_group_idx").on(table.cycleId, table.selectionGroupId),
 ]);
 
 // Favorite merchant testimonials table
@@ -828,3 +874,22 @@ export const favoriteMerchantTestimonialPhotosRelations = relations(
     }),
   })
 );
+
+export const sweepstakesWinnersRelations = relations(sweepstakesWinners, ({ one }) => ({
+  cycle: one(sweepstakesCycles, {
+    fields: [sweepstakesWinners.cycleId],
+    references: [sweepstakesCycles.id],
+  }),
+  winnerMember: one(members, {
+    fields: [sweepstakesWinners.winnerMemberId],
+    references: [members.id],
+  }),
+  grandWinnerMember: one(members, {
+    fields: [sweepstakesWinners.grandWinnerMemberId],
+    references: [members.id],
+  }),
+  selectedByUser: one(users, {
+    fields: [sweepstakesWinners.selectedByUserId],
+    references: [users.id],
+  }),
+}));

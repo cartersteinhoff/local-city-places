@@ -97,6 +97,7 @@ export async function POST(request: NextRequest) {
     }
 
     const { email, recipientName, denomination } = parsed.data;
+    const normalizedEmail = email.toLowerCase();
 
     // Check if denomination is valid
     if (!GRC_PRICING[denomination]) {
@@ -113,7 +114,7 @@ export async function POST(request: NextRequest) {
       .where(
         and(
           eq(grcs.merchantId, merchant.id),
-          eq(grcs.recipientEmail, email),
+          eq(grcs.recipientEmail, normalizedEmail),
           inArray(grcs.status, ["pending", "active"])
         )
       )
@@ -147,7 +148,7 @@ export async function POST(request: NextRequest) {
         merchantId: merchant.id,
         denomination,
         costPerCert,
-        recipientEmail: email,
+        recipientEmail: normalizedEmail,
         recipientName: recipientName || null,
         monthsRemaining: totalMonths,
         status: "pending",
@@ -161,7 +162,7 @@ export async function POST(request: NextRequest) {
 
     // Send email to recipient
     await sendGrcIssuedEmail({
-      recipientEmail: email,
+      recipientEmail: normalizedEmail,
       recipientName: recipientName,
       merchantName: merchant.businessName,
       denomination,
@@ -169,7 +170,7 @@ export async function POST(request: NextRequest) {
       claimUrl,
     });
 
-    console.log(`GRC issued to ${email}: ${claimUrl}`);
+    console.log(`GRC issued to ${normalizedEmail}: ${claimUrl}`);
 
     return NextResponse.json({
       success: true,
@@ -177,7 +178,7 @@ export async function POST(request: NextRequest) {
         id: newGrc.id,
         denomination,
         claimUrl,
-        recipientEmail: email,
+        recipientEmail: normalizedEmail,
         recipientName: recipientName || null,
       },
     });

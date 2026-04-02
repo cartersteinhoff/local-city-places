@@ -11,6 +11,7 @@ import { SurveyStep } from "@/components/registration/steps/survey-step";
 import { ReviewOfferStep } from "@/components/registration/steps/review-offer-step";
 import { StartDateStep } from "@/components/registration/steps/start-date-step";
 import type { GroceryStore, SurveyAnswers, StartDate } from "@/lib/validations/member";
+import { cn } from "@/lib/utils";
 import {
   DollarSign,
   Receipt,
@@ -75,8 +76,33 @@ interface SweepstakesDashboardData {
   } | null;
   confirmedEntriesThisMonth: number;
   activatedReferrals: number;
+  combinedEntriesThisMonth: number;
   referralCode: string;
   referralLink: string;
+  currentStanding: {
+    memberId: string;
+    displayName: string;
+    regularEntries: number;
+    referralEntries: number;
+    totalEntries: number;
+    rank: number;
+  } | null;
+  leaderboardPreview: Array<{
+    memberId: string;
+    displayName: string;
+    regularEntries: number;
+    referralEntries: number;
+    totalEntries: number;
+    rank: number;
+  }>;
+  winners: Array<{
+    id: string;
+    prizeTier: "grand_prize" | "tier1_match" | "tier2_match";
+    memberId: string;
+    displayName: string;
+    selectionMethod: "draw" | "manual_override";
+    emailSentAt: string | null;
+  }>;
 }
 
 const MONTH_NAMES = [
@@ -573,7 +599,7 @@ function MemberDashboardContent() {
             <div>
               <h2 className="text-lg font-semibold">Favorite Merchant Sweepstakes</h2>
               <p className="text-sm text-muted-foreground mt-1">
-                {sweepstakesData.cycle.name} • {sweepstakesData.cycle.grandPrizeLabel}
+                {sweepstakesData.cycle.name} - {sweepstakesData.cycle.grandPrizeLabel}
               </p>
             </div>
             {sweepstakesData.todayEntry?.status === "confirmed" ? (
@@ -598,7 +624,7 @@ function MemberDashboardContent() {
             )}
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mt-6">
             <StatCard
               label="Today's Entry"
               value={
@@ -619,6 +645,11 @@ function MemberDashboardContent() {
               label="Activated Referrals"
               value={sweepstakesData.activatedReferrals}
               icon={Users}
+            />
+            <StatCard
+              label="Combined Entries"
+              value={sweepstakesData.combinedEntriesThisMonth}
+              icon={Ticket}
             />
           </div>
 
@@ -658,6 +689,96 @@ function MemberDashboardContent() {
           )}
           {sweepstakesActionError && (
             <p className="text-sm text-red-700 mt-3">{sweepstakesActionError}</p>
+          )}
+
+          {sweepstakesData.winners.length > 0 && (
+            <div className="rounded-xl border border-border bg-muted/20 p-4 mt-6">
+              <p className="text-sm font-medium">Current recorded winners</p>
+              <div className="grid gap-3 md:grid-cols-3 mt-4">
+                {sweepstakesData.winners.map((winner) => (
+                  <div key={winner.id} className="rounded-lg border bg-background p-3">
+                    <p className="text-xs uppercase tracking-[0.15em] text-muted-foreground">
+                      {winner.prizeTier === "grand_prize"
+                        ? "Grand Prize"
+                        : winner.prizeTier === "tier1_match"
+                          ? "Tier 1 Match"
+                          : "Tier 2 Match"}
+                    </p>
+                    <p className="font-medium mt-2">{winner.displayName}</p>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      {winner.selectionMethod === "manual_override" ? "Manual override" : "Random draw"}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {sweepstakesData.currentStanding && (
+            <div className="rounded-xl border border-border bg-muted/20 p-4 mt-6">
+              <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                <div>
+                  <p className="text-sm font-medium">Your leaderboard standing</p>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Rank #{sweepstakesData.currentStanding.rank} this cycle
+                  </p>
+                </div>
+                <div className="grid grid-cols-3 gap-3 text-sm">
+                  <div className="rounded-lg bg-background border px-3 py-2 text-center">
+                    <p className="text-muted-foreground">Regular</p>
+                    <p className="font-semibold mt-1">{sweepstakesData.currentStanding.regularEntries}</p>
+                  </div>
+                  <div className="rounded-lg bg-background border px-3 py-2 text-center">
+                    <p className="text-muted-foreground">Referral</p>
+                    <p className="font-semibold mt-1">{sweepstakesData.currentStanding.referralEntries}</p>
+                  </div>
+                  <div className="rounded-lg bg-background border px-3 py-2 text-center">
+                    <p className="text-muted-foreground">Total</p>
+                    <p className="font-semibold mt-1">{sweepstakesData.currentStanding.totalEntries}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {sweepstakesData.leaderboardPreview.length > 0 && (
+            <div className="rounded-xl border border-border bg-muted/20 p-4 mt-6">
+              <p className="text-sm font-medium">Leaderboard</p>
+              <p className="text-sm text-muted-foreground mt-1">
+                Regular entries and activated referral entries both count toward your odds.
+              </p>
+
+              <div className="overflow-x-auto mt-4">
+                <table className="w-full text-sm">
+                  <thead className="text-muted-foreground">
+                    <tr className="border-b">
+                      <th className="text-left py-2 pr-3">Rank</th>
+                      <th className="text-left py-2 pr-3">Member</th>
+                      <th className="text-right py-2 pr-3">Regular</th>
+                      <th className="text-right py-2 pr-3">Referral</th>
+                      <th className="text-right py-2">Total</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {sweepstakesData.leaderboardPreview.map((row) => (
+                      <tr
+                        key={row.memberId}
+                        className={cn(
+                          "border-b last:border-0",
+                          sweepstakesData.currentStanding?.memberId === row.memberId && "bg-amber-50"
+                        )}
+                      >
+                        <td className="py-3 pr-3 font-medium">#{row.rank}</td>
+                        <td className="py-3 pr-3">{row.displayName}</td>
+                        <td className="py-3 pr-3 text-right">{row.regularEntries}</td>
+                        <td className="py-3 pr-3 text-right">{row.referralEntries}</td>
+                        <td className="py-3 text-right font-medium">{row.totalEntries}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
           )}
         </div>
       )}

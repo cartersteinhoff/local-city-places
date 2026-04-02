@@ -15,7 +15,7 @@ import {
 
 export const adminNavItems = [
   { label: "Dashboard", href: "/admin", icon: LayoutDashboard },
-  { label: "Sweepstakes", href: "/admin/sweepstakes/testimonials", icon: Sparkles },
+  { label: "Sweepstakes", href: "/admin/sweepstakes", icon: Sparkles },
   { label: "Users", href: "/admin/users", icon: Users },
   { label: "Merchant Pages", href: "/admin/merchants", icon: Store },
   { label: "Reviews", href: "/admin/reviews", icon: MessageSquare },
