@@ -157,7 +157,7 @@ export default function AdminSweepstakesPage() {
             actions={
               <>
                 <a
-                  href="/admin/sweepstakes/testimonials"
+                  href="/admin/merchant-nominations"
                   className="inline-flex items-center justify-center rounded-md border px-4 py-2 text-sm font-medium hover:bg-muted transition-colors"
                 >
                   Open Merchant Nominations

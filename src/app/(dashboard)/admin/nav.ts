@@ -19,7 +19,7 @@ export const adminNavItems = [
   { label: "Sweepstakes", href: "/admin/sweepstakes", icon: Sparkles },
   {
     label: "Merchant Nominations",
-    href: "/admin/sweepstakes/testimonials",
+    href: "/admin/merchant-nominations",
     icon: ImageIcon,
   },
   { label: "Users", href: "/admin/users", icon: Users },
