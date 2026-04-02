@@ -232,32 +232,6 @@ export function FavoriteMerchantLandingPage() {
                 </p>
               </div>
 
-              <div className="relative overflow-hidden rounded-[2rem] border border-[#ffcf8b]/24 bg-[linear-gradient(150deg,rgba(255,255,255,0.14),rgba(255,255,255,0.04))] p-3 shadow-[0_28px_90px_rgba(0,0,0,0.24)]">
-                <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,207,139,0.22),transparent_34%),radial-gradient(circle_at_bottom_left,rgba(118,181,79,0.12),transparent_30%)]" />
-                <div className="relative">
-                  <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
-                    <span className="inline-flex items-center gap-2 rounded-full border border-[#ffcf8b]/24 bg-black/22 px-3 py-1 text-[0.72rem] font-semibold uppercase tracking-[0.22em] text-[#ffcf8b]">
-                      <Gift className="h-3.5 w-3.5" />
-                      Monthly grand prize
-                    </span>
-                    <span className="text-sm font-medium text-white/74">
-                      $500 gas or grocery gift card
-                    </span>
-                  </div>
-
-                  <div className="overflow-hidden rounded-[1.5rem] border border-white/14 bg-[#0e2c6b]/80 shadow-[0_12px_30px_rgba(0,0,0,0.18)]">
-                    <Image
-                      src="/images/gas-grocery-gift-card.png"
-                      alt="$500 gas and grocery gift card prize"
-                      width={1368}
-                      height={865}
-                      className="h-auto w-full"
-                      priority
-                    />
-                  </div>
-                </div>
-              </div>
-
               <div className="grid gap-3 text-base leading-7 text-white/80 sm:grid-cols-3">
                 {heroHighlights.map((item) => (
                   <div
@@ -297,15 +271,33 @@ export function FavoriteMerchantLandingPage() {
             </div>
 
             <div
-              className="animate-rise-in lg:pl-4"
+              className="animate-rise-in space-y-4 lg:space-y-0"
               style={{ animationDelay: "120ms" }}
             >
-              <SweepstakesEntryForm
-                onRequireLogin={(email) => {
-                  setLoginEmail(email);
-                  setLoginOpen(true);
-                }}
-              />
+              <div className="relative mx-auto max-w-[25rem] sm:max-w-[30rem] lg:-ml-[4.5rem] lg:mr-[-2.5rem] lg:mb-[-7rem] lg:max-w-[35rem]">
+                <div className="absolute inset-x-8 -top-2 bottom-4 rounded-full bg-[#ffcf8b]/22 blur-3xl" />
+                <div className="relative rotate-[-4deg] lg:rotate-[-6deg]">
+                  <div className="overflow-hidden rounded-[1.8rem] border border-white/18 bg-[#0e2c6b]/88 shadow-[0_26px_80px_rgba(0,0,0,0.34)]">
+                    <Image
+                      src="/images/gas-grocery-gift-card.png"
+                      alt="$500 gas and grocery gift card prize"
+                      width={1368}
+                      height={865}
+                      className="h-auto w-full"
+                      priority
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="relative z-10 lg:-mt-12 lg:pl-10">
+                <SweepstakesEntryForm
+                  onRequireLogin={(email) => {
+                    setLoginEmail(email);
+                    setLoginOpen(true);
+                  }}
+                />
+              </div>
             </div>
           </div>
 
