@@ -1,35 +1,20 @@
 "use client";
 
+import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { DashboardLayout } from "@/components/layout";
 import { PageHeader } from "@/components/ui/page-header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Pagination } from "@/components/ui/pagination";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import { useUser } from "@/hooks/use-user";
 import { adminNavItems } from "../../nav";
 import { cn } from "@/lib/utils";
-import {
-  CheckCircle2,
-  Clock,
-  Loader2,
-  RefreshCw,
-  Search,
-  Sparkles,
-  XCircle,
-} from "lucide-react";
+import { ArrowRight, ImageIcon, Loader2, RefreshCw, Search } from "lucide-react";
 
 type TestimonialStatus = "submitted" | "changes_requested" | "approved" | "rejected";
+type PhotoStatus = "pending" | "approved" | "rejected";
 
 interface AdminTestimonial {
   id: string;
@@ -48,7 +33,10 @@ interface AdminTestimonial {
   createdAt: string;
   updatedAt: string;
   photoCount: number;
-  photos: Array<{ id: string; url: string; displayOrder: number }>;
+  pendingPhotoCount: number;
+  approvedPhotoCount: number;
+  rejectedPhotoCount: number;
+  photos: Array<{ id: string; url: string; displayOrder: number; status: PhotoStatus }>;
 }
 
 interface Stats {
@@ -72,7 +60,34 @@ function statusClasses(status: TestimonialStatus) {
   }
 }
 
-export default function AdminSweepstakesTestimonialsPage() {
+function photoStatusClasses(status: PhotoStatus) {
+  switch (status) {
+    case "approved":
+      return "bg-green-100 text-green-700";
+    case "rejected":
+      return "bg-red-100 text-red-700";
+    default:
+      return "bg-blue-100 text-blue-700";
+  }
+}
+
+function readinessLabel(testimonial: AdminTestimonial) {
+  if (testimonial.status === "approved") {
+    return "Published";
+  }
+
+  if (testimonial.pendingPhotoCount > 0) {
+    return "Photo review pending";
+  }
+
+  if (testimonial.approvedPhotoCount >= 2) {
+    return "Ready for final approval";
+  }
+
+  return "Need 2 approved photos";
+}
+
+export default function AdminMerchantNominationsPage() {
   const router = useRouter();
   const { user, isLoading: authLoading, isAuthenticated } = useUser();
 
@@ -91,9 +106,7 @@ export default function AdminSweepstakesTestimonialsPage() {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [total, setTotal] = useState(0);
-  const [selected, setSelected] = useState<AdminTestimonial | null>(null);
-  const [notes, setNotes] = useState("");
-  const [processingAction, setProcessingAction] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!authLoading && (!isAuthenticated || user?.role !== "admin")) {
@@ -111,6 +124,8 @@ export default function AdminSweepstakesTestimonialsPage() {
 
   const fetchTestimonials = useCallback(async () => {
     setIsLoading(true);
+    setError(null);
+
     try {
       const params = new URLSearchParams({
         page: page.toString(),
@@ -121,14 +136,19 @@ export default function AdminSweepstakesTestimonialsPage() {
 
       const response = await fetch(`/api/admin/sweepstakes/testimonials?${params.toString()}`);
       const json = await response.json();
-      if (!response.ok) throw new Error(json.error || "Failed to fetch testimonials");
+      if (!response.ok) throw new Error(json.error || "Failed to fetch merchant nominations");
 
       setTestimonials(json.testimonials);
       setStats(json.stats);
       setTotal(json.pagination.total);
       setTotalPages(json.pagination.totalPages);
-    } catch (error) {
-      console.error("Failed to fetch sweepstakes testimonials:", error);
+    } catch (fetchError) {
+      console.error("Failed to fetch merchant nominations:", fetchError);
+      setError(
+        fetchError instanceof Error
+          ? fetchError.message
+          : "We couldn't load the merchant nominations queue."
+      );
     } finally {
       setIsLoading(false);
     }
@@ -140,28 +160,6 @@ export default function AdminSweepstakesTestimonialsPage() {
     }
   }, [authLoading, fetchTestimonials, isAuthenticated, user?.role]);
 
-  async function moderate(action: "approve" | "request_changes" | "reject") {
-    if (!selected) return;
-    setProcessingAction(action);
-    try {
-      const response = await fetch(`/api/admin/sweepstakes/testimonials/${selected.id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action, notes }),
-      });
-      const json = await response.json();
-      if (!response.ok) throw new Error(json.error || "Failed to update testimonial");
-      setSelected(null);
-      setNotes("");
-      await fetchTestimonials();
-    } catch (error) {
-      console.error("Failed to moderate testimonial:", error);
-      alert(error instanceof Error ? error.message : "Failed to update testimonial.");
-    } finally {
-      setProcessingAction(null);
-    }
-  }
-
   return (
     <DashboardLayout navItems={adminNavItems}>
       {authLoading ? (
@@ -171,15 +169,45 @@ export default function AdminSweepstakesTestimonialsPage() {
       ) : (
         <>
           <PageHeader
-            title="Favorite Merchant Moderation"
-            description="Review nominations, publish approved stories, and create the $25 certificate path."
+            title="Merchant Nominations"
+            description="Open the queue, review each photo one by one, and then make the final testimonial decision."
+            actions={
+              <>
+                <Link
+                  href="/admin/sweepstakes"
+                  className="inline-flex items-center justify-center rounded-md border px-4 py-2 text-sm font-medium hover:bg-muted transition-colors"
+                >
+                  Sweepstakes Control Room
+                </Link>
+                <Button
+                  variant="outline"
+                  onClick={() => void fetchTestimonials()}
+                  disabled={isLoading}
+                >
+                  <RefreshCw className={cn("w-4 h-4 mr-2", isLoading && "animate-spin")} />
+                  Refresh
+                </Button>
+              </>
+            }
           />
 
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4 mb-6">
-            <div className="bg-card border rounded-lg p-3 sm:p-4"><p className="text-xs sm:text-sm text-muted-foreground mb-1">Submitted</p><p className="text-lg sm:text-2xl font-bold">{stats.submitted}</p></div>
-            <div className="bg-card border rounded-lg p-3 sm:p-4"><p className="text-xs sm:text-sm text-muted-foreground mb-1">Changes Requested</p><p className="text-lg sm:text-2xl font-bold">{stats.changesRequested}</p></div>
-            <div className="bg-card border rounded-lg p-3 sm:p-4"><p className="text-xs sm:text-sm text-muted-foreground mb-1">Approved</p><p className="text-lg sm:text-2xl font-bold">{stats.approved}</p></div>
-            <div className="bg-card border rounded-lg p-3 sm:p-4"><p className="text-xs sm:text-sm text-muted-foreground mb-1">Rejected</p><p className="text-lg sm:text-2xl font-bold">{stats.rejected}</p></div>
+            <div className="bg-card border rounded-lg p-3 sm:p-4">
+              <p className="text-xs sm:text-sm text-muted-foreground mb-1">Submitted</p>
+              <p className="text-lg sm:text-2xl font-bold">{stats.submitted}</p>
+            </div>
+            <div className="bg-card border rounded-lg p-3 sm:p-4">
+              <p className="text-xs sm:text-sm text-muted-foreground mb-1">Changes Requested</p>
+              <p className="text-lg sm:text-2xl font-bold">{stats.changesRequested}</p>
+            </div>
+            <div className="bg-card border rounded-lg p-3 sm:p-4">
+              <p className="text-xs sm:text-sm text-muted-foreground mb-1">Approved</p>
+              <p className="text-lg sm:text-2xl font-bold">{stats.approved}</p>
+            </div>
+            <div className="bg-card border rounded-lg p-3 sm:p-4">
+              <p className="text-xs sm:text-sm text-muted-foreground mb-1">Rejected</p>
+              <p className="text-lg sm:text-2xl font-bold">{stats.rejected}</p>
+            </div>
           </div>
 
           <div className="relative mb-4">
@@ -197,8 +225,8 @@ export default function AdminSweepstakesTestimonialsPage() {
               { key: "all", label: `All (${stats.total})` },
               { key: "submitted", label: `Submitted (${stats.submitted})` },
               { key: "changes_requested", label: `Changes (${stats.changesRequested})` },
-              { key: "approved", label: "Approved" },
-              { key: "rejected", label: "Rejected" },
+              { key: "approved", label: `Approved (${stats.approved})` },
+              { key: "rejected", label: `Rejected (${stats.rejected})` },
             ].map((filter) => (
               <Button
                 key={filter.key}
@@ -212,11 +240,13 @@ export default function AdminSweepstakesTestimonialsPage() {
                 {filter.label}
               </Button>
             ))}
-
-            <Button variant="ghost" size="sm" onClick={() => void fetchTestimonials()} disabled={isLoading} className="ml-auto">
-              <RefreshCw className={cn("w-4 h-4", isLoading && "animate-spin")} />
-            </Button>
           </div>
+
+          {error && (
+            <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800 mb-6">
+              {error}
+            </div>
+          )}
 
           {totalPages > 1 && (
             <div className="mb-4">
@@ -234,17 +264,25 @@ export default function AdminSweepstakesTestimonialsPage() {
           <div className="space-y-4">
             {!isLoading && testimonials.length === 0 ? (
               <div className="rounded-xl border border-dashed p-10 text-center text-muted-foreground">
-                No testimonials found.
+                No merchant nominations found.
               </div>
             ) : (
               testimonials.map((testimonial) => (
                 <div key={testimonial.id} className="rounded-xl border bg-card p-4">
-                  <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                  <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
                     <div className="min-w-0">
                       <div className="flex flex-wrap items-center gap-2">
                         <h3 className="font-semibold">{testimonial.merchantName}</h3>
-                        <span className={cn("rounded-full px-2.5 py-1 text-xs font-medium", statusClasses(testimonial.status))}>
+                        <span
+                          className={cn(
+                            "rounded-full px-2.5 py-1 text-xs font-medium capitalize",
+                            statusClasses(testimonial.status)
+                          )}
+                        >
                           {testimonial.status.replace("_", " ")}
+                        </span>
+                        <span className="rounded-full bg-muted px-2.5 py-1 text-xs font-medium text-muted-foreground">
+                          {readinessLabel(testimonial)}
                         </span>
                         {testimonial.rewardStatus === "registration_required" && (
                           <span className="rounded-full bg-green-100 px-2.5 py-1 text-xs font-medium text-green-700">
@@ -252,12 +290,32 @@ export default function AdminSweepstakesTestimonialsPage() {
                           </span>
                         )}
                       </div>
+
                       <p className="text-sm text-muted-foreground mt-2">
-                        {[testimonial.memberFirstName, testimonial.memberLastName].filter(Boolean).join(" ") || "Member"} • {testimonial.memberEmail}
+                        {[testimonial.memberFirstName, testimonial.memberLastName]
+                          .filter(Boolean)
+                          .join(" ") || "Member"}{" "}
+                        | {testimonial.memberEmail}
                       </p>
                       <p className="text-sm text-muted-foreground mt-1">
-                        {testimonial.wordCount} words • {testimonial.photoCount} photo{testimonial.photoCount === 1 ? "" : "s"} • updated {new Date(testimonial.updatedAt).toLocaleDateString()}
+                        {testimonial.wordCount} words | updated{" "}
+                        {new Date(testimonial.updatedAt).toLocaleDateString()}
                       </p>
+                      <div className="flex flex-wrap items-center gap-2 mt-3 text-xs text-muted-foreground">
+                        <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2.5 py-1">
+                          <ImageIcon className="w-3.5 h-3.5" />
+                          {testimonial.photoCount} photos
+                        </span>
+                        <span className="rounded-full bg-blue-50 px-2.5 py-1 text-blue-700">
+                          {testimonial.pendingPhotoCount} pending
+                        </span>
+                        <span className="rounded-full bg-green-50 px-2.5 py-1 text-green-700">
+                          {testimonial.approvedPhotoCount} approved
+                        </span>
+                        <span className="rounded-full bg-red-50 px-2.5 py-1 text-red-700">
+                          {testimonial.rejectedPhotoCount} rejected
+                        </span>
+                      </div>
                       <p className="text-sm mt-4 line-clamp-3">{testimonial.content}</p>
                       {testimonial.moderationNotes && (
                         <p className="text-sm text-muted-foreground mt-3">
@@ -266,23 +324,36 @@ export default function AdminSweepstakesTestimonialsPage() {
                       )}
                     </div>
 
-                    <div className="flex flex-col gap-3 lg:items-end lg:w-[320px] shrink-0">
+                    <div className="flex flex-col gap-3 xl:w-[320px] shrink-0">
                       {testimonial.photos.length > 0 && (
-                        <div className="grid grid-cols-3 gap-2 w-full">
+                        <div className="grid grid-cols-3 gap-2 min-h-[80px]">
                           {testimonial.photos.slice(0, 3).map((photo) => (
-                            <img key={photo.id} src={photo.url} alt={testimonial.merchantName} className="h-20 w-full rounded-lg object-cover border" />
+                            <div key={photo.id} className="relative overflow-hidden rounded-lg border">
+                              <img
+                                src={photo.url}
+                                alt={testimonial.merchantName}
+                                className="h-20 w-full object-cover"
+                              />
+                              <span
+                                className={cn(
+                                  "absolute left-2 top-2 rounded-full px-2 py-1 text-[11px] font-medium capitalize",
+                                  photoStatusClasses(photo.status)
+                                )}
+                              >
+                                {photo.status}
+                              </span>
+                            </div>
                           ))}
                         </div>
                       )}
-                      <Button
-                        type="button"
-                        onClick={() => {
-                          setSelected(testimonial);
-                          setNotes(testimonial.moderationNotes || "");
-                        }}
+
+                      <Link
+                        href={`/admin/sweepstakes/testimonials/${testimonial.id}`}
+                        className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors"
                       >
-                        Moderate
-                      </Button>
+                        Manage Nomination
+                        <ArrowRight className="w-4 h-4 ml-2" />
+                      </Link>
                     </div>
                   </div>
                 </div>
@@ -302,82 +373,6 @@ export default function AdminSweepstakesTestimonialsPage() {
               />
             </div>
           )}
-
-          <Dialog open={!!selected} onOpenChange={(open) => { if (!open) { setSelected(null); setNotes(""); } }}>
-            <DialogContent className="max-w-3xl">
-              <DialogHeader>
-                <DialogTitle>{selected?.merchantName}</DialogTitle>
-                <DialogDescription>
-                  Review the story, photos, and moderation notes before publishing.
-                </DialogDescription>
-              </DialogHeader>
-
-              {selected && (
-                <div className="space-y-4">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className={cn("rounded-full px-2.5 py-1 text-xs font-medium", statusClasses(selected.status))}>
-                      {selected.status.replace("_", " ")}
-                    </span>
-                    <span className="text-sm text-muted-foreground">
-                      {[selected.memberFirstName, selected.memberLastName].filter(Boolean).join(" ") || "Member"} • {selected.memberEmail}
-                    </span>
-                  </div>
-
-                  <div className="rounded-xl border bg-muted/20 p-4">
-                    <p className="text-sm whitespace-pre-wrap">{selected.content}</p>
-                  </div>
-
-                  {selected.photos.length > 0 && (
-                    <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                      {selected.photos.map((photo) => (
-                        <img key={photo.id} src={photo.url} alt={selected.merchantName} className="h-32 w-full rounded-lg object-cover border" />
-                      ))}
-                    </div>
-                  )}
-
-                  <div>
-                    <label className="text-sm font-medium">Admin notes</label>
-                    <Textarea
-                      value={notes}
-                      onChange={(event) => setNotes(event.target.value)}
-                      className="mt-2 min-h-[120px]"
-                      placeholder="Tell the member what to fix, or note why it was approved."
-                    />
-                  </div>
-                </div>
-              )}
-
-              <DialogFooter className="flex-col sm:flex-row gap-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  disabled={processingAction !== null || selected?.status === "approved"}
-                  onClick={() => void moderate("request_changes")}
-                >
-                  {processingAction === "request_changes" ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Clock className="w-4 h-4 mr-2" />}
-                  Request Changes
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="border-red-200 text-red-700 hover:bg-red-50"
-                  disabled={processingAction !== null || selected?.status === "approved"}
-                  onClick={() => void moderate("reject")}
-                >
-                  {processingAction === "reject" ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <XCircle className="w-4 h-4 mr-2" />}
-                  Reject
-                </Button>
-                <Button
-                  type="button"
-                  disabled={processingAction !== null}
-                  onClick={() => void moderate("approve")}
-                >
-                  {processingAction === "approve" ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <CheckCircle2 className="w-4 h-4 mr-2" />}
-                  Approve & Create Reward
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
         </>
       )}
     </DashboardLayout>

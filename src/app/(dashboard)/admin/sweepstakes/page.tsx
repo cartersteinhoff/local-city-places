@@ -157,7 +157,7 @@ export default function AdminSweepstakesPage() {
                   href="/admin/sweepstakes/testimonials"
                   className="inline-flex items-center justify-center rounded-md border px-4 py-2 text-sm font-medium hover:bg-muted transition-colors"
                 >
-                  Open Testimonial Queue
+                  Open Merchant Nominations
                 </a>
                 <Button variant="outline" onClick={() => void fetchData(selectedCycleId)} disabled={isLoading}>
                   <RefreshCw className={`w-4 h-4 mr-2 ${isLoading ? "animate-spin" : ""}`} />

@@ -11,11 +11,13 @@ import {
   Store,
   MessageSquare,
   Sparkles,
+  ImageIcon,
 } from "lucide-react";
 
 export const adminNavItems = [
   { label: "Dashboard", href: "/admin", icon: LayoutDashboard },
   { label: "Sweepstakes", href: "/admin/sweepstakes", icon: Sparkles },
+  { label: "Merchant Nominations", href: "/admin/sweepstakes/testimonials", icon: ImageIcon },
   { label: "Users", href: "/admin/users", icon: Users },
   { label: "Merchant Pages", href: "/admin/merchants", icon: Store },
   { label: "Reviews", href: "/admin/reviews", icon: MessageSquare },

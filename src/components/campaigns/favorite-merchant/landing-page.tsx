@@ -71,18 +71,16 @@ const campaignRhythm = [
 const heroHighlights = [
   {
     title: "Daily entry window",
-    description:
-      "Enter once each Arizona day. The monthly drawing closes at 11:59 PM Arizona time on the last day of the month.",
+    description: "One confirmed entry per Arizona day.",
   },
   {
     title: "Matching prize chain",
     description:
-      "If someone in your referral chain wins, first-tier and second-tier matches can pay out above them.",
+      "First-tier and second-tier matches can pay out above a winner.",
   },
   {
     title: "Favorite merchant reward",
-    description:
-      "Approved nominations can unlock a $25 gas or grocery reward for the member who submitted them.",
+    description: "Approved nominations can unlock a $25 reward.",
   },
 ];
 
@@ -234,12 +232,33 @@ export function FavoriteMerchantLandingPage() {
                 </p>
               </div>
 
-              <div className="rounded-[1.4rem] border border-white/10 bg-white/6 px-4 py-3 text-base leading-7 text-white/80 sm:hidden">
-                Daily entries, matching prize tiers, and favorite-merchant
-                rewards.
+              <div className="relative overflow-hidden rounded-[2rem] border border-[#ffcf8b]/24 bg-[linear-gradient(150deg,rgba(255,255,255,0.14),rgba(255,255,255,0.04))] p-3 shadow-[0_28px_90px_rgba(0,0,0,0.24)]">
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,207,139,0.22),transparent_34%),radial-gradient(circle_at_bottom_left,rgba(118,181,79,0.12),transparent_30%)]" />
+                <div className="relative">
+                  <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+                    <span className="inline-flex items-center gap-2 rounded-full border border-[#ffcf8b]/24 bg-black/22 px-3 py-1 text-[0.72rem] font-semibold uppercase tracking-[0.22em] text-[#ffcf8b]">
+                      <Gift className="h-3.5 w-3.5" />
+                      Monthly grand prize
+                    </span>
+                    <span className="text-sm font-medium text-white/74">
+                      $500 gas or grocery gift card
+                    </span>
+                  </div>
+
+                  <div className="overflow-hidden rounded-[1.5rem] border border-white/14 bg-[#0e2c6b]/80 shadow-[0_12px_30px_rgba(0,0,0,0.18)]">
+                    <Image
+                      src="/images/gas-grocery-gift-card.png"
+                      alt="$500 gas and grocery gift card prize"
+                      width={1368}
+                      height={865}
+                      className="h-auto w-full"
+                      priority
+                    />
+                  </div>
+                </div>
               </div>
 
-              <div className="hidden gap-3 text-base leading-7 text-white/80 sm:grid sm:grid-cols-3">
+              <div className="grid gap-3 text-base leading-7 text-white/80 sm:grid-cols-3">
                 {heroHighlights.map((item) => (
                   <div
                     key={item.title}

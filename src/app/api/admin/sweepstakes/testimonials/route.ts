@@ -54,6 +54,18 @@ export async function GET(request: NextRequest) {
       .select({
         testimonialId: favoriteMerchantTestimonialPhotos.testimonialId,
         count: sql<number>`count(*)`.as("photo_count"),
+        pendingCount:
+          sql<number>`count(*) filter (where ${favoriteMerchantTestimonialPhotos.status} = 'pending')`.as(
+            "pending_count"
+          ),
+        approvedCount:
+          sql<number>`count(*) filter (where ${favoriteMerchantTestimonialPhotos.status} = 'approved')`.as(
+            "approved_count"
+          ),
+        rejectedCount:
+          sql<number>`count(*) filter (where ${favoriteMerchantTestimonialPhotos.status} = 'rejected')`.as(
+            "rejected_count"
+          ),
       })
       .from(favoriteMerchantTestimonialPhotos)
       .groupBy(favoriteMerchantTestimonialPhotos.testimonialId)
@@ -87,6 +99,9 @@ export async function GET(request: NextRequest) {
         createdAt: favoriteMerchantTestimonials.createdAt,
         updatedAt: favoriteMerchantTestimonials.updatedAt,
         photoCount: sql<number>`coalesce(${photoCountSq.count}, 0)`,
+        pendingPhotoCount: sql<number>`coalesce(${photoCountSq.pendingCount}, 0)`,
+        approvedPhotoCount: sql<number>`coalesce(${photoCountSq.approvedCount}, 0)`,
+        rejectedPhotoCount: sql<number>`coalesce(${photoCountSq.rejectedCount}, 0)`,
       })
       .from(favoriteMerchantTestimonials)
       .innerJoin(members, eq(favoriteMerchantTestimonials.memberId, members.id))
@@ -108,6 +123,7 @@ export async function GET(request: NextRequest) {
               testimonialId: favoriteMerchantTestimonialPhotos.testimonialId,
               url: favoriteMerchantTestimonialPhotos.url,
               displayOrder: favoriteMerchantTestimonialPhotos.displayOrder,
+              status: favoriteMerchantTestimonialPhotos.status,
             })
             .from(favoriteMerchantTestimonialPhotos)
             .where(inArray(favoriteMerchantTestimonialPhotos.testimonialId, testimonialIds))
@@ -119,7 +135,12 @@ export async function GET(request: NextRequest) {
 
     const photosByTestimonial = new Map<
       string,
-      Array<{ id: string; url: string; displayOrder: number }>
+      Array<{
+        id: string;
+        url: string;
+        displayOrder: number;
+        status: "pending" | "approved" | "rejected";
+      }>
     >();
 
     for (const photo of photos) {
@@ -131,6 +152,7 @@ export async function GET(request: NextRequest) {
         id: photo.id,
         url: photo.url,
         displayOrder: photo.displayOrder,
+        status: photo.status,
       });
     }
 
@@ -148,6 +170,9 @@ export async function GET(request: NextRequest) {
       testimonials: testimonialRows.map((row) => ({
         ...row,
         photoCount: Number(row.photoCount) || 0,
+        pendingPhotoCount: Number(row.pendingPhotoCount) || 0,
+        approvedPhotoCount: Number(row.approvedPhotoCount) || 0,
+        rejectedPhotoCount: Number(row.rejectedPhotoCount) || 0,
         createdAt: row.createdAt.toISOString(),
         updatedAt: row.updatedAt.toISOString(),
         photos: photosByTestimonial.get(row.id) || [],

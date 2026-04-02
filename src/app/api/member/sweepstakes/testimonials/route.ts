@@ -1,10 +1,5 @@
-import { NextRequest, NextResponse } from "next/server";
-import { and, desc, eq, ne, sql } from "drizzle-orm";
-import { getSession } from "@/lib/auth";
-import { countWords, ensureCurrentSweepstakesCycle } from "@/lib/sweepstakes";
-import {
-  favoriteMerchantTestimonialSchema,
-} from "@/lib/validations/sweepstakes";
+import { and, desc, eq, inArray, ne, sql } from "drizzle-orm";
+import { type NextRequest, NextResponse } from "next/server";
 import {
   db,
   favoriteMerchantTestimonialPhotos,
@@ -13,12 +8,22 @@ import {
   merchants,
   sweepstakesEntries,
 } from "@/db";
+import { getSession } from "@/lib/auth";
+import {
+  countWords,
+  ensureCurrentSweepstakesCycle,
+  getSweepstakesLeaderboard,
+} from "@/lib/sweepstakes";
+import { favoriteMerchantTestimonialSchema } from "@/lib/validations/sweepstakes";
 
 export async function GET() {
   try {
     const session = await getSession();
 
-    if (!session || (session.user.role !== "member" && session.user.role !== "admin")) {
+    if (
+      !session ||
+      (session.user.role !== "member" && session.user.role !== "admin")
+    ) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -41,8 +46,8 @@ export async function GET() {
         and(
           eq(sweepstakesEntries.memberId, member.id),
           eq(sweepstakesEntries.cycleId, cycle.id),
-          eq(sweepstakesEntries.status, "confirmed")
-        )
+          eq(sweepstakesEntries.status, "confirmed"),
+        ),
       )
       .limit(1);
 
@@ -61,22 +66,30 @@ export async function GET() {
         photoId: favoriteMerchantTestimonialPhotos.id,
         photoUrl: favoriteMerchantTestimonialPhotos.url,
         photoOrder: favoriteMerchantTestimonialPhotos.displayOrder,
+        photoStatus: favoriteMerchantTestimonialPhotos.status,
+        photoModeratedAt: favoriteMerchantTestimonialPhotos.moderatedAt,
       })
       .from(favoriteMerchantTestimonials)
-      .innerJoin(merchants, eq(favoriteMerchantTestimonials.merchantId, merchants.id))
+      .innerJoin(
+        merchants,
+        eq(favoriteMerchantTestimonials.merchantId, merchants.id),
+      )
       .leftJoin(
         favoriteMerchantTestimonialPhotos,
-        eq(favoriteMerchantTestimonials.id, favoriteMerchantTestimonialPhotos.testimonialId)
+        eq(
+          favoriteMerchantTestimonials.id,
+          favoriteMerchantTestimonialPhotos.testimonialId,
+        ),
       )
       .where(
         and(
           eq(favoriteMerchantTestimonials.memberId, member.id),
-          eq(favoriteMerchantTestimonials.cycleId, cycle.id)
-        )
+          eq(favoriteMerchantTestimonials.cycleId, cycle.id),
+        ),
       )
       .orderBy(
         desc(favoriteMerchantTestimonials.createdAt),
-        favoriteMerchantTestimonialPhotos.displayOrder
+        favoriteMerchantTestimonialPhotos.displayOrder,
       );
 
     const [activeSubmissionCount] = await db
@@ -86,8 +99,8 @@ export async function GET() {
         and(
           eq(favoriteMerchantTestimonials.memberId, member.id),
           eq(favoriteMerchantTestimonials.cycleId, cycle.id),
-          ne(favoriteMerchantTestimonials.status, "rejected")
-        )
+          ne(favoriteMerchantTestimonials.status, "rejected"),
+        ),
       );
 
     const [rejectedSubmissionCount] = await db
@@ -97,9 +110,13 @@ export async function GET() {
         and(
           eq(favoriteMerchantTestimonials.memberId, member.id),
           eq(favoriteMerchantTestimonials.cycleId, cycle.id),
-          eq(favoriteMerchantTestimonials.status, "rejected")
-        )
+          eq(favoriteMerchantTestimonials.status, "rejected"),
+        ),
       );
+
+    const leaderboard = await getSweepstakesLeaderboard(cycle.id);
+    const currentStandingRow =
+      leaderboard.find((row) => row.memberId === member.id) ?? null;
 
     const testimonials = new Map<
       string,
@@ -114,7 +131,13 @@ export async function GET() {
         rewardStatus: string;
         createdAt: string;
         updatedAt: string;
-        photos: Array<{ id: string; url: string; displayOrder: number }>;
+        photos: Array<{
+          id: string;
+          url: string;
+          displayOrder: number;
+          status: "pending" | "approved" | "rejected";
+          moderatedAt: string | null;
+        }>;
       }
     >();
 
@@ -140,6 +163,10 @@ export async function GET() {
           id: row.photoId,
           url: row.photoUrl,
           displayOrder: row.photoOrder ?? 0,
+          status: row.photoStatus ?? "pending",
+          moderatedAt: row.photoModeratedAt
+            ? row.photoModeratedAt.toISOString()
+            : null,
         });
       }
     }
@@ -152,15 +179,36 @@ export async function GET() {
       submissionLimit: 5,
       confirmedEntryThisMonth: !!confirmedEntry,
       activeSubmissions: activeSubmissionCount?.count ?? 0,
-      remainingSubmissions: Math.max(0, 5 - (activeSubmissionCount?.count ?? 0)),
+      remainingSubmissions: Math.max(
+        0,
+        5 - (activeSubmissionCount?.count ?? 0),
+      ),
       rejectedSubmissions: rejectedSubmissionCount?.count ?? 0,
+      currentStanding: currentStandingRow
+        ? {
+            memberId: currentStandingRow.memberId,
+            displayName: currentStandingRow.displayName,
+            regularEntries: currentStandingRow.regularEntries,
+            referralEntries: currentStandingRow.referralEntries,
+            totalEntries: currentStandingRow.totalEntries,
+            rank: currentStandingRow.rank,
+          }
+        : null,
+      leaderboardPreview: leaderboard.slice(0, 10).map((row) => ({
+        memberId: row.memberId,
+        displayName: row.displayName,
+        regularEntries: row.regularEntries,
+        referralEntries: row.referralEntries,
+        totalEntries: row.totalEntries,
+        rank: row.rank,
+      })),
       testimonials: Array.from(testimonials.values()),
     });
   } catch (error) {
     console.error("Error fetching favorite merchant testimonials:", error);
     return NextResponse.json(
       { error: "Failed to fetch testimonials" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -169,7 +217,10 @@ export async function POST(request: NextRequest) {
   try {
     const session = await getSession();
 
-    if (!session || (session.user.role !== "member" && session.user.role !== "admin")) {
+    if (
+      !session ||
+      (session.user.role !== "member" && session.user.role !== "admin")
+    ) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -189,7 +240,7 @@ export async function POST(request: NextRequest) {
     if (!result.success) {
       return NextResponse.json(
         { error: "Invalid testimonial data", details: result.error.flatten() },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -200,7 +251,7 @@ export async function POST(request: NextRequest) {
     if (wordCount < 50) {
       return NextResponse.json(
         { error: "Testimonial must include at least 50 words." },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -213,15 +264,18 @@ export async function POST(request: NextRequest) {
         and(
           eq(sweepstakesEntries.memberId, member.id),
           eq(sweepstakesEntries.cycleId, cycle.id),
-          eq(sweepstakesEntries.status, "confirmed")
-        )
+          eq(sweepstakesEntries.status, "confirmed"),
+        ),
       )
       .limit(1);
 
     if (!confirmedEntry) {
       return NextResponse.json(
-        { error: "Confirm your current sweepstakes entry before submitting a favorite merchant testimonial." },
-        { status: 409 }
+        {
+          error:
+            "Confirm your current sweepstakes entry before submitting a favorite merchant testimonial.",
+        },
+        { status: 409 },
       );
     }
 
@@ -235,7 +289,10 @@ export async function POST(request: NextRequest) {
       .limit(1);
 
     if (!merchant) {
-      return NextResponse.json({ error: "Merchant not found" }, { status: 404 });
+      return NextResponse.json(
+        { error: "Merchant not found" },
+        { status: 404 },
+      );
     }
 
     if (testimonialId) {
@@ -245,19 +302,25 @@ export async function POST(request: NextRequest) {
         .where(
           and(
             eq(favoriteMerchantTestimonials.id, testimonialId),
-            eq(favoriteMerchantTestimonials.memberId, member.id)
-          )
+            eq(favoriteMerchantTestimonials.memberId, member.id),
+          ),
         )
         .limit(1);
 
       if (!existingTestimonial) {
-        return NextResponse.json({ error: "Testimonial not found" }, { status: 404 });
+        return NextResponse.json(
+          { error: "Testimonial not found" },
+          { status: 404 },
+        );
       }
 
       if (existingTestimonial.status !== "changes_requested") {
         return NextResponse.json(
-          { error: "Only testimonials with requested changes can be resubmitted." },
-          { status: 409 }
+          {
+            error:
+              "Only testimonials with requested changes can be resubmitted.",
+          },
+          { status: 409 },
         );
       }
 
@@ -272,19 +335,61 @@ export async function POST(request: NextRequest) {
             eq(favoriteMerchantTestimonials.cycleId, cycle.id),
             eq(favoriteMerchantTestimonials.merchantId, merchantId),
             ne(favoriteMerchantTestimonials.status, "rejected"),
-            ne(favoriteMerchantTestimonials.id, existingTestimonial.id)
-          )
+            ne(favoriteMerchantTestimonials.id, existingTestimonial.id),
+          ),
         )
         .limit(1);
 
       if (conflictingActiveTestimonial) {
         return NextResponse.json(
           {
-            error: "You already have another active testimonial for this merchant this month.",
+            error:
+              "You already have another active testimonial for this merchant this month.",
             testimonialId: conflictingActiveTestimonial.id,
           },
-          { status: 409 }
+          { status: 409 },
         );
+      }
+
+      const existingPhotos = await db
+        .select({
+          id: favoriteMerchantTestimonialPhotos.id,
+          status: favoriteMerchantTestimonialPhotos.status,
+        })
+        .from(favoriteMerchantTestimonialPhotos)
+        .where(
+          eq(
+            favoriteMerchantTestimonialPhotos.testimonialId,
+            existingTestimonial.id,
+          ),
+        );
+
+      const existingPhotosById = new Map(
+        existingPhotos.map((photo) => [photo.id, photo]),
+      );
+      const retainedPhotoIds = photos
+        .map((photo) => photo.id)
+        .filter((photoId): photoId is string => typeof photoId === "string");
+      const retainedPhotoIdSet = new Set(retainedPhotoIds);
+
+      for (const photoId of retainedPhotoIds) {
+        const existingPhoto = existingPhotosById.get(photoId);
+        if (!existingPhoto) {
+          return NextResponse.json(
+            { error: "One of the selected photos could not be found." },
+            { status: 400 },
+          );
+        }
+
+        if (existingPhoto.status === "rejected") {
+          return NextResponse.json(
+            {
+              error:
+                "Remove rejected photos and upload replacements before resubmitting.",
+            },
+            { status: 409 },
+          );
+        }
       }
 
       await db
@@ -301,17 +406,39 @@ export async function POST(request: NextRequest) {
         })
         .where(eq(favoriteMerchantTestimonials.id, existingTestimonial.id));
 
-      await db
-        .delete(favoriteMerchantTestimonialPhotos)
-        .where(eq(favoriteMerchantTestimonialPhotos.testimonialId, existingTestimonial.id));
+      const photoIdsToDelete = existingPhotos
+        .filter((photo) => !retainedPhotoIdSet.has(photo.id))
+        .map((photo) => photo.id);
 
-      if (photos.length > 0) {
+      if (photoIdsToDelete.length > 0) {
+        await db
+          .delete(favoriteMerchantTestimonialPhotos)
+          .where(
+            inArray(favoriteMerchantTestimonialPhotos.id, photoIdsToDelete),
+          );
+      }
+
+      const existingPhotoInputs = photos.filter(
+        (photo): photo is typeof photo & { id: string } => !!photo.id,
+      );
+      for (const [index, photo] of existingPhotoInputs.entries()) {
+        await db
+          .update(favoriteMerchantTestimonialPhotos)
+          .set({
+            displayOrder: index,
+          })
+          .where(eq(favoriteMerchantTestimonialPhotos.id, photo.id));
+      }
+
+      const newPhotoInputs = photos.filter((photo) => !photo.id);
+      if (newPhotoInputs.length > 0) {
         await db.insert(favoriteMerchantTestimonialPhotos).values(
-          photos.map((photo, index) => ({
+          newPhotoInputs.map((photo, index) => ({
             testimonialId: existingTestimonial.id,
             url: photo.url,
-            displayOrder: index,
-          }))
+            displayOrder: existingPhotoInputs.length + index,
+            status: "pending" as const,
+          })),
         );
       }
 
@@ -329,14 +456,17 @@ export async function POST(request: NextRequest) {
         and(
           eq(favoriteMerchantTestimonials.memberId, member.id),
           eq(favoriteMerchantTestimonials.cycleId, cycle.id),
-          ne(favoriteMerchantTestimonials.status, "rejected")
-        )
+          ne(favoriteMerchantTestimonials.status, "rejected"),
+        ),
       );
 
     if ((activeSubmissionCount?.count ?? 0) >= 5) {
       return NextResponse.json(
-        { error: "You have already used your 5 favorite merchant submissions for this month." },
-        { status: 409 }
+        {
+          error:
+            "You have already used your 5 favorite merchant submissions for this month.",
+        },
+        { status: 409 },
       );
     }
 
@@ -351,8 +481,8 @@ export async function POST(request: NextRequest) {
           eq(favoriteMerchantTestimonials.memberId, member.id),
           eq(favoriteMerchantTestimonials.cycleId, cycle.id),
           eq(favoriteMerchantTestimonials.merchantId, merchantId),
-          ne(favoriteMerchantTestimonials.status, "rejected")
-        )
+          ne(favoriteMerchantTestimonials.status, "rejected"),
+        ),
       )
       .limit(1);
 
@@ -365,7 +495,7 @@ export async function POST(request: NextRequest) {
               : "You already have an active testimonial for this merchant this month.",
           testimonialId: existingForMerchant.id,
         },
-        { status: 409 }
+        { status: 409 },
       );
     }
 
@@ -385,7 +515,8 @@ export async function POST(request: NextRequest) {
         testimonialId: createdTestimonial.id,
         url: photo.url,
         displayOrder: index,
-      }))
+        status: "pending" as const,
+      })),
     );
 
     return NextResponse.json({
@@ -397,7 +528,7 @@ export async function POST(request: NextRequest) {
     console.error("Error creating favorite merchant testimonial:", error);
     return NextResponse.json(
       { error: "Failed to submit favorite merchant testimonial" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

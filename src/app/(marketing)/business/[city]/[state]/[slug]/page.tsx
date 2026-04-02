@@ -132,12 +132,22 @@ async function getFavoriteMerchantNominations(merchantId: string) {
             testimonialId: favoriteMerchantTestimonialPhotos.testimonialId,
             url: favoriteMerchantTestimonialPhotos.url,
             displayOrder: favoriteMerchantTestimonialPhotos.displayOrder,
+            status: favoriteMerchantTestimonialPhotos.status,
+            moderatedAt: favoriteMerchantTestimonialPhotos.moderatedAt,
           })
           .from(favoriteMerchantTestimonialPhotos)
           .where(inArray(favoriteMerchantTestimonialPhotos.testimonialId, nominationIds))
       : [];
 
-  const photosByNomination = new Map<string, { url: string; displayOrder: number }[]>();
+  const photosByNomination = new Map<
+    string,
+    Array<{
+      url: string;
+      displayOrder: number;
+      status: "pending" | "approved" | "rejected";
+      moderatedAt: Date | null;
+    }>
+  >();
   for (const photo of photos) {
     if (!photosByNomination.has(photo.testimonialId)) {
       photosByNomination.set(photo.testimonialId, []);
@@ -147,9 +157,18 @@ async function getFavoriteMerchantNominations(merchantId: string) {
 
   return approvedNominations.map((nomination) => ({
     ...nomination,
-    photos: (photosByNomination.get(nomination.id) || [])
-      .sort((a, b) => (a.displayOrder || 0) - (b.displayOrder || 0))
-      .map((photo) => photo.url),
+    photos: (() => {
+      const nominationPhotos = (photosByNomination.get(nomination.id) || []).sort(
+        (a, b) => (a.displayOrder || 0) - (b.displayOrder || 0)
+      );
+      const hasReviewedPhotos = nominationPhotos.some(
+        (photo) => photo.status !== "pending" || photo.moderatedAt !== null
+      );
+
+      return nominationPhotos
+        .filter((photo) => (hasReviewedPhotos ? photo.status === "approved" : true))
+        .map((photo) => photo.url);
+    })(),
   }));
 }
 

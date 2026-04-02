@@ -1,16 +1,120 @@
 import { NextRequest, NextResponse } from "next/server";
-import { and, eq } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 import { getSession } from "@/lib/auth";
 import { issueFavoriteMerchantReward } from "@/lib/favorite-merchant";
 import { revalidateMerchantPublicPaths } from "@/lib/merchant-public-revalidation";
 import { favoriteMerchantModerationSchema } from "@/lib/validations/sweepstakes";
 import {
   db,
+  favoriteMerchantTestimonialPhotos,
   favoriteMerchantTestimonials,
   members,
   merchants,
   users,
 } from "@/db";
+
+async function getAdminTestimonialDetail(testimonialId: string) {
+  const [testimonial] = await db
+    .select({
+      id: favoriteMerchantTestimonials.id,
+      cycleId: favoriteMerchantTestimonials.cycleId,
+      memberId: favoriteMerchantTestimonials.memberId,
+      merchantId: favoriteMerchantTestimonials.merchantId,
+      merchantName: merchants.businessName,
+      merchantCity: merchants.city,
+      merchantState: merchants.state,
+      merchantSlug: merchants.slug,
+      memberFirstName: users.firstName,
+      memberLastName: users.lastName,
+      memberEmail: users.email,
+      content: favoriteMerchantTestimonials.content,
+      wordCount: favoriteMerchantTestimonials.wordCount,
+      status: favoriteMerchantTestimonials.status,
+      moderationNotes: favoriteMerchantTestimonials.moderationNotes,
+      approvedAt: favoriteMerchantTestimonials.approvedAt,
+      rewardStatus: favoriteMerchantTestimonials.rewardStatus,
+      rewardReferenceId: favoriteMerchantTestimonials.rewardReferenceId,
+      createdAt: favoriteMerchantTestimonials.createdAt,
+      updatedAt: favoriteMerchantTestimonials.updatedAt,
+    })
+    .from(favoriteMerchantTestimonials)
+    .innerJoin(members, eq(favoriteMerchantTestimonials.memberId, members.id))
+    .innerJoin(users, eq(members.userId, users.id))
+    .innerJoin(merchants, eq(favoriteMerchantTestimonials.merchantId, merchants.id))
+    .where(eq(favoriteMerchantTestimonials.id, testimonialId))
+    .limit(1);
+
+  if (!testimonial) {
+    return null;
+  }
+
+  const photos = await db
+    .select({
+      id: favoriteMerchantTestimonialPhotos.id,
+      url: favoriteMerchantTestimonialPhotos.url,
+      displayOrder: favoriteMerchantTestimonialPhotos.displayOrder,
+      status: favoriteMerchantTestimonialPhotos.status,
+      moderatedAt: favoriteMerchantTestimonialPhotos.moderatedAt,
+    })
+    .from(favoriteMerchantTestimonialPhotos)
+    .where(eq(favoriteMerchantTestimonialPhotos.testimonialId, testimonial.id))
+    .orderBy(favoriteMerchantTestimonialPhotos.displayOrder);
+
+  const [photoStats] = await db
+    .select({
+      total: sql<number>`count(*)`,
+      pending: sql<number>`count(*) filter (where ${favoriteMerchantTestimonialPhotos.status} = 'pending')`,
+      approved: sql<number>`count(*) filter (where ${favoriteMerchantTestimonialPhotos.status} = 'approved')`,
+      rejected: sql<number>`count(*) filter (where ${favoriteMerchantTestimonialPhotos.status} = 'rejected')`,
+    })
+    .from(favoriteMerchantTestimonialPhotos)
+    .where(eq(favoriteMerchantTestimonialPhotos.testimonialId, testimonial.id));
+
+  return {
+    ...testimonial,
+    createdAt: testimonial.createdAt.toISOString(),
+    updatedAt: testimonial.updatedAt.toISOString(),
+    approvedAt: testimonial.approvedAt ? testimonial.approvedAt.toISOString() : null,
+    photos: photos.map((photo) => ({
+      ...photo,
+      moderatedAt: photo.moderatedAt ? photo.moderatedAt.toISOString() : null,
+    })),
+    photoStats: {
+      total: Number(photoStats.total) || 0,
+      pending: Number(photoStats.pending) || 0,
+      approved: Number(photoStats.approved) || 0,
+      rejected: Number(photoStats.rejected) || 0,
+    },
+  };
+}
+
+export async function GET(
+  _request: NextRequest,
+  { params }: { params: Promise<{ testimonialId: string }> }
+) {
+  try {
+    const session = await getSession();
+
+    if (!session || session.user.role !== "admin") {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
+    }
+
+    const { testimonialId } = await params;
+    const testimonial = await getAdminTestimonialDetail(testimonialId);
+
+    if (!testimonial) {
+      return NextResponse.json({ error: "Testimonial not found" }, { status: 404 });
+    }
+
+    return NextResponse.json({ testimonial });
+  } catch (error) {
+    console.error("Error fetching favorite merchant testimonial:", error);
+    return NextResponse.json(
+      { error: "Failed to fetch favorite merchant testimonial" },
+      { status: 500 }
+    );
+  }
+}
 
 export async function PUT(
   request: NextRequest,
@@ -34,26 +138,7 @@ export async function PUT(
       );
     }
 
-    const [testimonial] = await db
-      .select({
-        id: favoriteMerchantTestimonials.id,
-        status: favoriteMerchantTestimonials.status,
-        rewardReferenceId: favoriteMerchantTestimonials.rewardReferenceId,
-        merchantId: favoriteMerchantTestimonials.merchantId,
-        merchantName: merchants.businessName,
-        merchantCity: merchants.city,
-        merchantState: merchants.state,
-        merchantSlug: merchants.slug,
-        memberFirstName: users.firstName,
-        memberLastName: users.lastName,
-        memberEmail: users.email,
-      })
-      .from(favoriteMerchantTestimonials)
-      .innerJoin(members, eq(favoriteMerchantTestimonials.memberId, members.id))
-      .innerJoin(users, eq(members.userId, users.id))
-      .innerJoin(merchants, eq(favoriteMerchantTestimonials.merchantId, merchants.id))
-      .where(eq(favoriteMerchantTestimonials.id, testimonialId))
-      .limit(1);
+    const testimonial = await getAdminTestimonialDetail(testimonialId);
 
     if (!testimonial) {
       return NextResponse.json({ error: "Testimonial not found" }, { status: 404 });
@@ -73,6 +158,26 @@ export async function PUT(
     }
 
     if (action === "approve") {
+      if (testimonial.photoStats.pending > 0) {
+        return NextResponse.json(
+          {
+            error:
+              "Review every photo before approving this nomination. Each photo needs its own approve or reject decision.",
+          },
+          { status: 409 }
+        );
+      }
+
+      if (testimonial.photoStats.approved < 2) {
+        return NextResponse.json(
+          {
+            error:
+              "Approve at least 2 photos before approving this nomination so the merchant page has an accepted photo set.",
+          },
+          { status: 409 }
+        );
+      }
+
       const memberDisplayName = [testimonial.memberFirstName, testimonial.memberLastName]
         .filter(Boolean)
         .join(" ")
@@ -112,7 +217,10 @@ export async function PUT(
 
       return NextResponse.json({
         success: true,
-        testimonial: updatedTestimonial,
+        testimonial: {
+          ...updatedTestimonial,
+          photoStats: testimonial.photoStats,
+        },
         reward: reward,
       });
     }
@@ -142,7 +250,10 @@ export async function PUT(
 
     return NextResponse.json({
       success: true,
-      testimonial: updatedTestimonial,
+      testimonial: {
+        ...updatedTestimonial,
+        photoStats: testimonial.photoStats,
+      },
     });
   } catch (error) {
     console.error("Error moderating favorite merchant testimonial:", error);

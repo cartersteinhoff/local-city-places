@@ -62,6 +62,10 @@ export const favoriteMerchantTestimonialStatusEnum = pgEnum(
   "favorite_merchant_testimonial_status",
   ["submitted", "changes_requested", "approved", "rejected"]
 );
+export const favoriteMerchantTestimonialPhotoStatusEnum = pgEnum(
+  "favorite_merchant_testimonial_photo_status",
+  ["pending", "approved", "rejected"]
+);
 export const favoriteMerchantRewardStatusEnum = pgEnum(
   "favorite_merchant_reward_status",
   ["not_created", "registration_required", "qualifying", "qualified", "fulfilled", "void"]
@@ -267,8 +271,16 @@ export const favoriteMerchantTestimonialPhotos = pgTable("favorite_merchant_test
     .references(() => favoriteMerchantTestimonials.id, { onDelete: "cascade" }),
   url: text("url").notNull(),
   displayOrder: integer("display_order").default(0).notNull(),
+  status: favoriteMerchantTestimonialPhotoStatusEnum("status").notNull().default("pending"),
+  moderatedAt: timestamp("moderated_at"),
+  moderatedBy: uuid("moderated_by").references(() => users.id),
   createdAt: timestamp("created_at").defaultNow().notNull(),
-});
+}, (table) => [
+  index("favorite_merchant_testimonial_photos_testimonial_status_idx").on(
+    table.testimonialId,
+    table.status
+  ),
+]);
 
 // Review status enum
 export const reviewStatusEnum = pgEnum("review_status", ["pending", "approved", "rejected"]);
@@ -871,6 +883,10 @@ export const favoriteMerchantTestimonialPhotosRelations = relations(
     testimonial: one(favoriteMerchantTestimonials, {
       fields: [favoriteMerchantTestimonialPhotos.testimonialId],
       references: [favoriteMerchantTestimonials.id],
+    }),
+    moderatedByUser: one(users, {
+      fields: [favoriteMerchantTestimonialPhotos.moderatedBy],
+      references: [users.id],
     }),
   })
 );
