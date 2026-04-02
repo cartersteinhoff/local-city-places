@@ -83,6 +83,8 @@ function statusClasses(status: TestimonialStatus) {
 export default function FavoriteMerchantTestimonialsPage() {
   const router = useRouter();
   const { user, isLoading: authLoading, isAuthenticated } = useUser();
+  const canUseMemberSweepstakes =
+    user?.role === "member" || user?.role === "admin";
 
   const [data, setData] = useState<PageData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -101,10 +103,10 @@ export default function FavoriteMerchantTestimonialsPage() {
   const [editingId, setEditingId] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!authLoading && (!isAuthenticated || user?.role !== "member")) {
+    if (!authLoading && (!isAuthenticated || !canUseMemberSweepstakes)) {
       router.push("/");
     }
-  }, [authLoading, isAuthenticated, router, user?.role]);
+  }, [authLoading, canUseMemberSweepstakes, isAuthenticated, router]);
 
   async function loadPage() {
     setLoading(true);
@@ -122,10 +124,10 @@ export default function FavoriteMerchantTestimonialsPage() {
   }
 
   useEffect(() => {
-    if (!authLoading && isAuthenticated && user?.role === "member") {
+    if (!authLoading && isAuthenticated && canUseMemberSweepstakes) {
       void loadPage();
     }
-  }, [authLoading, isAuthenticated, user?.role]);
+  }, [authLoading, canUseMemberSweepstakes, isAuthenticated]);
 
   function resetForm() {
     setStep(0);
