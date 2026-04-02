@@ -1,9 +1,5 @@
 "use client";
 
-import { Playfair_Display, Space_Grotesk } from "next/font/google";
-import Image from "next/image";
-import Link from "next/link";
-import { useState } from "react";
 import {
   ArrowRight,
   Camera,
@@ -14,6 +10,10 @@ import {
   Trophy,
   UserPlus,
 } from "lucide-react";
+import { Playfair_Display, Space_Grotesk } from "next/font/google";
+import Image from "next/image";
+import Link from "next/link";
+import { useState } from "react";
 import { FeaturedMarquee } from "@/components/featured-marquee";
 import { Footer } from "@/components/footer";
 import { LoginModal } from "@/components/login-modal";
@@ -37,34 +37,52 @@ const campaignRhythm = [
   {
     step: "01",
     title: "Enter once per day",
-    cue: "Daily return habit",
+    cue: "Daily habit",
     description:
-      "The landing page stays alive because members can come back every Arizona day and take another shot at the monthly prize.",
+      "Come back each Arizona day for another shot at the monthly prize and keep your name in the drawing.",
     icon: Trophy,
   },
   {
     step: "02",
     title: "Confirm by magic link",
-    cue: "Fast path to dashboard",
+    cue: "Quick confirmation",
     description:
-      "Confirmation should feel almost invisible, but it still turns an email capture into a real member session.",
+      "A quick email confirmation locks in today's entry and sends you straight into your member dashboard.",
     icon: MailCheck,
   },
   {
     step: "03",
     title: "Share your referral link",
-    cue: "Matching prize engine",
+    cue: "Grow your chain",
     description:
-      "This is the mechanic that makes the campaign spread. People are not just entering. They are building a chain.",
+      "Invite friends with your link so one winning entry can create matching winners above it.",
     icon: UserPlus,
   },
   {
     step: "04",
     title: "Nominate favorite merchants",
-    cue: "Merchant story loop",
+    cue: "Champion local",
     description:
-      "After login, the campaign becomes content. Members nominate merchants, submit photos, and give admin something worth publishing.",
+      "Inside the dashboard, tell us which local business deserves the spotlight and why the community should back them.",
     icon: Store,
+  },
+];
+
+const heroHighlights = [
+  {
+    title: "Daily entry window",
+    description:
+      "Enter once each Arizona day. The monthly drawing closes at 11:59 PM Arizona time on the last day of the month.",
+  },
+  {
+    title: "Matching prize chain",
+    description:
+      "If someone in your referral chain wins, first-tier and second-tier matches can pay out above them.",
+  },
+  {
+    title: "Favorite merchant reward",
+    description:
+      "Approved nominations can unlock a $25 gas or grocery reward for the member who submitted them.",
   },
 ];
 
@@ -72,30 +90,55 @@ const relayScript = [
   "You invite Sally.",
   "Sally invites Jim.",
   "Jim wins the grand prize.",
-  "Sally wins because she referred Jim.",
-  "You win because Jim sits on your second tier.",
+  "Sally wins the first-tier match.",
+  "You win the second-tier match.",
+];
+
+const nextSteps = [
+  {
+    title: "Confirm your entry",
+    description:
+      "Use the magic link in your inbox to lock in today's entry and land in your dashboard.",
+    icon: MailCheck,
+  },
+  {
+    title: "Share your referral link",
+    description:
+      "Invite friends so your chain has a shot at creating matching winners above the grand prize entry.",
+    icon: UserPlus,
+  },
+  {
+    title: "Nominate a merchant",
+    description:
+      "Tell us which local business deserves the spotlight and why it matters to your neighborhood.",
+    icon: Store,
+  },
 ];
 
 const nominationBreakdown = [
   {
-    title: "Prompt the story",
-    description: "The dashboard should open with one clear question: who is your favorite merchant and why?",
-    accent: "One clear prompt",
+    title: "Tell us who deserves it",
+    description:
+      "Start with one clear prompt: which merchant do you want to champion, and what makes them worth backing?",
+    accent: "Favorite merchant",
   },
   {
-    title: "Require proof",
-    description: "Members need at least 50 words and at least 2 photos so the nomination feels real, not generic.",
+    title: "Add real proof",
+    description:
+      "A short written story plus at least two photos helps each nomination feel specific, personal, and publishable.",
     accent: "Words plus photos",
   },
   {
-    title: "Moderate before publishing",
-    description: "Admin reviews every nomination before it appears publicly in a separate merchant-page section.",
-    accent: "Admin controlled",
+    title: "Wait for approval",
+    description:
+      "Every nomination is reviewed before it appears publicly, keeping the merchant pages curated and credible.",
+    accent: "Reviewed first",
   },
   {
-    title: "Start the $25 path",
-    description: "Approval should kick off the certificate process, then qualification and store rules take over from there.",
-    accent: "Reward after approval",
+    title: "Unlock the reward path",
+    description:
+      "Once a nomination is approved, the $25 gas or grocery reward path can begin, subject to the campaign rules.",
+    accent: "$25 reward path",
   },
 ];
 
@@ -104,7 +147,9 @@ export function FavoriteMerchantLandingPage() {
   const [loginEmail, setLoginEmail] = useState("");
 
   return (
-    <div className={`min-h-screen bg-[#f5efe7] text-[#1f1510] ${sans.className}`}>
+    <div
+      className={`min-h-screen bg-[#f5efe7] text-[#1f1510] ${sans.className}`}
+    >
       <header className="sticky top-0 z-30">
         <div className="border-b border-white/10 bg-[#120b08]/78 text-white backdrop-blur-xl">
           <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3 sm:px-6 lg:px-8">
@@ -120,10 +165,16 @@ export function FavoriteMerchantLandingPage() {
             </Link>
 
             <div className="hidden items-center gap-6 text-sm font-medium text-white/74 lg:flex">
-              <a href="#how-it-works" className="transition-colors hover:text-white">
+              <a
+                href="#how-it-works"
+                className="transition-colors hover:text-white"
+              >
                 How It Works
               </a>
-              <a href="#entry-form" className="transition-colors hover:text-white">
+              <a
+                href="#entry-form"
+                className="transition-colors hover:text-white"
+              >
                 Enter Today
               </a>
             </div>
@@ -154,7 +205,7 @@ export function FavoriteMerchantLandingPage() {
         <div className="absolute right-0 top-8 h-72 w-72 rounded-full bg-[#76b54f]/14 blur-3xl animate-drift-soft-reverse" />
 
         <div className="relative mx-auto max-w-7xl px-4 pb-14 pt-8 sm:px-6 sm:pb-18 lg:px-8 lg:pb-22 lg:pt-10">
-          <div className="grid gap-8 lg:grid-cols-[1.02fr_0.98fr] lg:items-start">
+          <div className="grid gap-8 lg:grid-cols-[minmax(0,1.08fr)_minmax(24rem,30rem)] lg:items-start">
             <div className="animate-rise-in space-y-7">
               <div className="flex flex-wrap items-center gap-3 text-xs font-semibold uppercase tracking-[0.2em] text-white/78 sm:text-[0.8rem]">
                 <span className="rounded-full border border-white/12 bg-white/8 px-3 py-1.5">
@@ -168,29 +219,40 @@ export function FavoriteMerchantLandingPage() {
                 <p className="text-base font-semibold uppercase tracking-[0.22em] text-[#ffcf8b] sm:text-[1.02rem]">
                   Win $500 in gas or groceries
                 </p>
-                <h1 className={`max-w-4xl text-balance text-4xl font-semibold leading-[0.98] sm:text-5xl lg:text-6xl xl:text-7xl ${display.className}`}>
+                <h1
+                  className={`max-w-4xl text-balance text-4xl font-semibold leading-[0.98] sm:text-5xl lg:text-6xl xl:text-7xl ${display.className}`}
+                >
                   Back your favorite local merchant.
-                  <span className="block text-[#ffcf8b]">Bring people with you.</span>
+                  <span className="block text-[#ffcf8b]">
+                    Bring people with you.
+                  </span>
                 </h1>
                 <p className="max-w-2xl text-lg leading-8 text-white/82 sm:text-[1.35rem] sm:leading-9">
-                  Enter once per day, confirm by magic link, and keep the momentum going inside your member dashboard where referrals and favorite-merchant nominations turn into the real story.
+                  Enter once per day, confirm by magic link, and head into your
+                  dashboard to share referrals and champion the local merchant
+                  you want to see win.
                 </p>
               </div>
 
               <div className="rounded-[1.4rem] border border-white/10 bg-white/6 px-4 py-3 text-base leading-7 text-white/80 sm:hidden">
-                Daily entry. Matching prize tiers. Approved nominations unlock a $25 reward.
+                Daily entries, matching prize tiers, and favorite-merchant
+                rewards.
               </div>
 
               <div className="hidden gap-3 text-base leading-7 text-white/80 sm:grid sm:grid-cols-3">
-                <div className="rounded-[1.4rem] border border-white/10 bg-white/6 px-4 py-3">
-                  Sweepstakes opens on the first and closes at 11:59 PM Arizona time on the last day of the month.
-                </div>
-                <div className="rounded-[1.4rem] border border-white/10 bg-white/6 px-4 py-3">
-                  Matching winners can pay out on your first tier and your second tier.
-                </div>
-                <div className="rounded-[1.4rem] border border-white/10 bg-white/6 px-4 py-3">
-                  Approved favorite-merchant nominations unlock a $25 reward.
-                </div>
+                {heroHighlights.map((item) => (
+                  <div
+                    key={item.title}
+                    className="rounded-[1.4rem] border border-white/10 bg-white/6 px-4 py-3"
+                  >
+                    <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#ffcf8b]">
+                      {item.title}
+                    </p>
+                    <p className="mt-2 text-sm leading-6 text-white/74">
+                      {item.description}
+                    </p>
+                  </div>
+                ))}
               </div>
 
               <div className="flex flex-col gap-3 sm:flex-row">
@@ -215,7 +277,10 @@ export function FavoriteMerchantLandingPage() {
               </div>
             </div>
 
-            <div className="animate-rise-in lg:pl-4" style={{ animationDelay: "120ms" }}>
+            <div
+              className="animate-rise-in lg:pl-4"
+              style={{ animationDelay: "120ms" }}
+            >
               <SweepstakesEntryForm
                 onRequireLogin={(email) => {
                   setLoginEmail(email);
@@ -225,48 +290,72 @@ export function FavoriteMerchantLandingPage() {
             </div>
           </div>
 
-          <div className="mt-8 grid gap-4 lg:mt-10 lg:grid-cols-[1.15fr_0.85fr]">
-            <div className="animate-rise-in rounded-[2rem] border border-white/12 bg-[linear-gradient(145deg,rgba(255,255,255,0.1),rgba(255,255,255,0.04))] p-6 shadow-[0_24px_80px_rgba(0,0,0,0.18)]" style={{ animationDelay: "180ms" }}>
+          <div className="mt-8 grid gap-4 lg:mt-10 lg:grid-cols-[1.08fr_0.92fr]">
+            <div
+              className="animate-rise-in rounded-[2rem] border border-white/12 bg-[linear-gradient(145deg,rgba(255,255,255,0.1),rgba(255,255,255,0.04))] p-6 shadow-[0_24px_80px_rgba(0,0,0,0.18)]"
+              style={{ animationDelay: "180ms" }}
+            >
               <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
                 <div>
                   <p className="text-sm font-semibold uppercase tracking-[0.22em] text-[#ffcf8b]">
                     Matching prize explained
                   </p>
                   <h2 className="mt-2 text-2xl font-semibold text-white sm:text-3xl">
-                    Make the referral upside obvious in one glance.
+                    See how one winning entry can ripple back through the chain.
                   </h2>
                 </div>
                 <span className="rounded-full border border-white/12 bg-black/16 px-3 py-1.5 text-sm text-white/78">
-                  First tier + second tier
+                  Grand prize + matching winners
                 </span>
               </div>
 
               <div className="grid gap-3 md:grid-cols-[1fr_auto_1fr_auto_1fr] md:items-center">
                 <div className="rounded-[1.5rem] border border-white/10 bg-black/18 p-4">
-                  <p className="text-sm font-semibold uppercase tracking-[0.22em] text-[#ffcf8b]">You</p>
-                  <p className="mt-2 text-lg font-semibold text-white">Referral link owner</p>
-                  <p className="mt-2 text-base leading-7 text-white/74">You brought the chain into motion.</p>
+                  <p className="text-sm font-semibold uppercase tracking-[0.22em] text-[#ffcf8b]">
+                    You
+                  </p>
+                  <p className="mt-2 text-lg font-semibold text-white">
+                    Referral link owner
+                  </p>
+                  <p className="mt-2 text-base leading-7 text-white/74">
+                    Your invite started the chain.
+                  </p>
                 </div>
                 <div className="hidden items-center justify-center md:flex">
                   <div className="h-px w-8 bg-[linear-gradient(90deg,rgba(255,207,139,0.08),rgba(255,207,139,0.85),rgba(255,207,139,0.08))]" />
                 </div>
                 <div className="rounded-[1.5rem] border border-white/10 bg-black/18 p-4">
-                  <p className="text-sm font-semibold uppercase tracking-[0.22em] text-[#ffcf8b]">Sally</p>
-                  <p className="mt-2 text-lg font-semibold text-white">First-tier referral</p>
-                  <p className="mt-2 text-base leading-7 text-white/74">She referred Jim into the sweepstakes.</p>
+                  <p className="text-sm font-semibold uppercase tracking-[0.22em] text-[#ffcf8b]">
+                    Sally
+                  </p>
+                  <p className="mt-2 text-lg font-semibold text-white">
+                    First-tier referral
+                  </p>
+                  <p className="mt-2 text-base leading-7 text-white/74">
+                    She referred the person who won.
+                  </p>
                 </div>
                 <div className="hidden items-center justify-center md:flex">
                   <div className="h-px w-8 bg-[linear-gradient(90deg,rgba(255,207,139,0.08),rgba(255,207,139,0.85),rgba(255,207,139,0.08))]" />
                 </div>
                 <div className="rounded-[1.5rem] border border-white/10 bg-[#ffcf8b]/12 p-4">
-                  <p className="text-sm font-semibold uppercase tracking-[0.22em] text-[#ffcf8b]">Jim</p>
-                  <p className="mt-2 text-lg font-semibold text-white">Grand prize winner</p>
-                  <p className="mt-2 text-base leading-7 text-white/74">That result can trigger matching winners above him.</p>
+                  <p className="text-sm font-semibold uppercase tracking-[0.22em] text-[#ffcf8b]">
+                    Jim
+                  </p>
+                  <p className="mt-2 text-lg font-semibold text-white">
+                    Grand prize winner
+                  </p>
+                  <p className="mt-2 text-base leading-7 text-white/74">
+                    His win can trigger the matching winners above him.
+                  </p>
                 </div>
               </div>
             </div>
 
-            <div className="animate-rise-in rounded-[2rem] border border-[#ffcf8b]/18 bg-[#fff7ee] p-6 text-[#23140d] shadow-[0_20px_60px_rgba(0,0,0,0.16)]" style={{ animationDelay: "220ms" }}>
+            <div
+              className="animate-rise-in rounded-[2rem] border border-[#ffcf8b]/18 bg-[#fff7ee] p-6 text-[#23140d] shadow-[0_20px_60px_rgba(0,0,0,0.16)]"
+              style={{ animationDelay: "220ms" }}
+            >
               <p className="text-sm font-semibold uppercase tracking-[0.22em] text-[#ab6731]">
                 What happens next
               </p>
@@ -274,42 +363,50 @@ export function FavoriteMerchantLandingPage() {
                 Entry is just the front door.
               </h2>
               <div className="mt-5 space-y-4">
-                <div className="flex items-start gap-3">
-                  <MailCheck className="mt-1 h-4 w-4 text-[#ab6731]" />
-                  <p className="text-base leading-8 text-[#5e483a]">
-                    Magic-link confirmation moves people straight into the member dashboard.
-                  </p>
-                </div>
-                <div className="flex items-start gap-3">
-                  <Store className="mt-1 h-4 w-4 text-[#ab6731]" />
-                  <p className="text-base leading-8 text-[#5e483a]">
-                    Members are prompted to nominate their favorite merchants and explain why they matter.
-                  </p>
-                </div>
-                <div className="flex items-start gap-3">
-                  <Gift className="mt-1 h-4 w-4 text-[#ab6731]" />
-                  <p className="text-base leading-8 text-[#5e483a]">
-                    Approved nominations can trigger a $25 gas or grocery reward and fresh merchant proof.
-                  </p>
-                </div>
+                {nextSteps.map((item) => {
+                  const Icon = item.icon;
+
+                  return (
+                    <div key={item.title} className="flex items-start gap-3">
+                      <span className="mt-1 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#fff0dd] text-[#ab6731]">
+                        <Icon className="h-4 w-4" />
+                      </span>
+                      <div>
+                        <p className="text-sm font-semibold uppercase tracking-[0.16em] text-[#ab6731]">
+                          {item.title}
+                        </p>
+                        <p className="mt-1 text-base leading-7 text-[#5e483a]">
+                          {item.description}
+                        </p>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      <section id="how-it-works" className="border-b border-[#e6d8ca] bg-[#f5efe7]">
+      <section
+        id="how-it-works"
+        className="border-b border-[#e6d8ca] bg-[#f5efe7]"
+      >
         <div className="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8 lg:py-18">
           <div className="grid gap-10 lg:grid-cols-[0.82fr_1.18fr]">
             <div className="space-y-5 lg:sticky lg:top-28 lg:self-start">
               <p className="text-base font-semibold uppercase tracking-[0.22em] text-[#ab6731]">
                 Campaign rhythm
               </p>
-              <h2 className={`max-w-xl text-balance text-4xl leading-tight text-[#1f1510] sm:text-5xl ${display.className}`}>
-                One entry turns into a referral machine and a merchant story.
+              <h2
+                className={`max-w-xl text-balance text-4xl leading-tight text-[#1f1510] sm:text-5xl ${display.className}`}
+              >
+                One daily entry can turn into a referral chain and a merchant
+                spotlight.
               </h2>
               <p className="max-w-lg text-lg leading-8 text-[#645347]">
-                The page should not explain the sweepstakes with generic feature cards. It should break the campaign into a few memorable beats people can repeat.
+                The campaign works best when people can understand it in four
+                beats: enter, confirm, share, and champion a local merchant.
               </p>
             </div>
 
@@ -323,7 +420,9 @@ export function FavoriteMerchantLandingPage() {
                     className="grid gap-5 border-b border-[#dcc8b4] py-6 md:grid-cols-[auto_1fr_auto] md:items-start md:gap-6"
                   >
                     <div className="flex items-center gap-4">
-                      <span className={`text-4xl leading-none text-[#ab6731] sm:text-5xl ${display.className}`}>
+                      <span
+                        className={`text-4xl leading-none text-[#ab6731] sm:text-5xl ${display.className}`}
+                      >
                         {step.step}
                       </span>
                       <span className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-[#d9c4ad] bg-white text-[#ab6731] md:hidden">
@@ -336,9 +435,13 @@ export function FavoriteMerchantLandingPage() {
                         <span className="hidden h-11 w-11 items-center justify-center rounded-full border border-[#d9c4ad] bg-white text-[#ab6731] md:inline-flex">
                           <Icon className="h-5 w-5" />
                         </span>
-                        <h3 className="text-2xl font-semibold text-[#1f1510]">{step.title}</h3>
+                        <h3 className="text-2xl font-semibold text-[#1f1510]">
+                          {step.title}
+                        </h3>
                       </div>
-                      <p className="max-w-2xl text-base leading-8 text-[#645347]">{step.description}</p>
+                      <p className="max-w-2xl text-base leading-8 text-[#645347]">
+                        {step.description}
+                      </p>
                     </div>
 
                     <div className="md:flex md:justify-end">
@@ -362,11 +465,14 @@ export function FavoriteMerchantLandingPage() {
               <p className="text-base font-semibold uppercase tracking-[0.22em] text-[#ffcf8b]">
                 Matching prize relay
               </p>
-              <h2 className={`max-w-xl text-balance text-4xl leading-tight sm:text-5xl ${display.className}`}>
-                The share mechanic should read like a chain reaction, not legal copy.
+              <h2
+                className={`max-w-xl text-balance text-4xl leading-tight sm:text-5xl ${display.className}`}
+              >
+                See how one winning entry can create a chain reaction.
               </h2>
               <p className="max-w-xl text-lg leading-8 text-white/76">
-                If people can picture the referral chain instantly, they can explain it instantly. That is what makes this campaign spread.
+                If the referral chain makes sense in a glance, it is easier to
+                share, easier to explain, and easier to join.
               </p>
 
               <div className="border-y border-white/10">
@@ -409,12 +515,16 @@ export function FavoriteMerchantLandingPage() {
                     },
                   ].map((person, index) => (
                     <div key={person.name} className="contents">
-                      <div className="border border-white/12 bg-black/14 px-5 py-6">
+                      <div className="rounded-[1.5rem] border border-white/12 bg-black/14 px-5 py-6">
                         <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#ffcf8b]">
                           {person.name}
                         </p>
-                        <h3 className="mt-3 text-2xl font-semibold text-white">{person.label}</h3>
-                        <p className="mt-3 text-base leading-7 text-white/72">{person.note}</p>
+                        <h3 className="mt-3 text-2xl font-semibold text-white">
+                          {person.label}
+                        </h3>
+                        <p className="mt-3 text-base leading-7 text-white/72">
+                          {person.note}
+                        </p>
                       </div>
 
                       {index < 2 && (
@@ -426,7 +536,8 @@ export function FavoriteMerchantLandingPage() {
 
                 <div className="border-t border-white/10 pt-5">
                   <p className="text-lg leading-8 text-white/78">
-                    One winning entry can create three winners from the same referral chain. That is the clever part of the campaign and the page should make it feel obvious.
+                    One winning entry can create three winners from the same
+                    referral chain. That is the hook people remember.
                   </p>
                 </div>
               </div>
@@ -443,13 +554,17 @@ export function FavoriteMerchantLandingPage() {
               <div className="relative space-y-8">
                 <div className="space-y-4">
                   <p className="text-base font-semibold uppercase tracking-[0.22em] text-[#ffcf8b]">
-                    After they enter
+                    After you confirm
                   </p>
-                  <h2 className={`max-w-2xl text-balance text-4xl leading-tight sm:text-5xl ${display.className}`}>
-                    "Who's your favorite merchant and why?"
+                  <h2
+                    className={`max-w-2xl text-balance text-4xl leading-tight sm:text-5xl ${display.className}`}
+                  >
+                    "Who is your favorite merchant and why?"
                   </h2>
                   <p className="max-w-2xl text-lg leading-8 text-white/76">
-                    That question should dominate the dashboard. It is the bridge between sweepstakes participation, merchant storytelling, and the approval-based reward path.
+                    That single question connects the sweepstakes to real local
+                    businesses, member stories, and the approval-based reward
+                    path.
                   </p>
                 </div>
 
@@ -460,7 +575,8 @@ export function FavoriteMerchantLandingPage() {
                       Confirm first
                     </p>
                     <p className="mt-2 text-base leading-7 text-white/72">
-                      The magic link should hand the member straight into this next step without extra friction.
+                      The magic link should take members straight into this next
+                      step without extra friction.
                     </p>
                   </div>
                   <div>
@@ -469,7 +585,8 @@ export function FavoriteMerchantLandingPage() {
                       Bring proof
                     </p>
                     <p className="mt-2 text-base leading-7 text-white/72">
-                      Fifty words and two photos make the nomination feel lived-in and worth moderating.
+                      A short story and two photos make the nomination feel
+                      lived-in and worth publishing.
                     </p>
                   </div>
                   <div>
@@ -478,7 +595,8 @@ export function FavoriteMerchantLandingPage() {
                       Qualify after approval
                     </p>
                     <p className="mt-2 text-base leading-7 text-white/72">
-                      Approval starts the $25 certificate path. Store selection and qualification still happen after that.
+                      Approval starts the $25 reward path. Store selection and
+                      qualification still happen after that.
                     </p>
                   </div>
                 </div>
@@ -495,7 +613,9 @@ export function FavoriteMerchantLandingPage() {
                   ].join(" ")}
                 >
                   <div>
-                    <h3 className="text-2xl font-semibold text-[#1f1510]">{item.title}</h3>
+                    <h3 className="text-2xl font-semibold text-[#1f1510]">
+                      {item.title}
+                    </h3>
                     <p className="mt-3 max-w-2xl text-base leading-8 text-[#645347]">
                       {item.description}
                     </p>
@@ -508,8 +628,13 @@ export function FavoriteMerchantLandingPage() {
 
               <div className="border-t border-[#dcc8b4] py-6">
                 <p className="text-lg leading-8 text-[#3d2b21]">
-                  Members can submit up to five favorite-merchant nominations per calendar month, and approved posts should land in a dedicated merchant-page section called{" "}
-                  <span className="font-semibold">Nominated As A Favorite Merchant</span>.
+                  Members can submit up to five favorite-merchant nominations
+                  per calendar month, and approved posts appear in a dedicated
+                  merchant-page section called{" "}
+                  <span className="font-semibold">
+                    Nominated As A Favorite Merchant
+                  </span>
+                  .
                 </p>
               </div>
             </div>
@@ -525,12 +650,15 @@ export function FavoriteMerchantLandingPage() {
               <p className="text-base font-semibold uppercase tracking-[0.22em] text-[#ffcf8b]">
                 Local merchants
               </p>
-              <h2 className={`max-w-2xl text-balance text-4xl leading-tight sm:text-5xl ${display.className}`}>
-                Show the kind of merchants people can champion.
+              <h2
+                className={`max-w-2xl text-balance text-4xl leading-tight sm:text-5xl ${display.className}`}
+              >
+                Show the kinds of merchants people will want to champion.
               </h2>
             </div>
             <p className="max-w-lg text-base leading-8 text-white/74">
-              The prize gets stronger when it feels connected to real businesses people already care about and want to champion.
+              The sweepstakes lands better when it feels connected to real
+              businesses people already know, use, and want to support.
             </p>
           </div>
 
@@ -549,11 +677,14 @@ export function FavoriteMerchantLandingPage() {
               <p className="text-sm font-semibold uppercase tracking-[0.28em] text-[#ab6731]">
                 Enter today
               </p>
-              <h2 className={`max-w-2xl text-balance text-4xl leading-tight text-[#1f1510] sm:text-5xl ${display.className}`}>
-                Enter today and start your referral chain.
+              <h2
+                className={`max-w-2xl text-balance text-4xl leading-tight text-[#1f1510] sm:text-5xl ${display.className}`}
+              >
+                Take today's entry, then start your referral chain.
               </h2>
               <p className="max-w-2xl text-lg leading-8 text-[#645347]">
-                One strong prize, one clear action, and a faster path into the dashboard where the real merchant story begins.
+                One clear prize, one clear action, and a fast path into the
+                dashboard where the merchant story begins.
               </p>
             </div>
 
