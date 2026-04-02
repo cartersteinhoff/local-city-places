@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import { revalidatePath } from "next/cache";
 import { db } from "@/db";
 import { merchants } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { getSession } from "@/lib/auth";
 import { getMerchantPageUrl } from "@/lib/utils";
+import { revalidateMerchantPublicPaths } from "@/lib/merchant-public-revalidation";
 
 // POST /api/admin/merchant-pages/[id]/revalidate
 // Manually trigger page rebuild for instant updates
@@ -44,12 +44,11 @@ export async function POST(
 
     const pageUrl = getMerchantPageUrl(merchant.city, merchant.state, merchant.slug);
 
-    // Trigger revalidation
-    revalidatePath(pageUrl);
+    revalidateMerchantPublicPaths(merchant);
 
     return NextResponse.json({
       success: true,
-      message: "Page rebuild triggered",
+      message: "Public merchant surfaces rebuilt",
       url: pageUrl,
     });
   } catch (error) {

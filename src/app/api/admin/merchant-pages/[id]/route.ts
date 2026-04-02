@@ -10,6 +10,7 @@ import {
   getMerchantPageUrl,
   getMerchantShortUrl,
 } from "@/lib/utils";
+import { revalidateMerchantPublicPaths } from "@/lib/merchant-public-revalidation";
 
 export async function GET(
   request: NextRequest,
@@ -308,6 +309,8 @@ export async function PATCH(
       : null;
     const shortUrl = updated.phone ? getMerchantShortUrl(updated.phone) : null;
 
+    revalidateMerchantPublicPaths(existing, updated);
+
     return NextResponse.json({
       success: true,
       merchant: {
@@ -362,6 +365,8 @@ export async function DELETE(
 
     // Delete the merchant
     await db.delete(merchants).where(eq(merchants.id, id));
+
+    revalidateMerchantPublicPaths(existing);
 
     return NextResponse.json({ success: true });
   } catch (error) {

@@ -4,6 +4,7 @@ import { users, merchants, categories, merchantBankAccounts } from "@/db/schema"
 import { eq } from "drizzle-orm";
 import { getSession } from "@/lib/auth";
 import { uploadProfilePhoto, uploadMerchantLogo, validateImageFormat, validateImageSize } from "@/lib/storage";
+import { revalidateMerchantPublicPaths } from "@/lib/merchant-public-revalidation";
 
 export async function GET() {
   try {
@@ -244,6 +245,18 @@ export async function PATCH(request: NextRequest) {
         });
       }
     }
+
+    const [updatedMerchant] = await db
+      .select({
+        city: merchants.city,
+        state: merchants.state,
+        slug: merchants.slug,
+      })
+      .from(merchants)
+      .where(eq(merchants.id, merchant.id))
+      .limit(1);
+
+    revalidateMerchantPublicPaths(merchant, updatedMerchant);
 
     return NextResponse.json({ success: true, profilePhotoUrl, logoUrl });
   } catch (error) {
