@@ -31,3 +31,34 @@ export const sweepstakesEntrySchema = z.object({
 });
 
 export type SweepstakesEntryInput = z.infer<typeof sweepstakesEntrySchema>;
+
+export const favoriteMerchantTestimonialPhotoSchema = z.object({
+  url: z.string().url("Photo URL must be valid"),
+});
+
+export const favoriteMerchantTestimonialSchema = z.object({
+  testimonialId: z.string().uuid().optional(),
+  merchantId: z.string().uuid("Merchant is required"),
+  content: z
+    .string()
+    .trim()
+    .min(50, "Testimonial must be at least 50 characters")
+    .max(4000, "Testimonial must be less than 4000 characters"),
+  photos: z
+    .array(favoriteMerchantTestimonialPhotoSchema)
+    .min(2, "At least 2 photos are required")
+    .max(6, "You can upload up to 6 photos"),
+});
+
+export const favoriteMerchantModerationSchema = z.object({
+  action: z.enum(["approve", "reject", "request_changes"]),
+  notes: z
+    .string()
+    .trim()
+    .max(1000, "Notes must be less than 1000 characters")
+    .optional()
+    .or(z.literal("")),
+});
+
+export type FavoriteMerchantTestimonialInput = z.infer<typeof favoriteMerchantTestimonialSchema>;
+export type FavoriteMerchantModerationInput = z.infer<typeof favoriteMerchantModerationSchema>;

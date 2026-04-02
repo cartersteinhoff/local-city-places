@@ -642,9 +642,17 @@ function MemberDashboardContent() {
             </div>
           </div>
 
-          <p className="text-sm text-muted-foreground mt-4">
-            Next step: nominate your favorite merchant, then share your link so referrals can activate under your name.
-          </p>
+          <div className="flex flex-col gap-3 mt-4 lg:flex-row lg:items-center lg:justify-between">
+            <p className="text-sm text-muted-foreground">
+              Next step: nominate your favorite merchant, then share your link so referrals can activate under your name.
+            </p>
+            <a
+              href="/member/sweepstakes/testimonials/new"
+              className="inline-flex items-center justify-center rounded-md border px-4 py-2 text-sm font-medium hover:bg-muted transition-colors"
+            >
+              Nominate a Favorite Merchant
+            </a>
+          </div>
           {sweepstakesActionMessage && (
             <p className="text-sm text-green-700 mt-3">{sweepstakesActionMessage}</p>
           )}

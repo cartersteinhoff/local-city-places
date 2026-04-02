@@ -108,6 +108,13 @@ export function normalizeReferralCode(code: string | null | undefined) {
   return normalized || null;
 }
 
+export function countWords(value: string) {
+  return value
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean).length;
+}
+
 export async function ensureSweepstakesReferralCode(memberId: string) {
   const [existingCode] = await db
     .select()

@@ -9,6 +9,7 @@ import {
   varchar,
   decimal,
   pgEnum,
+  index,
   uniqueIndex,
 } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
@@ -44,6 +45,14 @@ export const sweepstakesEntrySourceEnum = pgEnum("sweepstakes_entry_source", [
   "campaign_page",
   "dashboard",
 ]);
+export const favoriteMerchantTestimonialStatusEnum = pgEnum(
+  "favorite_merchant_testimonial_status",
+  ["submitted", "changes_requested", "approved", "rejected"]
+);
+export const favoriteMerchantRewardStatusEnum = pgEnum(
+  "favorite_merchant_reward_status",
+  ["not_created", "registration_required", "qualifying", "qualified", "fulfilled", "void"]
+);
 
 // Users table
 export const users = pgTable("users", {
@@ -171,6 +180,49 @@ export const sweepstakesReferralActivations = pgTable("sweepstakes_referral_acti
     table.referredMemberId
   ),
 ]);
+
+// Favorite merchant testimonials table
+export const favoriteMerchantTestimonials = pgTable("favorite_merchant_testimonials", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  cycleId: uuid("cycle_id")
+    .notNull()
+    .references(() => sweepstakesCycles.id, { onDelete: "cascade" }),
+  memberId: uuid("member_id")
+    .notNull()
+    .references(() => members.id, { onDelete: "cascade" }),
+  merchantId: uuid("merchant_id")
+    .notNull()
+    .references(() => merchants.id, { onDelete: "cascade" }),
+  content: text("content").notNull(),
+  wordCount: integer("word_count").notNull(),
+  status: favoriteMerchantTestimonialStatusEnum("status").notNull().default("submitted"),
+  moderationNotes: text("moderation_notes"),
+  approvedAt: timestamp("approved_at"),
+  approvedBy: uuid("approved_by").references(() => users.id),
+  rewardStatus: favoriteMerchantRewardStatusEnum("reward_status")
+    .notNull()
+    .default("not_created"),
+  rewardReferenceId: uuid("reward_reference_id"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => [
+  index("favorite_merchant_testimonials_member_cycle_merchant_idx").on(
+    table.memberId,
+    table.cycleId,
+    table.merchantId
+  ),
+]);
+
+// Favorite merchant testimonial photos table
+export const favoriteMerchantTestimonialPhotos = pgTable("favorite_merchant_testimonial_photos", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  testimonialId: uuid("testimonial_id")
+    .notNull()
+    .references(() => favoriteMerchantTestimonials.id, { onDelete: "cascade" }),
+  url: text("url").notNull(),
+  displayOrder: integer("display_order").default(0).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
 
 // Review status enum
 export const reviewStatusEnum = pgEnum("review_status", ["pending", "approved", "rejected"]);
@@ -594,6 +646,7 @@ export const membersRelations = relations(members, ({ one, many }) => ({
   monthlyQualifications: many(monthlyQualifications),
   surveyResponses: many(surveyResponses),
   reviews: many(reviews),
+  favoriteMerchantTestimonials: many(favoriteMerchantTestimonials),
   offerClaims: many(offerClaims),
 }));
 
@@ -625,6 +678,7 @@ export const merchantsRelations = relations(merchants, ({ one, many }) => ({
   grcPurchases: many(grcPurchases),
   surveys: many(surveys),
   reviews: many(reviews),
+  favoriteMerchantTestimonials: many(favoriteMerchantTestimonials),
   marketplaceOffers: many(marketplaceOffers),
 }));
 
@@ -741,3 +795,36 @@ export const reviewPhotosRelations = relations(reviewPhotos, ({ one }) => ({
     references: [reviews.id],
   }),
 }));
+
+export const favoriteMerchantTestimonialsRelations = relations(
+  favoriteMerchantTestimonials,
+  ({ one, many }) => ({
+    cycle: one(sweepstakesCycles, {
+      fields: [favoriteMerchantTestimonials.cycleId],
+      references: [sweepstakesCycles.id],
+    }),
+    member: one(members, {
+      fields: [favoriteMerchantTestimonials.memberId],
+      references: [members.id],
+    }),
+    merchant: one(merchants, {
+      fields: [favoriteMerchantTestimonials.merchantId],
+      references: [merchants.id],
+    }),
+    approvedByUser: one(users, {
+      fields: [favoriteMerchantTestimonials.approvedBy],
+      references: [users.id],
+    }),
+    photos: many(favoriteMerchantTestimonialPhotos),
+  })
+);
+
+export const favoriteMerchantTestimonialPhotosRelations = relations(
+  favoriteMerchantTestimonialPhotos,
+  ({ one }) => ({
+    testimonial: one(favoriteMerchantTestimonials, {
+      fields: [favoriteMerchantTestimonialPhotos.testimonialId],
+      references: [favoriteMerchantTestimonials.id],
+    }),
+  })
+);
