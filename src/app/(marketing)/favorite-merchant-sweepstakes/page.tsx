@@ -13,7 +13,10 @@ export default async function FavoriteMerchantSweepstakesPage() {
           ? !!session.member
           : !!session.merchant;
 
-    if (session.user.role === "member" && session.member) {
+    if (
+      (session.user.role === "member" && session.member) ||
+      (session.user.role === "admin" && session.member)
+    ) {
       redirect("/member?sweepstakes=dashboard");
     }
 
