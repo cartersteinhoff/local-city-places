@@ -32,7 +32,7 @@ export function Footer({ className, variant = "overlay" }: FooterProps) {
         &copy; 2026 LOCAL City Places&trade; LLC - All Rights Reserved
       </p>
       <p className={styles.secondaryText}>
-        Powered by CityPressMedia.Com, INC.
+        3075 W. Ray Rd, Suite 200, Chandler, Arizona 85226
       </p>
       <div className="mt-2 flex flex-wrap justify-center gap-x-4 gap-y-1">
         <Link href="/privacy" className={styles.link}>
