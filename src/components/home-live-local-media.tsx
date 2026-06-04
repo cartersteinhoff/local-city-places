@@ -100,40 +100,6 @@ function normalizeNowPlaying(
   return { title, subtitle, artworkUrl, startTime };
 }
 
-function Waveform() {
-  const bars = [
-    { id: "a", height: 18 },
-    { id: "b", height: 28 },
-    { id: "c", height: 20 },
-    { id: "d", height: 34 },
-    { id: "e", height: 44 },
-    { id: "f", height: 30 },
-    { id: "g", height: 52 },
-    { id: "h", height: 24 },
-    { id: "i", height: 40 },
-    { id: "j", height: 58 },
-    { id: "k", height: 36 },
-    { id: "l", height: 26 },
-    { id: "m", height: 48 },
-    { id: "n", height: 32 },
-    { id: "o", height: 42 },
-    { id: "p", height: 20 },
-    { id: "q", height: 30 },
-  ];
-
-  return (
-    <div className="flex h-14 items-center gap-1.5 text-sky-400">
-      {bars.map((bar) => (
-        <span
-          key={bar.id}
-          className="w-1 rounded-full bg-current shadow-[0_0_12px_rgba(14,165,233,0.45)]"
-          style={{ height: bar.height }}
-        />
-      ))}
-    </div>
-  );
-}
-
 function RadioCoPlayer() {
   const audioRef = useRef<HTMLAudioElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -321,31 +287,6 @@ function RadioCoPlayer() {
             {nowPlaying.title}
           </h3>
           <p className="mt-1 text-base text-white/80">{nowPlaying.subtitle}</p>
-
-          <div className="mt-4 flex items-center gap-4">
-            <button
-              type="button"
-              onClick={togglePlayback}
-              className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full border-2 border-white/90 text-white transition hover:bg-white/10"
-              aria-label={playbackLabel}
-              aria-pressed={isPlaying}
-            >
-              {isPlaying ? (
-                <Pause className="h-7 w-7" fill="currentColor" />
-              ) : (
-                <Play className="ml-1 h-7 w-7" fill="currentColor" />
-              )}
-            </button>
-            <button
-              type="button"
-              onClick={togglePlayback}
-              className="min-w-0 cursor-pointer rounded-[6px] transition hover:opacity-85 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white"
-              aria-label={playbackLabel}
-              aria-pressed={isPlaying}
-            >
-              <Waveform />
-            </button>
-          </div>
         </div>
       </div>
 
@@ -594,7 +535,7 @@ export function HomeLiveLocalMedia() {
           </div>
 
           <div className="grid justify-center gap-6 lg:grid-cols-[minmax(420px,540px)_minmax(420px,540px)] lg:items-stretch">
-            <div className="flex aspect-[6/5] h-full w-full flex-col justify-between rounded-[8px] border border-sky-300/10 bg-[linear-gradient(135deg,#063860_0%,#01233f_54%,#04131f_100%)] p-5 shadow-2xl shadow-black/35 sm:p-6">
+            <div className="flex w-full flex-col gap-5 rounded-[8px] border border-sky-300/10 bg-[linear-gradient(135deg,#063860_0%,#01233f_54%,#04131f_100%)] p-5 shadow-2xl shadow-black/35 sm:p-6 lg:h-full lg:justify-between">
               <div className="relative mb-6 flex justify-center pt-12 text-center sm:pt-0">
                 <span className="absolute left-0 top-0 rounded-[4px] border border-white/70 px-2 py-1 text-sm font-bold uppercase text-white">
                   On Air
@@ -626,7 +567,7 @@ export function HomeLiveLocalMedia() {
         </div>
       </div>
 
-      <div className="relative overflow-hidden border-b border-white/10 bg-[#090909] px-4 py-9 sm:px-6">
+      <div className="relative overflow-hidden bg-[#090909] px-4 py-9 sm:px-6">
         <div className="pointer-events-none absolute inset-x-0 bottom-0 h-40 bg-[linear-gradient(180deg,transparent_0%,rgba(0,0,0,0.82)_70%,#000_100%)]" />
         <div className="pointer-events-none absolute inset-x-0 bottom-0 h-28 opacity-55">
           <div className="absolute bottom-0 left-[3%] h-16 w-14 rounded-t-[28px] bg-black" />

@@ -24,7 +24,7 @@ const footerVariants = {
   },
   dark: {
     footer:
-      "relative z-10 bg-black border-t border-orange-500/20 px-4 py-5 text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] sm:px-6",
+      "relative z-10 bg-black border-t border-white/10 px-4 py-5 text-white sm:px-6",
     inner: "mx-auto flex max-w-6xl flex-col items-center gap-2 text-center",
     primaryText: "text-xs font-medium text-white/75",
     secondaryText: "mt-1 text-xs text-white/45",
