@@ -2,8 +2,9 @@
 
 import { AnimatedFoodBackground } from "@/components/animated-food-background";
 import { FeaturedMarquee } from "@/components/featured-marquee";
+import { Footer } from "@/components/footer";
 import { HomeHeader } from "@/components/home-header";
-import { TopMarketsFooter } from "@/components/top-markets";
+import { HomeLiveLocalMedia } from "@/components/home-live-local-media";
 
 export function HomeClient() {
   return (
@@ -17,7 +18,9 @@ export function HomeClient() {
 
       <FeaturedMarquee />
 
-      <TopMarketsFooter />
+      <HomeLiveLocalMedia />
+
+      <Footer variant="dark" />
     </div>
   );
 }

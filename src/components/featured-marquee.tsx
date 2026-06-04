@@ -1,28 +1,37 @@
-"use client"
+"use client";
 
-import Image from "next/image"
-import { useEffect, useState } from "react"
-import { getMerchantPageUrl } from "@/lib/utils"
+import Image from "next/image";
+import { useEffect, useState } from "react";
+import { getMerchantPageUrl } from "@/lib/utils";
+
+const skeletonRows = ["row-1", "row-2", "row-3"];
+const skeletonCards = [
+  "card-1",
+  "card-2",
+  "card-3",
+  "card-4",
+  "card-5",
+  "card-6",
+];
 
 interface FeaturedMerchant {
-  id: string
-  businessName: string
-  city: string | null
-  state: string | null
-  slug: string | null
-  logoUrl: string | null
-  photos: string[] | null
-  categoryName: string | null
+  id: string;
+  businessName: string;
+  city: string | null;
+  state: string | null;
+  slug: string | null;
+  logoUrl: string | null;
+  photos: string[] | null;
+  categoryName: string | null;
 }
 
 function MerchantCard({ merchant }: { merchant: FeaturedMerchant }) {
   const href =
     merchant.city && merchant.state && merchant.slug
       ? getMerchantPageUrl(merchant.city, merchant.state, merchant.slug)
-      : "#"
+      : "#";
 
-  const photo = merchant.photos?.[0]
-  const hasImage = photo || merchant.logoUrl
+  const photo = merchant.photos?.[0];
 
   return (
     <a
@@ -67,12 +76,19 @@ function MerchantCard({ merchant }: { merchant: FeaturedMerchant }) {
         </h3>
         {(merchant.city || merchant.categoryName) && (
           <p className="text-white/70 text-xs mt-0.5 truncate">
-            {[merchant.city && merchant.state ? `${merchant.city}, ${merchant.state}` : merchant.city, merchant.categoryName].filter(Boolean).join(" · ")}
+            {[
+              merchant.city && merchant.state
+                ? `${merchant.city}, ${merchant.state}`
+                : merchant.city,
+              merchant.categoryName,
+            ]
+              .filter(Boolean)
+              .join(" · ")}
           </p>
         )}
       </div>
     </a>
-  )
+  );
 }
 
 function MarqueeRow({
@@ -80,14 +96,14 @@ function MarqueeRow({
   direction,
   speed,
 }: {
-  merchants: FeaturedMerchant[]
-  direction: "left" | "right"
-  speed: number
+  merchants: FeaturedMerchant[];
+  direction: "left" | "right";
+  speed: number;
 }) {
-  if (merchants.length === 0) return null
+  if (merchants.length === 0) return null;
 
   // Duplicate items enough to fill the screen and create seamless loop
-  const items = [...merchants, ...merchants, ...merchants, ...merchants]
+  const items = [...merchants, ...merchants, ...merchants, ...merchants];
 
   return (
     <div className="relative overflow-hidden">
@@ -102,60 +118,60 @@ function MarqueeRow({
         ))}
       </div>
     </div>
-  )
+  );
 }
 
 interface FeaturedMarqueeProps {
-  showHeading?: boolean
+  showHeading?: boolean;
 }
 
 export function FeaturedMarquee({ showHeading = true }: FeaturedMarqueeProps) {
-  const [merchants, setMerchants] = useState<FeaturedMerchant[]>([])
-  const [isLoading, setIsLoading] = useState(true)
+  const [merchants, setMerchants] = useState<FeaturedMerchant[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     async function fetchFeatured() {
       try {
-        const res = await fetch("/api/featured-merchants")
+        const res = await fetch("/api/featured-merchants");
         if (res.ok) {
-          const data = await res.json()
-          setMerchants(data.merchants)
+          const data = await res.json();
+          setMerchants(data.merchants);
         }
       } catch (err) {
-        console.error("Error fetching featured merchants:", err)
+        console.error("Error fetching featured merchants:", err);
       } finally {
-        setIsLoading(false)
+        setIsLoading(false);
       }
     }
-    fetchFeatured()
-  }, [])
+    fetchFeatured();
+  }, []);
 
-  if (!isLoading && merchants.length === 0) return null
+  if (!isLoading && merchants.length === 0) return null;
 
   // Random shuffle for each row
   const shuffle = (arr: FeaturedMerchant[]) => {
-    const shuffled = [...arr]
+    const shuffled = [...arr];
     for (let i = shuffled.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1))
-      ;[shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]]
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
     }
-    return shuffled
-  }
+    return shuffled;
+  };
 
   if (isLoading) {
     return (
       <section className="relative z-10 py-8">
         {showHeading && (
-          <h2 className="text-center text-lg font-bold uppercase tracking-[0.15em] text-white/80 mb-6">
+          <h2 className="mb-6 text-center text-2xl font-black uppercase text-white/80 sm:text-3xl">
             Explore Local Merchants
           </h2>
         )}
         <div className="space-y-4">
-          {[0, 1, 2].map((i) => (
-            <div key={i} className="flex gap-4 overflow-hidden px-4">
-              {Array.from({ length: 6 }).map((_, j) => (
+          {skeletonRows.map((row) => (
+            <div key={row} className="flex gap-4 overflow-hidden px-4">
+              {skeletonCards.map((card) => (
                 <div
-                  key={j}
+                  key={`${row}-${card}`}
                   className="w-[300px] h-[200px] shrink-0 rounded-lg bg-white/10 animate-pulse"
                 />
               ))}
@@ -163,17 +179,17 @@ export function FeaturedMarquee({ showHeading = true }: FeaturedMarqueeProps) {
           ))}
         </div>
       </section>
-    )
+    );
   }
 
-  const row1 = shuffle(merchants)
-  const row2 = shuffle(merchants)
-  const row3 = shuffle(merchants)
+  const row1 = shuffle(merchants);
+  const row2 = shuffle(merchants);
+  const row3 = shuffle(merchants);
 
   return (
     <section className="relative z-10 py-8">
       {showHeading && (
-        <h2 className="text-center text-lg font-bold uppercase tracking-[0.15em] text-white/80 mb-6">
+        <h2 className="mb-6 text-center text-2xl font-black uppercase text-white/80 sm:text-3xl">
           Explore Local Merchants
         </h2>
       )}
@@ -183,5 +199,5 @@ export function FeaturedMarquee({ showHeading = true }: FeaturedMarqueeProps) {
         <MarqueeRow merchants={row3} direction="left" speed={45} />
       </div>
     </section>
-  )
+  );
 }
