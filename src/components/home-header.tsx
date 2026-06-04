@@ -1,13 +1,10 @@
 "use client";
 
-import { Moon, Sun } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { useTheme } from "next-themes";
 import { useState } from "react";
 import { LoginModal } from "@/components/login-modal";
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
 
 type HomeHeaderVariant = "white" | "transparent";
 
@@ -17,24 +14,19 @@ interface HomeHeaderProps {
 
 const headerVariants = {
   white: {
-    bar: "border-b border-zinc-200/80 bg-white shadow-sm",
+    bar: "border-b border-[#05355c] bg-[#05355c] shadow-sm",
     login:
-      "bg-orange-500 px-6 font-semibold text-white shadow-sm hover:bg-orange-600",
-    toggle: "hover:bg-zinc-100",
-    icon: "text-zinc-700",
+      "bg-white px-6 font-semibold text-[#05355c] shadow-sm hover:bg-white/90",
   },
   transparent: {
-    bar: "border-b border-white/10 bg-transparent",
+    bar: "border-b border-[#05355c] bg-[#05355c] shadow-sm",
     login:
-      "bg-white px-6 font-semibold text-zinc-900 shadow-lg hover:bg-white/90",
-    toggle: "hover:bg-white/15",
-    icon: "text-white",
+      "bg-white px-6 font-semibold text-[#05355c] shadow-sm hover:bg-white/90",
   },
 } as const;
 
 export function HomeHeader({ variant = "white" }: HomeHeaderProps) {
   const [loginOpen, setLoginOpen] = useState(false);
-  const { theme, setTheme } = useTheme();
   const styles = headerVariants[variant];
 
   return (
@@ -60,28 +52,6 @@ export function HomeHeader({ variant = "white" }: HomeHeaderProps) {
             >
               Login
             </Button>
-            <button
-              onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-              className={cn(
-                "relative rounded-lg p-2 transition-colors",
-                styles.toggle,
-              )}
-              aria-label="Toggle theme"
-              type="button"
-            >
-              <Sun
-                className={cn(
-                  "h-5 w-5 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0",
-                  styles.icon,
-                )}
-              />
-              <Moon
-                className={cn(
-                  "absolute top-2 left-2 h-5 w-5 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100",
-                  styles.icon,
-                )}
-              />
-            </button>
           </div>
         </div>
       </div>
