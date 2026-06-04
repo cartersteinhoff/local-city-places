@@ -2,7 +2,7 @@
 
 import { Pause, Play, Radio, RadioTower } from "lucide-react";
 import Image from "next/image";
-import { useId, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 
 const cityColumns = [
@@ -34,6 +34,71 @@ const cityColumns = [
 ];
 
 const radioStreamUrl = "https://s5.radio.co/sabc365e3e/listen";
+const radioTrackApiUrl =
+  "https://public.radio.co/api/v2/sabc365e3e/track/current";
+const radioTrackEventsUrl = `https://mercure.radio.co/.well-known/mercure?topic=${encodeURIComponent(
+  radioTrackApiUrl,
+)}`;
+const metadataFallbackRefreshMs = 15_000;
+
+type RadioTrackApiResponse = {
+  data?: {
+    title?: unknown;
+    start_time?: unknown;
+    artwork_urls?: {
+      standard?: unknown;
+      large?: unknown;
+    };
+    track_artist?: unknown;
+    track_title?: unknown;
+    track_album?: unknown;
+  };
+};
+
+type NowPlayingTrack = {
+  title: string;
+  subtitle: string;
+  artworkUrl: string | null;
+  startTime: string | null;
+};
+
+const fallbackNowPlaying: NowPlayingTrack = {
+  title: "KLCP Radio",
+  subtitle: "Live from Phoenix 96.5 FM",
+  artworkUrl: null,
+  startTime: null,
+};
+
+function stringValue(value: unknown) {
+  return typeof value === "string" ? value.trim() : "";
+}
+
+function normalizeNowPlaying(
+  payload: RadioTrackApiResponse,
+): NowPlayingTrack | null {
+  const track = payload.data;
+  if (!track) return null;
+
+  const title =
+    stringValue(track.track_title) ||
+    stringValue(track.title) ||
+    fallbackNowPlaying.title;
+  const artist = stringValue(track.track_artist);
+  const album = stringValue(track.track_album);
+  const subtitle =
+    artist && artist !== title
+      ? artist
+      : album && album !== title
+        ? album
+        : fallbackNowPlaying.subtitle;
+  const artworkUrl =
+    stringValue(track.artwork_urls?.large) ||
+    stringValue(track.artwork_urls?.standard) ||
+    null;
+  const startTime = stringValue(track.start_time) || null;
+
+  return { title, subtitle, artworkUrl, startTime };
+}
 
 function Waveform() {
   const bars = [
@@ -76,6 +141,9 @@ function RadioCoPlayer() {
     "idle" | "loading" | "playing" | "paused" | "error"
   >("idle");
   const [streamError, setStreamError] = useState("");
+  const [nowPlaying, setNowPlaying] =
+    useState<NowPlayingTrack>(fallbackNowPlaying);
+  const [artworkFailed, setArtworkFailed] = useState(false);
   const playbackLabel = isPlaying ? "Pause KLCP Radio" : "Play KLCP Radio";
   const statusText = {
     idle: "Ready",
@@ -84,6 +152,56 @@ function RadioCoPlayer() {
     paused: "Paused",
     error: "Stream unavailable",
   }[playerStatus];
+  const hasTrackArtwork = Boolean(nowPlaying.artworkUrl && !artworkFailed);
+
+  useEffect(() => {
+    let isMounted = true;
+    const controller = new AbortController();
+
+    async function refreshNowPlaying() {
+      try {
+        const response = await fetch(radioTrackApiUrl, {
+          cache: "no-store",
+          signal: controller.signal,
+        });
+        if (!response.ok) return;
+
+        const payload = (await response.json()) as RadioTrackApiResponse;
+        const nextTrack = normalizeNowPlaying(payload);
+        if (isMounted && nextTrack) {
+          setNowPlaying(nextTrack);
+          setArtworkFailed(false);
+        }
+      } catch (error) {
+        if (error instanceof DOMException && error.name === "AbortError") {
+          return;
+        }
+      }
+    }
+
+    refreshNowPlaying();
+    const eventSource =
+      typeof EventSource === "undefined"
+        ? null
+        : new EventSource(radioTrackEventsUrl);
+    if (eventSource) {
+      eventSource.onmessage = () => {
+        refreshNowPlaying();
+      };
+    }
+
+    const intervalId = window.setInterval(
+      refreshNowPlaying,
+      metadataFallbackRefreshMs,
+    );
+
+    return () => {
+      isMounted = false;
+      controller.abort();
+      eventSource?.close();
+      window.clearInterval(intervalId);
+    };
+  }, []);
 
   async function togglePlayback() {
     const audio = audioRef.current;
@@ -161,16 +279,29 @@ function RadioCoPlayer() {
           type="button"
           onClick={togglePlayback}
           className="group relative mx-auto aspect-square w-full max-w-[172px] cursor-pointer overflow-hidden rounded-[8px] bg-white shadow-lg transition hover:scale-[1.01] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white sm:max-w-none"
-          aria-label={`${playbackLabel}: The John and Heidi Show`}
+          aria-label={`${playbackLabel}: ${nowPlaying.title}`}
           aria-pressed={isPlaying}
         >
-          <Image
-            src="/images/john-heidi-show.jpg"
-            alt="The John and Heidi Show"
-            fill
-            className="object-cover"
-            sizes="172px"
-          />
+          {hasTrackArtwork ? (
+            <Image
+              src={nowPlaying.artworkUrl ?? ""}
+              alt={`Artwork for ${nowPlaying.title}`}
+              fill
+              className="object-cover"
+              sizes="172px"
+              onError={() => setArtworkFailed(true)}
+            />
+          ) : (
+            <span className="flex h-full w-full flex-col items-center justify-center bg-[linear-gradient(135deg,#0b4f80_0%,#01233f_58%,#07131d_100%)] p-5 text-center text-white">
+              <Radio className="mb-3 h-10 w-10 text-orange-400" />
+              <span className="text-lg font-black uppercase leading-tight">
+                KLCP Radio
+              </span>
+              <span className="mt-1 text-sm font-bold text-white/75">
+                96.5 FM
+              </span>
+            </span>
+          )}
           <span className="absolute inset-0 flex items-center justify-center bg-black/0 opacity-0 transition group-hover:bg-black/15 group-hover:opacity-100 group-focus-visible:bg-black/20 group-focus-visible:opacity-100">
             <span className="flex h-14 w-14 items-center justify-center rounded-full bg-black/55 text-white backdrop-blur-sm">
               {isPlaying ? (
@@ -187,9 +318,9 @@ function RadioCoPlayer() {
             Now Playing
           </p>
           <h3 className="text-xl font-black leading-tight text-white">
-            The John & Heidi Show
+            {nowPlaying.title}
           </h3>
-          <p className="mt-1 text-base text-white/80">Weekdays 6am - 10am</p>
+          <p className="mt-1 text-base text-white/80">{nowPlaying.subtitle}</p>
 
           <div className="mt-4 flex items-center gap-4">
             <button
