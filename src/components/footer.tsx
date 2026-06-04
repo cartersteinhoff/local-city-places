@@ -25,8 +25,7 @@ const footerVariants = {
   dark: {
     footer:
       "relative z-10 bg-black border-t border-orange-500/20 px-4 py-5 text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] sm:px-6",
-    inner:
-      "mx-auto flex max-w-6xl flex-col gap-3 text-center sm:flex-row sm:items-center sm:justify-between sm:text-left",
+    inner: "mx-auto flex max-w-6xl flex-col items-center gap-2 text-center",
     primaryText: "text-xs font-medium text-white/75",
     secondaryText: "mt-1 text-xs text-white/45",
     link: "text-xs font-medium text-white/55 transition-colors hover:text-orange-400",
@@ -41,14 +40,11 @@ export function Footer({ className, variant = "overlay" }: FooterProps) {
         <p className={styles.primaryText}>
           &copy; 2026 LOCAL City Places&trade; LLC - All Rights Reserved
         </p>
-        <p className={styles.secondaryText}>
-          3075 W. Ray Rd, Suite 200, Chandler, Arizona 85226
-        </p>
       </div>
       <div
         className={cn(
           "flex flex-wrap justify-center gap-x-4 gap-y-1",
-          variant === "dark" ? "mt-0 sm:justify-end" : "mt-2",
+          variant === "dark" ? "mt-0" : "mt-2",
         )}
       >
         <Link href="/privacy" className={styles.link}>
@@ -56,22 +52,6 @@ export function Footer({ className, variant = "overlay" }: FooterProps) {
         </Link>
         <Link href="/terms" className={styles.link}>
           Terms &amp; Conditions
-        </Link>
-        <Link
-          href="https://ClaimMyGRC.Com"
-          target="_blank"
-          rel="noopener noreferrer"
-          className={styles.link}
-        >
-          ClaimMyGRC for Customers
-        </Link>
-        <Link
-          href="https://GRCRebates.Com"
-          target="_blank"
-          rel="noopener noreferrer"
-          className={styles.link}
-        >
-          GRC Rebates for Business
         </Link>
       </div>
     </>

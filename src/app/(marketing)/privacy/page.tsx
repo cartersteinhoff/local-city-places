@@ -36,7 +36,6 @@ export default function PrivacyPolicyPage() {
             <li>Name, email, phone number</li>
             <li>Address and contact details</li>
             <li>Payment information (if applicable)</li>
-            <li>Receipt uploads (GRC program)</li>
           </ul>
 
           <h3 className="mt-4 font-medium">B. Automatically Collected</h3>
@@ -56,7 +55,6 @@ export default function PrivacyPolicyPage() {
           <h2 className="text-lg font-semibold">3. How We Use Information</h2>
           <ul className="mt-2 list-disc space-y-1 pl-5">
             <li>Operate platform services</li>
-            <li>Deliver GRC rebates</li>
             <li>Provide AI recommendations</li>
             <li>Improve platform performance</li>
             <li>Enable merchant marketing</li>
@@ -64,17 +62,7 @@ export default function PrivacyPolicyPage() {
         </section>
 
         <section>
-          <h2 className="text-lg font-semibold">4. GRC Program</h2>
-          <p className="mt-2">Participation may involve:</p>
-          <ul className="mt-2 list-disc space-y-1 pl-5">
-            <li>Data sharing with merchants</li>
-            <li>Tracking redemption activity</li>
-            <li>Communication regarding rebate status</li>
-          </ul>
-        </section>
-
-        <section>
-          <h2 className="text-lg font-semibold">5. Sharing of Information</h2>
+          <h2 className="text-lg font-semibold">4. Sharing of Information</h2>
           <p className="mt-2">We may share data with:</p>
           <ul className="mt-2 list-disc space-y-1 pl-5">
             <li>Participating merchants</li>
@@ -86,7 +74,7 @@ export default function PrivacyPolicyPage() {
 
         <section>
           <h2 className="text-lg font-semibold">
-            6. AI &amp; Automated Processing
+            5. AI &amp; Automated Processing
           </h2>
           <p className="mt-2">We use AI systems (including Ask MILO™) to:</p>
           <ul className="mt-2 list-disc space-y-1 pl-5">
@@ -97,14 +85,14 @@ export default function PrivacyPolicyPage() {
         </section>
 
         <section>
-          <h2 className="text-lg font-semibold">7. Cookies &amp; Tracking</h2>
+          <h2 className="text-lg font-semibold">6. Cookies &amp; Tracking</h2>
           <p className="mt-2">
             We use cookies to enhance experience and analytics.
           </p>
         </section>
 
         <section>
-          <h2 className="text-lg font-semibold">8. Data Security</h2>
+          <h2 className="text-lg font-semibold">7. Data Security</h2>
           <p className="mt-2">
             We implement reasonable safeguards but cannot guarantee absolute
             security.
@@ -112,7 +100,7 @@ export default function PrivacyPolicyPage() {
         </section>
 
         <section>
-          <h2 className="text-lg font-semibold">9. Your Rights</h2>
+          <h2 className="text-lg font-semibold">8. Your Rights</h2>
           <p className="mt-2">
             You may request access, correction, or deletion of your data.
           </p>
@@ -120,41 +108,39 @@ export default function PrivacyPolicyPage() {
         </section>
 
         <section>
-          <h2 className="text-lg font-semibold">10. Data Retention</h2>
+          <h2 className="text-lg font-semibold">9. Data Retention</h2>
           <p className="mt-2">
             We retain data as necessary for operations and legal obligations.
           </p>
         </section>
 
         <section>
-          <h2 className="text-lg font-semibold">11. Third-Party Links</h2>
+          <h2 className="text-lg font-semibold">10. Third-Party Links</h2>
           <p className="mt-2">
             We are not responsible for third-party privacy practices.
           </p>
         </section>
 
         <section>
-          <h2 className="text-lg font-semibold">12. Children&apos;s Privacy</h2>
+          <h2 className="text-lg font-semibold">11. Children&apos;s Privacy</h2>
           <p className="mt-2">Not intended for individuals under 18.</p>
         </section>
 
         <section>
-          <h2 className="text-lg font-semibold">13. Changes</h2>
+          <h2 className="text-lg font-semibold">12. Changes</h2>
           <p className="mt-2">We may update this policy periodically.</p>
         </section>
 
         <section>
-          <h2 className="text-lg font-semibold">14. Contact</h2>
+          <h2 className="text-lg font-semibold">13. Contact</h2>
           <p className="mt-2">LOCAL City Places LLC</p>
-          <p>3075 W. Ray Rd. Suite 200</p>
-          <p>Chandler, Arizona</p>
           <p>(480) 378-7400</p>
           <p>Email: privacy@localcityplaces.com</p>
         </section>
 
         <section>
           <h2 className="text-lg font-semibold">
-            15. DataSMART360™ &amp; Advanced Data Processing
+            14. DataSMART360™ &amp; Advanced Data Processing
           </h2>
 
           <h3 className="mt-3 font-medium">A. Data Enrichment</h3>
@@ -170,7 +156,6 @@ export default function PrivacyPolicyPage() {
           <ul className="mt-2 list-disc space-y-1 pl-5">
             <li>User-provided data</li>
             <li>Platform activity</li>
-            <li>GRC participation</li>
             <li>Merchant interactions</li>
             <li>Enriched data</li>
           </ul>

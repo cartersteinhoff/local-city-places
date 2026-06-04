@@ -32,7 +32,6 @@ export default function TermsPage() {
           <p className="mt-2">LOCAL City Places provides:</p>
           <ul className="mt-2 list-disc space-y-1 pl-5">
             <li>Exclusive city-based merchant marketplaces</li>
-            <li>GRC (Gas &amp; Grocery Rebate Certificate) programs</li>
             <li>Merchant Pages and promotional tools</li>
             <li>AI-powered assistance (Ask MILO™)</li>
             <li>
@@ -53,9 +52,8 @@ export default function TermsPage() {
           <p className="mt-2">Merchants agree to:</p>
           <ul className="mt-2 list-disc space-y-1 pl-5">
             <li>Provide accurate business information</li>
-            <li>Honor issued GRC offers</li>
             <li>Maintain compliance with applicable laws</li>
-            <li>Participate in monthly program requirements (if applicable)</li>
+            <li>Participate in agreed program requirements (if applicable)</li>
           </ul>
           <p className="mt-2">
             LOCAL City Places reserves the right to approve, deny, or remove
@@ -75,21 +73,8 @@ export default function TermsPage() {
         </section>
 
         <section>
-          <h2 className="text-lg font-semibold">6. GRC Program Terms</h2>
-          <ul className="mt-2 list-disc space-y-1 pl-5">
-            <li>GRCs are promotional incentives, not cash equivalents</li>
-            <li>Redemption requires compliance with program rules</li>
-            <li>
-              LOCAL City Places is not responsible for misuse or
-              misunderstanding of offers
-            </li>
-            <li>Approval of rebates is subject to validation</li>
-          </ul>
-        </section>
-
-        <section>
           <h2 className="text-lg font-semibold">
-            7. Payments &amp; Subscriptions
+            6. Payments &amp; Subscriptions
           </h2>
           <ul className="mt-2 list-disc space-y-1 pl-5">
             <li>Subscription fees are billed as agreed</li>
@@ -99,7 +84,7 @@ export default function TermsPage() {
         </section>
 
         <section>
-          <h2 className="text-lg font-semibold">8. Acceptable Use</h2>
+          <h2 className="text-lg font-semibold">7. Acceptable Use</h2>
           <p className="mt-2">You agree not to:</p>
           <ul className="mt-2 list-disc space-y-1 pl-5">
             <li>Use the platform for unlawful purposes</li>
@@ -110,7 +95,7 @@ export default function TermsPage() {
         </section>
 
         <section>
-          <h2 className="text-lg font-semibold">9. Intellectual Property</h2>
+          <h2 className="text-lg font-semibold">8. Intellectual Property</h2>
           <p className="mt-2">
             All platform content, branding, and technology are owned by or
             licensed to LOCAL City Places LLC.
@@ -121,7 +106,7 @@ export default function TermsPage() {
         </section>
 
         <section>
-          <h2 className="text-lg font-semibold">10. AI Tools Disclaimer</h2>
+          <h2 className="text-lg font-semibold">9. AI Tools Disclaimer</h2>
           <p className="mt-2">AI-generated responses (e.g., Ask MILO™):</p>
           <ul className="mt-2 list-disc space-y-1 pl-5">
             <li>Are for informational purposes</li>
@@ -131,7 +116,7 @@ export default function TermsPage() {
         </section>
 
         <section>
-          <h2 className="text-lg font-semibold">11. Limitation of Liability</h2>
+          <h2 className="text-lg font-semibold">10. Limitation of Liability</h2>
           <p className="mt-2">
             To the maximum extent permitted by law, LOCAL City Places shall not
             be liable for:
@@ -144,7 +129,7 @@ export default function TermsPage() {
         </section>
 
         <section>
-          <h2 className="text-lg font-semibold">12. Termination</h2>
+          <h2 className="text-lg font-semibold">11. Termination</h2>
           <p className="mt-2">We may suspend or terminate access:</p>
           <ul className="mt-2 list-disc space-y-1 pl-5">
             <li>For violation of these Terms</li>
@@ -154,14 +139,14 @@ export default function TermsPage() {
         </section>
 
         <section>
-          <h2 className="text-lg font-semibold">13. Governing Law</h2>
+          <h2 className="text-lg font-semibold">12. Governing Law</h2>
           <p className="mt-2">
             These Terms are governed by the laws of the State of Arizona.
           </p>
         </section>
 
         <section>
-          <h2 className="text-lg font-semibold">14. Dispute Resolution</h2>
+          <h2 className="text-lg font-semibold">13. Dispute Resolution</h2>
           <p className="mt-2">
             Disputes shall be resolved through binding arbitration in Arizona
             unless otherwise required by law.
@@ -169,7 +154,7 @@ export default function TermsPage() {
         </section>
 
         <section>
-          <h2 className="text-lg font-semibold">15. Changes to Terms</h2>
+          <h2 className="text-lg font-semibold">14. Changes to Terms</h2>
           <p className="mt-2">
             We may update these Terms at any time. Continued use constitutes
             acceptance.
@@ -177,10 +162,8 @@ export default function TermsPage() {
         </section>
 
         <section>
-          <h2 className="text-lg font-semibold">16. Contact</h2>
+          <h2 className="text-lg font-semibold">15. Contact</h2>
           <p className="mt-2">LOCAL City Places LLC</p>
-          <p>3075 W. Ray Road, Suite 200</p>
-          <p>Chandler, Arizona</p>
           <p>Email: legal@localcityplaces.com</p>
         </section>
       </div>
