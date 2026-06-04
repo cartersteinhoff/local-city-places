@@ -1,17 +1,17 @@
-import { NextRequest, NextResponse } from "next/server";
+import { and, asc, desc, eq, ilike, or, type SQL, sql } from "drizzle-orm";
+import { type NextRequest, NextResponse } from "next/server";
 import { db } from "@/db";
-import { merchants, categories, reviews } from "@/db/schema";
-import { eq, desc, asc, sql, and, isNull, isNotNull, ilike, or } from "drizzle-orm";
+import { categories, merchants, reviews } from "@/db/schema";
 import { getSession } from "@/lib/auth";
-import { isValidVimeoUrl } from "@/lib/vimeo";
+import { calculateCompletion } from "@/lib/merchant-completion";
+import { revalidateMerchantPublicPaths } from "@/lib/merchant-public-revalidation";
 import {
-  stripPhoneNumber,
   generateMerchantSlug,
   getMerchantPageUrl,
   getMerchantShortUrl,
+  stripPhoneNumber,
 } from "@/lib/utils";
-import { calculateCompletion } from "@/lib/merchant-completion";
-import { revalidateMerchantPublicPaths } from "@/lib/merchant-public-revalidation";
+import { isValidVimeoUrl } from "@/lib/vimeo";
 
 export async function GET(request: NextRequest) {
   try {
@@ -21,33 +21,46 @@ export async function GET(request: NextRequest) {
     }
 
     const { searchParams } = new URL(request.url);
-    const page = Math.max(1, parseInt(searchParams.get("page") || "1"));
-    const limit = Math.min(100, Math.max(1, parseInt(searchParams.get("limit") || "20")));
+    const page = Math.max(1, parseInt(searchParams.get("page") || "1", 10));
+    const limit = Math.min(
+      100,
+      Math.max(1, parseInt(searchParams.get("limit") || "20", 10)),
+    );
     const offset = (page - 1) * limit;
-    const search = searchParams.get("search") || "";
+    const search = searchParams.get("search")?.trim() || "";
     const categoryId = searchParams.get("categoryId") || "";
     const completionFilter = searchParams.get("completion") || ""; // "complete", "incomplete", or ""
     const sortBy = searchParams.get("sortBy") || "updatedAt"; // "name", "completion", "updatedAt", "createdAt"
     const sortOrder = searchParams.get("sortOrder") || "desc"; // "asc" or "desc"
 
     // Build where clauses
-    const conditions: any[] = [eq(merchants.isPublicPage, true)];
+    const conditions: SQL[] = [eq(merchants.isPublicPage, true)];
 
     if (categoryId) {
       conditions.push(eq(merchants.categoryId, categoryId));
     }
 
     if (search) {
-      conditions.push(
-        or(
-          ilike(merchants.businessName, `%${search}%`),
-          ilike(merchants.city, `%${search}%`),
-          sql`${merchants.phone} LIKE ${"%" + search.replace(/\D/g, "") + "%"}`
-        )
-      );
+      const phoneSearch = search.replace(/\D/g, "");
+      const searchConditions: SQL[] = [
+        ilike(merchants.businessName, `%${search}%`),
+        ilike(merchants.city, `%${search}%`),
+      ];
+
+      if (phoneSearch) {
+        searchConditions.push(
+          sql`${merchants.phone} LIKE ${`%${phoneSearch}%`}`,
+        );
+      }
+
+      const searchClause = or(...searchConditions);
+      if (searchClause) {
+        conditions.push(searchClause);
+      }
     }
 
-    const whereClause = conditions.length > 1 ? and(...conditions) : conditions[0];
+    const whereClause =
+      conditions.length > 1 ? and(...conditions) : conditions[0];
 
     // Count query
     const [{ count }] = await db
@@ -58,13 +71,18 @@ export async function GET(request: NextRequest) {
     // Determine sort column and direction
     const getSortColumn = () => {
       switch (sortBy) {
-        case "name": return merchants.businessName;
-        case "updatedAt": return merchants.updatedAt;
-        case "createdAt": return merchants.createdAt;
-        default: return merchants.updatedAt;
+        case "name":
+          return merchants.businessName;
+        case "updatedAt":
+          return merchants.updatedAt;
+        case "createdAt":
+          return merchants.createdAt;
+        default:
+          return merchants.updatedAt;
       }
     };
-    const orderByClause = sortOrder === "asc" ? asc(getSortColumn()) : desc(getSortColumn());
+    const orderByClause =
+      sortOrder === "asc" ? asc(getSortColumn()) : desc(getSortColumn());
 
     // For completion sorting/filtering, we need to fetch all and sort in memory
     const needsCompletionSort = sortBy === "completion";
@@ -98,7 +116,9 @@ export async function GET(request: NextRequest) {
         logoUrl: merchants.logoUrl,
         createdAt: merchants.createdAt,
         updatedAt: merchants.updatedAt,
-        reviewCount: sql<number>`coalesce(${reviewCountSq.count}, 0)`.as("review_count"),
+        reviewCount: sql<number>`coalesce(${reviewCountSq.count}, 0)`.as(
+          "review_count",
+        ),
         // Additional fields for completion calculation
         aboutStory: merchants.aboutStory,
         hours: merchants.hours,
@@ -163,7 +183,10 @@ export async function GET(request: NextRequest) {
         completionPercentage: completion.percentage,
         reviewCount: Number(m.reviewCount) || 0,
         urls: {
-          full: m.city && m.state && m.slug ? getMerchantPageUrl(m.city, m.state, m.slug) : null,
+          full:
+            m.city && m.state && m.slug
+              ? getMerchantPageUrl(m.city, m.state, m.slug)
+              : null,
           short: m.phone ? getMerchantShortUrl(m.phone) : null,
         },
       };
@@ -171,9 +194,13 @@ export async function GET(request: NextRequest) {
 
     // Apply completion filter
     if (completionFilter === "complete") {
-      processedMerchants = processedMerchants.filter((m) => m.completionPercentage === 100);
+      processedMerchants = processedMerchants.filter(
+        (m) => m.completionPercentage === 100,
+      );
     } else if (completionFilter === "incomplete") {
-      processedMerchants = processedMerchants.filter((m) => m.completionPercentage < 100);
+      processedMerchants = processedMerchants.filter(
+        (m) => m.completionPercentage < 100,
+      );
     }
 
     // Sort by completion if requested
@@ -207,7 +234,7 @@ export async function GET(request: NextRequest) {
     console.error("Error fetching merchant pages:", error);
     return NextResponse.json(
       { error: "Failed to fetch merchant pages" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -244,31 +271,32 @@ export async function POST(request: NextRequest) {
     } = body;
 
     // Validate required fields
-    if (!businessName || typeof businessName !== "string" || !businessName.trim()) {
+    if (
+      !businessName ||
+      typeof businessName !== "string" ||
+      !businessName.trim()
+    ) {
       return NextResponse.json(
         { error: "Business name is required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     if (!city || typeof city !== "string" || !city.trim()) {
-      return NextResponse.json(
-        { error: "City is required" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "City is required" }, { status: 400 });
     }
 
     if (!state || typeof state !== "string" || state.trim().length !== 2) {
       return NextResponse.json(
         { error: "State must be a 2-letter code" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     if (!phone || typeof phone !== "string") {
       return NextResponse.json(
         { error: "Phone number is required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -276,7 +304,7 @@ export async function POST(request: NextRequest) {
     if (strippedPhone.length !== 10) {
       return NextResponse.json(
         { error: "Phone number must be 10 digits" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -284,7 +312,7 @@ export async function POST(request: NextRequest) {
     if (vimeoUrl && !isValidVimeoUrl(vimeoUrl)) {
       return NextResponse.json(
         { error: "Invalid Vimeo URL. Use format: https://vimeo.com/123456789" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -299,10 +327,13 @@ export async function POST(request: NextRequest) {
       if (!category) {
         return NextResponse.json(
           { error: "Invalid category" },
-          { status: 400 }
+          { status: 400 },
         );
       }
     }
+
+    const normalizedCity = city.trim();
+    const normalizedState = state.trim().toUpperCase();
 
     // Create the merchant
     const [newMerchant] = await db
@@ -310,8 +341,8 @@ export async function POST(request: NextRequest) {
       .values({
         businessName: businessName.trim(),
         streetAddress: streetAddress?.trim() || null,
-        city: city.trim(),
-        state: state.trim().toUpperCase(),
+        city: normalizedCity,
+        state: normalizedState,
         zipCode: zipCode?.trim() || null,
         phone: strippedPhone,
         website: website?.trim() || null,
@@ -340,12 +371,12 @@ export async function POST(request: NextRequest) {
       .set({ slug })
       .where(eq(merchants.id, newMerchant.id));
 
-    const fullUrl = getMerchantPageUrl(newMerchant.city!, newMerchant.state!, slug);
+    const fullUrl = getMerchantPageUrl(normalizedCity, normalizedState, slug);
     const shortUrl = getMerchantShortUrl(strippedPhone);
 
     revalidateMerchantPublicPaths({
-      city: newMerchant.city,
-      state: newMerchant.state,
+      city: normalizedCity,
+      state: normalizedState,
       slug,
     });
 
@@ -365,7 +396,7 @@ export async function POST(request: NextRequest) {
     console.error("Error creating merchant page:", error);
     return NextResponse.json(
       { error: "Failed to create merchant page" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
