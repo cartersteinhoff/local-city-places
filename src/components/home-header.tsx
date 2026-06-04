@@ -14,14 +14,14 @@ interface HomeHeaderProps {
 
 const headerVariants = {
   white: {
-    bar: "border-b border-[#05355c] bg-[#05355c] shadow-sm",
+    bar: "border-b border-sky-300/10 bg-[linear-gradient(135deg,#063860_0%,#01233f_54%,#04131f_100%)] shadow-sm",
     login:
-      "bg-white px-6 font-semibold text-[#05355c] shadow-sm hover:bg-white/90",
+      "bg-orange-500 px-6 font-semibold text-white shadow-sm hover:bg-orange-600",
   },
   transparent: {
-    bar: "border-b border-[#05355c] bg-[#05355c] shadow-sm",
+    bar: "border-b border-sky-300/10 bg-[linear-gradient(135deg,#063860_0%,#01233f_54%,#04131f_100%)] shadow-sm",
     login:
-      "bg-white px-6 font-semibold text-[#05355c] shadow-sm hover:bg-white/90",
+      "bg-orange-500 px-6 font-semibold text-white shadow-sm hover:bg-orange-600",
   },
 } as const;
 
