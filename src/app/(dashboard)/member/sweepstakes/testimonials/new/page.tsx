@@ -4,7 +4,6 @@ import {
   AlertCircle,
   ArrowLeft,
   ArrowRight,
-  Gift,
   ImagePlus,
   Loader2,
   Sparkles,
@@ -50,7 +49,6 @@ interface MemberTestimonial {
   wordCount: number;
   status: TestimonialStatus;
   moderationNotes: string | null;
-  rewardStatus: string;
   updatedAt: string;
   photos: TestimonialPhoto[];
 }
@@ -701,8 +699,7 @@ export default function FavoriteMerchantTestimonialsPage() {
                   This month&apos;s nominations
                 </h2>
                 <p className="text-sm text-muted-foreground mt-1">
-                  Approved nominations create a $25 certificate and publish to
-                  the merchant page.
+                  Approved nominations publish to the merchant page.
                 </p>
               </div>
               {editingId && (
@@ -741,12 +738,6 @@ export default function FavoriteMerchantTestimonialsPage() {
                             >
                               {testimonial.status.replace("_", " ")}
                             </span>
-                            {testimonial.rewardStatus ===
-                              "registration_required" && (
-                              <span className="rounded-full bg-green-100 px-2.5 py-1 text-xs font-medium text-green-700">
-                                $25 ready
-                              </span>
-                            )}
                           </div>
                           <p className="text-sm text-muted-foreground mt-2">
                             Updated{" "}
@@ -772,16 +763,6 @@ export default function FavoriteMerchantTestimonialsPage() {
                             >
                               Revise
                             </Button>
-                          )}
-                          {testimonial.rewardStatus ===
-                            "registration_required" && (
-                            <a
-                              href="/member/grcs"
-                              className="inline-flex items-center justify-center rounded-md border px-4 py-2 text-sm font-medium hover:bg-muted"
-                            >
-                              <Gift className="w-4 h-4 mr-2" />
-                              View Certificate
-                            </a>
                           )}
                         </div>
                       </div>

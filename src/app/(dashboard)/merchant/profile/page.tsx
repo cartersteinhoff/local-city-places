@@ -19,7 +19,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Camera, Loader2, Save, Building2, CheckCircle, CreditCard, Lock, Upload, FileCheck, X } from "lucide-react";
+import { Camera, Loader2, Save, Building2, CheckCircle, Lock, Upload, FileCheck, X } from "lucide-react";
 import { merchantNavItems } from "../nav";
 import { useUser } from "@/hooks/use-user";
 import { GooglePlacesAutocomplete, PlaceDetails } from "@/components/ui/google-places-autocomplete";
@@ -34,7 +34,7 @@ interface ProfileData {
   email: string;
   profilePhotoUrl: string | null;
   notificationPrefs: {
-    emailReceipts: boolean;
+    emailActivity: boolean;
     emailReminders: boolean;
     emailMarketing: boolean;
   };
@@ -386,7 +386,7 @@ export default function MerchantProfilePage() {
             <CardHeader>
               <CardTitle>Business Logo</CardTitle>
               <CardDescription>
-                This appears on your public profile and GRCs
+                This appears on your public profile
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -581,15 +581,15 @@ export default function MerchantProfilePage() {
             <CardContent className="space-y-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="font-medium">GRC Updates</p>
+                  <p className="font-medium">Account Activity</p>
                   <p className="text-sm text-muted-foreground">
-                    Notifications when GRCs are claimed or completed
+                    Notifications about important merchant activity
                   </p>
                 </div>
                 <Switch
-                  checked={profile?.notificationPrefs?.emailReceipts ?? false}
+                  checked={profile?.notificationPrefs?.emailActivity ?? false}
                   onCheckedChange={(checked) =>
-                    updateNotificationPref("emailReceipts", checked)
+                    updateNotificationPref("emailActivity", checked)
                   }
                 />
               </div>
@@ -859,17 +859,6 @@ export default function MerchantProfilePage() {
 
               <Separator />
 
-              {/* Zelle Info */}
-              <div className="space-y-2">
-                <div className="flex items-center gap-2">
-                  <CreditCard className="w-4 h-4 text-muted-foreground" />
-                  <h4 className="font-medium">Pay via Zelle</h4>
-                </div>
-                <p className="text-sm text-muted-foreground">
-                  When purchasing GRCs with Zelle, send payment to:{" "}
-                  <code className="px-1 py-0.5 bg-muted rounded text-foreground">troywarren@localcityplaces.com</code>
-                </p>
-              </div>
             </CardContent>
           </Card>
 

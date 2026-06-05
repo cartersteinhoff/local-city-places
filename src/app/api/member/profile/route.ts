@@ -38,7 +38,7 @@ export async function GET() {
         phone: user.phone,
         profilePhotoUrl: user.profilePhotoUrl,
         notificationPrefs: user.notificationPrefs || {
-          emailReceipts: true,
+          emailActivity: true,
           emailReminders: true,
           emailMarketing: false,
         },

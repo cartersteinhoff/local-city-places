@@ -1,8 +1,0 @@
-{
-  "crons": [
-    {
-      "path": "/api/admin/cleanup/skipped-receipts",
-      "schedule": "0 3 * * *"
-    }
-  ]
-}

@@ -22,7 +22,7 @@ const roleContent = {
   member: {
     title: "Member Login",
     eyebrow: "Member Access",
-    description: "Sign in to manage your rebates, receipts, and sweepstakes.",
+    description: "Sign in to manage your profile, sweepstakes, and local favorites.",
     defaultCallbackUrl: "/member",
     alternateHref: "/merchant-login",
     alternateLabel: "Merchant Login",
@@ -30,7 +30,7 @@ const roleContent = {
   merchant: {
     title: "Merchant Login",
     eyebrow: "Merchant Access",
-    description: "Sign in to manage your merchant dashboard and GRC activity.",
+    description: "Sign in to manage your merchant dashboard and local visibility.",
     defaultCallbackUrl: "/merchant",
     alternateHref: "/member-login",
     alternateLabel: "Member Login",

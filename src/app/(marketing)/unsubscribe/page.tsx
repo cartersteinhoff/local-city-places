@@ -205,7 +205,7 @@ function UnsubscribeContent() {
             <div className="space-y-0.5">
               <Label htmlFor="transactional">Account Notifications</Label>
               <p className="text-sm text-muted-foreground">
-                GRC updates, receipts, and important account info
+                Important account and security updates
               </p>
             </div>
             <Switch

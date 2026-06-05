@@ -25,7 +25,6 @@ import {
   CheckCircle2,
   XCircle,
   ArrowRight,
-  Gift,
 } from "lucide-react";
 import { GooglePlacesAutocomplete, PlaceDetails } from "@/components/ui/google-places-autocomplete";
 import { formatPhoneNumber, stripPhoneNumber } from "@/lib/utils";
@@ -248,18 +247,8 @@ function MerchantOnboardingContent() {
           </div>
           <h1 className="text-2xl font-bold mb-2">Welcome to Local City Places!</h1>
           <p className="text-muted-foreground mb-6">
-            Your merchant account has been created. Our team will reach out to set up your free trial GRCs!
+            Your merchant account has been created. You can now manage your business profile and dashboard.
           </p>
-
-          <div className="bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-xl p-4 mb-6">
-            <div className="flex items-center justify-center gap-2 text-blue-800 dark:text-blue-200 font-medium mb-1">
-              <Gift className="w-5 h-5" />
-              Trial GRCs Coming Soon
-            </div>
-            <p className="text-blue-700 dark:text-blue-300 text-sm">
-              We'll send you an email when your trial GRCs are ready to use.
-            </p>
-          </div>
 
           <Button onClick={handleGoToDashboard} className="w-full">
             Go to Your Dashboard
@@ -288,16 +277,16 @@ function MerchantOnboardingContent() {
           <h2 className="text-xl font-semibold text-white dark:text-foreground">Become a Merchant Partner</h2>
         </div>
 
-        {/* Trial GRCs Banner */}
+        {/* Partner setup banner */}
         <div className="bg-blue-50/95 dark:bg-blue-950/95 backdrop-blur-sm border border-blue-200 dark:border-blue-800 rounded-xl p-4 mb-6">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center shrink-0">
-              <Gift className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+              <Store className="w-5 h-5 text-blue-600 dark:text-blue-400" />
             </div>
             <div>
-              <p className="font-medium text-blue-800 dark:text-blue-200">Trial GRCs Coming Soon</p>
+              <p className="font-medium text-blue-800 dark:text-blue-200">Merchant Profile Setup</p>
               <p className="text-sm text-blue-700 dark:text-blue-300">
-                Our team will set up your free trial GRCs after reviewing your registration.
+                Complete this form so your business can appear correctly across Local City Places.
               </p>
             </div>
           </div>

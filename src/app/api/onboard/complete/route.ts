@@ -3,10 +3,10 @@ import { hashToken, createMagicLinkToken } from "@/lib/auth";
 import { db, merchantInvites } from "@/db";
 import { eq, and, gt, isNull } from "drizzle-orm";
 import {
-  createMerchantWithTrialGrcs,
+  createMerchantAccount,
   validateEmailForMerchant,
 } from "@/lib/merchant-onboarding";
-import { sendMerchantWelcomeNoTrialEmail } from "@/lib/email";
+import { sendMerchantWelcomeEmail } from "@/lib/email";
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
 
@@ -69,8 +69,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Create merchant WITHOUT trial GRCs (admin will set them up later)
-    const result = await createMerchantWithTrialGrcs({
+    const result = await createMerchantAccount({
       email,
       businessName,
       city,
@@ -81,7 +80,6 @@ export async function POST(request: NextRequest) {
       description,
       logoUrl,
       googlePlaceId,
-      trialGrcDenomination: null, // No trial GRCs for invite flow
     });
 
     // Mark invite as used
@@ -97,8 +95,7 @@ export async function POST(request: NextRequest) {
     const magicToken = await createMagicLinkToken(email);
     const loginUrl = `${APP_URL}/api/auth/verify?token=${magicToken}`;
 
-    // Send welcome email (mentions trial GRCs are coming)
-    await sendMerchantWelcomeNoTrialEmail({
+    await sendMerchantWelcomeEmail({
       email,
       businessName,
       loginUrl,
@@ -114,7 +111,6 @@ export async function POST(request: NextRequest) {
         id: result.merchant.id,
         businessName: result.merchant.businessName,
       },
-      trialGrcs: null, // Trial GRCs will be set up later by admin
       // Return the magic token so the frontend can auto-login
       magicToken,
     });

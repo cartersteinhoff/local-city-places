@@ -24,7 +24,6 @@ interface Review {
   memberName: string;
   content: string;
   wordCount: number;
-  bonusMonthAwarded: boolean;
   createdAt: string;
 }
 
@@ -107,7 +106,7 @@ export default function ReviewsPage() {
             <EmptyState
               icon={Star}
               title="No reviews yet"
-              description="Reviews will appear here when your GRC recipients write about their experience. Members are invited to write a review during their first GRC registration."
+              description="Reviews will appear here when customers write about their experience."
             />
           ) : (
             <>
@@ -133,11 +132,6 @@ export default function ReviewsPage() {
                       </div>
                       <div className="flex items-center gap-2 text-sm text-muted-foreground">
                         <span>{review.wordCount} words</span>
-                        {review.bonusMonthAwarded && (
-                          <span className="px-2 py-0.5 bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 rounded-full text-xs">
-                            Bonus Awarded
-                          </span>
-                        )}
                       </div>
                     </div>
 

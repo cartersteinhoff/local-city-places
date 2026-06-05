@@ -28,7 +28,6 @@ import {
   Loader2,
   CheckCircle,
   UserPlus,
-  Gift,
   Users,
 } from "lucide-react";
 import { useUser } from "@/hooks/use-user";
@@ -57,7 +56,6 @@ interface Stats {
   admins: number;
   merchants: number;
   members: number;
-  pendingTrial: number;
 }
 
 interface UsersData {
@@ -78,7 +76,7 @@ export default function AdminUsersPage() {
   // Data state
   const [users, setUsers] = useState<UserData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [stats, setStats] = useState<Stats>({ total: 0, admins: 0, merchants: 0, members: 0, pendingTrial: 0 });
+  const [stats, setStats] = useState<Stats>({ total: 0, admins: 0, merchants: 0, members: 0 });
 
   // Filter state
   const [filter, setFilter] = useState("all");
@@ -134,9 +132,7 @@ export default function AdminUsersPage() {
       page: page.toString(),
       limit: "20",
     });
-    if (filter === "pendingTrial") {
-      params.set("pendingTrial", "true");
-    } else if (filter !== "all") {
+    if (filter !== "all") {
       params.set("role", filter);
     }
     if (debouncedSearch) params.set("search", debouncedSearch);
@@ -359,20 +355,6 @@ export default function AdminUsersPage() {
             >
               <UserCircle className="w-4 h-4 mr-1" />
               Members
-            </Button>
-            <Button
-              variant={filter === "pendingTrial" ? "default" : "outline"}
-              size="sm"
-              onClick={() => handleFilterChange("pendingTrial")}
-              className={cn(stats.pendingTrial > 0 && filter !== "pendingTrial" && "border-yellow-400 text-yellow-700 hover:bg-yellow-50")}
-            >
-              <Gift className="w-4 h-4 mr-1" />
-              Pending Trial
-              {stats.pendingTrial > 0 && (
-                <span className="ml-1 bg-yellow-100 text-yellow-800 text-xs px-1.5 py-0.5 rounded-full">
-                  {stats.pendingTrial}
-                </span>
-              )}
             </Button>
             <Button
               variant="ghost"

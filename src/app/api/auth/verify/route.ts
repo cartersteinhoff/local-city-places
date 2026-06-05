@@ -60,7 +60,7 @@ export async function GET(request: NextRequest) {
     let redirectPath: string;
     if (result.role === "member" && !hasProfile) {
       // New members must complete registration first
-      // Preserve query params from callbackUrl (e.g., grc=xxx for claiming)
+      // Preserve query params from callbackUrl.
       if (result.callbackUrl && isValidCallbackUrl(result.callbackUrl)) {
         const callbackUrlObj = new URL(result.callbackUrl, request.url);
         redirectPath = `/member/register${callbackUrlObj.search}`;

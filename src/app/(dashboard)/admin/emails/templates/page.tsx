@@ -22,10 +22,7 @@ import {
   Send,
   UserPlus,
   Store,
-  Gift,
-  CheckCircle2,
   LogIn,
-  Sparkles,
   Loader2,
   ChevronRight,
   Info,
@@ -38,7 +35,7 @@ interface EmailTemplate {
   name: string;
   description: string;
   icon: React.ReactNode;
-  category: "auth" | "member" | "merchant" | "grc";
+  category: "auth" | "member" | "merchant";
   previewParams: Record<string, string | number>;
 }
 
@@ -66,21 +63,6 @@ const EMAIL_TEMPLATES: EmailTemplate[] = [
     },
   },
   {
-    id: "grc-issued",
-    name: "GRC Issued",
-    description: "Sent when a merchant issues a GRC to a customer",
-    icon: <Gift className="w-5 h-5" />,
-    category: "grc",
-    previewParams: {
-      recipientEmail: "customer@example.com",
-      recipientName: "John Smith",
-      merchantName: "Example Business",
-      denomination: 120,
-      totalMonths: 12,
-      claimUrl: "https://localcityplaces.com/claim/abc123",
-    },
-  },
-  {
     id: "merchant-invite",
     name: "Merchant Invite",
     description: "Sent to invite a new merchant to join the platform",
@@ -94,22 +76,8 @@ const EMAIL_TEMPLATES: EmailTemplate[] = [
   },
   {
     id: "merchant-welcome",
-    name: "Merchant Welcome (with Trial)",
-    description: "Sent when a merchant completes registration with trial GRCs",
-    icon: <Sparkles className="w-5 h-5" />,
-    category: "merchant",
-    previewParams: {
-      email: "merchant@example.com",
-      businessName: "Example Business",
-      loginUrl: "https://localcityplaces.com/login",
-      trialGrcCount: 10,
-      trialGrcDenomination: 120,
-    },
-  },
-  {
-    id: "merchant-welcome-no-trial",
-    name: "Merchant Welcome (No Trial)",
-    description: "Sent when merchant registers via invite link (trial GRCs pending)",
+    name: "Merchant Welcome",
+    description: "Sent when a merchant account is created",
     icon: <Store className="w-5 h-5" />,
     category: "merchant",
     previewParams: {
@@ -118,27 +86,12 @@ const EMAIL_TEMPLATES: EmailTemplate[] = [
       loginUrl: "https://localcityplaces.com/login",
     },
   },
-  {
-    id: "trial-grcs-activated",
-    name: "Trial GRCs Activated",
-    description: "Sent when admin activates trial GRCs for a merchant",
-    icon: <CheckCircle2 className="w-5 h-5" />,
-    category: "merchant",
-    previewParams: {
-      email: "merchant@example.com",
-      businessName: "Example Business",
-      loginUrl: "https://localcityplaces.com/login",
-      trialGrcCount: 10,
-      trialGrcDenomination: 120,
-    },
-  },
 ];
 
 const CATEGORY_LABELS: Record<string, { label: string; color: string }> = {
   auth: { label: "Authentication", color: "bg-blue-100 text-blue-700" },
   member: { label: "Member", color: "bg-green-100 text-green-700" },
   merchant: { label: "Merchant", color: "bg-purple-100 text-purple-700" },
-  grc: { label: "GRC", color: "bg-orange-100 text-orange-700" },
 };
 
 export default function EmailTemplatesPage() {

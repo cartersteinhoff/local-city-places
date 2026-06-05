@@ -1,68 +1,15 @@
 "use client";
 
-import {
-  ArrowLeft,
-  Calendar,
-  CheckCircle,
-  ChevronRight,
-  ClipboardList,
-  Copy,
-  DollarSign,
-  Gift,
-  Loader2,
-  Receipt,
-  Store,
-  Ticket,
-  Users,
-} from "lucide-react";
+import { Copy, Gift, Loader2, Sparkles, Ticket, Users } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
 import { DashboardLayout } from "@/components/layout";
-import { GroceryStoreStep } from "@/components/registration/steps/grocery-store-step";
-import { ReviewOfferStep } from "@/components/registration/steps/review-offer-step";
-import { StartDateStep } from "@/components/registration/steps/start-date-step";
-import { SurveyStep } from "@/components/registration/steps/survey-step";
 import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/ui/page-header";
 import { StatCard } from "@/components/ui/stat-card";
 import { useUser } from "@/hooks/use-user";
 import { cn } from "@/lib/utils";
-import type {
-  GroceryStore,
-  StartDate,
-  SurveyAnswers,
-} from "@/lib/validations/member";
 import { memberNavItems } from "./nav";
-
-interface GRCDetails {
-  id: string;
-  merchantId: string;
-  merchantName: string;
-  denomination: number;
-  monthsRemaining: number;
-  status: string;
-  survey?: {
-    id: string;
-    title: string;
-    questions: Array<{
-      id: string;
-      type: "text" | "multiple_choice" | "single_choice";
-      question: string;
-      options?: string[];
-      required?: boolean;
-    }>;
-  } | null;
-}
-
-interface ActiveGRC {
-  id: string;
-  merchantName: string;
-  denomination: number;
-  monthsRemaining: number;
-  groceryStore: string | null;
-  startMonth: number | null;
-  startYear: number | null;
-}
 
 interface SweepstakesDashboardData {
   cycle: {
@@ -109,255 +56,41 @@ interface SweepstakesDashboardData {
   }>;
 }
 
-const MONTH_NAMES = [
-  "January",
-  "February",
-  "March",
-  "April",
-  "May",
-  "June",
-  "July",
-  "August",
-  "September",
-  "October",
-  "November",
-  "December",
-];
-
 function MemberDashboardContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const grcId = searchParams.get("grc");
   const sweepstakesStatus = searchParams.get("sweepstakes");
+  const { user, isLoading: authLoading, isAuthenticated } = useUser();
 
-  const { user, isLoading: loading, isAuthenticated } = useUser();
-
-  // GRC onboarding state
-  const [grcDetails, setGrcDetails] = useState<GRCDetails | null>(null);
-  const [grcLoading, setGrcLoading] = useState(false);
-  const [grcError, setGrcError] = useState<string | null>(null);
-  const [onboardingStep, setOnboardingStep] = useState<
-    "store" | "survey" | "review" | "start"
-  >("store");
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
-  // Onboarding form data
-  const [groceryData, setGroceryData] = useState<GroceryStore | null>(null);
-  const [surveyData, setSurveyData] = useState<SurveyAnswers>({});
-  const [reviewContent, setReviewContent] = useState<string | undefined>(
-    undefined,
-  );
-  const [bonusMonth, setBonusMonth] = useState(false);
-
-  // Dashboard data
-  const [activeGrc, setActiveGrc] = useState<ActiveGRC | null>(null);
-  const [pendingGrcCount, setPendingGrcCount] = useState(0);
   const [sweepstakesData, setSweepstakesData] =
     useState<SweepstakesDashboardData | null>(null);
+  const [dataLoading, setDataLoading] = useState(true);
   const [copiedReferralLink, setCopiedReferralLink] = useState(false);
 
-  // Completed GRC banner
-  const [completedGrcMerchant, setCompletedGrcMerchant] = useState<
-    string | null
-  >(null);
-
-  // Dashboard stats
-  const [dashboardStats, setDashboardStats] = useState<{
-    thisMonthReceipts: number;
-    amountRemaining: number;
-    totalEarned: number;
-    monthsQualified: number;
-    currentMonth: {
-      approvedTotal: string;
-      surveyCompletedAt: string | null;
-      status: string;
-    } | null;
-    hasSurvey: boolean;
-  } | null>(null);
-
-  // Redirect if not authenticated or wrong role
   useEffect(() => {
     if (
-      !loading &&
+      !authLoading &&
       (!isAuthenticated || (user?.role !== "member" && user?.role !== "admin"))
     ) {
       router.push("/");
     }
-  }, [loading, isAuthenticated, user?.role, router]);
+  }, [authLoading, isAuthenticated, user?.role, router]);
 
-  // Fetch GRC details if grcId is present
   useEffect(() => {
-    if (!grcId) return;
-
-    async function fetchGRC() {
-      setGrcLoading(true);
-      setGrcError(null);
-
-      try {
-        const res = await fetch(`/api/grc/${grcId}`);
-        if (!res.ok) {
-          const errorData = await res.json();
-          setGrcError(errorData.error || "Failed to load GRC");
-          return;
-        }
-        const data = await res.json();
-        setGrcDetails(data);
-      } catch {
-        setGrcError("Failed to load GRC details");
-      } finally {
-        setGrcLoading(false);
-      }
-    }
-
-    fetchGRC();
-  }, [grcId]);
-
-  // Fetch dashboard GRC data (active GRC + pending count) and stats
-  useEffect(() => {
-    if (loading || grcId) return;
-
-    async function fetchDashboardData() {
-      try {
-        const [grcsRes, statsRes, sweepstakesRes] = await Promise.all([
-          fetch("/api/member/grcs"),
-          fetch("/api/member/dashboard"),
-          fetch("/api/member/sweepstakes"),
-        ]);
-
-        if (grcsRes.ok) {
-          const data = await grcsRes.json();
-          if (data.active && data.active.length > 0) {
-            setActiveGrc(data.active[0]);
+    if (!authLoading && isAuthenticated) {
+      fetch("/api/member/sweepstakes")
+        .then((res) => res.json())
+        .then((data) => {
+          if (!data.error) {
+            setSweepstakesData(data);
           }
-          setPendingGrcCount(data.pending?.length || 0);
-          // Check for completed GRCs (for banner)
-          if (
-            data.completed &&
-            data.completed.length > 0 &&
-            (!data.active || data.active.length === 0)
-          ) {
-            setCompletedGrcMerchant(data.completed[0].merchantName);
-          }
-        }
-
-        if (statsRes.ok) {
-          const stats = await statsRes.json();
-          setDashboardStats(stats);
-        }
-
-        if (sweepstakesRes.ok) {
-          const sweepstakes = await sweepstakesRes.json();
-          setSweepstakesData(sweepstakes);
-        }
-      } catch (err) {
-        console.error("Failed to fetch dashboard data:", err);
-      }
+        })
+        .catch((error) => {
+          console.error("Failed to fetch sweepstakes data:", error);
+        })
+        .finally(() => setDataLoading(false));
     }
-
-    fetchDashboardData();
-  }, [loading, grcId]);
-
-  const handleGroceryStoreNext = (data: GroceryStore) => {
-    setGroceryData(data);
-    // Skip survey step if no survey
-    if (grcDetails?.survey && grcDetails.survey.questions.length > 0) {
-      setOnboardingStep("survey");
-    } else {
-      setOnboardingStep("review");
-    }
-  };
-
-  const handleSurveyNext = (data: SurveyAnswers) => {
-    setSurveyData(data);
-    setOnboardingStep("review");
-  };
-
-  const handleReviewNext = (content: string | undefined) => {
-    setReviewContent(content);
-    setBonusMonth(!!content);
-    setOnboardingStep("start");
-  };
-
-  const handleStartDateNext = async (data: StartDate) => {
-    if (!groceryData || !grcDetails) return;
-
-    setIsSubmitting(true);
-
-    try {
-      // Submit survey response if there was a survey
-      if (grcDetails.survey && Object.keys(surveyData).length > 0) {
-        await fetch("/api/survey/respond", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            surveyId: grcDetails.survey.id,
-            grcId: grcDetails.id,
-            answers: surveyData,
-          }),
-        });
-      }
-
-      // Submit review if provided
-      if (reviewContent) {
-        await fetch("/api/review/create", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            merchantId: grcDetails.merchantId,
-            grcId: grcDetails.id,
-            content: reviewContent,
-          }),
-        });
-      }
-
-      // Register the GRC
-      const res = await fetch("/api/member/register-grc", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          grcId: grcDetails.id,
-          groceryStore: groceryData.groceryStore,
-          groceryStorePlaceId: groceryData.groceryStorePlaceId,
-          startMonth: data.startMonth,
-          startYear: data.startYear,
-        }),
-      });
-
-      if (!res.ok) {
-        const errorData = await res.json();
-        throw new Error(errorData.error || "Failed to register GRC");
-      }
-
-      // Clear the GRC param and reload dashboard
-      router.push("/member");
-      router.refresh();
-    } catch (err) {
-      console.error("Error registering GRC:", err);
-      setGrcError(
-        err instanceof Error ? err.message : "Failed to register GRC",
-      );
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const handleBackStep = () => {
-    if (onboardingStep === "survey") {
-      setOnboardingStep("store");
-    } else if (onboardingStep === "review") {
-      if (grcDetails?.survey && grcDetails.survey.questions.length > 0) {
-        setOnboardingStep("survey");
-      } else {
-        setOnboardingStep("store");
-      }
-    } else if (onboardingStep === "start") {
-      setOnboardingStep("review");
-    }
-  };
-
-  const handleCancelOnboarding = () => {
-    router.push("/member");
-  };
+  }, [authLoading, isAuthenticated]);
 
   const handleCopyReferralLink = async () => {
     if (!sweepstakesData?.referralLink) return;
@@ -371,214 +104,18 @@ function MemberDashboardContent() {
     }
   };
 
-  // Show GRC onboarding flow if grcId is present
-  if (grcId && !loading) {
-    // Loading GRC details
-    if (grcLoading) {
-      return (
-        <DashboardLayout navItems={memberNavItems}>
-          <div className="flex items-center justify-center min-h-[400px]">
-            <Loader2 className="w-8 h-8 animate-spin text-primary" />
-          </div>
-        </DashboardLayout>
-      );
-    }
-
-    // GRC error
-    if (grcError) {
-      return (
-        <DashboardLayout navItems={memberNavItems}>
-          <div className="max-w-md mx-auto text-center space-y-6 py-12">
-            <div className="w-16 h-16 rounded-full bg-destructive/10 flex items-center justify-center mx-auto">
-              <Gift className="w-8 h-8 text-destructive" />
-            </div>
-            <div className="space-y-2">
-              <h1 className="text-2xl font-bold">GRC Not Available</h1>
-              <p className="text-muted-foreground">{grcError}</p>
-            </div>
-            <Button onClick={handleCancelOnboarding} variant="outline">
-              Return to Dashboard
-            </Button>
-          </div>
-        </DashboardLayout>
-      );
-    }
-
-    // GRC onboarding steps
-    if (grcDetails) {
-      const steps = [
-        { id: "store", label: "Grocery Store" },
-        ...(grcDetails.survey?.questions?.length
-          ? [{ id: "survey", label: "Survey" }]
-          : []),
-        { id: "review", label: "Review" },
-        { id: "start", label: "Start Date" },
-      ];
-      const currentStepIndex = steps.findIndex((s) => s.id === onboardingStep);
-
-      return (
-        <DashboardLayout navItems={memberNavItems}>
-          <div className="max-w-2xl mx-auto">
-            {/* GRC Header Card */}
-            <div className="bg-gradient-to-r from-orange-500 to-orange-600 rounded-xl p-6 text-white mb-8">
-              <div className="flex items-start gap-4">
-                <div className="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0">
-                  <Gift className="w-6 h-6" />
-                </div>
-                <div className="flex-1">
-                  <h1 className="text-xl font-bold mb-1">Activate Your GRC</h1>
-                  <p className="text-white/90 text-sm">
-                    ${grcDetails.denomination} certificate from{" "}
-                    {grcDetails.merchantName}
-                  </p>
-                  <div className="mt-3 flex items-center gap-4 text-sm">
-                    <span className="bg-white/20 px-3 py-1 rounded-full">
-                      {grcDetails.monthsRemaining} months
-                    </span>
-                    <span className="bg-white/20 px-3 py-1 rounded-full">
-                      ${grcDetails.monthsRemaining * 25} in rebates
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Progress Steps */}
-            <div className="flex items-center justify-center gap-2 mb-8">
-              {steps.map((step, index) => (
-                <div key={step.id} className="flex items-center">
-                  <div
-                    className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
-                      index < currentStepIndex
-                        ? "bg-primary text-primary-foreground"
-                        : index === currentStepIndex
-                          ? "bg-primary text-primary-foreground"
-                          : "bg-muted text-muted-foreground"
-                    }`}
-                  >
-                    {index < currentStepIndex ? (
-                      <CheckCircle className="w-4 h-4" />
-                    ) : (
-                      index + 1
-                    )}
-                  </div>
-                  <span
-                    className={`ml-2 text-sm hidden sm:inline ${
-                      index === currentStepIndex
-                        ? "text-foreground font-medium"
-                        : "text-muted-foreground"
-                    }`}
-                  >
-                    {step.label}
-                  </span>
-                  {index < steps.length - 1 && (
-                    <ChevronRight className="w-4 h-4 mx-2 text-muted-foreground" />
-                  )}
-                </div>
-              ))}
-            </div>
-
-            {/* Back Button */}
-            {onboardingStep !== "store" && (
-              <button
-                type="button"
-                onClick={handleBackStep}
-                className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-6 transition-colors"
-              >
-                <ArrowLeft className="w-4 h-4" />
-                Back
-              </button>
-            )}
-
-            {/* Step Content */}
-            <div className="bg-card rounded-xl border p-6">
-              {onboardingStep === "store" && (
-                <GroceryStoreStep
-                  data={groceryData || {}}
-                  onNext={handleGroceryStoreNext}
-                  isLoading={isSubmitting}
-                />
-              )}
-
-              {onboardingStep === "survey" && grcDetails.survey && (
-                <SurveyStep
-                  merchantName={grcDetails.merchantName}
-                  questions={grcDetails.survey.questions}
-                  data={surveyData}
-                  onNext={handleSurveyNext}
-                  isLoading={isSubmitting}
-                />
-              )}
-
-              {onboardingStep === "review" && (
-                <ReviewOfferStep
-                  merchantName={grcDetails.merchantName}
-                  onNext={handleReviewNext}
-                  isLoading={isSubmitting}
-                />
-              )}
-
-              {onboardingStep === "start" && (
-                <StartDateStep
-                  denomination={grcDetails.denomination}
-                  monthsRemaining={grcDetails.monthsRemaining}
-                  bonusMonth={bonusMonth}
-                  onNext={handleStartDateNext}
-                  isLoading={isSubmitting}
-                />
-              )}
-            </div>
-
-            {/* Cancel Link */}
-            <div className="text-center mt-6">
-              <button
-                type="button"
-                onClick={handleCancelOnboarding}
-                className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-              >
-                Cancel and return to dashboard
-              </button>
-            </div>
-          </div>
-        </DashboardLayout>
-      );
-    }
-  }
-
-  // Normal dashboard view
   return (
     <DashboardLayout navItems={memberNavItems}>
-      {loading ? (
-        <div className="flex items-center justify-center min-h-[400px]">
+      {authLoading || dataLoading ? (
+        <div className="flex min-h-[400px] items-center justify-center">
           <Loader2 className="w-8 h-8 animate-spin text-primary" />
         </div>
       ) : (
         <>
           <PageHeader
             title="Member Dashboard"
-            description="Track your progress and earn grocery rebates"
+            description="Nominate favorite local businesses and track your sweepstakes activity"
           />
-
-          {/* Completed GRC Banner */}
-          {completedGrcMerchant && pendingGrcCount > 0 && (
-            <div className="bg-green-50 border border-green-200 rounded-xl p-4 mb-6 flex items-center justify-between gap-4">
-              <div>
-                <p className="font-semibold text-green-800">
-                  Your GRC from {completedGrcMerchant} is complete!
-                </p>
-                <p className="text-sm text-green-700 mt-1">
-                  You have {pendingGrcCount} more GRC
-                  {pendingGrcCount > 1 ? "s" : ""} ready to activate.
-                </p>
-              </div>
-              <a
-                href="/member/grcs"
-                className="px-4 py-2 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700 transition-colors shrink-0"
-              >
-                Activate Next GRC
-              </a>
-            </div>
-          )}
 
           {sweepstakesStatus === "account-created" && (
             <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-6">
@@ -589,14 +126,6 @@ function MemberDashboardContent() {
                 Submit your first favorite merchant nomination to lock in your
                 sweepstakes entry for this cycle.
               </p>
-              <div className="mt-3">
-                <a
-                  href="/member/sweepstakes/testimonials/new"
-                  className="inline-flex items-center justify-center rounded-md border border-amber-300 px-4 py-2 text-sm font-medium text-amber-900 hover:bg-amber-100 transition-colors"
-                >
-                  Start Your Nomination
-                </a>
-              </div>
             </div>
           )}
 
@@ -613,149 +142,121 @@ function MemberDashboardContent() {
           )}
 
           {sweepstakesData && (
-            <div className="bg-card rounded-xl border border-border p-6 mb-6">
-              <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-                <div>
-                  <h2 className="text-lg font-semibold">
-                    Favorite Merchant Sweepstakes
-                  </h2>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    {sweepstakesData.cycle.name} -{" "}
-                    {sweepstakesData.cycle.grandPrizeLabel}
-                  </p>
-                </div>
-                <span
-                  className={[
-                    "inline-flex items-center rounded-full px-3 py-1 text-sm font-medium",
-                    sweepstakesData.cycleEntry
-                      ? "bg-green-50 text-green-700"
-                      : "bg-amber-50 text-amber-800",
-                  ].join(" ")}
-                >
-                  {sweepstakesData.cycleEntry
-                    ? "Entry locked in"
-                    : "Entry starts with your first nomination"}
-                </span>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mt-6">
-                <StatCard
-                  label="Cycle Entry"
-                  value={
-                    sweepstakesData.cycleEntry?.status === "confirmed"
-                      ? "Confirmed"
-                      : "Awaiting nomination"
-                  }
-                  icon={Ticket}
-                />
-                <StatCard
-                  label="Entries This Cycle"
-                  value={sweepstakesData.confirmedEntriesThisMonth}
-                  icon={Gift}
-                />
-                <StatCard
-                  label="Activated Referrals"
-                  value={sweepstakesData.activatedReferrals}
-                  icon={Users}
-                />
-                <StatCard
-                  label="Total Entries This Cycle"
-                  value={sweepstakesData.combinedEntriesThisMonth}
-                  icon={Ticket}
-                />
-              </div>
-
-              <div className="rounded-xl border border-border bg-muted/30 p-4 mt-6">
-                <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-                  <div className="min-w-0">
-                    <p className="text-sm font-medium">Your referral link</p>
-                    <p className="text-sm text-muted-foreground mt-1 break-all">
-                      {sweepstakesData.referralLink}
+            <div className="space-y-6">
+              <div className="rounded-xl border bg-card p-6">
+                <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                  <div>
+                    <h2 className="text-lg font-semibold">
+                      Favorite Merchant Sweepstakes
+                    </h2>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      {sweepstakesData.cycle.name} ·{" "}
+                      {sweepstakesData.cycle.grandPrizeLabel}
                     </p>
                   </div>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="shrink-0"
-                    onClick={handleCopyReferralLink}
+                  <span
+                    className={cn(
+                      "inline-flex items-center rounded-full px-3 py-1 text-sm font-medium",
+                      sweepstakesData.cycleEntry
+                        ? "bg-green-50 text-green-700"
+                        : "bg-amber-50 text-amber-800",
+                    )}
                   >
-                    <Copy className="w-4 h-4 mr-2" />
-                    {copiedReferralLink ? "Copied" : "Copy Link"}
-                  </Button>
+                    {sweepstakesData.cycleEntry
+                      ? "Entry locked in"
+                      : "Entry starts with your first nomination"}
+                  </span>
                 </div>
-              </div>
 
-              <div className="flex flex-col gap-3 mt-4 lg:flex-row lg:items-center lg:justify-between">
-                <p className="text-sm text-muted-foreground">
-                  {sweepstakesData.cycleEntry
-                    ? "Your entry is locked in. Keep sharing your link so referrals can activate under your name."
-                    : "Submit your first favorite merchant nomination this cycle to lock in your entry, then start building your referral chain."}
-                </p>
-                <a
-                  href="/member/sweepstakes/testimonials/new"
-                  className="inline-flex items-center justify-center rounded-md border px-4 py-2 text-sm font-medium hover:bg-muted transition-colors"
-                >
-                  {sweepstakesData.cycleEntry
-                    ? "Manage Favorite Merchant Nominations"
-                    : "Nominate a Favorite Merchant"}
-                </a>
-              </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mt-6">
+                  <StatCard
+                    label="Cycle Entry"
+                    value={
+                      sweepstakesData.cycleEntry?.status === "confirmed"
+                        ? "Confirmed"
+                        : "Awaiting nomination"
+                    }
+                    icon={Ticket}
+                  />
+                  <StatCard
+                    label="Entries This Cycle"
+                    value={sweepstakesData.confirmedEntriesThisMonth}
+                    icon={Sparkles}
+                  />
+                  <StatCard
+                    label="Activated Referrals"
+                    value={sweepstakesData.activatedReferrals}
+                    icon={Users}
+                  />
+                  <StatCard
+                    label="Total Entries"
+                    value={sweepstakesData.combinedEntriesThisMonth}
+                    icon={Gift}
+                  />
+                </div>
 
-              {sweepstakesData.winners.length > 0 && (
-                <div className="rounded-xl border border-border bg-muted/20 p-4 mt-6">
-                  <p className="text-sm font-medium">
-                    Current recorded winners
-                  </p>
-                  <div className="grid gap-3 md:grid-cols-3 mt-4">
-                    {sweepstakesData.winners.map((winner) => (
-                      <div
-                        key={winner.id}
-                        className="rounded-lg border bg-background p-3"
-                      >
-                        <p className="text-xs uppercase tracking-[0.15em] text-muted-foreground">
-                          {winner.prizeTier === "grand_prize"
-                            ? "Grand Prize"
-                            : winner.prizeTier === "tier1_match"
-                              ? "Tier 1 Match"
-                              : "Tier 2 Match"}
-                        </p>
-                        <p className="font-medium mt-2">{winner.displayName}</p>
-                        <p className="text-sm text-muted-foreground mt-1">
-                          {winner.selectionMethod === "manual_override"
-                            ? "Manual override"
-                            : "Random draw"}
-                        </p>
-                      </div>
-                    ))}
+                <div className="rounded-xl border bg-muted/30 p-4 mt-6">
+                  <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium">Your referral link</p>
+                      <p className="text-sm text-muted-foreground mt-1 break-all">
+                        {sweepstakesData.referralLink}
+                      </p>
+                    </div>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="shrink-0"
+                      onClick={handleCopyReferralLink}
+                    >
+                      <Copy className="w-4 h-4 mr-2" />
+                      {copiedReferralLink ? "Copied" : "Copy Link"}
+                    </Button>
                   </div>
                 </div>
-              )}
+
+                <div className="flex flex-col gap-3 mt-4 lg:flex-row lg:items-center lg:justify-between">
+                  <p className="text-sm text-muted-foreground">
+                    {sweepstakesData.cycleEntry
+                      ? "Your entry is locked in. Keep sharing your link so referrals can activate under your name."
+                      : "Submit your first favorite merchant nomination this cycle to lock in your entry."}
+                  </p>
+                  <a
+                    href="/member/sweepstakes/testimonials/new"
+                    className="inline-flex items-center justify-center rounded-md border px-4 py-2 text-sm font-medium transition-colors hover:bg-muted"
+                  >
+                    {sweepstakesData.cycleEntry
+                      ? "Manage Nominations"
+                      : "Nominate a Favorite Merchant"}
+                  </a>
+                </div>
+              </div>
 
               {sweepstakesData.currentStanding && (
-                <div className="rounded-xl border border-border bg-muted/20 p-4 mt-6">
+                <div className="rounded-xl border bg-card p-6">
                   <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                     <div>
-                      <p className="text-sm font-medium">
+                      <h2 className="text-lg font-semibold">
                         Your leaderboard standing
-                      </p>
+                      </h2>
                       <p className="text-sm text-muted-foreground mt-1">
                         Rank #{sweepstakesData.currentStanding.rank} this cycle
                       </p>
                     </div>
                     <div className="grid grid-cols-3 gap-3 text-sm">
-                      <div className="rounded-lg bg-background border px-3 py-2 text-center">
+                      <div className="rounded-lg border px-3 py-2 text-center">
                         <p className="text-muted-foreground">Regular</p>
                         <p className="font-semibold mt-1">
                           {sweepstakesData.currentStanding.regularEntries}
                         </p>
                       </div>
-                      <div className="rounded-lg bg-background border px-3 py-2 text-center">
+                      <div className="rounded-lg border px-3 py-2 text-center">
                         <p className="text-muted-foreground">Referral</p>
                         <p className="font-semibold mt-1">
                           {sweepstakesData.currentStanding.referralEntries}
                         </p>
                       </div>
-                      <div className="rounded-lg bg-background border px-3 py-2 text-center">
+                      <div className="rounded-lg border px-3 py-2 text-center">
                         <p className="text-muted-foreground">Total</p>
                         <p className="font-semibold mt-1">
                           {sweepstakesData.currentStanding.totalEntries}
@@ -766,14 +267,13 @@ function MemberDashboardContent() {
                 </div>
               )}
 
-              {sweepstakesData.leaderboardPreview.length > 0 && (
-                <div className="rounded-xl border border-border bg-muted/20 p-4 mt-6">
-                  <p className="text-sm font-medium">Leaderboard</p>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    Regular entries and activated referral entries both count
-                    toward your odds.
-                  </p>
+              <div className="rounded-xl border bg-card p-6">
+                <h2 className="text-lg font-semibold">Leaderboard</h2>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Regular entries and activated referral entries both count.
+                </p>
 
+                {sweepstakesData.leaderboardPreview.length > 0 ? (
                   <div className="overflow-x-auto mt-4">
                     <table className="w-full text-sm">
                       <thead className="text-muted-foreground">
@@ -813,184 +313,14 @@ function MemberDashboardContent() {
                       </tbody>
                     </table>
                   </div>
-                </div>
-              )}
+                ) : (
+                  <div className="rounded-lg border border-dashed p-6 mt-4 text-sm text-muted-foreground">
+                    No leaderboard data yet for this cycle.
+                  </div>
+                )}
+              </div>
             </div>
           )}
-
-          {/* Stats Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-            <StatCard
-              label="This Month's Receipts"
-              value={`$${(dashboardStats?.thisMonthReceipts ?? 0).toFixed(2)}`}
-              icon={Receipt}
-            />
-            <StatCard
-              label="Amount Remaining"
-              value={`$${(dashboardStats?.amountRemaining ?? 100).toFixed(2)}`}
-              icon={DollarSign}
-            />
-            <StatCard
-              label="Total Earned"
-              value={`$${(dashboardStats?.totalEarned ?? 0).toFixed(2)}`}
-              icon={DollarSign}
-            />
-            <StatCard
-              label="Months Qualified"
-              value={String(dashboardStats?.monthsQualified ?? 0)}
-              icon={CheckCircle}
-            />
-          </div>
-
-          {/* Monthly Checklist */}
-          <div className="bg-card rounded-xl border border-border p-6 mb-6">
-            <h2 className="text-lg font-semibold mb-4">Monthly Checklist</h2>
-            <div className="space-y-4">
-              {(() => {
-                const receiptsTotal = dashboardStats?.thisMonthReceipts ?? 0;
-                const receiptsComplete = receiptsTotal >= 100;
-                return (
-                  <div className="flex items-center justify-between p-4 rounded-lg border border-border">
-                    <div className="flex items-center gap-3">
-                      <div
-                        className={`w-8 h-8 rounded-full flex items-center justify-center ${receiptsComplete ? "bg-green-100" : "bg-muted"}`}
-                      >
-                        {receiptsComplete ? (
-                          <CheckCircle className="w-4 h-4 text-green-600" />
-                        ) : (
-                          <Receipt className="w-4 h-4 text-muted-foreground" />
-                        )}
-                      </div>
-                      <div>
-                        <p className="font-medium">Submit $100 in Receipts</p>
-                        <p className="text-sm text-muted-foreground">
-                          ${receiptsTotal.toFixed(2)} / $100 submitted
-                        </p>
-                      </div>
-                    </div>
-                    {!receiptsComplete && (
-                      <a
-                        href="/member/upload"
-                        className="px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors"
-                      >
-                        Upload Receipt
-                      </a>
-                    )}
-                  </div>
-                );
-              })()}
-              {(() => {
-                const surveyDone =
-                  !!dashboardStats?.currentMonth?.surveyCompletedAt;
-                const hasSurvey = dashboardStats?.hasSurvey !== false;
-                return (
-                  <div className="flex items-center justify-between p-4 rounded-lg border border-border">
-                    <div className="flex items-center gap-3">
-                      <div
-                        className={`w-8 h-8 rounded-full flex items-center justify-center ${surveyDone || !hasSurvey ? "bg-green-100" : "bg-muted"}`}
-                      >
-                        {surveyDone || !hasSurvey ? (
-                          <CheckCircle className="w-4 h-4 text-green-600" />
-                        ) : (
-                          <ClipboardList className="w-4 h-4 text-muted-foreground" />
-                        )}
-                      </div>
-                      <div>
-                        <p className="font-medium">Complete Monthly Survey</p>
-                        <p className="text-sm text-muted-foreground">
-                          {!hasSurvey
-                            ? "No survey required"
-                            : surveyDone
-                              ? "Completed"
-                              : "Not completed"}
-                        </p>
-                      </div>
-                    </div>
-                    {hasSurvey && !surveyDone && (
-                      <a
-                        href="/member/survey"
-                        className="px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors"
-                      >
-                        Take Survey
-                      </a>
-                    )}
-                  </div>
-                );
-              })()}
-            </div>
-          </div>
-
-          {/* Active GRC */}
-          <div className="bg-card rounded-xl border border-border p-6">
-            <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
-              <Gift className="w-5 h-5 text-green-500" />
-              Active GRC
-            </h2>
-            {activeGrc ? (
-              <div>
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-green-400 to-green-600 flex items-center justify-center">
-                      <Gift className="w-6 h-6 text-white" />
-                    </div>
-                    <div>
-                      <h3 className="font-semibold text-lg">
-                        {activeGrc.merchantName}
-                      </h3>
-                      <p className="text-sm text-muted-foreground">
-                        ${activeGrc.denomination} &middot;{" "}
-                        {activeGrc.monthsRemaining} months remaining
-                      </p>
-                    </div>
-                  </div>
-                </div>
-                {(activeGrc.groceryStore ||
-                  (activeGrc.startMonth && activeGrc.startYear)) && (
-                  <div className="flex flex-wrap items-center gap-4 pt-4 border-t text-sm text-muted-foreground">
-                    {activeGrc.groceryStore && (
-                      <div className="flex items-center gap-1.5">
-                        <Store className="w-4 h-4" />
-                        <span>{activeGrc.groceryStore}</span>
-                      </div>
-                    )}
-                    {activeGrc.startMonth && activeGrc.startYear && (
-                      <div className="flex items-center gap-1.5">
-                        <Calendar className="w-4 h-4" />
-                        <span>
-                          Started {MONTH_NAMES[activeGrc.startMonth - 1]}{" "}
-                          {activeGrc.startYear}
-                        </span>
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-            ) : (
-              <div className="text-center py-6">
-                <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center mx-auto mb-3">
-                  <Gift className="w-6 h-6 text-muted-foreground" />
-                </div>
-                <p className="text-muted-foreground">No active GRC</p>
-                {pendingGrcCount > 0 ? (
-                  <p className="text-sm text-muted-foreground mt-1">
-                    You have{" "}
-                    <a
-                      href="/member/grcs"
-                      className="text-primary hover:underline"
-                    >
-                      {pendingGrcCount} pending GRC
-                      {pendingGrcCount > 1 ? "s" : ""}
-                    </a>{" "}
-                    to activate
-                  </p>
-                ) : (
-                  <p className="text-sm text-muted-foreground mt-1">
-                    When a merchant sends you a GRC, it will appear here
-                  </p>
-                )}
-              </div>
-            )}
-          </div>
         </>
       )}
     </DashboardLayout>

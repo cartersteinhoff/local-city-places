@@ -1,13 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSession, createMagicLinkToken } from "@/lib/auth";
 import {
-  createMerchantWithTrialGrcs,
+  createMerchantAccount,
   validateEmailForMerchant,
-  TRIAL_GRC_QUANTITY,
-  TRIAL_GRC_DENOMINATIONS,
-  type TrialGrcDenomination,
 } from "@/lib/merchant-onboarding";
-import { sendMerchantWelcomeEmail, sendMerchantWelcomeNoTrialEmail } from "@/lib/email";
+import { sendMerchantWelcomeEmail } from "@/lib/email";
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
 
@@ -31,29 +28,12 @@ export async function POST(request: NextRequest) {
       logoUrl,
       googlePlaceId,
       sendWelcomeEmail = true,
-      trialGrcDenomination, // number | null - required field, null means no trial GRCs
     } = body;
 
     // Validate required fields
     if (!email || !businessName) {
       return NextResponse.json(
         { error: "Email and business name are required" },
-        { status: 400 }
-      );
-    }
-
-    // Validate trialGrcDenomination is provided (required field)
-    if (trialGrcDenomination === undefined) {
-      return NextResponse.json(
-        { error: "Trial GRC denomination selection is required" },
-        { status: 400 }
-      );
-    }
-
-    // Validate denomination is valid (if not null)
-    if (trialGrcDenomination !== null && !TRIAL_GRC_DENOMINATIONS.includes(trialGrcDenomination)) {
-      return NextResponse.json(
-        { error: "Invalid trial GRC denomination" },
         { status: 400 }
       );
     }
@@ -67,8 +47,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Create merchant (with or without trial GRCs based on denomination)
-    const result = await createMerchantWithTrialGrcs({
+    const result = await createMerchantAccount({
       email,
       businessName,
       city,
@@ -79,8 +58,6 @@ export async function POST(request: NextRequest) {
       description,
       logoUrl,
       googlePlaceId,
-      createdBy: session.user.id,
-      trialGrcDenomination: trialGrcDenomination as TrialGrcDenomination | null,
     });
 
     // Send welcome email if requested
@@ -90,23 +67,11 @@ export async function POST(request: NextRequest) {
       const magicToken = await createMagicLinkToken(email);
       const loginUrl = `${APP_URL}/api/auth/verify?token=${magicToken}`;
 
-      if (result.trialPurchase) {
-        // Send welcome email with trial GRC info
-        emailSent = await sendMerchantWelcomeEmail({
-          email,
-          businessName,
-          loginUrl,
-          trialGrcCount: TRIAL_GRC_QUANTITY,
-          trialGrcDenomination: result.trialPurchase.denomination,
-        });
-      } else {
-        // Send welcome email without trial GRC info (they'll be set up later)
-        emailSent = await sendMerchantWelcomeNoTrialEmail({
-          email,
-          businessName,
-          loginUrl,
-        });
-      }
+      emailSent = await sendMerchantWelcomeEmail({
+        email,
+        businessName,
+        loginUrl,
+      });
     }
 
     return NextResponse.json({
@@ -121,13 +86,6 @@ export async function POST(request: NextRequest) {
         businessName: result.merchant.businessName,
         city: result.merchant.city,
       },
-      trialGrcs: result.trialPurchase
-        ? {
-            quantity: TRIAL_GRC_QUANTITY,
-            denomination: result.trialPurchase.denomination,
-            totalValue: TRIAL_GRC_QUANTITY * result.trialPurchase.denomination,
-          }
-        : null,
       emailSent,
     });
   } catch (error) {

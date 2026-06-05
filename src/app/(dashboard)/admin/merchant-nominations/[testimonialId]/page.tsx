@@ -51,8 +51,6 @@ interface TestimonialDetail {
   status: TestimonialStatus;
   moderationNotes: string | null;
   approvedAt: string | null;
-  rewardStatus: string;
-  rewardReferenceId: string | null;
   createdAt: string;
   updatedAt: string;
   photos: PhotoRecord[];
@@ -260,11 +258,6 @@ export default function AdminMerchantNominationDetailPage() {
                   >
                     {testimonial.status.replace("_", " ")}
                   </span>
-                  {testimonial.rewardStatus === "registration_required" && (
-                    <span className="rounded-full bg-green-100 px-2.5 py-1 text-xs font-medium text-green-700">
-                      $25 created
-                    </span>
-                  )}
                 </div>
                 <p className="text-sm text-muted-foreground mt-2">
                   {[testimonial.memberFirstName, testimonial.memberLastName]
@@ -503,7 +496,7 @@ export default function AdminMerchantNominationDetailPage() {
                     ) : (
                       <CheckCircle2 className="w-4 h-4 mr-2" />
                     )}
-                    Approve Testimonial & Create Reward
+                    Approve Testimonial
                   </Button>
                 </div>
               </div>

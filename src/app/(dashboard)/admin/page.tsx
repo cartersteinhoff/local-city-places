@@ -1,53 +1,52 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import {
+  FolderOpen,
+  ImageIcon,
+  Loader2,
+  MessageSquare,
+  RefreshCw,
+  Send,
+  Store,
+  Users,
+} from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 import { DashboardLayout } from "@/components/layout";
+import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/ui/page-header";
 import { StatCard } from "@/components/ui/stat-card";
-import {
-  ClipboardCheck,
-  CreditCard,
-  Users,
-  Receipt,
-  Gift,
-  UserCircle,
-  FileCheck,
-  UserPlus,
-  RefreshCw,
-} from "lucide-react";
 import { useUser } from "@/hooks/use-user";
-import { Button } from "@/components/ui/button";
 import { adminNavItems } from "./nav";
 
 interface DashboardStats {
-  pendingReceipts: number;
-  giftCardsPending: number;
-  activeMembers: number;
+  totalUsers: number;
   activeMerchants: number;
+  totalReviews: number;
+  pendingNominations: number;
 }
 
 interface ActivityItem {
+  id: string;
   type: string;
-  memberName?: string;
   merchantName?: string;
-  adminName?: string;
-  amount?: string;
+  status?: string;
+  wordCount?: number;
   timestamp: string;
 }
 
 export default function AdminDashboard() {
   const router = useRouter();
-  const { user, isLoading: loading, isAuthenticated } = useUser();
+  const { user, isLoading: authLoading, isAuthenticated } = useUser();
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [recentActivity, setRecentActivity] = useState<ActivityItem[]>([]);
   const [isLoadingStats, setIsLoadingStats] = useState(true);
 
   useEffect(() => {
-    if (!loading && (!isAuthenticated || user?.role !== "admin")) {
+    if (!authLoading && (!isAuthenticated || user?.role !== "admin")) {
       router.push("/");
     }
-  }, [loading, isAuthenticated, user?.role, router]);
+  }, [authLoading, isAuthenticated, user?.role, router]);
 
   const fetchDashboardData = async () => {
     setIsLoadingStats(true);
@@ -66,159 +65,147 @@ export default function AdminDashboard() {
   };
 
   useEffect(() => {
-    if (!loading && isAuthenticated && user?.role === "admin") {
+    if (!authLoading && isAuthenticated && user?.role === "admin") {
       fetchDashboardData();
     }
-  }, [loading, isAuthenticated, user?.role]);
+  }, [authLoading, isAuthenticated, user?.role]);
 
   const formatTimeAgo = (timestamp: string) => {
-    const now = new Date();
-    const date = new Date(timestamp);
-    const seconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+    const seconds = Math.floor(
+      (Date.now() - new Date(timestamp).getTime()) / 1000,
+    );
 
     if (seconds < 60) return "just now";
     if (seconds < 3600) return `${Math.floor(seconds / 60)} min ago`;
     if (seconds < 86400) return `${Math.floor(seconds / 3600)} hours ago`;
     if (seconds < 604800) return `${Math.floor(seconds / 86400)} days ago`;
-    return date.toLocaleDateString();
-  };
-
-  const getActivityIcon = (type: string) => {
-    switch (type) {
-      case "receipt_submitted":
-        return <Receipt className="w-4 h-4 text-blue-500" />;
-      case "grc_registered":
-        return <UserPlus className="w-4 h-4 text-green-500" />;
-      case "receipt_approved":
-        return <FileCheck className="w-4 h-4 text-emerald-500" />;
-      default:
-        return <Receipt className="w-4 h-4 text-muted-foreground" />;
-    }
-  };
-
-  const getActivityMessage = (item: ActivityItem) => {
-    switch (item.type) {
-      case "receipt_submitted":
-        return (
-          <>
-            <span className="font-medium">{item.memberName}</span> submitted a receipt
-            {item.amount && <span className="text-muted-foreground"> (${item.amount})</span>}
-          </>
-        );
-      case "grc_registered":
-        return (
-          <>
-            <span className="font-medium">{item.memberName}</span> registered with{" "}
-            <span className="font-medium">{item.merchantName}</span>
-          </>
-        );
-      case "receipt_approved":
-        return (
-          <>
-            <span className="font-medium">{item.adminName}</span> approved{" "}
-            <span className="font-medium">{item.memberName}&apos;s</span> receipt
-          </>
-        );
-      default:
-        return "Unknown activity";
-    }
+    return new Date(timestamp).toLocaleDateString();
   };
 
   return (
     <DashboardLayout navItems={adminNavItems}>
-      {loading ? (
-        <div className="flex items-center justify-center min-h-[400px]">
-          <div className="animate-pulse text-muted-foreground">Loading...</div>
+      {authLoading ? (
+        <div className="flex min-h-[400px] items-center justify-center">
+          <Loader2 className="w-8 h-8 animate-spin text-primary" />
         </div>
       ) : (
         <>
           <PageHeader
             title="Admin Dashboard"
-            description="Manage members, merchants, and platform operations"
+            description="Manage members, merchants, nominations, and platform operations"
           />
 
-          {/* Stats Grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
             <StatCard
-              label="Pending Receipts"
-              value={stats?.pendingReceipts ?? 0}
-              icon={Receipt}
-              isLoading={isLoadingStats}
-            />
-            <StatCard
-              label="Gift Cards Pending"
-              value={stats?.giftCardsPending ?? 0}
-              icon={Gift}
-              isLoading={isLoadingStats}
-            />
-            <StatCard
-              label="Active Members"
-              value={stats?.activeMembers ?? 0}
-              icon={UserCircle}
+              label="Users"
+              value={stats?.totalUsers ?? 0}
+              icon={Users}
               isLoading={isLoadingStats}
             />
             <StatCard
               label="Active Merchants"
               value={stats?.activeMerchants ?? 0}
-              icon={Users}
+              icon={Store}
+              isLoading={isLoadingStats}
+            />
+            <StatCard
+              label="Reviews"
+              value={stats?.totalReviews ?? 0}
+              icon={MessageSquare}
+              isLoading={isLoadingStats}
+            />
+            <StatCard
+              label="Pending Nominations"
+              value={stats?.pendingNominations ?? 0}
+              icon={ImageIcon}
               isLoading={isLoadingStats}
             />
           </div>
 
-          {/* Quick Actions */}
-          <div className="bg-card rounded-xl border border-border p-6 mb-8">
+          <div className="rounded-xl border bg-card p-6 mb-8">
             <h2 className="text-lg font-semibold mb-4">Quick Actions</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               <a
-                href="/admin/receipts"
-                className="flex items-center gap-3 p-4 rounded-lg border border-border hover:bg-muted transition-colors"
+                href="/admin/merchant-nominations"
+                className="flex items-center gap-3 rounded-lg border p-4 transition-colors hover:bg-muted"
               >
-                <ClipboardCheck className="w-5 h-5 text-primary" />
+                <ImageIcon className="w-5 h-5 text-primary" />
                 <div>
-                  <p className="font-medium">Review Receipts</p>
-                  <p className="text-sm text-muted-foreground">Approve or reject pending submissions</p>
+                  <p className="font-medium">Merchant Nominations</p>
+                  <p className="text-sm text-muted-foreground">Review stories and photos</p>
                 </div>
               </a>
               <a
-                href="/admin/gift-cards"
-                className="flex items-center gap-3 p-4 rounded-lg border border-border hover:bg-muted transition-colors"
+                href="/admin/merchants"
+                className="flex items-center gap-3 rounded-lg border p-4 transition-colors hover:bg-muted"
               >
-                <CreditCard className="w-5 h-5 text-primary" />
+                <Store className="w-5 h-5 text-primary" />
                 <div>
-                  <p className="font-medium">Fulfill Gift Cards</p>
-                  <p className="text-sm text-muted-foreground">Send rewards to qualified members</p>
+                  <p className="font-medium">Merchant Pages</p>
+                  <p className="text-sm text-muted-foreground">Edit public business pages</p>
                 </div>
               </a>
               <a
                 href="/admin/users"
-                className="flex items-center gap-3 p-4 rounded-lg border border-border hover:bg-muted transition-colors"
+                className="flex items-center gap-3 rounded-lg border p-4 transition-colors hover:bg-muted"
               >
                 <Users className="w-5 h-5 text-primary" />
                 <div>
-                  <p className="font-medium">Manage Users</p>
-                  <p className="text-sm text-muted-foreground">View and edit user accounts</p>
+                  <p className="font-medium">Users</p>
+                  <p className="text-sm text-muted-foreground">View and edit accounts</p>
+                </div>
+              </a>
+              <a
+                href="/admin/reviews"
+                className="flex items-center gap-3 rounded-lg border p-4 transition-colors hover:bg-muted"
+              >
+                <MessageSquare className="w-5 h-5 text-primary" />
+                <div>
+                  <p className="font-medium">Reviews</p>
+                  <p className="text-sm text-muted-foreground">Moderate public feedback</p>
+                </div>
+              </a>
+              <a
+                href="/admin/emails"
+                className="flex items-center gap-3 rounded-lg border p-4 transition-colors hover:bg-muted"
+              >
+                <Send className="w-5 h-5 text-primary" />
+                <div>
+                  <p className="font-medium">Emails</p>
+                  <p className="text-sm text-muted-foreground">Manage campaigns</p>
+                </div>
+              </a>
+              <a
+                href="/admin/categories"
+                className="flex items-center gap-3 rounded-lg border p-4 transition-colors hover:bg-muted"
+              >
+                <FolderOpen className="w-5 h-5 text-primary" />
+                <div>
+                  <p className="font-medium">Categories</p>
+                  <p className="text-sm text-muted-foreground">Organize merchants</p>
                 </div>
               </a>
             </div>
           </div>
 
-          {/* Recent Activity */}
-          <div className="bg-card rounded-xl border border-border p-6">
+          <div className="rounded-xl border bg-card p-6">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold">Recent Activity</h2>
+              <h2 className="text-lg font-semibold">Recent Nominations</h2>
               <Button
                 variant="ghost"
                 size="icon"
                 onClick={fetchDashboardData}
                 disabled={isLoadingStats}
               >
-                <RefreshCw className={`w-4 h-4 ${isLoadingStats ? "animate-spin" : ""}`} />
+                <RefreshCw
+                  className={`w-4 h-4 ${isLoadingStats ? "animate-spin" : ""}`}
+                />
               </Button>
             </div>
             {isLoadingStats ? (
               <div className="space-y-3">
-                {[1, 2, 3, 4, 5].map((i) => (
-                  <div key={i} className="flex items-center gap-3 animate-pulse">
+                {[1, 2, 3].map((item) => (
+                  <div key={item} className="flex items-center gap-3 animate-pulse">
                     <div className="w-8 h-8 rounded-full bg-muted" />
                     <div className="flex-1">
                       <div className="h-4 w-3/4 bg-muted rounded" />
@@ -228,21 +215,24 @@ export default function AdminDashboard() {
                 ))}
               </div>
             ) : recentActivity.length === 0 ? (
-              <p className="text-muted-foreground text-sm">No recent activity</p>
+              <p className="text-sm text-muted-foreground">No recent nominations</p>
             ) : (
               <div className="space-y-3">
-                {recentActivity.map((item, index) => (
+                {recentActivity.map((item) => (
                   <div
-                    key={index}
-                    className="flex items-start gap-3 py-2 border-b border-border last:border-0"
+                    key={item.id}
+                    className="flex items-start gap-3 border-b py-2 last:border-0"
                   >
-                    <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center">
-                      {getActivityIcon(item.type)}
+                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-muted">
+                      <ImageIcon className="w-4 h-4 text-primary" />
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm">{getActivityMessage(item)}</p>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm">
+                        <span className="font-medium">{item.merchantName}</span>{" "}
+                        nomination is {item.status?.replace("_", " ")}
+                      </p>
                       <p className="text-xs text-muted-foreground">
-                        {formatTimeAgo(item.timestamp)}
+                        {item.wordCount} words · {formatTimeAgo(item.timestamp)}
                       </p>
                     </div>
                   </div>

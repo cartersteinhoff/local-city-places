@@ -49,38 +49,3 @@ export function StatusBadge({ variant, status, label, children, size = "md", cla
     </span>
   );
 }
-
-// Convenience function to map receipt/qualification status to badge variant
-export function getReceiptStatusVariant(
-  status: "pending" | "approved" | "rejected"
-): StatusVariant {
-  switch (status) {
-    case "approved":
-      return "success";
-    case "rejected":
-      return "error";
-    case "pending":
-      return "pending";
-    default:
-      return "default";
-  }
-}
-
-export function getQualificationStatusVariant(
-  status: "in_progress" | "receipts_complete" | "qualified" | "pending_review" | "forfeited"
-): StatusVariant {
-  switch (status) {
-    case "qualified":
-      return "success";
-    case "receipts_complete":
-      return "info";
-    case "in_progress":
-      return "pending";
-    case "pending_review":
-      return "warning";
-    case "forfeited":
-      return "error";
-    default:
-      return "default";
-  }
-}

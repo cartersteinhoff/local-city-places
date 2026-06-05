@@ -15,7 +15,6 @@
     "db:push": "drizzle-kit push",
     "db:studio": "drizzle-kit studio",
     "db:seed": "tsx src/db/seed.ts",
-    "db:grc": "tsx src/db/seed.ts grc",
     "migrate:v1": "tsx scripts/migrate-from-v1.ts"
   },
   "dependencies": {

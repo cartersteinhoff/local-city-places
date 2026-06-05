@@ -134,7 +134,7 @@ export default function SurveyResponsesPage({ params }: { params: Promise<{ id: 
               <MessageSquare className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
               <h3 className="font-semibold text-lg mb-2">No responses yet</h3>
               <p className="text-muted-foreground">
-                Responses will appear here when GRC recipients complete your survey.
+                Responses will appear here when customers complete your survey.
               </p>
             </div>
           ) : (

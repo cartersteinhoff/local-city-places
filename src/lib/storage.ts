@@ -1,43 +1,6 @@
 import { put } from "@vercel/blob";
 
 /**
- * Upload a receipt image to Vercel Blob storage
- * Requires BLOB_READ_WRITE_TOKEN env variable
- *
- * @param base64Data - Base64 encoded image data (with or without data URI prefix)
- * @param fileName - Original filename
- * @returns Public URL for the stored image
- */
-export async function uploadReceiptImage(
-  base64Data: string,
-  fileName: string = "receipt.jpg"
-): Promise<string> {
-  // Strip data URI prefix if present
-  const rawBase64 = base64Data.replace(/^data:image\/\w+;base64,/, "");
-
-  // Convert base64 to Buffer
-  const buffer = Buffer.from(rawBase64, "base64");
-
-  // Detect content type from data URI or default to jpeg
-  let contentType = "image/jpeg";
-  const dataUriMatch = base64Data.match(/^data:(image\/\w+);base64,/);
-  if (dataUriMatch) {
-    contentType = dataUriMatch[1];
-  }
-
-  // Generate unique path with timestamp
-  const timestamp = Date.now();
-  const uniqueFileName = `receipts/${timestamp}-${fileName}`;
-
-  const blob = await put(uniqueFileName, buffer, {
-    access: "public",
-    contentType,
-  });
-
-  return blob.url;
-}
-
-/**
  * Get the file extension from a content type
  */
 export function getExtensionFromContentType(contentType: string): string {
@@ -91,7 +54,7 @@ export function validateImageFormat(base64Data: string): {
  */
 export function validateImageSize(
   base64Data: string,
-  maxSize: number = 20 * 1024 * 1024 // 20MB default for Veryfi
+  maxSize: number = 20 * 1024 * 1024
 ): {
   valid: boolean;
   sizeBytes: number;

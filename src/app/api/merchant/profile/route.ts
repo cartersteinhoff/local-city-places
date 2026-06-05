@@ -65,7 +65,7 @@ export async function GET() {
         email: user.email,
         profilePhotoUrl: user.profilePhotoUrl,
         notificationPrefs: user.notificationPrefs || {
-          emailReceipts: true,
+          emailActivity: true,
           emailReminders: true,
           emailMarketing: false,
         },

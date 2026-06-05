@@ -39,8 +39,6 @@ interface AdminTestimonial {
   wordCount: number;
   status: TestimonialStatus;
   moderationNotes: string | null;
-  rewardStatus: string;
-  rewardReferenceId: string | null;
   createdAt: string;
   updatedAt: string;
   photoCount: number;
@@ -323,12 +321,6 @@ export default function AdminMerchantNominationsPage() {
                         <span className="rounded-full bg-muted px-2.5 py-1 text-xs font-medium text-muted-foreground">
                           {readinessLabel(testimonial)}
                         </span>
-                        {testimonial.rewardStatus ===
-                          "registration_required" && (
-                          <span className="rounded-full bg-green-100 px-2.5 py-1 text-xs font-medium text-green-700">
-                            $25 created
-                          </span>
-                        )}
                       </div>
 
                       <p className="text-sm text-muted-foreground mt-2">

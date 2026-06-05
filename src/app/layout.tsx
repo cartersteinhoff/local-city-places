@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "Local City Places",
-  description: "GRC Platform - Grocery Rebate Certificates",
+  description: "Local merchant discovery and community sweepstakes platform",
 };
 
 export default function RootLayout({

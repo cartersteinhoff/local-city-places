@@ -3,11 +3,8 @@ import { getSession } from "@/lib/auth";
 import {
   sendMagicLinkEmail,
   sendWelcomeEmail,
-  sendGrcIssuedEmail,
   sendMerchantInviteEmail,
   sendMerchantWelcomeEmail,
-  sendMerchantWelcomeNoTrialEmail,
-  sendTrialGrcsActivatedEmail,
 } from "@/lib/email";
 
 export async function POST(request: NextRequest) {
@@ -37,17 +34,6 @@ export async function POST(request: NextRequest) {
         success = await sendWelcomeEmail(to, params.token || "test-token-12345");
         break;
 
-      case "grc-issued":
-        success = await sendGrcIssuedEmail({
-          recipientEmail: to,
-          recipientName: params.recipientName || "Test User",
-          merchantName: params.merchantName || "Test Business",
-          denomination: params.denomination || 120,
-          totalMonths: params.totalMonths || 12,
-          claimUrl: params.claimUrl || "https://localcityplaces.com/claim/test",
-        });
-        break;
-
       case "merchant-invite":
         success = await sendMerchantInviteEmail({
           email: to,
@@ -61,26 +47,6 @@ export async function POST(request: NextRequest) {
           email: to,
           businessName: params.businessName || "Test Business",
           loginUrl: params.loginUrl || "https://localcityplaces.com/login",
-          trialGrcCount: params.trialGrcCount || 10,
-          trialGrcDenomination: params.trialGrcDenomination || 120,
-        });
-        break;
-
-      case "merchant-welcome-no-trial":
-        success = await sendMerchantWelcomeNoTrialEmail({
-          email: to,
-          businessName: params.businessName || "Test Business",
-          loginUrl: params.loginUrl || "https://localcityplaces.com/login",
-        });
-        break;
-
-      case "trial-grcs-activated":
-        success = await sendTrialGrcsActivatedEmail({
-          email: to,
-          businessName: params.businessName || "Test Business",
-          loginUrl: params.loginUrl || "https://localcityplaces.com/login",
-          trialGrcCount: params.trialGrcCount || 10,
-          trialGrcDenomination: params.trialGrcDenomination || 120,
         });
         break;
 

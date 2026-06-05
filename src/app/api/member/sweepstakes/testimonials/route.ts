@@ -61,7 +61,6 @@ export async function GET() {
         wordCount: favoriteMerchantTestimonials.wordCount,
         status: favoriteMerchantTestimonials.status,
         moderationNotes: favoriteMerchantTestimonials.moderationNotes,
-        rewardStatus: favoriteMerchantTestimonials.rewardStatus,
         createdAt: favoriteMerchantTestimonials.createdAt,
         updatedAt: favoriteMerchantTestimonials.updatedAt,
         photoId: favoriteMerchantTestimonialPhotos.id,
@@ -129,7 +128,6 @@ export async function GET() {
         wordCount: number;
         status: string;
         moderationNotes: string | null;
-        rewardStatus: string;
         createdAt: string;
         updatedAt: string;
         photos: Array<{
@@ -152,7 +150,6 @@ export async function GET() {
           wordCount: row.wordCount,
           status: row.status,
           moderationNotes: row.moderationNotes,
-          rewardStatus: row.rewardStatus,
           createdAt: row.createdAt.toISOString(),
           updatedAt: row.updatedAt.toISOString(),
           photos: [],

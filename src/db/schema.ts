@@ -20,38 +20,6 @@ export const userRoleEnum = pgEnum("user_role", [
   "merchant",
   "admin",
 ]);
-export const grcStatusEnum = pgEnum("grc_status", [
-  "pending",
-  "active",
-  "completed",
-  "expired",
-]);
-export const grcSourceTypeEnum = pgEnum("grc_source_type", [
-  "merchant_issue",
-  "favorite_merchant_testimonial",
-]);
-export const receiptStatusEnum = pgEnum("receipt_status", [
-  "pending",
-  "approved",
-  "rejected",
-]);
-export const qualificationStatusEnum = pgEnum("qualification_status", [
-  "in_progress",
-  "receipts_complete",
-  "qualified",
-  "pending_review",
-  "forfeited",
-]);
-export const paymentMethodEnum = pgEnum("payment_method", [
-  "bank_account",
-  "zelle",
-  "business_check",
-]);
-export const paymentStatusEnum = pgEnum("payment_status", [
-  "pending",
-  "confirmed",
-  "failed",
-]);
 export const sweepstakesCycleStatusEnum = pgEnum("sweepstakes_cycle_status", [
   "open",
   "closed",
@@ -87,17 +55,6 @@ export const favoriteMerchantTestimonialPhotoStatusEnum = pgEnum(
   "favorite_merchant_testimonial_photo_status",
   ["pending", "approved", "rejected"],
 );
-export const favoriteMerchantRewardStatusEnum = pgEnum(
-  "favorite_merchant_reward_status",
-  [
-    "not_created",
-    "registration_required",
-    "qualifying",
-    "qualified",
-    "fulfilled",
-    "void",
-  ],
-);
 
 // Users table
 export const users = pgTable("users", {
@@ -109,7 +66,7 @@ export const users = pgTable("users", {
   role: userRoleEnum("role").notNull().default("member"),
   profilePhotoUrl: text("profile_photo_url"),
   notificationPrefs: jsonb("notification_prefs").$type<{
-    emailReceipts?: boolean;
+    emailActivity?: boolean;
     emailReminders?: boolean;
     emailMarketing?: boolean;
   }>(),
@@ -329,10 +286,6 @@ export const favoriteMerchantTestimonials = pgTable(
     moderationNotes: text("moderation_notes"),
     approvedAt: timestamp("approved_at"),
     approvedBy: uuid("approved_by").references(() => users.id),
-    rewardStatus: favoriteMerchantRewardStatusEnum("reward_status")
-      .notNull()
-      .default("not_created"),
-    rewardReferenceId: uuid("reward_reference_id"),
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at").defaultNow().notNull(),
   },
@@ -471,131 +424,6 @@ export const surveys = pgTable("surveys", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
-// GRCs table - ISSUED certificates only
-// A GRC record is created ONLY when a merchant issues it to a customer.
-// Do NOT pre-create GRC records for inventory - that's tracked in grcPurchases.
-// See CLAUDE.md "GRC Data Model" for full explanation.
-export const grcs = pgTable("grcs", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  merchantId: uuid("merchant_id")
-    .notNull()
-    .references(() => merchants.id, { onDelete: "cascade" }),
-  memberId: uuid("member_id").references(() => members.id, {
-    onDelete: "set null",
-  }),
-  denomination: integer("denomination").notNull(), // $50-$500
-  costPerCert: decimal("cost_per_cert", { precision: 5, scale: 2 }).notNull(),
-  groceryStore: varchar("grocery_store", { length: 255 }),
-  groceryStorePlaceId: varchar("grocery_store_place_id", { length: 255 }),
-  sourceType: grcSourceTypeEnum("source_type")
-    .notNull()
-    .default("merchant_issue"),
-  sourceReferenceId: uuid("source_reference_id"),
-  recipientEmail: varchar("recipient_email", { length: 255 }),
-  recipientName: varchar("recipient_name", { length: 255 }),
-  status: grcStatusEnum("status").notNull().default("pending"),
-  monthsRemaining: integer("months_remaining").notNull(),
-  startMonth: integer("start_month"), // 1-12
-  startYear: integer("start_year"),
-  issuedAt: timestamp("issued_at"),
-  registeredAt: timestamp("registered_at"),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-});
-
-// Member GRC queue - tracks preferred order for pending GRCs
-export const memberGrcQueue = pgTable(
-  "member_grc_queue",
-  {
-    id: uuid("id").primaryKey().defaultRandom(),
-    memberId: uuid("member_id")
-      .notNull()
-      .references(() => members.id, { onDelete: "cascade" }),
-    grcId: uuid("grc_id")
-      .notNull()
-      .references(() => grcs.id, { onDelete: "cascade" }),
-    sortOrder: integer("sort_order").notNull().default(0),
-    createdAt: timestamp("created_at").defaultNow().notNull(),
-  },
-  (table) => [
-    uniqueIndex("member_grc_queue_unique_idx").on(table.memberId, table.grcId),
-  ],
-);
-
-// GRC purchases table - INVENTORY tracking
-// This tracks what merchants have purchased (their issuable inventory).
-// Inventory = sum(quantity where paymentStatus='confirmed') - count(grcs for this merchant)
-// When admin approves, only update paymentStatus - do NOT create grcs records.
-export const grcPurchases = pgTable("grc_purchases", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  merchantId: uuid("merchant_id")
-    .notNull()
-    .references(() => merchants.id, { onDelete: "cascade" }),
-  denomination: integer("denomination").notNull(),
-  quantity: integer("quantity").notNull(),
-  totalCost: decimal("total_cost", { precision: 10, scale: 2 }).notNull(),
-  paymentMethod: paymentMethodEnum("payment_method").notNull(),
-  paymentStatus: paymentStatusEnum("payment_status")
-    .notNull()
-    .default("pending"),
-  isTrial: boolean("is_trial").default(false).notNull(), // True for free trial GRCs
-  // Zelle payment info
-  zelleAccountName: varchar("zelle_account_name", { length: 255 }), // Name on bank sending Zelle
-  // Admin fields
-  paymentNotes: text("payment_notes"),
-  rejectionReason: varchar("rejection_reason", { length: 255 }),
-  paymentConfirmedAt: timestamp("payment_confirmed_at"),
-  paymentConfirmedBy: uuid("payment_confirmed_by").references(() => users.id),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-});
-
-// Receipts table
-export const receipts = pgTable("receipts", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  memberId: uuid("member_id")
-    .notNull()
-    .references(() => members.id, { onDelete: "cascade" }),
-  grcId: uuid("grc_id")
-    .notNull()
-    .references(() => grcs.id, { onDelete: "cascade" }),
-  imageUrl: text("image_url").notNull(),
-  imageHash: varchar("image_hash", { length: 64 }), // SHA-256 hash for duplicate detection
-  amount: decimal("amount", { precision: 10, scale: 2 }),
-  receiptDate: timestamp("receipt_date"),
-  extractedStoreName: varchar("extracted_store_name", { length: 255 }),
-  storeMismatch: boolean("store_mismatch").default(false),
-  dateMismatch: boolean("date_mismatch").default(false),
-  memberOverride: boolean("member_override").default(false),
-  veryfiResponse: jsonb("veryfi_response"),
-  submittedAt: timestamp("submitted_at").defaultNow().notNull(),
-  status: receiptStatusEnum("status").notNull().default("pending"),
-  rejectionReason: varchar("rejection_reason", { length: 100 }),
-  rejectionNotes: text("rejection_notes"),
-  reuploadAllowedUntil: timestamp("reupload_allowed_until"),
-  reviewedAt: timestamp("reviewed_at"),
-  reviewedBy: uuid("reviewed_by").references(() => users.id),
-});
-
-// Monthly qualifications table
-export const monthlyQualifications = pgTable("monthly_qualifications", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  memberId: uuid("member_id")
-    .notNull()
-    .references(() => members.id, { onDelete: "cascade" }),
-  grcId: uuid("grc_id")
-    .notNull()
-    .references(() => grcs.id, { onDelete: "cascade" }),
-  month: integer("month").notNull(), // 1-12
-  year: integer("year").notNull(),
-  approvedTotal: decimal("approved_total", { precision: 10, scale: 2 }).default(
-    "0",
-  ),
-  surveyCompletedAt: timestamp("survey_completed_at"),
-  status: qualificationStatusEnum("status").notNull().default("in_progress"),
-  rewardSentAt: timestamp("reward_sent_at"),
-  giftCardTrackingNumber: varchar("gift_card_tracking_number", { length: 100 }),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-});
-
 // Survey responses table
 export const surveyResponses = pgTable("survey_responses", {
   id: uuid("id").primaryKey().defaultRandom(),
@@ -628,7 +456,6 @@ export const reviews = pgTable("reviews", {
   reviewerFirstName: varchar("reviewer_first_name", { length: 100 }),
   reviewerLastName: varchar("reviewer_last_name", { length: 100 }),
   reviewerPhotoUrl: text("reviewer_photo_url"),
-  bonusMonthAwarded: boolean("bonus_month_awarded").default(false),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
@@ -675,29 +502,6 @@ export const magicLinkTokens = pgTable("magic_link_tokens", {
   callbackUrl: varchar("callback_url", { length: 500 }),
   expiresAt: timestamp("expires_at").notNull(),
   usedAt: timestamp("used_at"),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-});
-
-// Skipped receipts table - tracks Veryfi documents that were analyzed but not submitted
-// Used to handle "retry" scenarios where user uploads same receipt again
-// When duplicate detected, check if duplicate_of matches a skipped receipt for same member
-export const skippedReceipts = pgTable("skipped_receipts", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  memberId: uuid("member_id")
-    .notNull()
-    .references(() => members.id, { onDelete: "cascade" }),
-  grcId: uuid("grc_id")
-    .notNull()
-    .references(() => grcs.id, { onDelete: "cascade" }),
-  veryfiDocumentId: integer("veryfi_document_id").notNull(),
-  imageUrl: text("image_url").notNull(), // Blob URL for cleanup
-  // Cached Veryfi analysis results
-  amount: decimal("amount", { precision: 10, scale: 2 }),
-  receiptDate: timestamp("receipt_date"),
-  extractedStoreName: varchar("extracted_store_name", { length: 255 }),
-  storeMismatch: boolean("store_mismatch").default(false),
-  dateMismatch: boolean("date_mismatch").default(false),
-  veryfiResponse: jsonb("veryfi_response"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
@@ -835,9 +639,6 @@ export const membersRelations = relations(members, ({ one, many }) => ({
     fields: [members.userId],
     references: [users.id],
   }),
-  grcs: many(grcs),
-  receipts: many(receipts),
-  monthlyQualifications: many(monthlyQualifications),
   surveyResponses: many(surveyResponses),
   reviews: many(reviews),
   favoriteMerchantTestimonials: many(favoriteMerchantTestimonials),
@@ -871,40 +672,10 @@ export const merchantsRelations = relations(merchants, ({ one, many }) => ({
     fields: [merchants.id],
     references: [merchantBankAccounts.merchantId],
   }),
-  grcs: many(grcs),
-  grcPurchases: many(grcPurchases),
   surveys: many(surveys),
   reviews: many(reviews),
   favoriteMerchantTestimonials: many(favoriteMerchantTestimonials),
   marketplaceOffers: many(marketplaceOffers),
-}));
-
-export const grcsRelations = relations(grcs, ({ one, many }) => ({
-  merchant: one(merchants, {
-    fields: [grcs.merchantId],
-    references: [merchants.id],
-  }),
-  member: one(members, {
-    fields: [grcs.memberId],
-    references: [members.id],
-  }),
-  receipts: many(receipts),
-  monthlyQualifications: many(monthlyQualifications),
-}));
-
-export const receiptsRelations = relations(receipts, ({ one }) => ({
-  member: one(members, {
-    fields: [receipts.memberId],
-    references: [members.id],
-  }),
-  grc: one(grcs, {
-    fields: [receipts.grcId],
-    references: [grcs.id],
-  }),
-  reviewedByUser: one(users, {
-    fields: [receipts.reviewedBy],
-    references: [users.id],
-  }),
 }));
 
 export const surveysRelations = relations(surveys, ({ one, many }) => ({
@@ -925,20 +696,6 @@ export const surveyResponsesRelations = relations(
     member: one(members, {
       fields: [surveyResponses.memberId],
       references: [members.id],
-    }),
-  }),
-);
-
-export const monthlyQualificationsRelations = relations(
-  monthlyQualifications,
-  ({ one }) => ({
-    member: one(members, {
-      fields: [monthlyQualifications.memberId],
-      references: [members.id],
-    }),
-    grc: one(grcs, {
-      fields: [monthlyQualifications.grcId],
-      references: [grcs.id],
     }),
   }),
 );

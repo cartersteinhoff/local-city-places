@@ -1,4 +1,4 @@
-# Claude Code Context
+# Codex Context
 
 ## Dev Login (Development Only)
 

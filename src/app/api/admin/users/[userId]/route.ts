@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { db, users, members, merchants, grcPurchases } from "@/db";
+import { db, users, members, merchants } from "@/db";
 import { getSession } from "@/lib/auth";
-import { eq, and } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 
 export async function GET(
   request: NextRequest,
@@ -50,26 +50,10 @@ export async function GET(
       .where(eq(merchants.userId, userId))
       .limit(1);
 
-    // Check if merchant has trial GRCs
-    let hasTrialGrcs = false;
-    if (merchant) {
-      const [trialPurchase] = await db
-        .select({ id: grcPurchases.id })
-        .from(grcPurchases)
-        .where(
-          and(
-            eq(grcPurchases.merchantId, merchant.id),
-            eq(grcPurchases.isTrial, true)
-          )
-        )
-        .limit(1);
-      hasTrialGrcs = !!trialPurchase;
-    }
-
     return NextResponse.json({
       user,
       member,
-      merchant: merchant ? { ...merchant, hasTrialGrcs } : null,
+      merchant,
     });
   } catch (error) {
     console.error("Error fetching user:", error);

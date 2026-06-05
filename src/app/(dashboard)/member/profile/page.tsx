@@ -20,7 +20,7 @@ interface ProfileData {
   phone: string | null;
   profilePhotoUrl: string | null;
   notificationPrefs: {
-    emailReceipts: boolean;
+    emailActivity: boolean;
     emailReminders: boolean;
     emailMarketing: boolean;
   };
@@ -349,15 +349,15 @@ export default function MemberProfilePage() {
             <CardContent className="space-y-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="font-medium">Receipt Confirmations</p>
+                  <p className="font-medium">Account Activity</p>
                   <p className="text-sm text-muted-foreground">
-                    Get notified when receipts are approved or rejected
+                    Get notified about important account updates
                   </p>
                 </div>
                 <Switch
-                  checked={profile.notificationPrefs.emailReceipts}
+                  checked={profile.notificationPrefs.emailActivity}
                   onCheckedChange={(checked) =>
-                    updateNotificationPref("emailReceipts", checked)
+                    updateNotificationPref("emailActivity", checked)
                   }
                 />
               </div>
@@ -366,9 +366,9 @@ export default function MemberProfilePage() {
 
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="font-medium">Monthly Reminders</p>
+                  <p className="font-medium">Member Reminders</p>
                   <p className="text-sm text-muted-foreground">
-                    Reminder to upload receipts before month end
+                    Reminders about member updates and offers
                   </p>
                 </div>
                 <Switch

@@ -100,8 +100,6 @@ export async function GET(request: NextRequest) {
         wordCount: favoriteMerchantTestimonials.wordCount,
         status: favoriteMerchantTestimonials.status,
         moderationNotes: favoriteMerchantTestimonials.moderationNotes,
-        rewardStatus: favoriteMerchantTestimonials.rewardStatus,
-        rewardReferenceId: favoriteMerchantTestimonials.rewardReferenceId,
         createdAt: favoriteMerchantTestimonials.createdAt,
         updatedAt: favoriteMerchantTestimonials.updatedAt,
         photoCount: sql<number>`coalesce(${photoCountSq.count}, 0)`,

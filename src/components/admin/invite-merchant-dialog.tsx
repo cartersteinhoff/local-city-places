@@ -63,7 +63,6 @@ export function InviteMerchantDialog({
   const [googlePlaceId, setGooglePlaceId] = useState("");
   const [googlePlaceName, setGooglePlaceName] = useState("");
   const [sendWelcomeEmail, setSendWelcomeEmail] = useState(true);
-  const [trialGrcDenomination, setTrialGrcDenomination] = useState<string>(""); // "", "100", "75", "50", "25", "none"
   const [isCreating, setIsCreating] = useState(false);
   const [createError, setCreateError] = useState("");
   const [createSuccess, setCreateSuccess] = useState(false);
@@ -92,7 +91,6 @@ export function InviteMerchantDialog({
       setGooglePlaceId("");
       setGooglePlaceName("");
       setSendWelcomeEmail(true);
-      setTrialGrcDenomination("");
       setCreateError("");
       setCreateSuccess(false);
     }
@@ -194,8 +192,6 @@ export function InviteMerchantDialog({
 
     try {
       const { city, state } = parseCityState(cityState);
-      // Convert denomination selection to API format
-      const denominationValue = trialGrcDenomination === "none" ? null : parseInt(trialGrcDenomination);
 
       const res = await fetch("/api/admin/merchants", {
         method: "POST",
@@ -211,7 +207,6 @@ export function InviteMerchantDialog({
           description: description || undefined,
           googlePlaceId: googlePlaceId || undefined,
           sendWelcomeEmail,
-          trialGrcDenomination: denominationValue,
         }),
       });
 
@@ -241,7 +236,7 @@ export function InviteMerchantDialog({
         <DialogHeader>
           <DialogTitle>Invite Merchant</DialogTitle>
           <DialogDescription>
-            Invite a new merchant to join Local City Places. Trial GRCs can be set up now or later.
+            Invite a new merchant to join Local City Places.
           </DialogDescription>
         </DialogHeader>
 
@@ -445,25 +440,6 @@ export function InviteMerchantDialog({
                       </Select>
                     </div>
 
-                    <div className="col-span-2">
-                      <Label htmlFor="trial-grcs">Trial GRCs *</Label>
-                      <Select value={trialGrcDenomination} onValueChange={setTrialGrcDenomination}>
-                        <SelectTrigger id="trial-grcs" className="w-full">
-                          <SelectValue placeholder="Select trial GRCs..." />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="100">10 x $100 ($1,000 value)</SelectItem>
-                          <SelectItem value="75">10 x $75 ($750 value)</SelectItem>
-                          <SelectItem value="50">10 x $50 ($500 value)</SelectItem>
-                          <SelectItem value="25">10 x $25 ($250 value)</SelectItem>
-                          <SelectItem value="none">No trial GRCs (set up later)</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        Trial GRCs are free for the merchant to issue to customers
-                      </p>
-                    </div>
-
                     <div>
                       <Label htmlFor="phone">Phone</Label>
                       <Input
@@ -524,7 +500,7 @@ export function InviteMerchantDialog({
                   </Button>
                   <Button
                     onClick={handleCreateDirectly}
-                    disabled={isCreating || !directEmail || !businessName || !trialGrcDenomination}
+                    disabled={isCreating || !directEmail || !businessName}
                   >
                     {isCreating ? (
                       <>

@@ -9,7 +9,6 @@ import {
   users,
 } from "@/db";
 import { getSession } from "@/lib/auth";
-import { issueFavoriteMerchantReward } from "@/lib/favorite-merchant";
 import { revalidateMerchantPublicPaths } from "@/lib/merchant-public-revalidation";
 import { favoriteMerchantModerationSchema } from "@/lib/validations/sweepstakes";
 
@@ -32,8 +31,6 @@ async function getAdminTestimonialDetail(testimonialId: string) {
       status: favoriteMerchantTestimonials.status,
       moderationNotes: favoriteMerchantTestimonials.moderationNotes,
       approvedAt: favoriteMerchantTestimonials.approvedAt,
-      rewardStatus: favoriteMerchantTestimonials.rewardStatus,
-      rewardReferenceId: favoriteMerchantTestimonials.rewardReferenceId,
       createdAt: favoriteMerchantTestimonials.createdAt,
       updatedAt: favoriteMerchantTestimonials.updatedAt,
     })
@@ -162,7 +159,7 @@ export async function PUT(
       return NextResponse.json(
         {
           error:
-            "Approved testimonials cannot be moved back to another moderation state because the reward certificate has already been issued.",
+            "Approved testimonials cannot be moved back to another moderation state.",
         },
         { status: 409 },
       );
@@ -189,20 +186,6 @@ export async function PUT(
         );
       }
 
-      const memberDisplayName = [
-        testimonial.memberFirstName,
-        testimonial.memberLastName,
-      ]
-        .filter(Boolean)
-        .join(" ")
-        .trim();
-
-      const reward = await issueFavoriteMerchantReward({
-        testimonialId: testimonial.id,
-        recipientEmail: testimonial.memberEmail,
-        recipientName: memberDisplayName || undefined,
-      });
-
       const [updatedTestimonial] = await db
         .update(favoriteMerchantTestimonials)
         .set({
@@ -210,8 +193,6 @@ export async function PUT(
           moderationNotes: trimmedNotes,
           approvedAt: new Date(),
           approvedBy: session.user.id,
-          rewardStatus: "registration_required",
-          rewardReferenceId: reward.rewardGrcId,
           updatedAt: new Date(),
         })
         .where(eq(favoriteMerchantTestimonials.id, testimonial.id))
@@ -219,8 +200,6 @@ export async function PUT(
           id: favoriteMerchantTestimonials.id,
           status: favoriteMerchantTestimonials.status,
           moderationNotes: favoriteMerchantTestimonials.moderationNotes,
-          rewardStatus: favoriteMerchantTestimonials.rewardStatus,
-          rewardReferenceId: favoriteMerchantTestimonials.rewardReferenceId,
         });
 
       revalidateMerchantPublicPaths({
@@ -235,7 +214,6 @@ export async function PUT(
           ...updatedTestimonial,
           photoStats: testimonial.photoStats,
         },
-        reward: reward,
       });
     }
 
@@ -246,7 +224,6 @@ export async function PUT(
         moderationNotes: trimmedNotes,
         approvedAt: null,
         approvedBy: null,
-        rewardStatus: "not_created",
         updatedAt: new Date(),
       })
       .where(
@@ -259,7 +236,6 @@ export async function PUT(
         id: favoriteMerchantTestimonials.id,
         status: favoriteMerchantTestimonials.status,
         moderationNotes: favoriteMerchantTestimonials.moderationNotes,
-        rewardStatus: favoriteMerchantTestimonials.rewardStatus,
       });
 
     return NextResponse.json({

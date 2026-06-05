@@ -40,7 +40,6 @@ export async function GET(request: NextRequest) {
         id: reviews.id,
         content: reviews.content,
         wordCount: reviews.wordCount,
-        bonusMonthAwarded: reviews.bonusMonthAwarded,
         createdAt: reviews.createdAt,
         memberFirstName: users.firstName,
         memberLastName: users.lastName,
@@ -72,7 +71,6 @@ export async function GET(request: NextRequest) {
           : "Anonymous",
       content: r.content,
       wordCount: r.wordCount,
-      bonusMonthAwarded: r.bonusMonthAwarded,
       createdAt: r.createdAt,
     }));
 
