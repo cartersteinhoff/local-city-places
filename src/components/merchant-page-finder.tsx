@@ -97,8 +97,10 @@ function MerchantPageFinderContent() {
   };
 
   return (
-    <div className="relative flex min-h-screen flex-col overflow-hidden bg-[#ff9418]">
-      <AnimatedFoodBackground />
+    <div className="dark relative flex min-h-screen flex-col overflow-hidden bg-[#04131f]">
+      <div aria-hidden="true" className="absolute inset-0 z-0">
+        <AnimatedFoodBackground />
+      </div>
       <HomeHeader />
 
       <main className="relative z-10 flex flex-1 flex-col px-4 pt-8 sm:px-6 lg:pt-10">
@@ -128,7 +130,7 @@ function MerchantPageFinderContent() {
                 >
                   Merchant page URL
                 </label>
-                <div className="flex flex-col overflow-hidden rounded-lg border border-zinc-300 bg-zinc-50 focus-within:border-orange-500 focus-within:ring-2 focus-within:ring-orange-500/20 sm:flex-row">
+                <div className="flex flex-col overflow-hidden rounded-lg border border-zinc-300 bg-white focus-within:border-orange-500 focus-within:ring-2 focus-within:ring-orange-500/30 sm:flex-row">
                   <div className="flex min-h-12 items-center border-b border-zinc-200 bg-[#f4f7f8] px-3 text-xs font-bold text-[#052843] sm:shrink-0 sm:border-r sm:border-b-0 sm:text-sm">
                     <span className="break-all sm:break-normal sm:whitespace-nowrap">
                       https://localcityplaces.com/
@@ -145,7 +147,7 @@ function MerchantPageFinderContent() {
                       setPhone(stripPhoneNumber(event.target.value));
                       setError("");
                     }}
-                    className="h-12 rounded-none border-0 bg-white px-3 text-base font-black tracking-[0.08em] text-zinc-950 shadow-none focus-visible:ring-0"
+                    className="h-12 rounded-none border-0 !bg-white px-3 text-base font-black tracking-[0.08em] !text-zinc-950 shadow-none placeholder:text-zinc-500 placeholder:opacity-100 focus-visible:ring-0 dark:!bg-white dark:!text-zinc-950 dark:placeholder:text-zinc-500"
                   />
                 </div>
                 {(error || helperMessage) && (
