@@ -13,7 +13,7 @@
  */
 
 import { Poiret_One, Raleway } from "next/font/google";
-import { MapPin, Phone, Globe, Share2, Gem, Navigation, Clock, Instagram, Facebook, Image as ImageIcon, Sparkles, Upload, Plus, Trash2, GripVertical, Pencil, X, ChevronLeft, ChevronRight, Star, Quote, ThumbsUp, Heart, Copy, Check } from "lucide-react";
+import { MapPin, Phone, Globe, Share2, Gem, Navigation, Clock, Instagram, Facebook, Image as ImageIcon, Sparkles, Upload, Plus, Trash2, GripVertical, Pencil, X, ChevronLeft, ChevronRight, Star, Quote, ThumbsUp, Heart, Copy, Check, LogIn } from "lucide-react";
 import { formatPhoneNumber, formatHoursDisplay, cn } from "@/lib/utils";
 import { useEditor, useEditable } from "../editor-context";
 import { EditableText, EditableImage, EditableLink, PreventLink } from "../editable-primitives";
@@ -1472,13 +1472,23 @@ export function ArtDecoDesign({
             </div>
             <span className="text-sm sm:text-base font-medium tracking-[0.15em] sm:tracking-[0.3em] uppercase text-[#D4AF37]/70 ml-1 sm:ml-2">Local City Places</span>
           </div>
-          <button
-            onClick={handleShare}
-            className="flex items-center gap-2 text-xs tracking-[0.2em] uppercase text-[#D4AF37]/70 hover:text-[#D4AF37] transition-colors cursor-pointer"
-          >
-            <Share2 className="w-4 h-4" />
-            {copied ? "Copied" : "Share"}
-          </button>
+          <div className="flex items-center gap-4">
+            <a
+              href="/merchant-login?redirect=/merchant"
+              className="flex items-center gap-2 border border-[#D4AF37]/40 px-3 py-2 text-xs tracking-[0.18em] uppercase text-[#D4AF37] transition-colors hover:border-[#D4AF37] hover:bg-[#D4AF37]/10"
+            >
+              <LogIn className="w-4 h-4" />
+              <span className="hidden sm:inline">Merchant Login</span>
+              <span className="sm:hidden">Login</span>
+            </a>
+            <button
+              onClick={handleShare}
+              className="flex items-center gap-2 text-xs tracking-[0.2em] uppercase text-[#D4AF37]/70 hover:text-[#D4AF37] transition-colors cursor-pointer"
+            >
+              <Share2 className="w-4 h-4" />
+              {copied ? "Copied" : "Share"}
+            </button>
+          </div>
         </div>
       </header>
 

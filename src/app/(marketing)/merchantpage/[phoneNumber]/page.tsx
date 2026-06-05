@@ -1,5 +1,5 @@
-import { and, eq } from "drizzle-orm";
-import { notFound, redirect } from "next/navigation";
+import { eq } from "drizzle-orm";
+import { redirect } from "next/navigation";
 import { db } from "@/db";
 import { merchants } from "@/db/schema";
 import { getMerchantPageUrl } from "@/lib/utils";
@@ -10,15 +10,13 @@ interface PageProps {
   }>;
 }
 
-export default async function PhoneRedirectPage({ params }: PageProps) {
+export default async function MerchantPagePhoneRedirect({ params }: PageProps) {
   const { phoneNumber } = await params;
 
-  // Only handle 10-digit phone numbers
   if (!/^\d{10}$/.test(phoneNumber)) {
-    notFound();
+    redirect("/merchantpage?status=invalid");
   }
 
-  // Look up merchant by phone
   const [merchant] = await db
     .select({
       city: merchants.city,
@@ -26,20 +24,12 @@ export default async function PhoneRedirectPage({ params }: PageProps) {
       slug: merchants.slug,
     })
     .from(merchants)
-    .where(
-      and(eq(merchants.phone, phoneNumber), eq(merchants.isPublicPage, true)),
-    )
+    .where(eq(merchants.phone, phoneNumber))
     .limit(1);
 
   if (!merchant || !merchant.city || !merchant.state || !merchant.slug) {
     redirect(`/merchantpage?phone=${phoneNumber}&status=not-found`);
   }
 
-  // Redirect to full URL
-  const fullUrl = getMerchantPageUrl(
-    merchant.city,
-    merchant.state,
-    merchant.slug,
-  );
-  redirect(fullUrl);
+  redirect(getMerchantPageUrl(merchant.city, merchant.state, merchant.slug));
 }

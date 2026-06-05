@@ -3,8 +3,6 @@
 import { Radio } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { useState } from "react";
-import { LoginModal } from "@/components/login-modal";
 import { Button } from "@/components/ui/button";
 
 type HomeHeaderVariant = "white" | "transparent";
@@ -31,7 +29,6 @@ const headerVariants = {
 } as const;
 
 export function HomeHeader({ variant = "white" }: HomeHeaderProps) {
-  const [loginOpen, setLoginOpen] = useState(false);
   const styles = headerVariants[variant];
 
   return (
@@ -56,18 +53,12 @@ export function HomeHeader({ variant = "white" }: HomeHeaderProps) {
                 Live Radio
               </Link>
             </Button>
-            <Button
-              size="sm"
-              className={styles.login}
-              onClick={() => setLoginOpen(true)}
-            >
-              Login
+            <Button size="sm" className={styles.login} asChild>
+              <Link href="/member-login">Login</Link>
             </Button>
           </div>
         </div>
       </div>
-
-      <LoginModal open={loginOpen} onOpenChange={setLoginOpen} />
     </header>
   );
 }
