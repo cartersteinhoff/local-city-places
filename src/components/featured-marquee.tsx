@@ -121,6 +121,28 @@ function MarqueeRow({
   );
 }
 
+function MarqueeHeading() {
+  return (
+    <div className="mb-6 flex items-center justify-center px-4">
+      <div className="max-w-full text-center">
+        <h2
+          aria-label="Explore Local Merchants"
+          className="flex flex-wrap items-center justify-center gap-x-3 gap-y-2 text-2xl font-black uppercase leading-tight text-white drop-shadow-[0_2px_0_rgba(6,56,96,0.3)] sm:gap-x-4 sm:text-3xl"
+        >
+          <span>Explore</span>
+          <span className="relative mx-1 inline-flex -rotate-1 items-center px-3 py-1 text-orange-300 sm:px-4">
+            <span className="absolute inset-0 translate-x-1 translate-y-1 rounded-[6px] bg-white/65" />
+            <span className="absolute inset-0 rounded-[6px] bg-[linear-gradient(135deg,#063860_0%,#01233f_70%,#04131f_100%)] shadow-[0_7px_0_rgba(148,56,7,0.28)] ring-1 ring-white/25" />
+            <span className="relative drop-shadow-[0_1px_0_rgba(0,0,0,0.55)]">
+              Local Merchants
+            </span>
+          </span>
+        </h2>
+      </div>
+    </div>
+  );
+}
+
 interface FeaturedMarqueeProps {
   showHeading?: boolean;
 }
@@ -161,11 +183,7 @@ export function FeaturedMarquee({ showHeading = true }: FeaturedMarqueeProps) {
   if (isLoading) {
     return (
       <section className="relative z-10 py-8">
-        {showHeading && (
-          <h2 className="mb-6 text-center text-2xl font-black uppercase text-white/80 sm:text-3xl">
-            Explore Local Merchants
-          </h2>
-        )}
+        {showHeading && <MarqueeHeading />}
         <div className="space-y-4">
           {skeletonRows.map((row) => (
             <div key={row} className="flex gap-4 overflow-hidden px-4">
@@ -188,11 +206,7 @@ export function FeaturedMarquee({ showHeading = true }: FeaturedMarqueeProps) {
 
   return (
     <section className="relative z-10 py-8">
-      {showHeading && (
-        <h2 className="mb-6 text-center text-2xl font-black uppercase text-white/80 sm:text-3xl">
-          Explore Local Merchants
-        </h2>
-      )}
+      {showHeading && <MarqueeHeading />}
       <div className="space-y-4">
         <MarqueeRow merchants={row1} direction="left" speed={40} />
         <MarqueeRow merchants={row2} direction="right" speed={50} />

@@ -278,12 +278,12 @@ function MerchantOnboardingContent() {
         {/* Header */}
         <div className="text-center mb-8">
           <Image
-            src="/images/logo-horizontal.png"
+            src="/images/local-city-places-header-logo-v12.webp"
             alt="Local City Places"
-            width={220}
-            height={55}
+            width={1592}
+            height={713}
             priority
-            className="mx-auto mb-4"
+            className="mx-auto mb-4 h-auto w-[220px] sm:w-[260px]"
           />
           <h2 className="text-xl font-semibold text-white dark:text-foreground">Become a Merchant Partner</h2>
         </div>

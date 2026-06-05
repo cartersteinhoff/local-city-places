@@ -1,6 +1,7 @@
 "use client";
 
 import { ChevronLeft } from "lucide-react";
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { WizardProgress } from "./wizard-progress";
 
@@ -30,14 +31,14 @@ export function WizardContainer({
       <div className="mx-auto max-w-2xl px-4 py-8">
         {/* Logo */}
         <div className="flex justify-center mb-8">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-primary-gradient flex items-center justify-center">
-              <span className="text-white font-bold text-lg">LC</span>
-            </div>
-            <span className="text-xl font-semibold text-foreground">
-              Local City Places
-            </span>
-          </div>
+          <Image
+            src="/images/local-city-places-header-logo-v12.webp"
+            alt="Local City Places"
+            width={1592}
+            height={713}
+            className="h-auto w-[220px]"
+            priority
+          />
         </div>
 
         {/* Progress */}

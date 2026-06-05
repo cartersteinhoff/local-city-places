@@ -1,10 +1,11 @@
 "use client";
 
+import { Check, LogOut, Moon, Shield, Store, Sun, User } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LogOut, Shield, Store, User, Moon, Sun, Check } from "lucide-react";
 import { useTheme } from "next-themes";
-import { cn } from "@/lib/utils";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -13,14 +14,29 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { useUser } from "@/hooks/use-user";
+import { cn } from "@/lib/utils";
 import type { NavItem } from "./types";
 
 const roleConfig = {
-  admin: { label: "Admin", icon: Shield, href: "/admin", color: "text-primary" },
-  merchant: { label: "Merchant", icon: Store, href: "/merchant", color: "text-blue-500" },
-  member: { label: "Member", icon: User, href: "/member", color: "text-green-500" },
+  admin: {
+    label: "Admin",
+    icon: Shield,
+    href: "/admin",
+    color: "text-primary",
+  },
+  merchant: {
+    label: "Merchant",
+    icon: Store,
+    href: "/merchant",
+    color: "text-blue-500",
+  },
+  member: {
+    label: "Member",
+    icon: User,
+    href: "/member",
+    color: "text-green-500",
+  },
 };
 
 interface SidebarProps {
@@ -36,9 +52,10 @@ export function Sidebar({ navItems, isCollapsed = false }: SidebarProps) {
 
   const fullName = userName || user?.email?.split("@")[0] || "User";
   const nameParts = fullName.split(" ");
-  const displayName = nameParts.length > 1
-    ? `${nameParts[0]} ${nameParts[nameParts.length - 1][0]}.`
-    : fullName;
+  const displayName =
+    nameParts.length > 1
+      ? `${nameParts[0]} ${nameParts[nameParts.length - 1][0]}.`
+      : fullName;
   const initials = displayName
     .split(" ")
     .map((n) => n[0])
@@ -49,31 +66,37 @@ export function Sidebar({ navItems, isCollapsed = false }: SidebarProps) {
   const currentView = pathname.startsWith("/admin")
     ? "admin"
     : pathname.startsWith("/merchant")
-    ? "merchant"
-    : pathname.startsWith("/member")
-    ? "member"
-    : "admin";
+      ? "merchant"
+      : pathname.startsWith("/member")
+        ? "member"
+        : "admin";
 
-  const CurrentIcon = roleConfig[currentView].icon;
   const isAdmin = user?.role === "admin";
+  const CurrentIcon = roleConfig[currentView].icon;
 
   return (
     <aside
       className={cn(
         "hidden md:flex flex-col bg-sidebar border-r border-sidebar-border h-screen sticky top-0 transition-all duration-200",
-        isCollapsed ? "w-16" : "w-64"
+        isCollapsed ? "w-16" : "w-64",
       )}
     >
       {/* Logo */}
       <div className="h-16 flex items-center px-4 border-b border-sidebar-border">
-        <Link href="/" className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg bg-primary-gradient flex items-center justify-center">
-            <span className="text-white font-bold text-sm">LC</span>
-          </div>
-          {!isCollapsed && (
-            <span className="font-semibold text-sidebar-foreground">
-              Local City Places
-            </span>
+        <Link href="/" className="flex min-w-0 items-center">
+          {isCollapsed ? (
+            <div className="w-8 h-8 rounded-lg bg-primary-gradient flex items-center justify-center">
+              <span className="text-white font-bold text-sm">LC</span>
+            </div>
+          ) : (
+            <Image
+              src="/images/local-city-places-header-logo-v12.webp"
+              alt="Local City Places"
+              width={1592}
+              height={713}
+              className="h-10 w-auto"
+              priority
+            />
           )}
         </Link>
       </div>
@@ -81,8 +104,9 @@ export function Sidebar({ navItems, isCollapsed = false }: SidebarProps) {
       {/* Navigation */}
       <nav className="flex-1 py-4 px-2 space-y-1 overflow-y-auto">
         {navItems.map((item) => {
-          const hrefSegments = item.href.split('/').filter(Boolean).length;
-          const isActive = pathname === item.href ||
+          const hrefSegments = item.href.split("/").filter(Boolean).length;
+          const isActive =
+            pathname === item.href ||
             (hrefSegments > 1 && pathname.startsWith(`${item.href}/`));
           const Icon = item.icon;
 
@@ -94,7 +118,7 @@ export function Sidebar({ navItems, isCollapsed = false }: SidebarProps) {
                 "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors",
                 isActive
                   ? "bg-sidebar-accent text-sidebar-primary"
-                  : "text-sidebar-foreground hover:bg-sidebar-accent/50"
+                  : "text-sidebar-foreground hover:bg-sidebar-accent/50",
               )}
             >
               <Icon className="w-5 h-5 shrink-0" strokeWidth={1.75} />
@@ -108,24 +132,34 @@ export function Sidebar({ navItems, isCollapsed = false }: SidebarProps) {
       <div className="border-t border-sidebar-border p-2 space-y-2">
         {/* Theme toggle */}
         <button
+          type="button"
           onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
           className={cn(
             "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors w-full",
-            "text-sidebar-foreground hover:bg-sidebar-accent/50"
+            "text-sidebar-foreground hover:bg-sidebar-accent/50",
           )}
         >
-          <Sun className="w-5 h-5 shrink-0 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" strokeWidth={1.75} />
-          <Moon className="w-5 h-5 shrink-0 absolute rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" strokeWidth={1.75} />
+          <Sun
+            className="w-5 h-5 shrink-0 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0"
+            strokeWidth={1.75}
+          />
+          <Moon
+            className="w-5 h-5 shrink-0 absolute rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100"
+            strokeWidth={1.75}
+          />
           {!isCollapsed && <span>Toggle theme</span>}
         </button>
 
         {/* User menu */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <button className={cn(
-              "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors w-full",
-              "text-sidebar-foreground hover:bg-sidebar-accent/50"
-            )}>
+            <button
+              type="button"
+              className={cn(
+                "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors w-full",
+                "text-sidebar-foreground hover:bg-sidebar-accent/50",
+              )}
+            >
               <Avatar className="w-7 h-7 border border-sidebar-border shrink-0">
                 {user?.profilePhotoUrl && (
                   <AvatarImage src={user.profilePhotoUrl} alt={displayName} />
@@ -136,10 +170,16 @@ export function Sidebar({ navItems, isCollapsed = false }: SidebarProps) {
               </Avatar>
               {!isCollapsed && (
                 <div className="flex-1 text-left min-w-0">
-                  <p className="text-sm font-medium text-sidebar-foreground leading-tight truncate">{displayName}</p>
+                  <p className="text-sm font-medium text-sidebar-foreground leading-tight truncate">
+                    {displayName}
+                  </p>
                   <div className="flex items-center gap-1">
-                    <CurrentIcon className={`w-3 h-3 ${roleConfig[currentView].color}`} />
-                    <span className="text-xs text-muted-foreground">{roleConfig[currentView].label}</span>
+                    <CurrentIcon
+                      className={`w-3 h-3 ${roleConfig[currentView].color}`}
+                    />
+                    <span className="text-xs text-muted-foreground">
+                      {roleConfig[currentView].label}
+                    </span>
                   </div>
                 </div>
               )}
@@ -149,7 +189,9 @@ export function Sidebar({ navItems, isCollapsed = false }: SidebarProps) {
             {/* User Info Header */}
             <div className="px-3 py-2">
               <p className="text-sm font-medium">{displayName}</p>
-              <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
+              <p className="text-xs text-muted-foreground truncate">
+                {user?.email}
+              </p>
             </div>
             <DropdownMenuSeparator />
 
@@ -164,10 +206,15 @@ export function Sidebar({ navItems, isCollapsed = false }: SidebarProps) {
                   const isActiveView = currentView === key;
                   return (
                     <DropdownMenuItem key={key} asChild>
-                      <Link href={config.href} className="flex items-center gap-2">
+                      <Link
+                        href={config.href}
+                        className="flex items-center gap-2"
+                      >
                         <Icon className={`w-4 h-4 ${config.color}`} />
                         {config.label}
-                        {isActiveView && <Check className="ml-auto w-4 h-4 text-primary" />}
+                        {isActiveView && (
+                          <Check className="ml-auto w-4 h-4 text-primary" />
+                        )}
                       </Link>
                     </DropdownMenuItem>
                   );
@@ -180,10 +227,9 @@ export function Sidebar({ navItems, isCollapsed = false }: SidebarProps) {
             <DropdownMenuItem
               className="text-destructive focus:text-destructive cursor-pointer"
               onClick={() => {
-                fetch("/api/auth/logout", { method: "POST" })
-                  .then(() => {
-                    window.location.href = "/";
-                  });
+                fetch("/api/auth/logout", { method: "POST" }).then(() => {
+                  window.location.href = "/";
+                });
               }}
             >
               <LogOut className="w-4 h-4 mr-2" />

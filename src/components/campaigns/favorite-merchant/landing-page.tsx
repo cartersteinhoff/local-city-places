@@ -162,7 +162,7 @@ export function FavoriteMerchantLandingPage() {
         <div className="absolute right-0 top-8 h-72 w-72 rounded-full bg-[#76b54f]/14 blur-3xl animate-drift-soft-reverse" />
 
         <div className="relative z-20">
-          <HomeHeader />
+          <HomeHeader variant="transparent" />
         </div>
 
         <div className="relative mx-auto max-w-7xl px-4 pb-14 pt-8 sm:px-6 sm:pb-18 lg:px-8 lg:pb-22 lg:pt-10">

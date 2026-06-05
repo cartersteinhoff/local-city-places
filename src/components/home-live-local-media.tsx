@@ -33,6 +33,8 @@ const cityColumns = [
   ],
 ];
 
+const allCities = cityColumns.flat();
+
 const radioStreamUrl = "https://s5.radio.co/sabc365e3e/listen";
 const radioTrackApiUrl =
   "https://public.radio.co/api/v2/sabc365e3e/track/current";
@@ -73,18 +75,26 @@ function stringValue(value: unknown) {
   return typeof value === "string" ? value.trim() : "";
 }
 
+function readableTrackText(value: string) {
+  return value
+    .replace(/([a-z])([A-Z])/g, "$1 $2")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
 function normalizeNowPlaying(
   payload: RadioTrackApiResponse,
 ): NowPlayingTrack | null {
   const track = payload.data;
   if (!track) return null;
 
-  const title =
+  const title = readableTrackText(
     stringValue(track.track_title) ||
-    stringValue(track.title) ||
-    fallbackNowPlaying.title;
-  const artist = stringValue(track.track_artist);
-  const album = stringValue(track.track_album);
+      stringValue(track.title) ||
+      fallbackNowPlaying.title,
+  );
+  const artist = readableTrackText(stringValue(track.track_artist));
+  const album = readableTrackText(stringValue(track.track_album));
   const subtitle =
     artist && artist !== title
       ? artist
@@ -240,95 +250,84 @@ function RadioCoPlayer() {
         }}
       />
 
-      <div className="grid items-center gap-4 sm:grid-cols-[172px_1fr]">
-        <button
-          type="button"
-          onClick={togglePlayback}
-          className="group relative mx-auto aspect-square w-full max-w-[172px] cursor-pointer overflow-hidden rounded-[8px] bg-white shadow-lg transition hover:scale-[1.01] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white sm:max-w-none"
-          aria-label={`${playbackLabel}: ${nowPlaying.title}`}
-          aria-pressed={isPlaying}
-        >
-          {hasTrackArtwork ? (
-            <Image
-              src={nowPlaying.artworkUrl ?? ""}
-              alt={`Artwork for ${nowPlaying.title}`}
-              fill
-              className="object-cover"
-              sizes="172px"
-              onError={() => setArtworkFailed(true)}
-            />
-          ) : (
-            <span className="flex h-full w-full flex-col items-center justify-center bg-[linear-gradient(135deg,#0b4f80_0%,#01233f_58%,#07131d_100%)] p-5 text-center text-white">
-              <Radio className="mb-3 h-10 w-10 text-orange-400" />
-              <span className="text-lg font-black uppercase leading-tight">
-                KLCP Radio
+      <div className="min-w-0 rounded-[8px] bg-[#031b2d] p-3 ring-1 ring-sky-200/15 sm:p-4">
+        <div className="grid min-w-0 items-center gap-4 sm:grid-cols-[minmax(150px,190px)_minmax(0,1fr)] xl:grid-cols-[minmax(160px,210px)_minmax(0,1fr)]">
+          <div className="relative mx-auto aspect-square w-full max-w-[190px] overflow-hidden rounded-[8px] bg-[#07131d] ring-1 ring-white/15 xl:max-w-[210px]">
+            {hasTrackArtwork ? (
+              <Image
+                src={nowPlaying.artworkUrl ?? ""}
+                alt={`Artwork for ${nowPlaying.title}`}
+                fill
+                className="object-cover"
+                sizes="(min-width: 1280px) 210px, 190px"
+                onError={() => setArtworkFailed(true)}
+              />
+            ) : (
+              <span className="flex h-full w-full flex-col items-center justify-center bg-[linear-gradient(135deg,#0b4f80_0%,#01233f_58%,#07131d_100%)] p-5 text-center text-white">
+                <Radio className="mb-3 h-10 w-10 text-orange-400" />
+                <span className="text-lg font-black uppercase leading-tight">
+                  KLCP Radio
+                </span>
+                <span className="mt-1 text-sm font-bold text-white/75">
+                  96.5 FM
+                </span>
               </span>
-              <span className="mt-1 text-sm font-bold text-white/75">
-                96.5 FM
-              </span>
-            </span>
-          )}
-          <span className="absolute inset-0 flex items-center justify-center bg-black/0 opacity-0 transition group-hover:bg-black/15 group-hover:opacity-100 group-focus-visible:bg-black/20 group-focus-visible:opacity-100">
-            <span className="flex h-14 w-14 items-center justify-center rounded-full bg-black/55 text-white backdrop-blur-sm">
-              {isPlaying ? (
-                <Pause className="h-7 w-7" fill="currentColor" />
-              ) : (
-                <Play className="ml-1 h-7 w-7" fill="currentColor" />
-              )}
-            </span>
-          </span>
-        </button>
+            )}
+          </div>
 
-        <div className="min-w-0">
-          <p className="mb-2 text-sm font-black uppercase text-orange-500">
-            Now Playing
-          </p>
-          <h3 className="text-xl font-black leading-tight text-white">
-            {nowPlaying.title}
-          </h3>
-          <p className="mt-1 text-base text-white/80">{nowPlaying.subtitle}</p>
+          <div className="min-w-0 text-center sm:text-left" aria-live="polite">
+            <p className="mb-1.5 text-xs font-black uppercase tracking-wide text-orange-400">
+              Now Playing
+            </p>
+            <h3 className="line-clamp-2 text-base font-black leading-tight text-white [overflow-wrap:anywhere] sm:text-lg xl:text-xl">
+              {nowPlaying.title}
+            </h3>
+            <p className="mt-2 line-clamp-2 text-sm font-medium text-white/78 sm:text-base">
+              {nowPlaying.subtitle}
+            </p>
+          </div>
         </div>
-      </div>
 
-      <div className="mt-4 border-t border-white/10 pt-3">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+        <div className="my-4 h-px bg-white/15" />
+
+        <div className="grid gap-3 sm:grid-cols-[auto_minmax(0,1fr)] sm:items-center">
           <button
             type="button"
             onClick={togglePlayback}
             disabled={playerStatus === "loading"}
-            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-sky-400 text-slate-950 transition hover:bg-sky-300 disabled:cursor-wait disabled:opacity-70"
+            className="mx-auto flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-sky-400 text-slate-950 shadow-lg shadow-black/25 transition hover:scale-[1.03] hover:bg-sky-300 disabled:cursor-wait disabled:opacity-75 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white sm:mx-0 sm:h-16 sm:w-16"
             aria-label={playbackLabel}
             aria-pressed={isPlaying}
           >
             {isPlaying ? (
-              <Pause className="h-5 w-5" fill="currentColor" />
+              <Pause className="h-6 w-6 sm:h-7 sm:w-7" fill="currentColor" />
             ) : (
-              <Play className="ml-0.5 h-5 w-5" fill="currentColor" />
+              <Play
+                className="ml-1 h-6 w-6 sm:h-7 sm:w-7"
+                fill="currentColor"
+              />
             )}
           </button>
 
-          <div className="min-w-0 flex-1" aria-live="polite">
-            <div className="flex min-h-5 items-center gap-2">
+          <div className="min-w-0">
+            <div className="flex min-h-5 items-center justify-center gap-2 sm:justify-start">
               <span
                 className={cn(
-                  "h-2.5 w-2.5 shrink-0 rounded-full",
+                  "h-3 w-3 rounded-full",
                   playerStatus === "playing" &&
                     "bg-red-500 shadow-[0_0_10px_rgba(239,68,68,0.85)]",
-                  playerStatus === "loading" && "animate-pulse bg-sky-400",
+                  playerStatus === "loading" && "animate-pulse bg-sky-300",
                   (playerStatus === "idle" || playerStatus === "paused") &&
                     "bg-white/45",
                   playerStatus === "error" && "bg-orange-500",
                 )}
               />
-              <span className="text-sm font-bold text-white">{statusText}</span>
-              {playerStatus === "playing" && (
-                <span className="rounded-full border border-red-400/50 px-2 py-0.5 text-[10px] font-black uppercase tracking-wide text-red-200">
-                  Live
-                </span>
-              )}
+              <span className="text-base font-black text-white">
+                {statusText}
+              </span>
             </div>
 
-            <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-white/20">
+            <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-white/25">
               <span
                 className={cn(
                   "block h-full rounded-full bg-sky-400 transition-all duration-300",
@@ -340,28 +339,40 @@ function RadioCoPlayer() {
                 )}
               />
             </div>
-
-            {streamError && (
-              <p className="mt-1 text-xs text-orange-200">{streamError}</p>
-            )}
           </div>
         </div>
+
+        {streamError && (
+          <p className="mt-3 truncate whitespace-nowrap text-xs text-orange-200">
+            {streamError}
+          </p>
+        )}
+
+        <p className="mt-5 text-center text-sm font-bold text-white/75">
+          Powered by <span className="font-black text-orange-500">KLCP</span>{" "}
+          96.5 FM
+        </p>
       </div>
     </div>
   );
 }
 
-function MorningBuzzArtwork() {
+function MorningBuzzArtwork({ className }: { className?: string }) {
   const [imageAvailable, setImageAvailable] = useState(true);
 
   return (
-    <div className="relative mx-auto flex aspect-[6/5] h-full w-full overflow-hidden rounded-[8px] border border-white/10 bg-[#180b16] shadow-2xl shadow-black/35">
+    <div
+      className={cn(
+        "relative mx-auto flex aspect-[1.28/1] h-full w-full overflow-hidden rounded-[8px] border border-orange-200/20 bg-[#180b16] shadow-2xl shadow-black/45 sm:aspect-[16/9] lg:aspect-[1915/821]",
+        className,
+      )}
+    >
       {imageAvailable ? (
         <Image
-          src="/images/morning-buzz-media-card-6x5.png"
+          src="/images/morning-buzz-homepage-wide.png"
           alt="The Morning BUZZ with Teeroy and Michael J"
-          width={1500}
-          height={1250}
+          width={1915}
+          height={821}
           unoptimized
           className="h-full w-full object-cover"
           onError={() => setImageAvailable(false)}
@@ -509,93 +520,91 @@ function CityColumn({
       )}
     >
       {cities.map((city) => (
-        <li
-          key={city}
-          className="flex min-h-8 items-center gap-3 text-base font-medium text-white"
-        >
-          <CityPinMarker />
-          <span>{city}</span>
-        </li>
+        <CityListItem key={city} city={city} />
       ))}
     </ul>
   );
 }
 
+function CityListItem({ city }: { city: string }) {
+  return (
+    <li className="flex min-h-8 min-w-0 items-center gap-2 text-sm font-medium text-white drop-shadow-[0_2px_6px_rgba(0,0,0,0.85)] sm:gap-3 sm:text-base lg:text-xl xl:text-2xl">
+      <CityPinMarker />
+      <span>{city}</span>
+    </li>
+  );
+}
+
 export function HomeLiveLocalMedia() {
   return (
-    <section className="relative z-10 bg-[#101010] text-white">
-      <div className="border-y border-white/10 bg-[linear-gradient(180deg,#171717_0%,#0c0c0c_100%)] px-4 py-8 sm:px-6">
-        <div className="mx-auto max-w-6xl">
-          <div className="mb-6 flex items-center justify-center gap-3 text-orange-500">
-            <RadioTower className="h-5 w-5" />
-            <h2 className="text-center text-2xl font-black uppercase text-white sm:text-3xl">
+    <section
+      id="live-radio"
+      className="relative z-10 overflow-hidden bg-[#090909] text-white"
+    >
+      <div className="relative border-t border-white/10 bg-[#05090f] px-4 py-10 sm:px-6 sm:py-12">
+        <div className="mx-auto max-w-[1400px] 2xl:max-w-[1760px]">
+          <div className="mb-6 flex items-center justify-center gap-2 text-orange-500 sm:gap-3">
+            <RadioTower className="h-4 w-4 sm:h-5 sm:w-5" />
+            <h2 className="text-center text-[1.7rem] font-black uppercase leading-none text-white sm:text-3xl">
               Live Local Media
             </h2>
-            <RadioTower className="h-5 w-5" />
+            <RadioTower className="h-4 w-4 sm:h-5 sm:w-5" />
           </div>
 
-          <div className="grid justify-center gap-6 lg:grid-cols-[minmax(420px,540px)_minmax(420px,540px)] lg:items-stretch">
-            <div className="flex w-full flex-col gap-5 rounded-[8px] border border-sky-300/10 bg-[linear-gradient(135deg,#063860_0%,#01233f_54%,#04131f_100%)] p-5 shadow-2xl shadow-black/35 sm:p-6 lg:h-full lg:justify-between">
-              <div className="relative mb-6 flex justify-center pt-12 text-center sm:pt-0">
-                <span className="absolute left-0 top-0 rounded-[4px] border border-white/70 px-2 py-1 text-sm font-bold uppercase text-white">
-                  On Air
-                </span>
-                <div>
-                  <div className="flex items-center justify-center gap-2">
-                    <Radio className="h-5 w-5 text-orange-500" />
-                    <p className="text-3xl font-black uppercase italic text-white">
-                      KLCP <span className="text-orange-500">Radio</span>
+          <div className="mx-auto grid max-w-[1560px] gap-5 lg:grid-cols-[minmax(320px,0.68fr)_minmax(0,1.32fr)] lg:items-stretch xl:gap-6">
+            <div className="order-2 mx-auto w-full max-w-[1280px] lg:order-1 lg:mx-0 lg:flex lg:h-full lg:max-w-none">
+              <div className="relative flex w-full flex-col justify-center overflow-hidden rounded-[8px] border border-sky-200/15 bg-[#031624] p-4 shadow-2xl shadow-black/45 lg:min-h-full xl:p-5">
+                <div className="relative z-10 mb-3 flex flex-col gap-2.5 sm:mb-4 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="min-w-0 text-center sm:text-left">
+                    <div className="flex items-center justify-center gap-2 sm:justify-start">
+                      <Radio className="h-4 w-4 text-orange-500" />
+                      <p className="text-xl font-black uppercase italic text-white sm:text-2xl">
+                        KLCP <span className="text-orange-500">Radio</span>
+                      </p>
+                    </div>
+                    <p className="mt-1 text-xs font-medium text-white/72 sm:text-sm">
+                      The Soundtrack of the Phoenix Metro
                     </p>
                   </div>
-                  <p className="text-2xl font-black">96.5 FM</p>
-                  <p className="text-base text-white/80">
-                    The Soundtrack of the Phoenix Metro
-                  </p>
+                  <div className="flex shrink-0 flex-wrap items-center justify-center gap-2">
+                    <span className="rounded-[4px] border border-red-300/70 bg-red-600 px-2.5 py-1 text-xs font-black uppercase tracking-wide text-white shadow-[0_0_14px_rgba(239,68,68,0.5)] sm:text-sm">
+                      On Air
+                    </span>
+                    <span className="rounded-full border border-sky-300/20 bg-sky-300/10 px-2.5 py-1 text-xs font-black uppercase text-sky-100 sm:text-sm">
+                      96.5 FM
+                    </span>
+                  </div>
+                </div>
+
+                <div className="relative z-10 w-full">
+                  <RadioCoPlayer />
                 </div>
               </div>
-
-              <RadioCoPlayer />
-
-              <p className="mt-3 text-center text-sm font-medium text-white/80">
-                Powered by{" "}
-                <span className="font-black text-orange-500">KLCP</span> 96.5 FM
-              </p>
             </div>
 
-            <MorningBuzzArtwork />
+            <MorningBuzzArtwork className="order-1 lg:order-2 lg:mx-0" />
           </div>
         </div>
       </div>
 
-      <div className="relative overflow-hidden bg-[#090909] px-4 py-9 sm:px-6">
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-40 bg-[linear-gradient(180deg,transparent_0%,rgba(0,0,0,0.82)_70%,#000_100%)]" />
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-28 opacity-55">
-          <div className="absolute bottom-0 left-[3%] h-16 w-14 rounded-t-[28px] bg-black" />
-          <div className="absolute bottom-0 left-[8%] h-24 w-8 rounded-t-[22px] bg-black" />
-          <div className="absolute bottom-0 left-[16%] h-20 w-16 rounded-t-[28px] bg-black" />
-          <div className="absolute bottom-0 left-[28%] h-28 w-28 rounded-t-[30px] bg-black" />
-          <div className="absolute bottom-0 left-[43%] h-32 w-24 rounded-t-[24px] bg-black" />
-          <div className="absolute bottom-0 left-[55%] h-20 w-36 rounded-t-[28px] bg-black" />
-          <div className="absolute bottom-0 left-[70%] h-28 w-24 rounded-t-[28px] bg-black" />
-          <div className="absolute bottom-0 right-[6%] h-24 w-10 rounded-t-[22px] bg-black" />
+      <div className="relative overflow-hidden px-4 py-12 sm:px-6 sm:py-14">
+        <div className="pointer-events-none absolute inset-0">
+          <picture className="block h-full w-full">
+            <source
+              media="(max-width: 767px)"
+              srcSet="/images/phoenix-skyline-section-mobile-v3.webp"
+            />
+            <img
+              src="/images/phoenix-skyline-section-desktop-v3.webp"
+              alt=""
+              className="h-full w-full object-cover object-center"
+            />
+          </picture>
         </div>
-        <div className="pointer-events-none absolute bottom-0 left-8 hidden h-28 w-20 sm:block">
-          <div className="absolute bottom-0 left-8 h-28 w-4 rounded-full bg-black" />
-          <div className="absolute bottom-14 left-0 h-4 w-10 rounded-full bg-black" />
-          <div className="absolute bottom-10 left-0 h-11 w-4 rounded-full bg-black" />
-          <div className="absolute bottom-12 right-0 h-4 w-10 rounded-full bg-black" />
-          <div className="absolute bottom-12 right-0 h-12 w-4 rounded-full bg-black" />
-        </div>
-        <div className="pointer-events-none absolute right-8 bottom-0 hidden h-28 w-20 sm:block">
-          <div className="absolute bottom-0 left-8 h-28 w-4 rounded-full bg-black" />
-          <div className="absolute bottom-12 left-0 h-4 w-10 rounded-full bg-black" />
-          <div className="absolute bottom-12 left-0 h-12 w-4 rounded-full bg-black" />
-          <div className="absolute right-0 bottom-14 h-4 w-10 rounded-full bg-black" />
-          <div className="absolute right-0 bottom-10 h-11 w-4 rounded-full bg-black" />
-        </div>
+        <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(5,9,15,0.72)_0%,rgba(5,9,15,0.5)_46%,rgba(0,0,0,0.78)_100%)]" />
 
         <div className="relative mx-auto max-w-6xl">
-          <div className="mb-8 flex items-center justify-center gap-3">
+          <div className="mb-8 flex items-center justify-center gap-3 drop-shadow-[0_3px_10px_rgba(0,0,0,0.85)]">
             <CactusTitleIcon />
             <h2 className="text-center text-2xl font-black uppercase sm:text-3xl">
               Explore the <span className="text-orange-500">Phoenix Metro</span>
@@ -603,7 +612,13 @@ export function HomeLiveLocalMedia() {
             <CactusTitleIcon />
           </div>
 
-          <div className="grid gap-6 sm:grid-cols-2 md:grid-cols-4 md:gap-0">
+          <ul className="grid grid-cols-2 gap-x-4 gap-y-3 md:hidden">
+            {allCities.map((city) => (
+              <CityListItem key={city} city={city} />
+            ))}
+          </ul>
+
+          <div className="hidden gap-6 sm:grid-cols-2 md:grid md:grid-cols-4 md:gap-0">
             {cityColumns.map((cities, index) => (
               <CityColumn
                 key={cities[0]}

@@ -1,9 +1,11 @@
 "use client";
 
+import { Check, LogOut, Moon, Shield, Store, Sun, User } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LogOut, Shield, Store, User, Moon, Sun, Check } from "lucide-react";
 import { useTheme } from "next-themes";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -12,13 +14,27 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { useUser } from "@/hooks/use-user";
 
 const roleConfig = {
-  admin: { label: "Admin", icon: Shield, href: "/admin", color: "text-primary" },
-  merchant: { label: "Merchant", icon: Store, href: "/merchant", color: "text-blue-500" },
-  member: { label: "Member", icon: User, href: "/member", color: "text-green-500" },
+  admin: {
+    label: "Admin",
+    icon: Shield,
+    href: "/admin",
+    color: "text-primary",
+  },
+  merchant: {
+    label: "Merchant",
+    icon: Store,
+    href: "/merchant",
+    color: "text-blue-500",
+  },
+  member: {
+    label: "Member",
+    icon: User,
+    href: "/member",
+    color: "text-green-500",
+  },
 };
 
 export function MobileHeader() {
@@ -28,9 +44,10 @@ export function MobileHeader() {
 
   const fullName = userName || user?.email?.split("@")[0] || "User";
   const nameParts = fullName.split(" ");
-  const displayName = nameParts.length > 1
-    ? `${nameParts[0]} ${nameParts[nameParts.length - 1][0]}.`
-    : fullName;
+  const displayName =
+    nameParts.length > 1
+      ? `${nameParts[0]} ${nameParts[nameParts.length - 1][0]}.`
+      : fullName;
   const initials = displayName
     .split(" ")
     .map((n) => n[0])
@@ -41,30 +58,32 @@ export function MobileHeader() {
   const currentView = pathname.startsWith("/admin")
     ? "admin"
     : pathname.startsWith("/merchant")
-    ? "merchant"
-    : pathname.startsWith("/member")
-    ? "member"
-    : "admin";
+      ? "merchant"
+      : pathname.startsWith("/member")
+        ? "member"
+        : "admin";
 
-  const CurrentIcon = roleConfig[currentView].icon;
   const isAdmin = user?.role === "admin";
 
   return (
     <header className="md:hidden h-14 bg-card border-b border-border flex items-center justify-between px-4 sticky top-0 z-40">
       {/* Logo */}
-      <Link href="/" className="flex items-center gap-2">
-        <div className="w-8 h-8 rounded-lg bg-primary-gradient flex items-center justify-center">
-          <span className="text-white font-bold text-sm">LC</span>
-        </div>
-        <span className="font-semibold text-foreground">
-          Local City Places
-        </span>
+      <Link href="/" className="flex min-w-0 items-center">
+        <Image
+          src="/images/local-city-places-header-logo-v12.webp"
+          alt="Local City Places"
+          width={1592}
+          height={713}
+          className="h-9 w-auto"
+          priority
+        />
       </Link>
 
       {/* Right side: Theme toggle + User menu */}
       <div className="flex items-center gap-1">
         {/* Theme toggle */}
         <button
+          type="button"
           onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
           className="relative p-2 rounded-lg hover:bg-muted transition-colors"
           aria-label="Toggle theme"
@@ -76,7 +95,10 @@ export function MobileHeader() {
         {/* User menu */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <button className="flex items-center gap-2 rounded-lg p-1.5 hover:bg-muted transition-colors">
+            <button
+              type="button"
+              className="flex items-center gap-2 rounded-lg p-1.5 hover:bg-muted transition-colors"
+            >
               <Avatar className="w-8 h-8 border-2 border-primary/20">
                 {user?.profilePhotoUrl && (
                   <AvatarImage src={user.profilePhotoUrl} alt={displayName} />
@@ -91,7 +113,9 @@ export function MobileHeader() {
             {/* User Info Header */}
             <div className="px-3 py-2">
               <p className="text-sm font-medium">{displayName}</p>
-              <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
+              <p className="text-xs text-muted-foreground truncate">
+                {user?.email}
+              </p>
             </div>
             <DropdownMenuSeparator />
 
@@ -106,10 +130,15 @@ export function MobileHeader() {
                   const isActiveView = currentView === key;
                   return (
                     <DropdownMenuItem key={key} asChild>
-                      <Link href={config.href} className="flex items-center gap-2">
+                      <Link
+                        href={config.href}
+                        className="flex items-center gap-2"
+                      >
                         <Icon className={`w-4 h-4 ${config.color}`} />
                         {config.label}
-                        {isActiveView && <Check className="ml-auto w-4 h-4 text-primary" />}
+                        {isActiveView && (
+                          <Check className="ml-auto w-4 h-4 text-primary" />
+                        )}
                       </Link>
                     </DropdownMenuItem>
                   );
@@ -122,10 +151,9 @@ export function MobileHeader() {
             <DropdownMenuItem
               className="text-destructive focus:text-destructive cursor-pointer"
               onClick={() => {
-                fetch("/api/auth/logout", { method: "POST" })
-                  .then(() => {
-                    window.location.href = "/";
-                  });
+                fetch("/api/auth/logout", { method: "POST" }).then(() => {
+                  window.location.href = "/";
+                });
               }}
             >
               <LogOut className="w-4 h-4 mr-2" />
