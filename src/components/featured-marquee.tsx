@@ -40,6 +40,7 @@ const cardStyle = {
   flexShrink: 0,
   overflow: "hidden",
   borderRadius: "0.5rem",
+  backgroundColor: "#111827",
 } satisfies CSSProperties;
 const skeletonCards = [
   "card-1",
@@ -83,14 +84,14 @@ function MerchantCard({
       ? getMerchantPageUrl(merchant.city, merchant.state, merchant.slug)
       : "#";
 
-  const priorityImageProps = priority
+  const imageLoadProps = priority
     ? ({ priority: true } as const)
-    : ({ loading: "lazy" } as const);
+    : ({ loading: "eager" } as const);
 
   return (
     <Link
       href={href}
-      className="group relative block w-[300px] h-[200px] shrink-0 rounded-lg overflow-hidden shadow-lg"
+      className="group relative block w-[300px] h-[200px] shrink-0 rounded-lg overflow-hidden bg-zinc-900 shadow-lg"
       style={cardStyle}
     >
       {merchant.imageUrl ? (
@@ -102,7 +103,7 @@ function MerchantCard({
           style={{ objectFit: "cover" }}
           sizes="300px"
           quality={60}
-          {...priorityImageProps}
+          {...imageLoadProps}
         />
       ) : merchant.logoUrl ? (
         <div className="absolute inset-0 bg-zinc-800 flex items-center justify-center p-6">
@@ -114,7 +115,7 @@ function MerchantCard({
             className="object-contain max-h-[80px]"
             style={{ maxHeight: "80px", objectFit: "contain" }}
             quality={60}
-            {...priorityImageProps}
+            {...imageLoadProps}
           />
         </div>
       ) : (
