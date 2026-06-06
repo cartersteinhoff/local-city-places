@@ -229,7 +229,7 @@ function DetailRow({
         href={href}
         target={href.startsWith("http") ? "_blank" : undefined}
         rel={href.startsWith("http") ? "noopener noreferrer" : undefined}
-        className="block border-b border-slate-100 py-3 transition-colors hover:text-[#2563EB]"
+        className="block min-w-0 border-b border-slate-100 py-3 transition-colors hover:text-[#2563EB]"
       >
         {content}
       </a>
@@ -332,21 +332,22 @@ function PhotoStripHero({
             {businessName}
           </h1>
 
-          <div className="mt-5 flex flex-wrap items-center gap-x-3 gap-y-3 text-base font-bold text-white">
-            {averageRating > 0 && <RatingBlocks rating={averageRating} />}
-            <span className="drop-shadow-lg">
-              {averageRating > 0
-                ? `${displayRating} (${reviewCount} review${reviewCount === 1 ? "" : "s"})`
-                : "New listing"}
-            </span>
-          </div>
+          {averageRating > 0 && (
+            <div className="mt-5 flex flex-wrap items-center gap-x-3 gap-y-3 text-base font-bold text-white">
+              <RatingBlocks rating={averageRating} />
+              <span className="drop-shadow-lg">
+                {displayRating} ({reviewCount} review
+                {reviewCount === 1 ? "" : "s"})
+              </span>
+            </div>
+          )}
 
           <div className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-2 text-sm font-extrabold text-white">
             <span className="inline-flex items-center gap-1.5">
               <span className="flex h-4 w-4 items-center justify-center rounded-full bg-[#1d9bf0]">
                 <Check className="h-3 w-3 stroke-[3]" />
               </span>
-              Claimed
+              Featured
             </span>
             {categoryName && (
               <>
@@ -679,15 +680,6 @@ export function LocalGuideDesign({
               )}
 
               <div className="mt-7 flex flex-wrap gap-3">
-                {phone && (
-                  <a
-                    href={`tel:${phone}`}
-                    className={`${actionButtonClass} bg-[#2563EB] text-white shadow-xl shadow-[#2563EB]/30 hover:bg-[#1D4ED8]`}
-                  >
-                    <Phone className="h-4 w-4 fill-white/10" />
-                    View Phone Number
-                  </a>
-                )}
                 <a
                   href={directionsUrl}
                   target="_blank"
@@ -819,7 +811,7 @@ export function LocalGuideDesign({
                   Category
                 </p>
                 <p className="mt-1 text-sm font-bold">{categoryName}</p>
-                <p className="mt-1 text-xs text-slate-600">Community partner</p>
+                <p className="mt-1 text-xs text-slate-600">Featured listing</p>
               </div>
             </div>
           )}
@@ -1120,15 +1112,6 @@ export function LocalGuideDesign({
               )}
             </div>
             <div className="space-y-3 p-4">
-              {phone && (
-                <a
-                  href={`tel:${phone}`}
-                  className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-md bg-[#2563EB] px-4 text-sm font-black text-white shadow-lg shadow-[#2563EB]/20 hover:bg-[#1D4ED8]"
-                >
-                  <Phone className="h-4 w-4 fill-white/10" />
-                  View Phone Number
-                </a>
-              )}
               <div className="grid grid-cols-2 gap-3">
                 <a
                   href={directionsUrl}
@@ -1215,7 +1198,7 @@ export function LocalGuideDesign({
                 <DetailRow
                   label="Website"
                   value={
-                    <span className="inline-flex min-w-0 items-center gap-1 text-[#2563EB]">
+                    <span className="inline-flex min-w-0 max-w-full items-center gap-1 text-[#2563EB]">
                       <span className="truncate">
                         {formatWebsiteLabel(website || "")}
                       </span>
