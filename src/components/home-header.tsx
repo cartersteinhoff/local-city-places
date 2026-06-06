@@ -113,8 +113,8 @@ function HeaderRadioPlayer({ className }: { className: string }) {
       size="sm"
       className={cn(
         className,
-        "h-12 overflow-hidden rounded-[18px] border-sky-100/20 bg-[#12334b]/72 px-2.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.12),0_10px_24px_rgba(0,0,0,0.18)] backdrop-blur transition-[background-color,border-color] duration-200 hover:bg-[#163b56]/78 sm:px-3",
-        "w-[154px] justify-start gap-2 sm:w-[206px] md:w-[352px]",
+        "h-12 overflow-hidden rounded-[18px] border-sky-100/20 bg-[#12334b]/72 px-2.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.12),0_10px_24px_rgba(0,0,0,0.18)] backdrop-blur transition-[width,background-color,border-color] duration-200 hover:bg-[#163b56]/78 sm:px-3",
+        "w-fit min-w-[154px] max-w-[154px] justify-start gap-2 sm:min-w-[206px] sm:max-w-[206px] md:max-w-[352px]",
       )}
       style={{
         display: "inline-flex",
