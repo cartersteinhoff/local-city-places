@@ -65,6 +65,16 @@ function HeaderRadioPlayer({ className }: { className: string }) {
         "h-12 overflow-hidden rounded-[18px] border-sky-100/20 bg-[#12334b]/72 px-2.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.12),0_10px_24px_rgba(0,0,0,0.18)] backdrop-blur transition-[width,background-color,border-color] duration-200 hover:bg-[#163b56]/78 sm:px-3",
         "w-fit min-w-[154px] max-w-[154px] justify-start gap-2 sm:min-w-[206px] sm:max-w-[206px] md:min-w-0 md:max-w-[min(420px,calc(100vw-28rem))] lg:max-w-[min(480px,calc(100vw-34rem))]",
       )}
+      style={{
+        display: "inline-flex",
+        height: "3rem",
+        maxWidth: "min(206px, calc(100vw - 11rem))",
+        alignItems: "center",
+        justifyContent: "flex-start",
+        gap: "0.5rem",
+        overflow: "hidden",
+        whiteSpace: "nowrap",
+      }}
       onClick={togglePlayback}
       aria-label={playerLabel}
       aria-pressed={isPlaying}
@@ -73,6 +83,15 @@ function HeaderRadioPlayer({ className }: { className: string }) {
         className={cn(
           "flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-red-500 text-white shadow-[0_8px_18px_rgba(239,68,68,0.28)] transition-transform duration-200 hover:scale-[1.03] sm:h-8 sm:w-8",
         )}
+        style={{
+          display: "flex",
+          width: "1.75rem",
+          height: "1.75rem",
+          flexShrink: 0,
+          alignItems: "center",
+          justifyContent: "center",
+          borderRadius: "9999px",
+        }}
         aria-hidden="true"
       >
         {shouldStop ? (
@@ -84,7 +103,19 @@ function HeaderRadioPlayer({ className }: { className: string }) {
           />
         )}
       </span>
-      <span className="flex min-w-0 flex-1 flex-col items-start justify-center gap-1 text-left md:flex-none">
+      <span
+        className="flex min-w-0 flex-1 flex-col items-start justify-center gap-1 text-left md:flex-none"
+        style={{
+          display: "flex",
+          minWidth: 0,
+          flex: "1 1 auto",
+          flexDirection: "column",
+          alignItems: "flex-start",
+          justifyContent: "center",
+          gap: "0.25rem",
+          textAlign: "left",
+        }}
+      >
         <span className="block max-w-full truncate text-[12px] font-bold leading-none text-white sm:text-[15px]">
           {displayTitle}
         </span>
@@ -110,21 +141,45 @@ export function HomeHeader({ variant = "white" }: HomeHeaderProps) {
   const styles = headerVariants[variant];
 
   return (
-    <header className="relative z-10">
+    <header
+      className="relative z-10"
+      style={{ position: "relative", zIndex: 10 }}
+    >
       <div className={styles.bar}>
-        <div className="relative mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3 sm:px-6">
-          <Link href="/" aria-label="Go to homepage">
+        <div
+          className="relative mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3 sm:px-6"
+          style={{
+            position: "relative",
+            display: "flex",
+            maxWidth: "80rem",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: "1rem",
+            marginRight: "auto",
+            marginLeft: "auto",
+            padding: "0.75rem clamp(1rem, 2vw, 1.5rem)",
+          }}
+        >
+          <Link
+            href="/"
+            aria-label="Go to homepage"
+            style={{ display: "inline-flex", flexShrink: 0 }}
+          >
             <Image
               src="/images/local-city-places-header-logo-v12.webp"
               alt="Local City Places"
-              width={1592}
-              height={713}
+              width={161}
+              height={72}
               className="h-14 w-auto sm:h-[72px]"
+              style={{ height: "clamp(56px, 15vw, 72px)", width: "auto" }}
               priority
             />
           </Link>
 
-          <div className="flex items-center gap-2">
+          <div
+            className="flex items-center gap-2"
+            style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}
+          >
             <div>
               <HeaderRadioPlayer className={styles.radio} />
             </div>
@@ -137,6 +192,13 @@ export function HomeHeader({ variant = "white" }: HomeHeaderProps) {
                     styles.login,
                     "group h-12 rounded-[18px] px-3 text-base transition-[background-color,box-shadow] data-[state=open]:bg-orange-600 data-[state=open]:shadow-[0_14px_28px_rgba(249,115,22,0.3)] sm:px-6",
                   )}
+                  style={{
+                    display: "inline-flex",
+                    height: "3rem",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    whiteSpace: "nowrap",
+                  }}
                 >
                   Login
                   <ChevronDown className="ml-1 h-4 w-4 transition-transform group-data-[state=open]:rotate-180" />

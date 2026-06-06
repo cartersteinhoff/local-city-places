@@ -13,8 +13,27 @@ interface HomeClientProps {
 
 export function HomeClient({ featuredMerchants }: HomeClientProps) {
   return (
-    <div className="relative flex min-h-screen flex-col">
-      <AnimatedFoodBackground />
+    <div
+      className="relative flex min-h-screen flex-col"
+      style={{
+        display: "flex",
+        minHeight: "100vh",
+        position: "relative",
+        flexDirection: "column",
+      }}
+    >
+      <div
+        aria-hidden="true"
+        style={{
+          position: "fixed",
+          inset: 0,
+          zIndex: 0,
+          overflow: "hidden",
+          pointerEvents: "none",
+        }}
+      >
+        <AnimatedFoodBackground />
+      </div>
 
       <HomeHeader />
 
