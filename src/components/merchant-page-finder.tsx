@@ -9,16 +9,8 @@ import { Footer } from "@/components/footer";
 import { HomeHeader } from "@/components/home-header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import type { FeaturedMerchant } from "@/lib/featured-merchants-types";
 import { stripPhoneNumber } from "@/lib/utils";
-
-interface FeaturedMerchant {
-  id: string;
-  businessName: string;
-  city: string | null;
-  logoUrl: string | null;
-  photos: string[] | null;
-  state: string | null;
-}
 
 const trustItems = [
   {
@@ -37,6 +29,7 @@ const trustItems = [
     text: "Quickly find and manage your business page.",
   },
 ];
+const photoStripCopies = ["copy-1", "copy-2", "copy-3"];
 
 function MerchantPageFinderContent() {
   const router = useRouter();
@@ -243,14 +236,19 @@ function MerchantPhotoStrip() {
   }, []);
 
   const imageMerchants = merchants
-    .filter((merchant) => merchant.photos?.[0] || merchant.logoUrl)
+    .filter((merchant) => merchant.imageUrl || merchant.logoUrl)
     .slice(0, 14);
 
   if (imageMerchants.length === 0) {
     return <div className="mt-auto h-32 sm:h-44" aria-hidden="true" />;
   }
 
-  const stripItems = [...imageMerchants, ...imageMerchants, ...imageMerchants];
+  const stripItems = photoStripCopies.flatMap((copyId) =>
+    imageMerchants.map((merchant) => ({
+      merchant,
+      itemKey: `${copyId}-${merchant.id}`,
+    })),
+  );
 
   return (
     <section
@@ -262,8 +260,8 @@ function MerchantPhotoStrip() {
           className="absolute bottom-0 left-0 flex min-w-max animate-marquee-left gap-3 px-3 motion-reduce:animate-none"
           style={{ animationDuration: "125s" }}
         >
-          {stripItems.map((merchant, index) => {
-            const imageUrl = merchant.photos?.[0] || merchant.logoUrl;
+          {stripItems.map(({ merchant, itemKey }) => {
+            const imageUrl = merchant.imageUrl || merchant.logoUrl;
             if (!imageUrl) return null;
             const location =
               merchant.city && merchant.state
@@ -272,7 +270,7 @@ function MerchantPhotoStrip() {
 
             return (
               <div
-                key={`${merchant.id}-${index}`}
+                key={itemKey}
                 className="relative h-36 w-64 shrink-0 overflow-hidden rounded-t-lg bg-[#052843] shadow-[0_12px_34px_rgba(3,31,53,0.25)] ring-1 ring-white/25 sm:h-48 sm:w-80 lg:h-56 lg:w-[420px]"
               >
                 <Image

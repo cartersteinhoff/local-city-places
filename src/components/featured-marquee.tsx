@@ -1,10 +1,14 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useState } from "react";
+import Link from "next/link";
+import { useEffect, useMemo, useState } from "react";
+import type { FeaturedMerchant } from "@/lib/featured-merchants-types";
 import { getMerchantPageUrl } from "@/lib/utils";
 
 const skeletonRows = ["row-1", "row-2", "row-3"];
+const marqueeCopies = ["copy-1", "copy-2", "copy-3", "copy-4"];
+const priorityImagesPerRow = 3;
 const skeletonCards = [
   "card-1",
   "card-2",
@@ -14,39 +18,57 @@ const skeletonCards = [
   "card-6",
 ];
 
-interface FeaturedMerchant {
-  id: string;
-  businessName: string;
-  city: string | null;
-  state: string | null;
-  slug: string | null;
-  logoUrl: string | null;
-  photos: string[] | null;
-  categoryName: string | null;
+function getShuffleRank(merchant: FeaturedMerchant, seed: string) {
+  const value = `${seed}:${merchant.id}`;
+  let hash = 2166136261;
+
+  for (let i = 0; i < value.length; i++) {
+    hash ^= value.charCodeAt(i);
+    hash = Math.imul(hash, 16777619);
+  }
+
+  return hash >>> 0;
 }
 
-function MerchantCard({ merchant }: { merchant: FeaturedMerchant }) {
+function shuffleMerchants(merchants: FeaturedMerchant[], seed: string) {
+  return [...merchants].sort((a, b) => {
+    const rankDifference = getShuffleRank(a, seed) - getShuffleRank(b, seed);
+    if (rankDifference !== 0) return rankDifference;
+
+    return a.id < b.id ? -1 : a.id > b.id ? 1 : 0;
+  });
+}
+
+function MerchantCard({
+  merchant,
+  priority = false,
+}: {
+  merchant: FeaturedMerchant;
+  priority?: boolean;
+}) {
   const href =
     merchant.city && merchant.state && merchant.slug
       ? getMerchantPageUrl(merchant.city, merchant.state, merchant.slug)
       : "#";
 
-  const photo = merchant.photos?.[0];
+  const priorityImageProps = priority
+    ? ({ priority: true } as const)
+    : ({ loading: "lazy" } as const);
 
   return (
-    <a
+    <Link
       href={href}
-      target="_blank"
-      rel="noopener noreferrer"
       className="group relative block w-[300px] h-[200px] shrink-0 rounded-lg overflow-hidden shadow-lg"
     >
-      {photo ? (
+      {merchant.imageUrl ? (
         <Image
-          src={photo}
+          src={merchant.imageUrl}
           alt={merchant.businessName}
           fill
           className="object-cover transition-transform duration-500 group-hover:scale-110"
-          sizes="260px"
+          sizes="300px"
+          quality={60}
+          {...priorityImageProps}
         />
       ) : merchant.logoUrl ? (
         <div className="absolute inset-0 bg-zinc-800 flex items-center justify-center p-6">
@@ -56,6 +78,8 @@ function MerchantCard({ merchant }: { merchant: FeaturedMerchant }) {
             width={200}
             height={100}
             className="object-contain max-h-[80px]"
+            quality={60}
+            {...priorityImageProps}
           />
         </div>
       ) : (
@@ -87,7 +111,7 @@ function MerchantCard({ merchant }: { merchant: FeaturedMerchant }) {
           </p>
         )}
       </div>
-    </a>
+    </Link>
   );
 }
 
@@ -100,10 +124,21 @@ function MarqueeRow({
   direction: "left" | "right";
   speed: number;
 }) {
-  if (merchants.length === 0) return null;
+  const items = useMemo(
+    () =>
+      marqueeCopies.flatMap((copyId, copyIndex) =>
+        merchants.map((merchant, merchantIndex) => ({
+          merchant,
+          itemKey: `${copyId}-${merchant.id}`,
+          isPriority:
+            merchantIndex < priorityImagesPerRow &&
+            (direction === "right" ? copyIndex === 2 : copyIndex === 0),
+        })),
+      ),
+    [direction, merchants],
+  );
 
-  // Duplicate items enough to fill the screen and create seamless loop
-  const items = [...merchants, ...merchants, ...merchants, ...merchants];
+  if (merchants.length === 0) return null;
 
   return (
     <div className="relative overflow-hidden">
@@ -113,8 +148,12 @@ function MarqueeRow({
           animationDuration: `${speed}s`,
         }}
       >
-        {items.map((merchant, i) => (
-          <MerchantCard key={`${merchant.id}-${i}`} merchant={merchant} />
+        {items.map(({ merchant, itemKey, isPriority }) => (
+          <MerchantCard
+            key={itemKey}
+            merchant={merchant}
+            priority={isPriority}
+          />
         ))}
       </div>
     </div>
@@ -144,20 +183,32 @@ function MarqueeHeading() {
 }
 
 interface FeaturedMarqueeProps {
+  initialMerchants?: FeaturedMerchant[];
   showHeading?: boolean;
 }
 
-export function FeaturedMarquee({ showHeading = true }: FeaturedMarqueeProps) {
-  const [merchants, setMerchants] = useState<FeaturedMerchant[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+export function FeaturedMarquee({
+  initialMerchants,
+  showHeading = true,
+}: FeaturedMarqueeProps) {
+  const [merchants, setMerchants] = useState<FeaturedMerchant[]>(
+    () => initialMerchants ?? [],
+  );
+  const [isLoading, setIsLoading] = useState(initialMerchants === undefined);
 
   useEffect(() => {
+    if (initialMerchants !== undefined) {
+      setMerchants(initialMerchants);
+      setIsLoading(false);
+      return;
+    }
+
     async function fetchFeatured() {
       try {
         const res = await fetch("/api/featured-merchants");
         if (res.ok) {
           const data = await res.json();
-          setMerchants(data.merchants);
+          setMerchants(Array.isArray(data.merchants) ? data.merchants : []);
         }
       } catch (err) {
         console.error("Error fetching featured merchants:", err);
@@ -166,19 +217,18 @@ export function FeaturedMarquee({ showHeading = true }: FeaturedMarqueeProps) {
       }
     }
     fetchFeatured();
-  }, []);
+  }, [initialMerchants]);
+
+  const [row1, row2, row3] = useMemo(
+    () => [
+      shuffleMerchants(merchants, "homepage-featured-row-1"),
+      shuffleMerchants(merchants, "homepage-featured-row-2"),
+      shuffleMerchants(merchants, "homepage-featured-row-3"),
+    ],
+    [merchants],
+  );
 
   if (!isLoading && merchants.length === 0) return null;
-
-  // Random shuffle for each row
-  const shuffle = (arr: FeaturedMerchant[]) => {
-    const shuffled = [...arr];
-    for (let i = shuffled.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-    }
-    return shuffled;
-  };
 
   if (isLoading) {
     return (
@@ -199,10 +249,6 @@ export function FeaturedMarquee({ showHeading = true }: FeaturedMarqueeProps) {
       </section>
     );
   }
-
-  const row1 = shuffle(merchants);
-  const row2 = shuffle(merchants);
-  const row3 = shuffle(merchants);
 
   return (
     <section className="relative z-10 py-8">

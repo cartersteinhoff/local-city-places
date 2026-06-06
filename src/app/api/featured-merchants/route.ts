@@ -1,43 +1,26 @@
 import { NextResponse } from "next/server";
-import { db } from "@/db";
-import { merchants, categories } from "@/db/schema";
-import { eq, and } from "drizzle-orm";
+import {
+  FEATURED_MERCHANT_CACHE_SECONDS,
+  getFeaturedMerchants,
+} from "@/lib/featured-merchants";
 
 export async function GET() {
   try {
-    const featured = await db
-      .select({
-        id: merchants.id,
-        businessName: merchants.businessName,
-        city: merchants.city,
-        state: merchants.state,
-        slug: merchants.slug,
-        logoUrl: merchants.logoUrl,
-        photos: merchants.photos,
-        categoryName: categories.name,
-      })
-      .from(merchants)
-      .leftJoin(categories, eq(merchants.categoryId, categories.id))
-      .where(
-        and(
-          eq(merchants.featuredOnHomepage, true),
-          eq(merchants.isPublicPage, true)
-        )
-      );
+    const featured = await getFeaturedMerchants();
 
     return NextResponse.json(
       { merchants: featured },
       {
         headers: {
-          "Cache-Control": "public, s-maxage=3600, stale-while-revalidate=86400",
+          "Cache-Control": `public, s-maxage=${FEATURED_MERCHANT_CACHE_SECONDS}, stale-while-revalidate=86400`,
         },
-      }
+      },
     );
   } catch (error) {
     console.error("Error fetching featured merchants:", error);
     return NextResponse.json(
       { error: "Failed to fetch featured merchants" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

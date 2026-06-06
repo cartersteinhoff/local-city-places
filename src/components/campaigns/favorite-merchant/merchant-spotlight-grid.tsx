@@ -1,18 +1,9 @@
 "use client";
 
+import { Gem, MapPin } from "lucide-react";
 import Image from "next/image";
 import { useEffect, useMemo, useState } from "react";
-import { Gem, MapPin } from "lucide-react";
-
-interface FeaturedMerchant {
-  id: string;
-  businessName: string;
-  city: string | null;
-  state: string | null;
-  logoUrl: string | null;
-  photos: string[] | null;
-  categoryName: string | null;
-}
+import type { FeaturedMerchant } from "@/lib/featured-merchants-types";
 
 const fallbackTiles = [
   {
@@ -49,7 +40,10 @@ export function MerchantSpotlightGrid() {
           setMerchants(data.merchants);
         }
       } catch (error) {
-        console.error("Failed to load featured merchants for campaign page:", error);
+        console.error(
+          "Failed to load featured merchants for campaign page:",
+          error,
+        );
       } finally {
         setIsLoading(false);
       }
@@ -89,8 +83,12 @@ export function MerchantSpotlightGrid() {
                 <Gem className="h-5 w-5" />
               </span>
               <div className="space-y-2">
-                <h3 className="text-xl font-semibold text-white">{tile.title}</h3>
-                <p className="max-w-xs text-sm leading-6 text-white/72">{tile.subtitle}</p>
+                <h3 className="text-xl font-semibold text-white">
+                  {tile.title}
+                </h3>
+                <p className="max-w-xs text-sm leading-6 text-white/72">
+                  {tile.subtitle}
+                </p>
               </div>
             </div>
           </div>
@@ -102,8 +100,10 @@ export function MerchantSpotlightGrid() {
   return (
     <div className="grid gap-3 sm:grid-cols-[1.1fr_0.9fr]">
       {featuredTiles.map((merchant, index) => {
-        const imageUrl = merchant.photos?.[0] || merchant.logoUrl;
-        const location = [merchant.city, merchant.state].filter(Boolean).join(", ");
+        const imageUrl = merchant.imageUrl || merchant.logoUrl;
+        const location = [merchant.city, merchant.state]
+          .filter(Boolean)
+          .join(", ");
 
         return (
           <div
@@ -118,7 +118,11 @@ export function MerchantSpotlightGrid() {
                 src={imageUrl}
                 alt={merchant.businessName}
                 fill
-                sizes={index === 0 ? "(min-width: 640px) 40vw, 100vw" : "(min-width: 640px) 24vw, 100vw"}
+                sizes={
+                  index === 0
+                    ? "(min-width: 640px) 40vw, 100vw"
+                    : "(min-width: 640px) 24vw, 100vw"
+                }
                 className="object-cover transition-transform duration-700 group-hover:scale-105"
               />
             ) : (
@@ -143,7 +147,9 @@ export function MerchantSpotlightGrid() {
                       {location}
                     </span>
                   )}
-                  {merchant.categoryName && <span>{merchant.categoryName}</span>}
+                  {merchant.categoryName && (
+                    <span>{merchant.categoryName}</span>
+                  )}
                 </div>
               </div>
             </div>
