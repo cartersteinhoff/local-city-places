@@ -10,7 +10,7 @@
 
 import { useEffect, useState } from "react";
 import { EditorProvider } from "@/components/merchant-page/editor-context";
-import { ArtDecoDesign } from "@/components/merchant-page/designs/art-deco";
+import { PhotoStripDesign } from "@/components/merchant-page/designs/photo-strip";
 
 interface Hours {
   monday?: string;
@@ -104,7 +104,7 @@ export default function PreviewPage() {
       onUpdate={handleUpdate}
       showEditHints={showEditHints}
     >
-      <ArtDecoDesign
+      <PhotoStripDesign
         businessName={formData.businessName || "Business Name"}
         streetAddress={formData.streetAddress || null}
         city={formData.city || null}

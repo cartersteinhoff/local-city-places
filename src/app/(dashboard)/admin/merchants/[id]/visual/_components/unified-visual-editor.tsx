@@ -3,13 +3,13 @@
 /**
  * UNIFIED VISUAL EDITOR
  *
- * This component wraps the actual ArtDecoDesign template with EditorProvider
+ * This component wraps the actual merchant page template with EditorProvider
  * to enable editing. This ensures the visual editor always matches the actual
  * merchant page design - no drift possible.
  */
 
 import { EditorProvider } from "@/components/merchant-page/editor-context";
-import { ArtDecoDesign } from "@/components/merchant-page/designs/art-deco";
+import { PhotoStripDesign } from "@/components/merchant-page/designs/photo-strip";
 
 interface Hours {
   monday?: string;
@@ -78,7 +78,7 @@ export function UnifiedVisualEditor({
       onLogoUpload={onLogoUpload}
       showEditHints={showEditHints}
     >
-      <ArtDecoDesign
+      <PhotoStripDesign
         businessName={data.businessName || "Business Name"}
         streetAddress={data.streetAddress || null}
         city={data.city || null}

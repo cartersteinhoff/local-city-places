@@ -2,7 +2,9 @@
 
 import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
-import { ArtDecoDesign } from "@/components/merchant-page/designs/art-deco";
+import { Footer } from "@/components/footer";
+import { HomeHeader } from "@/components/home-header";
+import { PhotoStripDesign } from "@/components/merchant-page/designs/photo-strip";
 
 interface MerchantData {
   businessName: string;
@@ -74,26 +76,32 @@ export default function PreviewPage() {
   }
 
   return (
-    <ArtDecoDesign
-      businessName={merchant.businessName}
-      streetAddress={merchant.streetAddress}
-      city={merchant.city}
-      state={merchant.state}
-      zipCode={merchant.zipCode}
-      logoUrl={merchant.logoUrl}
-      categoryName={merchant.categoryName}
-      phone={merchant.phone}
-      website={merchant.website}
-      description={merchant.description}
-      vimeoUrl={merchant.vimeoUrl}
-      googlePlaceId={merchant.googlePlaceId}
-      hours={merchant.hours}
-      instagramUrl={merchant.instagramUrl}
-      facebookUrl={merchant.facebookUrl}
-      tiktokUrl={merchant.tiktokUrl}
-      photos={merchant.photos}
-      services={merchant.services}
-      aboutStory={merchant.aboutStory}
-    />
+    <div className="relative flex min-h-screen flex-col bg-[#F5F7FB]">
+      <HomeHeader />
+      <main className="flex-1">
+        <PhotoStripDesign
+          businessName={merchant.businessName}
+          streetAddress={merchant.streetAddress}
+          city={merchant.city}
+          state={merchant.state}
+          zipCode={merchant.zipCode}
+          logoUrl={merchant.logoUrl}
+          categoryName={merchant.categoryName}
+          phone={merchant.phone}
+          website={merchant.website}
+          description={merchant.description}
+          vimeoUrl={merchant.vimeoUrl}
+          googlePlaceId={merchant.googlePlaceId}
+          hours={merchant.hours}
+          instagramUrl={merchant.instagramUrl}
+          facebookUrl={merchant.facebookUrl}
+          tiktokUrl={merchant.tiktokUrl}
+          photos={merchant.photos}
+          services={merchant.services}
+          aboutStory={merchant.aboutStory}
+        />
+      </main>
+      <Footer variant="dark" />
+    </div>
   );
 }

@@ -1,7 +1,9 @@
 import { and, desc, eq, inArray } from "drizzle-orm";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { ArtDecoDesign } from "@/components/merchant-page/designs/art-deco";
+import { Footer } from "@/components/footer";
+import { HomeHeader } from "@/components/home-header";
+import { PhotoStripDesign } from "@/components/merchant-page/designs/photo-strip";
 import { db } from "@/db";
 import {
   categories,
@@ -212,7 +214,9 @@ export async function generateMetadata({
   };
 }
 
-export default async function MerchantPage({ params }: PageProps) {
+export default async function MerchantPage({
+  params,
+}: PageProps) {
   const { slug } = await params;
   const merchant = await getMerchantBySlug(slug);
 
@@ -225,30 +229,38 @@ export default async function MerchantPage({ params }: PageProps) {
     getFavoriteMerchantNominations(merchant.id),
   ]);
 
+  const merchantPageProps = {
+    merchantId: merchant.id,
+    businessName: merchant.businessName,
+    streetAddress: merchant.streetAddress,
+    city: merchant.city,
+    state: merchant.state,
+    zipCode: merchant.zipCode,
+    logoUrl: merchant.logoUrl,
+    categoryName: merchant.categoryName,
+    phone: merchant.phone,
+    website: merchant.website,
+    description: merchant.description,
+    vimeoUrl: merchant.vimeoUrl,
+    googlePlaceId: merchant.googlePlaceId,
+    hours: merchant.hours,
+    instagramUrl: merchant.instagramUrl,
+    facebookUrl: merchant.facebookUrl,
+    tiktokUrl: merchant.tiktokUrl,
+    photos: merchant.photos,
+    services: merchant.services,
+    aboutStory: merchant.aboutStory,
+    reviews: merchantReviews,
+    favoriteMerchantTestimonials: merchantNominations,
+  };
+
   return (
-    <ArtDecoDesign
-      merchantId={merchant.id}
-      businessName={merchant.businessName}
-      streetAddress={merchant.streetAddress}
-      city={merchant.city}
-      state={merchant.state}
-      zipCode={merchant.zipCode}
-      logoUrl={merchant.logoUrl}
-      categoryName={merchant.categoryName}
-      phone={merchant.phone}
-      website={merchant.website}
-      description={merchant.description}
-      vimeoUrl={merchant.vimeoUrl}
-      googlePlaceId={merchant.googlePlaceId}
-      hours={merchant.hours}
-      instagramUrl={merchant.instagramUrl}
-      facebookUrl={merchant.facebookUrl}
-      tiktokUrl={merchant.tiktokUrl}
-      photos={merchant.photos}
-      services={merchant.services}
-      aboutStory={merchant.aboutStory}
-      reviews={merchantReviews}
-      favoriteMerchantTestimonials={merchantNominations}
-    />
+    <div className="relative flex min-h-screen flex-col bg-[#F5F7FB]">
+      <HomeHeader />
+      <main className="flex-1">
+        <PhotoStripDesign {...merchantPageProps} />
+      </main>
+      <Footer variant="dark" />
+    </div>
   );
 }

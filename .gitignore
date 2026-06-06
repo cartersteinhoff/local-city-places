@@ -40,6 +40,7 @@ yarn-error.log*
 .agents/
 .agent/
 .codex/
+.playwright-cli/
 .playwright-mcp/
 .claude/skills/
 .cursor/skills/
@@ -48,6 +49,8 @@ yarn-error.log*
 .opencode/
 .windsurf/
 skills/
+codex-dev*.log
+/output/
 
 # typescript
 *.tsbuildinfo

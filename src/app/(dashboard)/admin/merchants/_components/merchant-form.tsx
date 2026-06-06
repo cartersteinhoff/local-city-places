@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState, useCallback, useMemo } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -49,15 +48,12 @@ import { ImageUploader, GalleryUploader } from "@/components/ui/image-uploader";
 import { SortableList, SortableImageGrid } from "@/components/ui/sortable-list";
 import { HoursSection, type Hours } from "../[id]/edit/_components/hours-section";
 import { CompletionIndicator } from "../[id]/edit/_components/completion-indicator";
-import { LivePreview, DesignSelector, DeviceSelector, type DesignType, type DeviceType, getDeviceConfig } from "../[id]/edit/_components/live-preview";
+import { LivePreview, DeviceSelector, type DeviceType, getDeviceConfig } from "../[id]/edit/_components/live-preview";
 import type { MerchantData } from "@/lib/merchant-completion";
 import { useManualSave } from "@/hooks/use-manual-save";
 
 // Preview components
-import { ArtDecoDesign } from "@/components/merchant-page/designs/art-deco";
-import { GatsbyGlamourDesign } from "@/components/merchant-page/designs/gatsby-glamour";
-import { VintageHollywoodDesign } from "@/components/merchant-page/designs/vintage-hollywood";
-import { ParisianEleganceDesign } from "@/components/merchant-page/designs/parisian-elegance";
+import { PhotoStripDesign } from "@/components/merchant-page/designs/photo-strip";
 
 interface Category {
   id: string;
@@ -149,8 +145,6 @@ export function MerchantForm({
   categories,
   onSuccess,
 }: MerchantFormProps) {
-  const router = useRouter();
-
   // Form data
   const [formData, setFormData] = useState<FormData>(initialData);
   const [originalData, setOriginalData] = useState<FormData>(initialData);
@@ -161,7 +155,6 @@ export function MerchantForm({
   const [urls, setUrls] = useState(initialUrls);
   const [copiedUrl, setCopiedUrl] = useState<string | null>(null);
   const [activeSection, setActiveSection] = useState("business");
-  const [previewDesign, setPreviewDesign] = useState<DesignType>("art-deco");
   const [previewDevice, setPreviewDevice] = useState<DeviceType>("mobile");
   const [previewOpen, setPreviewOpen] = useState(false);
   const [categoryName, setCategoryName] = useState(initialCategoryName);
@@ -1203,8 +1196,6 @@ export function MerchantForm({
       <div className="hidden lg:block w-[40%] sticky top-4 self-start">
         <LivePreview
           data={previewData}
-          design={previewDesign}
-          onDesignChange={setPreviewDesign}
         />
       </div>
 
@@ -1221,12 +1212,10 @@ export function MerchantForm({
               <span className="font-medium">Preview</span>
               <div className="flex items-center gap-2">
                 <DeviceSelector value={previewDevice} onChange={setPreviewDevice} />
-                <DesignSelector value={previewDesign} onChange={setPreviewDesign} />
               </div>
             </div>
             <div className="h-[calc(100%-60px)] overflow-auto bg-muted/30 flex justify-center">
               <MobilePreviewContent
-                design={previewDesign}
                 device={previewDevice}
                 data={previewData}
               />
@@ -1239,21 +1228,13 @@ export function MerchantForm({
 }
 
 function MobilePreviewContent({
-  design,
   device,
   data
 }: {
-  design: DesignType;
   device: DeviceType;
   data: any;
 }) {
   const deviceConfig = getDeviceConfig(device);
-  const DesignComponent = {
-    "art-deco": ArtDecoDesign,
-    "gatsby": GatsbyGlamourDesign,
-    "hollywood": VintageHollywoodDesign,
-    "parisian": ParisianEleganceDesign,
-  }[design];
 
   return (
     <div
@@ -1269,7 +1250,7 @@ function MobilePreviewContent({
           transform: `scale(${deviceConfig.scale})`,
         }}
       >
-        <DesignComponent {...data} />
+        <PhotoStripDesign {...data} />
       </div>
     </div>
   );
