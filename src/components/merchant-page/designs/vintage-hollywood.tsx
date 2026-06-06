@@ -9,7 +9,8 @@
  */
 
 import { Cinzel, Lato } from "next/font/google";
-import { MapPin, Phone, Globe, Share2, Star, Award, Clock, Instagram, Facebook, Navigation, Image } from "lucide-react";
+import { Facebook, Instagram } from "@/components/icons/social-icons";
+import { MapPin, Phone, Globe, Share2, Star, Award, Clock, Navigation, Image } from "lucide-react";
 import { formatPhoneNumber } from "@/lib/utils";
 import { extractVimeoId, getVimeoEmbedUrl } from "@/lib/vimeo";
 import { useState } from "react";

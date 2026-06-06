@@ -31,8 +31,6 @@ import {
   Camera,
   Plus,
   Trash2,
-  Instagram,
-  Facebook,
   Video,
   Building2,
   FileText,
@@ -41,6 +39,7 @@ import {
   RefreshCw,
   Paintbrush,
 } from "lucide-react";
+import { Facebook, Instagram } from "@/components/icons/social-icons";
 import { formatPhoneNumber, stripPhoneNumber, cn } from "@/lib/utils";
 import { isValidVimeoUrl } from "@/lib/vimeo";
 import { GooglePlacesAutocomplete, type PlaceDetails } from "@/components/ui/google-places-autocomplete";

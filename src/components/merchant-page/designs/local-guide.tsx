@@ -18,11 +18,9 @@ import {
   Clock,
   Copy,
   ExternalLink,
-  Facebook,
   Globe,
   Heart,
   Image as ImageIcon,
-  Instagram,
   MapPin,
   Navigation,
   Phone,
@@ -35,6 +33,7 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import { useEffect, useMemo, useState } from "react";
+import { Facebook, Instagram } from "@/components/icons/social-icons";
 import { formatHoursDisplay, formatPhoneNumber } from "@/lib/utils";
 import {
   formatFullAddress,

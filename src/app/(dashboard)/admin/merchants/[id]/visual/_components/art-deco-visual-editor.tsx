@@ -9,8 +9,9 @@
 
 import { useState } from "react";
 import { Poiret_One, Raleway } from "next/font/google";
+import { Facebook, Instagram } from "@/components/icons/social-icons";
 import {
-  MapPin, Phone, Globe, Gem, Navigation, Clock, Instagram, Facebook,
+  MapPin, Phone, Globe, Gem, Navigation, Clock,
   Image as ImageIcon, Sparkles, Plus, Video, Pencil, X, Check,
   GripVertical, Trash2
 } from "lucide-react";

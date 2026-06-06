@@ -13,7 +13,8 @@
  */
 
 import { Poiret_One, Raleway } from "next/font/google";
-import { MapPin, Phone, Globe, Share2, Gem, Navigation, Clock, Instagram, Facebook, Image as ImageIcon, Sparkles, Upload, Plus, Trash2, GripVertical, Pencil, X, ChevronLeft, ChevronRight, Star, Quote, ThumbsUp, Heart, Copy, Check, LogIn } from "lucide-react";
+import { Facebook, Instagram } from "@/components/icons/social-icons";
+import { MapPin, Phone, Globe, Share2, Gem, Navigation, Clock, Image as ImageIcon, Sparkles, Upload, Plus, Trash2, GripVertical, Pencil, X, ChevronLeft, ChevronRight, Star, Quote, ThumbsUp, Heart, Copy, Check, LogIn } from "lucide-react";
 import { formatPhoneNumber, formatHoursDisplay, cn } from "@/lib/utils";
 import { useEditor, useEditable } from "../editor-context";
 import { EditableText, EditableImage, EditableLink, PreventLink } from "../editable-primitives";
