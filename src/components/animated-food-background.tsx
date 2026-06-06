@@ -45,6 +45,7 @@ interface FoodIcon {
 interface AnimatedFoodBackgroundProps {
   includeGradient?: boolean;
   iconClassName?: string;
+  forceOrangeGradient?: boolean;
 }
 
 const foodIcons: FoodIcon[] = [
@@ -233,13 +234,16 @@ const foodIcons: FoodIcon[] = [
 export function AnimatedFoodBackground({
   includeGradient = true,
   iconClassName,
+  forceOrangeGradient = false,
 }: AnimatedFoodBackgroundProps = {}) {
   return (
     <div
       className={cn(
         "fixed inset-0 overflow-hidden pointer-events-none z-0 motion-reduce:[&_*]:!animate-none",
         includeGradient &&
-          "bg-gradient-to-br from-[#ff7a3c] via-[#ff9f1c] to-[#ffd166] dark:from-slate-900 dark:via-slate-800 dark:to-slate-900",
+          (forceOrangeGradient
+            ? "bg-gradient-to-br from-[#ff7a3c] via-[#ff9f1c] to-[#ffd166]"
+            : "bg-gradient-to-br from-[#ff7a3c] via-[#ff9f1c] to-[#ffd166] dark:from-slate-900 dark:via-slate-800 dark:to-slate-900"),
       )}
     >
       {foodIcons.map((item) => {
@@ -259,7 +263,12 @@ export function AnimatedFoodBackground({
             <Icon
               size={size}
               strokeWidth={1.5}
-              className={cn("text-white dark:text-slate-700", iconClassName)}
+              className={cn(
+                forceOrangeGradient
+                  ? "text-white"
+                  : "text-white dark:text-slate-700",
+                iconClassName,
+              )}
             />
           </div>
         );

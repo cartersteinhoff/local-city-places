@@ -32,7 +32,7 @@ export function HomeClient({ featuredMerchants }: HomeClientProps) {
           pointerEvents: "none",
         }}
       >
-        <AnimatedFoodBackground />
+        <AnimatedFoodBackground forceOrangeGradient />
       </div>
 
       <HomeHeader />
