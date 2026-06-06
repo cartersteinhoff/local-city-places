@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Local City Places pin">
+  <style>
+    .bg { fill: #ffffff; }
+    .pin-outline { fill: #ffffff; }
+    .pin { fill: #dc2626; }
+    .center { fill: #ffffff; }
+
+    @media (prefers-color-scheme: dark) {
+      .bg { fill: #07111f; }
+      .pin-outline { fill: #ffffff; }
+      .pin { fill: #ff3b3b; }
+      .center { fill: #ffffff; }
+    }
+  </style>
+  <circle class="bg" cx="256" cy="256" r="244"/>
+  <path class="pin-outline" d="M256 500c-20-32-152-184-152-306C104 91 184 28 256 28s152 63 152 166c0 122-132 274-152 306Z"/>
+  <path class="pin" d="M256 464c-17-27-128-156-128-260C128 119 193 60 256 60s128 59 128 144c0 104-111 233-128 260Z"/>
+  <circle class="center" cx="256" cy="194" r="54"/>
+</svg>

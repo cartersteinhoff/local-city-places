@@ -43,8 +43,57 @@ const loginMenuItemClass =
 const loginMenuIconClass =
   "flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-orange-400/15 text-orange-300 transition-colors group-focus:bg-orange-500 group-focus:text-white group-data-[highlighted]:bg-orange-500 group-data-[highlighted]:text-white";
 
+const headerProgramTextLimit = 30;
+const headerProgramTextSeparator = " - ";
+
+function normalizeHeaderProgramText(value: string) {
+  return value.replace(/\s+/g, " ").trim();
+}
+
+function truncateHeaderProgramText(value: string, maxLength: number) {
+  if (value.length <= maxLength) return value;
+  if (maxLength <= 3) return value.slice(0, maxLength);
+
+  return `${value.slice(0, maxLength - 3).trimEnd()}...`;
+}
+
 function getHeaderProgramTitle(track: NowPlayingTrack) {
-  return track.title;
+  return normalizeHeaderProgramText(track.title);
+}
+
+function getHeaderProgramSubtitle(track: NowPlayingTrack) {
+  const subtitle = normalizeHeaderProgramText(track.subtitle);
+  return subtitle && subtitle !== track.title ? subtitle : "";
+}
+
+function getHeaderProgramDisplay(track: NowPlayingTrack) {
+  const fullTitle = getHeaderProgramTitle(track);
+  const subtitle = getHeaderProgramSubtitle(track);
+  const fullText = [fullTitle, subtitle]
+    .filter(Boolean)
+    .join(headerProgramTextSeparator);
+
+  if (fullTitle.length >= headerProgramTextLimit) {
+    return {
+      fullText,
+      title: truncateHeaderProgramText(fullTitle, headerProgramTextLimit),
+      subtitle: "",
+    };
+  }
+
+  const subtitleCharacterLimit =
+    headerProgramTextLimit -
+    fullTitle.length -
+    headerProgramTextSeparator.length;
+
+  return {
+    fullText,
+    title: fullTitle,
+    subtitle:
+      subtitle && subtitleCharacterLimit > 0
+        ? truncateHeaderProgramText(subtitle, subtitleCharacterLimit)
+        : "",
+  };
 }
 
 function HeaderRadioPlayer({ className }: { className: string }) {
@@ -53,8 +102,10 @@ function HeaderRadioPlayer({ className }: { className: string }) {
 
   const isLoading = playerStatus === "loading";
   const shouldStop = isLoading || isPlaying;
-  const displayTitle = getHeaderProgramTitle(nowPlaying);
-  const playerLabel = `${shouldStop ? "Pause" : "Play"} ${displayTitle}`;
+  const programDisplay = getHeaderProgramDisplay(nowPlaying);
+  const playerLabel = `${shouldStop ? "Pause" : "Play"} ${
+    programDisplay.fullText
+  }`;
 
   return (
     <Button
@@ -63,12 +114,11 @@ function HeaderRadioPlayer({ className }: { className: string }) {
       className={cn(
         className,
         "h-12 overflow-hidden rounded-[18px] border-sky-100/20 bg-[#12334b]/72 px-2.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.12),0_10px_24px_rgba(0,0,0,0.18)] backdrop-blur transition-[width,background-color,border-color] duration-200 hover:bg-[#163b56]/78 sm:px-3",
-        "w-fit min-w-[154px] max-w-[154px] justify-start gap-2 sm:min-w-[206px] sm:max-w-[206px] md:min-w-0 md:max-w-[min(420px,calc(100vw-28rem))] lg:max-w-[min(480px,calc(100vw-34rem))]",
+        "w-fit min-w-[154px] max-w-[154px] justify-start gap-2 sm:min-w-[206px] sm:max-w-[206px] md:max-w-[352px]",
       )}
       style={{
         display: "inline-flex",
         height: "3rem",
-        maxWidth: "min(206px, calc(100vw - 11rem))",
         alignItems: "center",
         justifyContent: "flex-start",
         gap: "0.5rem",
@@ -116,10 +166,22 @@ function HeaderRadioPlayer({ className }: { className: string }) {
           textAlign: "left",
         }}
       >
-        <span className="block max-w-full truncate text-[12px] font-bold leading-none text-white sm:text-[15px]">
-          {displayTitle}
+        <span className="flex w-full max-w-full min-w-0 items-baseline gap-1.5 text-[12px] leading-none sm:text-[15px]">
+          <span className="min-w-0 truncate font-bold text-white">
+            {programDisplay.title}
+          </span>
+          {programDisplay.subtitle && (
+            <>
+              <span className="hidden shrink-0 font-bold text-white/35 md:inline">
+                -
+              </span>
+              <span className="hidden min-w-0 truncate text-[11px] font-bold text-white/58 md:inline xl:text-[12px]">
+                {programDisplay.subtitle}
+              </span>
+            </>
+          )}
         </span>
-        <span className="flex max-w-full items-center gap-1.5 text-[10px] font-bold leading-none text-white/76 sm:text-[12px]">
+        <span className="flex w-full max-w-full items-center gap-1.5 text-[10px] font-bold leading-none text-white/76 sm:text-[12px]">
           <span
             className={cn(
               "h-1.5 w-1.5 shrink-0 rounded-full bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.7)]",

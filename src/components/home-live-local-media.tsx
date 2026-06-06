@@ -173,12 +173,13 @@ function MorningBuzzArtwork({ className }: { className?: string }) {
     >
       {imageAvailable ? (
         <Image
-          src="/images/morning-buzz-homepage-wide.png"
+          src="/images/morning-buzz-homepage-wide.webp"
           alt="The Morning BUZZ with Teeroy and Michael J"
-          width={1915}
-          height={821}
-          unoptimized
+          width={1600}
+          height={686}
           className="h-full w-full object-cover"
+          quality={60}
+          sizes="(min-width: 1280px) 58vw, (min-width: 1024px) 64vw, 100vw"
           onError={() => setImageAvailable(false)}
         />
       ) : (

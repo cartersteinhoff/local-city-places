@@ -15,9 +15,10 @@ import {
   type RadioTrackApiResponse,
   radioStreamUrl,
   radioTrackApiUrl,
+  radioTrackEventsUrl,
 } from "@/lib/radio";
 
-const metadataFallbackRefreshMs = 15_000;
+const metadataFallbackRefreshMs = 5_000;
 
 type RadioPlayerStatus = "idle" | "loading" | "playing" | "paused" | "error";
 
@@ -33,6 +34,21 @@ const RadioPlaybackContext = createContext<RadioPlaybackContextValue | null>(
   null,
 );
 
+function parseNowPlayingEventPayload(
+  data: string,
+): RadioTrackApiResponse | null {
+  try {
+    const parsed = JSON.parse(data) as unknown;
+    if (!parsed || typeof parsed !== "object") return null;
+
+    return "data" in parsed
+      ? (parsed as RadioTrackApiResponse)
+      : ({ data: parsed } as RadioTrackApiResponse);
+  } catch {
+    return null;
+  }
+}
+
 export function RadioPlaybackProvider({ children }: { children: ReactNode }) {
   const audioRef = useRef<HTMLAudioElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -43,6 +59,14 @@ export function RadioPlaybackProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     let isMounted = true;
     const controller = new AbortController();
+    let eventSource: EventSource | null = null;
+
+    function applyNowPlayingPayload(payload: RadioTrackApiResponse) {
+      const nextTrack = normalizeNowPlaying(payload);
+      if (isMounted && nextTrack) {
+        setNowPlaying(nextTrack);
+      }
+    }
 
     async function refreshNowPlaying() {
       try {
@@ -53,10 +77,7 @@ export function RadioPlaybackProvider({ children }: { children: ReactNode }) {
         if (!response.ok) return;
 
         const payload = (await response.json()) as RadioTrackApiResponse;
-        const nextTrack = normalizeNowPlaying(payload);
-        if (isMounted && nextTrack) {
-          setNowPlaying(nextTrack);
-        }
+        applyNowPlayingPayload(payload);
       } catch (error) {
         if (error instanceof DOMException && error.name === "AbortError") {
           return;
@@ -70,9 +91,20 @@ export function RadioPlaybackProvider({ children }: { children: ReactNode }) {
       metadataFallbackRefreshMs,
     );
 
+    if ("EventSource" in window) {
+      eventSource = new EventSource(radioTrackEventsUrl);
+      eventSource.onmessage = (event) => {
+        const payload = parseNowPlayingEventPayload(event.data);
+        if (payload) {
+          applyNowPlayingPayload(payload);
+        }
+      };
+    }
+
     return () => {
       isMounted = false;
       controller.abort();
+      eventSource?.close();
       window.clearInterval(intervalId);
     };
   }, []);

@@ -1,24 +1,25 @@
 import {
   Apple,
-  Cherry,
+  Banana,
+  Beef,
+  Cake,
   Carrot,
+  Cherry,
+  Coffee,
   Cookie,
   Croissant,
   Egg,
+  Fish,
+  Grape,
+  IceCreamCone,
+  type LucideIcon,
   Milk,
   Pizza,
-  Cake,
-  Coffee,
-  Beef,
-  Fish,
-  Banana,
-  Grape,
   Salad,
   Sandwich,
-  IceCreamCone,
   ShoppingCart,
-  type LucideIcon,
-} from "lucide-react"
+} from "lucide-react";
+import { cn } from "@/lib/utils";
 
 type AnimationType =
   | "float"
@@ -28,50 +29,225 @@ type AnimationType =
   | "spin"
   | "spin-reverse"
   | "float-spin"
-  | "pulse-float"
+  | "pulse-float";
 
 interface FoodIcon {
-  Icon: LucideIcon
-  size: number
-  top: string
-  left: string
-  opacity: number
-  animation: AnimationType
-  duration: number
-  delay: number
+  Icon: LucideIcon;
+  size: number;
+  top: string;
+  left: string;
+  opacity: number;
+  animation: AnimationType;
+  duration: number;
+  delay: number;
+}
+
+interface AnimatedFoodBackgroundProps {
+  includeGradient?: boolean;
+  iconClassName?: string;
 }
 
 const foodIcons: FoodIcon[] = [
-  { Icon: Apple, size: 48, top: "8%", left: "5%", opacity: 0.45, animation: "float", duration: 7, delay: 0 },
-  { Icon: Pizza, size: 64, top: "15%", left: "85%", opacity: 0.4, animation: "float-spin", duration: 12, delay: 1 },
-  { Icon: ShoppingCart, size: 56, top: "25%", left: "12%", opacity: 0.38, animation: "drift", duration: 15, delay: 2 },
-  { Icon: Coffee, size: 40, top: "5%", left: "45%", opacity: 0.42, animation: "float-reverse", duration: 8, delay: 0.5 },
-  { Icon: Carrot, size: 44, top: "35%", left: "78%", opacity: 0.4, animation: "float", duration: 9, delay: 1.5 },
-  { Icon: Croissant, size: 52, top: "55%", left: "8%", opacity: 0.38, animation: "pulse-float", duration: 10, delay: 0 },
-  { Icon: Milk, size: 48, top: "70%", left: "88%", opacity: 0.42, animation: "float-reverse", duration: 11, delay: 2.5 },
-  { Icon: Cherry, size: 36, top: "18%", left: "32%", opacity: 0.45, animation: "spin", duration: 20, delay: 0 },
-  { Icon: Cake, size: 56, top: "45%", left: "92%", opacity: 0.35, animation: "drift-reverse", duration: 14, delay: 3 },
-  { Icon: Cookie, size: 32, top: "62%", left: "25%", opacity: 0.44, animation: "float-spin", duration: 13, delay: 1 },
-  { Icon: Egg, size: 40, top: "80%", left: "45%", opacity: 0.4, animation: "float", duration: 7.5, delay: 0.5 },
-  { Icon: Beef, size: 44, top: "12%", left: "68%", opacity: 0.42, animation: "drift", duration: 16, delay: 2 },
-  { Icon: Fish, size: 48, top: "75%", left: "15%", opacity: 0.38, animation: "float-reverse", duration: 9.5, delay: 1.5 },
-  { Icon: Banana, size: 38, top: "40%", left: "55%", opacity: 0.42, animation: "spin-reverse", duration: 18, delay: 0 },
-  { Icon: Grape, size: 42, top: "88%", left: "72%", opacity: 0.4, animation: "pulse-float", duration: 8.5, delay: 2 },
-  { Icon: Salad, size: 50, top: "28%", left: "42%", opacity: 0.35, animation: "drift-reverse", duration: 17, delay: 1 },
-  { Icon: Sandwich, size: 46, top: "58%", left: "65%", opacity: 0.38, animation: "float", duration: 10.5, delay: 0.5 },
-  { Icon: IceCreamCone, size: 44, top: "85%", left: "35%", opacity: 0.42, animation: "float-spin", duration: 11.5, delay: 3 },
-]
+  {
+    Icon: Apple,
+    size: 48,
+    top: "8%",
+    left: "5%",
+    opacity: 0.45,
+    animation: "float",
+    duration: 7,
+    delay: 0,
+  },
+  {
+    Icon: Pizza,
+    size: 64,
+    top: "15%",
+    left: "85%",
+    opacity: 0.4,
+    animation: "float-spin",
+    duration: 12,
+    delay: 1,
+  },
+  {
+    Icon: ShoppingCart,
+    size: 56,
+    top: "25%",
+    left: "12%",
+    opacity: 0.38,
+    animation: "drift",
+    duration: 15,
+    delay: 2,
+  },
+  {
+    Icon: Coffee,
+    size: 40,
+    top: "5%",
+    left: "45%",
+    opacity: 0.42,
+    animation: "float-reverse",
+    duration: 8,
+    delay: 0.5,
+  },
+  {
+    Icon: Carrot,
+    size: 44,
+    top: "35%",
+    left: "78%",
+    opacity: 0.4,
+    animation: "float",
+    duration: 9,
+    delay: 1.5,
+  },
+  {
+    Icon: Croissant,
+    size: 52,
+    top: "55%",
+    left: "8%",
+    opacity: 0.38,
+    animation: "pulse-float",
+    duration: 10,
+    delay: 0,
+  },
+  {
+    Icon: Milk,
+    size: 48,
+    top: "70%",
+    left: "88%",
+    opacity: 0.42,
+    animation: "float-reverse",
+    duration: 11,
+    delay: 2.5,
+  },
+  {
+    Icon: Cherry,
+    size: 36,
+    top: "18%",
+    left: "32%",
+    opacity: 0.45,
+    animation: "spin",
+    duration: 20,
+    delay: 0,
+  },
+  {
+    Icon: Cake,
+    size: 56,
+    top: "45%",
+    left: "92%",
+    opacity: 0.35,
+    animation: "drift-reverse",
+    duration: 14,
+    delay: 3,
+  },
+  {
+    Icon: Cookie,
+    size: 32,
+    top: "62%",
+    left: "25%",
+    opacity: 0.44,
+    animation: "float-spin",
+    duration: 13,
+    delay: 1,
+  },
+  {
+    Icon: Egg,
+    size: 40,
+    top: "80%",
+    left: "45%",
+    opacity: 0.4,
+    animation: "float",
+    duration: 7.5,
+    delay: 0.5,
+  },
+  {
+    Icon: Beef,
+    size: 44,
+    top: "12%",
+    left: "68%",
+    opacity: 0.42,
+    animation: "drift",
+    duration: 16,
+    delay: 2,
+  },
+  {
+    Icon: Fish,
+    size: 48,
+    top: "75%",
+    left: "15%",
+    opacity: 0.38,
+    animation: "float-reverse",
+    duration: 9.5,
+    delay: 1.5,
+  },
+  {
+    Icon: Banana,
+    size: 38,
+    top: "40%",
+    left: "55%",
+    opacity: 0.42,
+    animation: "spin-reverse",
+    duration: 18,
+    delay: 0,
+  },
+  {
+    Icon: Grape,
+    size: 42,
+    top: "88%",
+    left: "72%",
+    opacity: 0.4,
+    animation: "pulse-float",
+    duration: 8.5,
+    delay: 2,
+  },
+  {
+    Icon: Salad,
+    size: 50,
+    top: "28%",
+    left: "42%",
+    opacity: 0.35,
+    animation: "drift-reverse",
+    duration: 17,
+    delay: 1,
+  },
+  {
+    Icon: Sandwich,
+    size: 46,
+    top: "58%",
+    left: "65%",
+    opacity: 0.38,
+    animation: "float",
+    duration: 10.5,
+    delay: 0.5,
+  },
+  {
+    Icon: IceCreamCone,
+    size: 44,
+    top: "85%",
+    left: "35%",
+    opacity: 0.42,
+    animation: "float-spin",
+    duration: 11.5,
+    delay: 3,
+  },
+];
 
-export function AnimatedFoodBackground() {
+export function AnimatedFoodBackground({
+  includeGradient = true,
+  iconClassName,
+}: AnimatedFoodBackgroundProps = {}) {
   return (
     <div
-      className="fixed inset-0 overflow-hidden pointer-events-none z-0 bg-gradient-to-br from-[#ff7a3c] via-[#ff9f1c] to-[#ffd166] dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 motion-reduce:[&_*]:!animate-none"
+      className={cn(
+        "fixed inset-0 overflow-hidden pointer-events-none z-0 motion-reduce:[&_*]:!animate-none",
+        includeGradient &&
+          "bg-gradient-to-br from-[#ff7a3c] via-[#ff9f1c] to-[#ffd166] dark:from-slate-900 dark:via-slate-800 dark:to-slate-900",
+      )}
     >
-      {foodIcons.map((item, index) => {
-        const { Icon, size, top, left, opacity, animation, duration, delay } = item
+      {foodIcons.map((item) => {
+        const { Icon, size, top, left, opacity, animation, duration, delay } =
+          item;
         return (
           <div
-            key={index}
+            key={`${top}-${left}-${animation}`}
             className="absolute will-change-transform"
             style={{
               top,
@@ -80,10 +256,14 @@ export function AnimatedFoodBackground() {
               animation: `${animation} ${duration}s ease-in-out ${delay}s infinite`,
             }}
           >
-            <Icon size={size} strokeWidth={1.5} className="text-white dark:text-slate-700" />
+            <Icon
+              size={size}
+              strokeWidth={1.5}
+              className={cn("text-white dark:text-slate-700", iconClassName)}
+            />
           </div>
-        )
+        );
       })}
     </div>
-  )
+  );
 }
