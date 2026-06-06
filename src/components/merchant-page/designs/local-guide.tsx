@@ -1064,7 +1064,7 @@ export function LocalGuideDesign({
                           {review.content}
                         </p>
                         {review.photos.length > 0 && (
-                          <div className="mt-4 flex gap-2 overflow-x-auto">
+                          <div className="scrollbar-x-site scrollbar-x-guide mt-4 flex gap-2 overflow-x-auto pb-1">
                             {review.photos.slice(0, 3).map((photo, index) => (
                               <img
                                 key={photo}
@@ -1385,7 +1385,7 @@ export function LocalGuideDesign({
               className="border-t border-white/10 px-4 py-3 sm:px-6"
               onClick={(event) => event.stopPropagation()}
             >
-              <div className="mx-auto flex max-w-6xl gap-2 overflow-x-auto pb-1">
+              <div className="scrollbar-x-site scrollbar-x-lightbox mx-auto flex max-w-6xl gap-2 overflow-x-auto pb-1">
                 {cleanPhotos.map((photo, index) => (
                   <button
                     type="button"

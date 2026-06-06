@@ -1499,7 +1499,7 @@ export function ArtDecoDesign({
         if (allReviewPhotos.length === 0) return null;
         return (
           <div className="relative bg-black/30 overflow-hidden">
-            <div className="flex overflow-x-auto scrollbar-hide snap-x snap-mandatory">
+            <div className="scrollbar-x-site scrollbar-x-site-dark flex overflow-x-auto snap-x snap-mandatory pb-1">
               {allReviewPhotos.map((photo, i) => (
                 <div
                   key={i}
@@ -1955,7 +1955,7 @@ export function ArtDecoDesign({
                         {review.content}
                       </p>
                       {review.photos.length > 0 && (
-                        <div className="flex gap-2 mt-4 overflow-x-auto">
+                        <div className="scrollbar-x-site scrollbar-x-site-dark flex gap-2 mt-4 overflow-x-auto pb-1">
                           {review.photos.map((photo, i) => (
                             <img
                               key={i}

@@ -216,7 +216,7 @@ export default function SurveyResponsesPage({ params }: { params: Promise<{ id: 
                 <div className="p-4 border-b border-border">
                   <h3 className="font-semibold">Individual Responses</h3>
                 </div>
-                <div className="overflow-x-auto">
+                <div className="scrollbar-x-site overflow-x-auto pb-1">
                   <table className="w-full text-sm">
                     <thead className="bg-muted/50">
                       <tr>

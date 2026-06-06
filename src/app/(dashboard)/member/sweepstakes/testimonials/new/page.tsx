@@ -415,7 +415,7 @@ export default function FavoriteMerchantTestimonialsPage() {
               </p>
 
               {data?.leaderboardPreview.length ? (
-                <div className="overflow-x-auto mt-4">
+                <div className="scrollbar-x-site overflow-x-auto mt-4 pb-1">
                   <table className="w-full text-sm">
                     <thead className="text-muted-foreground">
                       <tr className="border-b">

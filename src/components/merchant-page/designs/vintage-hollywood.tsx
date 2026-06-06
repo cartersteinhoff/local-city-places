@@ -148,7 +148,7 @@ export function VintageHollywoodDesign({
       {/* Section Navigation */}
       <nav className="bg-[#0d0d0d]/95 border-b border-[#C0C0C0]/20 sticky top-0 z-40 backdrop-blur-sm">
         <div className="max-w-6xl mx-auto px-4">
-          <div className="flex items-center justify-center gap-1 sm:gap-2 py-2 overflow-x-auto">
+          <div className="scrollbar-x-site scrollbar-x-silver flex items-center justify-center gap-1 sm:gap-2 overflow-x-auto py-2">
             {aboutStory && (
               <a href="#story" className={`px-3 py-2 text-xs tracking-[0.15em] uppercase text-[#C0C0C0]/60 hover:text-[#C0C0C0] transition-all ${lato.className}`}>Story</a>
             )}

@@ -301,7 +301,7 @@ export default function AdminSweepstakesPage() {
               </p>
             </div>
 
-            <div className="overflow-x-auto">
+            <div className="scrollbar-x-site overflow-x-auto pb-1">
               <table className="w-full text-sm">
                 <thead className="bg-muted/30">
                   <tr>

@@ -143,7 +143,7 @@ export function GatsbyGlamourDesign({
       {/* Section Navigation */}
       <nav className="bg-black/95 border-b border-[#C9A962]/20 sticky top-0 z-40 backdrop-blur-sm">
         <div className="max-w-6xl mx-auto px-4">
-          <div className="flex items-center justify-center gap-1 sm:gap-2 py-2 overflow-x-auto">
+          <div className="scrollbar-x-site scrollbar-x-gold flex items-center justify-center gap-1 sm:gap-2 overflow-x-auto py-2">
             {aboutStory && (
               <a href="#story" className={`px-3 py-2 text-xs tracking-widest uppercase text-[#C9A962]/60 hover:text-[#C9A962] transition-all ${cormorant.className}`}>Story</a>
             )}

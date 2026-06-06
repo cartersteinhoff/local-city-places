@@ -637,7 +637,7 @@ export function MerchantForm({
         )}
 
         {/* Section Navigation */}
-        <div className="flex gap-1 mb-6 overflow-x-auto pb-2">
+        <div className="scrollbar-x-site flex gap-1 mb-6 overflow-x-auto pb-2">
           {sections.map((section) => (
             <button
               key={section.id}
