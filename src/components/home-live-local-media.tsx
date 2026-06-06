@@ -2,7 +2,8 @@
 
 import { Pause, Play, Radio, RadioTower } from "lucide-react";
 import Image from "next/image";
-import { useEffect, useId, useRef, useState } from "react";
+import { useId, useState } from "react";
+import { useRadioPlayback } from "@/components/radio-playback-provider";
 import { cn } from "@/lib/utils";
 
 const cityColumns = [
@@ -35,91 +36,10 @@ const cityColumns = [
 
 const allCities = cityColumns.flat();
 
-const radioStreamUrl = "https://s5.radio.co/sabc365e3e/listen";
-const radioTrackApiUrl =
-  "https://public.radio.co/api/v2/sabc365e3e/track/current";
-const radioTrackEventsUrl = `https://mercure.radio.co/.well-known/mercure?topic=${encodeURIComponent(
-  radioTrackApiUrl,
-)}`;
-const metadataFallbackRefreshMs = 15_000;
-
-type RadioTrackApiResponse = {
-  data?: {
-    title?: unknown;
-    start_time?: unknown;
-    artwork_urls?: {
-      standard?: unknown;
-      large?: unknown;
-    };
-    track_artist?: unknown;
-    track_title?: unknown;
-    track_album?: unknown;
-  };
-};
-
-type NowPlayingTrack = {
-  title: string;
-  subtitle: string;
-  artworkUrl: string | null;
-  startTime: string | null;
-};
-
-const fallbackNowPlaying: NowPlayingTrack = {
-  title: "KLCP Radio",
-  subtitle: "Live from Phoenix 96.5 FM",
-  artworkUrl: null,
-  startTime: null,
-};
-
-function stringValue(value: unknown) {
-  return typeof value === "string" ? value.trim() : "";
-}
-
-function readableTrackText(value: string) {
-  return value
-    .replace(/([a-z])([A-Z])/g, "$1 $2")
-    .replace(/\s+/g, " ")
-    .trim();
-}
-
-function normalizeNowPlaying(
-  payload: RadioTrackApiResponse,
-): NowPlayingTrack | null {
-  const track = payload.data;
-  if (!track) return null;
-
-  const title = readableTrackText(
-    stringValue(track.track_title) ||
-      stringValue(track.title) ||
-      fallbackNowPlaying.title,
-  );
-  const artist = readableTrackText(stringValue(track.track_artist));
-  const album = readableTrackText(stringValue(track.track_album));
-  const subtitle =
-    artist && artist !== title
-      ? artist
-      : album && album !== title
-        ? album
-        : fallbackNowPlaying.subtitle;
-  const artworkUrl =
-    stringValue(track.artwork_urls?.large) ||
-    stringValue(track.artwork_urls?.standard) ||
-    null;
-  const startTime = stringValue(track.start_time) || null;
-
-  return { title, subtitle, artworkUrl, startTime };
-}
-
 function RadioCoPlayer() {
-  const audioRef = useRef<HTMLAudioElement>(null);
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [playerStatus, setPlayerStatus] = useState<
-    "idle" | "loading" | "playing" | "paused" | "error"
-  >("idle");
-  const [streamError, setStreamError] = useState("");
-  const [nowPlaying, setNowPlaying] =
-    useState<NowPlayingTrack>(fallbackNowPlaying);
-  const [artworkFailed, setArtworkFailed] = useState(false);
+  const { isPlaying, nowPlaying, playerStatus, streamError, togglePlayback } =
+    useRadioPlayback();
+  const [failedArtworkUrl, setFailedArtworkUrl] = useState<string | null>(null);
   const playbackLabel = isPlaying ? "Pause KLCP Radio" : "Play KLCP Radio";
   const statusText = {
     idle: "Ready",
@@ -128,128 +48,12 @@ function RadioCoPlayer() {
     paused: "Paused",
     error: "Stream unavailable",
   }[playerStatus];
-  const hasTrackArtwork = Boolean(nowPlaying.artworkUrl && !artworkFailed);
-
-  useEffect(() => {
-    let isMounted = true;
-    const controller = new AbortController();
-
-    async function refreshNowPlaying() {
-      try {
-        const response = await fetch(radioTrackApiUrl, {
-          cache: "no-store",
-          signal: controller.signal,
-        });
-        if (!response.ok) return;
-
-        const payload = (await response.json()) as RadioTrackApiResponse;
-        const nextTrack = normalizeNowPlaying(payload);
-        if (isMounted && nextTrack) {
-          setNowPlaying(nextTrack);
-          setArtworkFailed(false);
-        }
-      } catch (error) {
-        if (error instanceof DOMException && error.name === "AbortError") {
-          return;
-        }
-      }
-    }
-
-    refreshNowPlaying();
-    const eventSource =
-      typeof EventSource === "undefined"
-        ? null
-        : new EventSource(radioTrackEventsUrl);
-    if (eventSource) {
-      eventSource.onmessage = () => {
-        refreshNowPlaying();
-      };
-    }
-
-    const intervalId = window.setInterval(
-      refreshNowPlaying,
-      metadataFallbackRefreshMs,
-    );
-
-    return () => {
-      isMounted = false;
-      controller.abort();
-      eventSource?.close();
-      window.clearInterval(intervalId);
-    };
-  }, []);
-
-  async function togglePlayback() {
-    const audio = audioRef.current;
-    if (!audio) return;
-
-    if (isPlaying) {
-      audio.pause();
-      setIsPlaying(false);
-      return;
-    }
-
-    try {
-      setStreamError("");
-      setPlayerStatus("loading");
-      if (audio.error) {
-        audio.load();
-      }
-      await audio.play();
-    } catch {
-      setIsPlaying(false);
-      setPlayerStatus("error");
-      setStreamError("KLCP is not responding. Please try again in a moment.");
-    }
-  }
+  const hasTrackArtwork = Boolean(
+    nowPlaying.artworkUrl && failedArtworkUrl !== nowPlaying.artworkUrl,
+  );
 
   return (
     <div className="mx-auto w-full">
-      {/* biome-ignore lint/a11y/useMediaCaption: This is a live radio stream without a captions feed. */}
-      <audio
-        ref={audioRef}
-        src={radioStreamUrl}
-        preload="none"
-        playsInline
-        onPlay={() => {
-          setIsPlaying(true);
-          setPlayerStatus("playing");
-          setStreamError("");
-        }}
-        onPlaying={() => {
-          setIsPlaying(true);
-          setPlayerStatus("playing");
-          setStreamError("");
-        }}
-        onWaiting={() => {
-          if (!audioRef.current?.paused) {
-            setPlayerStatus("loading");
-          }
-        }}
-        onStalled={() => {
-          if (!audioRef.current?.paused) {
-            setPlayerStatus("loading");
-          }
-        }}
-        onPause={() => {
-          setIsPlaying(false);
-          setPlayerStatus((current) =>
-            current === "error" ? current : "paused",
-          );
-        }}
-        onEnded={() => {
-          setIsPlaying(false);
-          setPlayerStatus("paused");
-        }}
-        onError={() => {
-          setIsPlaying(false);
-          setPlayerStatus("error");
-          setStreamError(
-            "KLCP is not responding. Please try again in a moment.",
-          );
-        }}
-      />
-
       <div className="min-w-0 rounded-[8px] bg-[#031b2d] p-3 ring-1 ring-sky-200/15 sm:p-4">
         <div className="grid min-w-0 items-center gap-4 sm:grid-cols-[minmax(150px,190px)_minmax(0,1fr)] xl:grid-cols-[minmax(160px,210px)_minmax(0,1fr)]">
           <div className="relative mx-auto aspect-square w-full max-w-[190px] overflow-hidden rounded-[8px] bg-[#07131d] ring-1 ring-white/15 xl:max-w-[210px]">
@@ -260,7 +64,7 @@ function RadioCoPlayer() {
                 fill
                 className="object-cover"
                 sizes="(min-width: 1280px) 210px, 190px"
-                onError={() => setArtworkFailed(true)}
+                onError={() => setFailedArtworkUrl(nowPlaying.artworkUrl)}
               />
             ) : (
               <span className="flex h-full w-full flex-col items-center justify-center bg-[linear-gradient(135deg,#0b4f80_0%,#01233f_58%,#07131d_100%)] p-5 text-center text-white">

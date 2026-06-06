@@ -1,8 +1,9 @@
 "use client";
 
-import { ChevronDown, Radio, Store, User } from "lucide-react";
+import { ChevronDown, Pause, Play, Store, User } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { useRadioPlayback } from "@/components/radio-playback-provider";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -10,6 +11,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import type { NowPlayingTrack } from "@/lib/radio";
 import { cn } from "@/lib/utils";
 
 type HomeHeaderVariant = "white" | "transparent";
@@ -41,13 +43,76 @@ const loginMenuItemClass =
 const loginMenuIconClass =
   "flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-orange-400/15 text-orange-300 transition-colors group-focus:bg-orange-500 group-focus:text-white group-data-[highlighted]:bg-orange-500 group-data-[highlighted]:text-white";
 
+function getHeaderProgramTitle(track: NowPlayingTrack) {
+  return track.title;
+}
+
+function HeaderRadioPlayer({ className }: { className: string }) {
+  const { isPlaying, nowPlaying, playerStatus, togglePlayback } =
+    useRadioPlayback();
+
+  const isLoading = playerStatus === "loading";
+  const shouldStop = isLoading || isPlaying;
+  const displayTitle = getHeaderProgramTitle(nowPlaying);
+  const playerLabel = `${shouldStop ? "Pause" : "Play"} ${displayTitle}`;
+
+  return (
+    <Button
+      type="button"
+      size="sm"
+      className={cn(
+        className,
+        "h-12 overflow-hidden rounded-[18px] border-sky-100/20 bg-[#12334b]/72 px-2.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.12),0_10px_24px_rgba(0,0,0,0.18)] backdrop-blur transition-[width,background-color,border-color] duration-200 hover:bg-[#163b56]/78 sm:px-3",
+        "w-fit min-w-[154px] max-w-[154px] justify-start gap-2 sm:min-w-[206px] sm:max-w-[206px] md:min-w-0 md:max-w-[min(420px,calc(100vw-28rem))] lg:max-w-[min(480px,calc(100vw-34rem))]",
+      )}
+      onClick={togglePlayback}
+      aria-label={playerLabel}
+      aria-pressed={isPlaying}
+    >
+      <span
+        className={cn(
+          "flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-red-500 text-white shadow-[0_8px_18px_rgba(239,68,68,0.28)] transition-transform duration-200 hover:scale-[1.03] sm:h-8 sm:w-8",
+        )}
+        aria-hidden="true"
+      >
+        {shouldStop ? (
+          <Pause className="h-3.5 w-3.5 sm:h-4 sm:w-4" fill="currentColor" />
+        ) : (
+          <Play
+            className="ml-0.5 h-3.5 w-3.5 sm:h-4 sm:w-4"
+            fill="currentColor"
+          />
+        )}
+      </span>
+      <span className="flex min-w-0 flex-1 flex-col items-start justify-center gap-1 text-left md:flex-none">
+        <span className="block max-w-full truncate text-[12px] font-bold leading-none text-white sm:text-[15px]">
+          {displayTitle}
+        </span>
+        <span className="flex max-w-full items-center gap-1.5 text-[10px] font-bold leading-none text-white/76 sm:text-[12px]">
+          <span
+            className={cn(
+              "h-1.5 w-1.5 shrink-0 rounded-full bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.7)]",
+              shouldStop && "animate-pulse",
+            )}
+            aria-hidden="true"
+          />
+          <span className="truncate">
+            KLCP 96.5 FM -{" "}
+            <span className="font-black text-red-400">On Air</span>
+          </span>
+        </span>
+      </span>
+    </Button>
+  );
+}
+
 export function HomeHeader({ variant = "white" }: HomeHeaderProps) {
   const styles = headerVariants[variant];
 
   return (
     <header className="relative z-10">
       <div className={styles.bar}>
-        <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3 sm:px-6">
+        <div className="relative mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3 sm:px-6">
           <Link href="/" aria-label="Go to homepage">
             <Image
               src="/images/local-city-places-header-logo-v12.webp"
@@ -60,12 +125,9 @@ export function HomeHeader({ variant = "white" }: HomeHeaderProps) {
           </Link>
 
           <div className="flex items-center gap-2">
-            <Button size="sm" className={styles.radio} asChild>
-              <Link href="/#live-radio">
-                <Radio className="h-4 w-4" />
-                Live Radio
-              </Link>
-            </Button>
+            <div>
+              <HeaderRadioPlayer className={styles.radio} />
+            </div>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button
