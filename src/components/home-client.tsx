@@ -37,9 +37,6 @@ export function HomeClient({ featuredMerchants }: HomeClientProps) {
 
       <HomeHeader />
 
-      {/* Spacer to push content down */}
-      <div className="flex-1" />
-
       <FeaturedMarquee initialMerchants={featuredMerchants} />
 
       <HomeLiveLocalMedia />
