@@ -211,7 +211,7 @@ function MarqueeHeading() {
     >
       <div className="max-w-full text-center">
         <h2
-          aria-label="Explore Local Merchants"
+          aria-label="Explore PHX Metro Merchants"
           className="flex flex-wrap items-center justify-center gap-x-3 gap-y-2 text-2xl font-black uppercase leading-tight text-white drop-shadow-[0_2px_0_rgba(6,56,96,0.3)] sm:gap-x-4 sm:text-3xl"
           style={{
             display: "flex",
@@ -265,7 +265,7 @@ function MarqueeHeading() {
               className="relative drop-shadow-[0_1px_0_rgba(0,0,0,0.55)]"
               style={{ position: "relative" }}
             >
-              Local Merchants
+              PHX Metro Merchants
             </span>
           </span>
         </h2>
