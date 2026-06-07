@@ -72,14 +72,6 @@ function shuffleMerchants(merchants: FeaturedMerchant[], seed: string) {
   });
 }
 
-function getRandomShuffleSeed() {
-  if (typeof window !== "undefined" && window.crypto?.randomUUID) {
-    return window.crypto.randomUUID();
-  }
-
-  return `${Date.now()}-${Math.random().toString(36).slice(2)}`;
-}
-
 function MerchantCard({
   merchant,
   priority = false,
@@ -296,11 +288,6 @@ export function FeaturedMarquee({
     () => initialMerchants ?? [],
   );
   const [isLoading, setIsLoading] = useState(initialMerchants === undefined);
-  const [shuffleSeed, setShuffleSeed] = useState("initial");
-
-  useEffect(() => {
-    setShuffleSeed(getRandomShuffleSeed());
-  }, []);
 
   useEffect(() => {
     if (initialMerchants !== undefined) {
@@ -327,11 +314,11 @@ export function FeaturedMarquee({
 
   const [row1, row2, row3] = useMemo(
     () => [
-      shuffleMerchants(merchants, `homepage-featured-row-1:${shuffleSeed}`),
-      shuffleMerchants(merchants, `homepage-featured-row-2:${shuffleSeed}`),
-      shuffleMerchants(merchants, `homepage-featured-row-3:${shuffleSeed}`),
+      shuffleMerchants(merchants, "homepage-featured-row-1"),
+      shuffleMerchants(merchants, "homepage-featured-row-2"),
+      shuffleMerchants(merchants, "homepage-featured-row-3"),
     ],
-    [merchants, shuffleSeed],
+    [merchants],
   );
 
   if (!isLoading && merchants.length === 0) return null;
