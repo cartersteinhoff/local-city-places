@@ -9,6 +9,7 @@ import { getMerchantPageUrl } from "@/lib/utils";
 
 const skeletonRows = ["row-1", "row-2", "row-3"];
 const marqueeCopies = ["copy-1", "copy-2", "copy-3", "copy-4"];
+const merchantsPerRow = 10;
 const priorityImagesPerRow = 3;
 const sectionStyle = {
   position: "relative",
@@ -70,6 +71,15 @@ function shuffleMerchants(merchants: FeaturedMerchant[], seed: string) {
 
     return a.id < b.id ? -1 : a.id > b.id ? 1 : 0;
   });
+}
+
+function getRowMerchants(merchants: FeaturedMerchant[], rowIndex: number) {
+  const start = rowIndex * merchantsPerRow;
+  const rowMerchants = merchants.slice(start, start + merchantsPerRow);
+
+  return rowMerchants.length > 0
+    ? rowMerchants
+    : merchants.slice(0, merchantsPerRow);
 }
 
 function MerchantCard({
@@ -314,9 +324,18 @@ export function FeaturedMarquee({
 
   const [row1, row2, row3] = useMemo(
     () => [
-      shuffleMerchants(merchants, "homepage-featured-row-1"),
-      shuffleMerchants(merchants, "homepage-featured-row-2"),
-      shuffleMerchants(merchants, "homepage-featured-row-3"),
+      shuffleMerchants(
+        getRowMerchants(merchants, 0),
+        "homepage-featured-row-1",
+      ),
+      shuffleMerchants(
+        getRowMerchants(merchants, 1),
+        "homepage-featured-row-2",
+      ),
+      shuffleMerchants(
+        getRowMerchants(merchants, 2),
+        "homepage-featured-row-3",
+      ),
     ],
     [merchants],
   );

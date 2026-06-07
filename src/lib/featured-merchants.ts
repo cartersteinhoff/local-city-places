@@ -4,7 +4,7 @@ import type { FeaturedMerchant } from "@/lib/featured-merchants-types";
 
 export const FEATURED_MERCHANT_CACHE_SECONDS = 3600;
 export const FEATURED_MERCHANT_CACHE_TAG = "featured-merchants";
-export const FEATURED_MERCHANT_LIMIT = 15;
+export const FEATURED_MERCHANT_LIMIT = 30;
 
 function getCappedLimit(limit: number) {
   if (!Number.isFinite(limit)) return FEATURED_MERCHANT_LIMIT;
