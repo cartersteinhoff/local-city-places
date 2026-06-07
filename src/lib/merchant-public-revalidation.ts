@@ -10,7 +10,7 @@ interface MerchantPublicIdentity {
 export function revalidateMerchantPublicPaths(
   ...merchants: MerchantPublicIdentity[]
 ) {
-  const paths = new Set<string>(["/api/featured-merchants"]);
+  const paths = new Set<string>(["/", "/request", "/api/featured-merchants"]);
 
   for (const merchant of merchants) {
     if (!merchant?.slug) {

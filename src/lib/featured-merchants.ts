@@ -1,4 +1,4 @@
-import { and, asc, eq } from "drizzle-orm";
+import { and, asc, desc, eq } from "drizzle-orm";
 import { categories, db, merchants } from "@/db";
 import type { FeaturedMerchant } from "@/lib/featured-merchants-types";
 
@@ -40,7 +40,7 @@ export async function getFeaturedMerchants(
         eq(merchants.isPublicPage, true),
       ),
     )
-    .orderBy(asc(merchants.businessName))
+    .orderBy(desc(merchants.createdAt), asc(merchants.businessName))
     .limit(cappedLimit);
 
   return featured.map(({ photos, ...merchant }) => ({
