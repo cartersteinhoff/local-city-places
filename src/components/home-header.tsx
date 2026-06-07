@@ -114,7 +114,7 @@ function HeaderRadioPlayer({ className }: { className: string }) {
       className={cn(
         className,
         "h-12 overflow-hidden rounded-[18px] border-sky-100/20 bg-[#12334b]/72 px-2.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.12),0_10px_24px_rgba(0,0,0,0.18)] backdrop-blur transition-[width,background-color,border-color] duration-200 hover:bg-[#163b56]/78 sm:px-3",
-        "w-fit min-w-[154px] max-w-[154px] justify-start gap-2 sm:min-w-[206px] sm:max-w-[206px] md:max-w-[352px]",
+        "w-fit min-w-[128px] max-w-[128px] justify-start gap-2 min-[380px]:min-w-[144px] min-[380px]:max-w-[144px] sm:min-w-[206px] sm:max-w-[206px] md:max-w-[352px]",
       )}
       style={{
         display: "inline-flex",
@@ -209,14 +209,14 @@ export function HomeHeader({ variant = "white" }: HomeHeaderProps) {
     >
       <div className={styles.bar}>
         <div
-          className="relative mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3 sm:px-6"
+          className="relative mx-auto flex max-w-7xl items-center justify-between gap-2 px-4 py-3 sm:gap-4 sm:px-6"
           style={{
             position: "relative",
             display: "flex",
             maxWidth: "80rem",
             alignItems: "center",
             justifyContent: "space-between",
-            gap: "1rem",
+            gap: "clamp(0.5rem, 1.5vw, 1rem)",
             marginRight: "auto",
             marginLeft: "auto",
             padding: "0.75rem clamp(1rem, 2vw, 1.5rem)",
@@ -232,7 +232,7 @@ export function HomeHeader({ variant = "white" }: HomeHeaderProps) {
               alt="Local City Places"
               width={161}
               height={72}
-              style={{ width: "clamp(125px, 33.5vw, 161px)", height: "auto" }}
+              style={{ width: "clamp(106px, 30vw, 161px)", height: "auto" }}
               priority
             />
           </Link>
@@ -251,7 +251,7 @@ export function HomeHeader({ variant = "white" }: HomeHeaderProps) {
                   size="sm"
                   className={cn(
                     styles.login,
-                    "group h-11 gap-1.5 rounded-[16px] px-4 text-[15px] leading-none transition-[background-color,box-shadow] data-[state=open]:bg-[#f46200] data-[state=open]:shadow-[0_12px_26px_rgba(249,115,22,0.28)] sm:px-5",
+                    "group h-11 gap-1.5 rounded-[16px] px-3 text-sm leading-none transition-[background-color,box-shadow] data-[state=open]:bg-[#f46200] data-[state=open]:shadow-[0_12px_26px_rgba(249,115,22,0.28)] sm:px-5 sm:text-[15px]",
                   )}
                   style={{
                     display: "inline-flex",

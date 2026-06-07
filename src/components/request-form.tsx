@@ -522,20 +522,20 @@ export function RequestForm() {
       onSubmit={handleSubmit}
       className="overflow-hidden rounded-[8px] border border-white/70 bg-white text-slate-950 shadow-[0_24px_70px_rgba(8,30,45,0.24)]"
     >
-      <div className="border-b border-slate-200 bg-white px-5 py-4 sm:px-6">
-        <div className="flex items-start justify-between gap-5">
+      <div className="border-b border-slate-200 bg-white px-4 py-3.5 sm:px-6 sm:py-4">
+        <div className="flex items-start justify-between gap-3 sm:gap-5">
           <div className="min-w-0">
             <p className="text-[11px] font-black uppercase tracking-[0.18em] text-[#bf4c00] sm:text-xs">
               Founding Merchant Request
             </p>
-            <h2 className="mt-1.5 text-xl font-black tracking-normal text-slate-950 sm:text-[24px]">
+            <h2 className="mt-1.5 text-lg font-black leading-tight tracking-normal text-slate-950 sm:text-[24px]">
               {currentStep.title}
             </h2>
-            <p className="mt-1.5 max-w-xl text-sm font-semibold leading-5 text-slate-600">
+            <p className="mt-1.5 max-w-xl text-xs font-semibold leading-5 text-slate-600 sm:text-sm">
               {currentStep.description}
             </p>
           </div>
-          <p className="shrink-0 rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-black text-slate-700 shadow-sm sm:text-sm">
+          <p className="shrink-0 rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-[11px] font-black text-slate-700 shadow-sm sm:text-sm">
             Step {currentStepIndex + 1} of {steps.length}
           </p>
         </div>
@@ -552,7 +552,7 @@ export function RequestForm() {
         </div>
       </div>
 
-      <div className="border-b border-slate-200 bg-slate-50 px-3 py-2 sm:px-5">
+      <div className="hidden border-b border-slate-200 bg-slate-50 px-3 py-2 sm:block sm:px-5">
         <div className="grid grid-cols-4 gap-1.5">
           {steps.map((step, index) => {
             const Icon = step.icon;
@@ -589,8 +589,8 @@ export function RequestForm() {
         </div>
       </div>
 
-      <div className="p-5 sm:p-6">
-        <div className="min-h-[292px] sm:min-h-[300px]">
+      <div className="p-4 sm:p-6">
+        <div className="sm:min-h-[300px]">
           {currentStep.id === "category" && (
             <div className="space-y-4">
               <div className="space-y-3">
@@ -1046,16 +1046,18 @@ export function RequestForm() {
           </div>
 
           <div className="flex flex-col-reverse gap-3 sm:flex-row">
-            <Button
-              type="button"
-              variant="outline"
-              className="h-10 rounded-[8px] sm:w-auto"
-              onClick={goToPreviousStep}
-              disabled={isFirstStep || isSubmitting}
-            >
-              <ChevronLeft className="mr-2 h-4 w-4" />
-              Back
-            </Button>
+            {!isFirstStep && (
+              <Button
+                type="button"
+                variant="outline"
+                className="h-10 rounded-[8px] sm:w-auto"
+                onClick={goToPreviousStep}
+                disabled={isSubmitting}
+              >
+                <ChevronLeft className="mr-2 h-4 w-4" />
+                Back
+              </Button>
+            )}
 
             {isReviewStep ? (
               <Button
