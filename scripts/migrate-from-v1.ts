@@ -12,10 +12,11 @@
  */
 
 import { config } from "dotenv";
+
 config({ path: ".env.local" });
 
-import postgres from "postgres";
 import { put } from "@vercel/blob";
+import postgres from "postgres";
 
 // ============================================================================
 // CONFIG
@@ -72,7 +73,7 @@ async function downloadBuffer(url: string): Promise<Buffer | null> {
 async function uploadToBlob(
   buffer: Buffer,
   pathname: string,
-  contentType: string
+  contentType: string,
 ): Promise<string> {
   const blob = await put(pathname, buffer, {
     access: "public",
@@ -115,7 +116,8 @@ async function buildMerchantIdMap() {
   `;
 
   // Get new merchants
-  const newMerchants = await newDb`SELECT id, google_place_id, slug FROM merchants`;
+  const newMerchants =
+    await newDb`SELECT id, google_place_id, slug FROM merchants`;
   const newByPlaceId = new Map<string, string>();
   const newBySlug = new Map<string, string>();
   for (const m of newMerchants) {
@@ -133,7 +135,7 @@ async function buildMerchantIdMap() {
       matched++;
     } else {
       // Try slug-based match (new slugs have -shortid suffix, old don't)
-      const found = newMerchants.find((m) => m.slug?.startsWith(b.slug + "-"));
+      const found = newMerchants.find((m) => m.slug?.startsWith(`${b.slug}-`));
       if (found) {
         merchantIdMap.set(b.id, found.id);
         matched++;
@@ -162,7 +164,11 @@ async function buildReviewerMap() {
 
   const reviewerMap = new Map<
     string,
-    { firstName: string | null; lastName: string | null; profilePhoto: string | null }
+    {
+      firstName: string | null;
+      lastName: string | null;
+      profilePhoto: string | null;
+    }
   >();
 
   for (const u of oldUsers) {
@@ -182,12 +188,24 @@ async function buildReviewerMap() {
 // ============================================================================
 
 async function migrateProfilePhotos(
-  reviewerMap: Map<string, { firstName: string | null; lastName: string | null; profilePhoto: string | null }>
+  reviewerMap: Map<
+    string,
+    {
+      firstName: string | null;
+      lastName: string | null;
+      profilePhoto: string | null;
+    }
+  >,
 ) {
   log("profiles", "Migrating reviewer profile photos to Vercel Blob...");
 
-  const usersWithPhotos = [...reviewerMap.entries()].filter(([, v]) => v.profilePhoto);
-  log("profiles", `Found ${usersWithPhotos.length} reviewers with profile photos`);
+  const usersWithPhotos = [...reviewerMap.entries()].filter(
+    ([, v]) => v.profilePhoto,
+  );
+  log(
+    "profiles",
+    `Found ${usersWithPhotos.length} reviewers with profile photos`,
+  );
 
   // Map old user_id → blob URL
   const photoUrlMap = new Map<string, string>();
@@ -206,7 +224,7 @@ async function migrateProfilePhotos(
           return;
         }
 
-        const filename = info.profilePhoto!.split("/").pop() || "profile.jpg";
+        const filename = info.profilePhoto?.split("/").pop() || "profile.jpg";
         const blobPath = `reviewer-photos/${Date.now()}-${filename}`;
         const contentType = guessContentType(filename);
 
@@ -218,11 +236,14 @@ async function migrateProfilePhotos(
           console.warn(`  Failed to upload profile for ${userId}:`, err);
           failed++;
         }
-      })
+      }),
     );
   }
 
-  log("profiles", `Done. ${migrated} profile photos migrated, ${failed} failed.`);
+  log(
+    "profiles",
+    `Done. ${migrated} profile photos migrated, ${failed} failed.`,
+  );
   return photoUrlMap;
 }
 
@@ -232,8 +253,15 @@ async function migrateProfilePhotos(
 
 async function importReviews(
   merchantIdMap: Map<number, string>,
-  reviewerMap: Map<string, { firstName: string | null; lastName: string | null; profilePhoto: string | null }>,
-  photoUrlMap: Map<string, string>
+  reviewerMap: Map<
+    string,
+    {
+      firstName: string | null;
+      lastName: string | null;
+      profilePhoto: string | null;
+    }
+  >,
+  photoUrlMap: Map<string, string>,
 ) {
   log("reviews", "Importing approved reviews...");
 
@@ -277,7 +305,10 @@ async function importReviews(
     }
   }
 
-  log("reviews", `Done. ${reviewIdMap.size} reviews imported, ${skipped} skipped.`);
+  log(
+    "reviews",
+    `Done. ${reviewIdMap.size} reviews imported, ${skipped} skipped.`,
+  );
   return reviewIdMap;
 }
 
@@ -333,11 +364,14 @@ async function migrateReviewPhotos(reviewIdMap: Map<number, string>) {
           console.warn(`  Failed to upload ${photo.file_path}:`, err);
           failed++;
         }
-      })
+      }),
     );
 
     if ((i + PHOTO_BATCH_SIZE) % 100 < PHOTO_BATCH_SIZE) {
-      log("photos", `  Progress: ${migrated} migrated, ${failed} failed of ${oldPhotos.length}`);
+      log(
+        "photos",
+        `  Progress: ${migrated} migrated, ${failed} failed of ${oldPhotos.length}`,
+      );
     }
   }
 
@@ -368,7 +402,11 @@ async function main() {
     console.log();
 
     // Import reviews with denormalized reviewer info
-    const reviewIdMap = await importReviews(merchantIdMap, reviewerMap, photoUrlMap);
+    const reviewIdMap = await importReviews(
+      merchantIdMap,
+      reviewerMap,
+      photoUrlMap,
+    );
     console.log();
 
     // Migrate review photos

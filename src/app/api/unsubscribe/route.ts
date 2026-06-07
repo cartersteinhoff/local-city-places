@@ -1,7 +1,12 @@
-import { NextRequest, NextResponse } from "next/server";
-import { db } from "@/db";
-import { users, emailPreferences } from "@/db/schema";
 import { eq } from "drizzle-orm";
+import { type NextRequest, NextResponse } from "next/server";
+import { db } from "@/db";
+import { emailPreferences, users } from "@/db/schema";
+
+type UnsubscribeUser = {
+  id: string;
+  email: string;
+};
 
 /**
  * GET /api/unsubscribe?userId=xxx or ?email=xxx
@@ -16,12 +21,12 @@ export async function GET(request: NextRequest) {
     if (!userId && !email) {
       return NextResponse.json(
         { error: "Missing userId or email parameter" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     // Find the user
-    let user;
+    let user: UnsubscribeUser | undefined;
     if (userId) {
       [user] = await db
         .select({ id: users.id, email: users.email })
@@ -37,10 +42,7 @@ export async function GET(request: NextRequest) {
     }
 
     if (!user) {
-      return NextResponse.json(
-        { error: "User not found" },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
     // Get email preferences
@@ -60,7 +62,7 @@ export async function GET(request: NextRequest) {
     console.error("Get email preferences error:", error);
     return NextResponse.json(
       { error: "Internal server error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -72,17 +74,23 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { userId, email, marketingEmails, transactionalEmails, unsubscribedAll } = body;
+    const {
+      userId,
+      email,
+      marketingEmails,
+      transactionalEmails,
+      unsubscribedAll,
+    } = body;
 
     if (!userId && !email) {
       return NextResponse.json(
         { error: "Missing userId or email" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     // Find the user
-    let user;
+    let user: UnsubscribeUser | undefined;
     if (userId) {
       [user] = await db
         .select({ id: users.id, email: users.email })
@@ -98,10 +106,7 @@ export async function POST(request: NextRequest) {
     }
 
     if (!user) {
-      return NextResponse.json(
-        { error: "User not found" },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
     // Check if preferences exist
@@ -137,7 +142,7 @@ export async function POST(request: NextRequest) {
     console.error("Update email preferences error:", error);
     return NextResponse.json(
       { error: "Internal server error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

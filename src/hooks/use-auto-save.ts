@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 export type AutoSaveStatus = "clean" | "dirty" | "saving" | "saved" | "error";
 
@@ -47,7 +47,10 @@ export function useAutoSave<T>({
 
   // Check if data has changed from last saved
   const hasChanges = useCallback(() => {
-    return JSON.stringify(dataRef.current) !== JSON.stringify(lastSavedDataRef.current);
+    return (
+      JSON.stringify(dataRef.current) !==
+      JSON.stringify(lastSavedDataRef.current)
+    );
   }, []);
 
   // Perform the save
@@ -115,7 +118,7 @@ export function useAutoSave<T>({
         clearTimeout(timerRef.current);
       }
     };
-  }, [data, enabled, debounceMs, hasChanges, performSave, status]);
+  }, [enabled, debounceMs, hasChanges, performSave, status]);
 
   // Warn before leaving with unsaved changes
   useEffect(() => {

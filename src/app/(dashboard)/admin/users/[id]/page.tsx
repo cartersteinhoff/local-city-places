@@ -1,15 +1,21 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useRouter, useParams } from "next/navigation";
+import { ArrowLeft, Loader2, Save } from "lucide-react";
+import { useParams, useRouter } from "next/navigation";
+import { useCallback, useEffect, useState } from "react";
 import { DashboardLayout } from "@/components/layout";
-import { PageHeader } from "@/components/ui/page-header";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Switch } from "@/components/ui/switch";
+import { PageHeader } from "@/components/ui/page-header";
 import {
   Select,
   SelectContent,
@@ -17,11 +23,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  ArrowLeft,
-  Loader2,
-  Save,
-} from "lucide-react";
+import { Switch } from "@/components/ui/switch";
 import { useUser } from "@/hooks/use-user";
 import { formatPhoneNumber, stripPhoneNumber } from "@/lib/utils";
 import { adminNavItems } from "../../nav";
@@ -97,15 +99,7 @@ export default function AdminUserEditPage() {
     verified: false,
   });
 
-  useEffect(() => {
-    if (!authLoading && (!isAuthenticated || authUser?.role !== "admin")) {
-      router.push("/");
-    } else if (!authLoading && isAuthenticated) {
-      fetchUser();
-    }
-  }, [authLoading, isAuthenticated, authUser?.role, router, userId]);
-
-  const fetchUser = async () => {
+  const fetchUser = useCallback(async () => {
     try {
       const res = await fetch(`/api/admin/users/${userId}`);
       if (!res.ok) {
@@ -145,7 +139,15 @@ export default function AdminUserEditPage() {
       setError("Failed to load user");
       setLoading(false);
     }
-  };
+  }, [userId]);
+
+  useEffect(() => {
+    if (!authLoading && (!isAuthenticated || authUser?.role !== "admin")) {
+      router.push("/");
+    } else if (!authLoading && isAuthenticated) {
+      fetchUser();
+    }
+  }, [authLoading, isAuthenticated, authUser?.role, router, fetchUser]);
 
   const handleSave = async () => {
     setSaving(true);
@@ -164,22 +166,26 @@ export default function AdminUserEditPage() {
           member: {
             firstName: formData.firstName,
             lastName: formData.lastName,
-            ...(member ? {
-              address: formData.address || null,
-              city: formData.city || null,
-              state: formData.state || null,
-              zip: formData.zip || null,
-              homeCity: formData.homeCity || null,
-            } : {}),
+            ...(member
+              ? {
+                  address: formData.address || null,
+                  city: formData.city || null,
+                  state: formData.state || null,
+                  zip: formData.zip || null,
+                  homeCity: formData.homeCity || null,
+                }
+              : {}),
           },
-          merchant: merchant ? {
-            businessName: formData.businessName,
-            city: formData.merchantCity || null,
-            phone: stripPhoneNumber(formData.merchantPhone) || null,
-            website: formData.website || null,
-            description: formData.description || null,
-            verified: formData.verified,
-          } : null,
+          merchant: merchant
+            ? {
+                businessName: formData.businessName,
+                city: formData.merchantCity || null,
+                phone: stripPhoneNumber(formData.merchantPhone) || null,
+                website: formData.website || null,
+                description: formData.description || null,
+                verified: formData.verified,
+              }
+            : null,
         }),
       });
 
@@ -227,13 +233,14 @@ export default function AdminUserEditPage() {
       ) : (
         <>
           <div className="flex items-center gap-4 mb-6">
-            <Button variant="ghost" size="icon" onClick={() => router.push("/admin/users")}>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => router.push("/admin/users")}
+            >
               <ArrowLeft className="w-4 h-4" />
             </Button>
-            <PageHeader
-              title="Edit User"
-              description={user?.email || ""}
-            />
+            <PageHeader title="Edit User" description={user?.email || ""} />
           </div>
 
           {error && (
@@ -249,13 +256,13 @@ export default function AdminUserEditPage() {
                 <div className="flex items-center gap-4">
                   <Avatar className="h-16 w-16">
                     <AvatarImage src={user?.profilePhotoUrl || undefined} />
-                    <AvatarFallback className="text-lg">{getInitials()}</AvatarFallback>
+                    <AvatarFallback className="text-lg">
+                      {getInitials()}
+                    </AvatarFallback>
                   </Avatar>
                   <div>
                     <CardTitle>Account Details</CardTitle>
-                    <CardDescription>
-                      User ID: {user?.id}
-                    </CardDescription>
+                    <CardDescription>User ID: {user?.id}</CardDescription>
                   </div>
                 </div>
               </CardHeader>
@@ -266,7 +273,9 @@ export default function AdminUserEditPage() {
                     <Input
                       id="firstName"
                       value={formData.firstName}
-                      onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
+                      onChange={(e) =>
+                        setFormData({ ...formData, firstName: e.target.value })
+                      }
                     />
                   </div>
                   <div className="space-y-2">
@@ -274,7 +283,9 @@ export default function AdminUserEditPage() {
                     <Input
                       id="lastName"
                       value={formData.lastName}
-                      onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
+                      onChange={(e) =>
+                        setFormData({ ...formData, lastName: e.target.value })
+                      }
                     />
                   </div>
                 </div>
@@ -285,7 +296,9 @@ export default function AdminUserEditPage() {
                       id="email"
                       type="email"
                       value={formData.email}
-                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                      onChange={(e) =>
+                        setFormData({ ...formData, email: e.target.value })
+                      }
                     />
                   </div>
                   <div className="space-y-2">
@@ -294,7 +307,12 @@ export default function AdminUserEditPage() {
                       id="phone"
                       type="tel"
                       value={formData.phone}
-                      onChange={(e) => setFormData({ ...formData, phone: formatPhoneNumber(e.target.value) })}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          phone: formatPhoneNumber(e.target.value),
+                        })
+                      }
                       placeholder="(425) 451-8599"
                     />
                   </div>
@@ -303,7 +321,12 @@ export default function AdminUserEditPage() {
                   <Label htmlFor="role">Role</Label>
                   <Select
                     value={formData.role}
-                    onValueChange={(value) => setFormData({ ...formData, role: value as "member" | "merchant" | "admin" })}
+                    onValueChange={(value) =>
+                      setFormData({
+                        ...formData,
+                        role: value as "member" | "merchant" | "admin",
+                      })
+                    }
                     disabled={isSelf}
                   >
                     <SelectTrigger id="role">
@@ -316,17 +339,23 @@ export default function AdminUserEditPage() {
                     </SelectContent>
                   </Select>
                   {isSelf && (
-                    <p className="text-xs text-muted-foreground">You cannot change your own role</p>
+                    <p className="text-xs text-muted-foreground">
+                      You cannot change your own role
+                    </p>
                   )}
                 </div>
                 <div className="grid grid-cols-2 gap-4 pt-2 text-sm text-muted-foreground">
                   <div>
                     <span className="font-medium">Created:</span>{" "}
-                    {user?.createdAt ? new Date(user.createdAt).toLocaleString() : "—"}
+                    {user?.createdAt
+                      ? new Date(user.createdAt).toLocaleString()
+                      : "—"}
                   </div>
                   <div>
                     <span className="font-medium">Updated:</span>{" "}
-                    {user?.updatedAt ? new Date(user.updatedAt).toLocaleString() : "—"}
+                    {user?.updatedAt
+                      ? new Date(user.updatedAt).toLocaleString()
+                      : "—"}
                   </div>
                 </div>
               </CardContent>
@@ -337,7 +366,9 @@ export default function AdminUserEditPage() {
               <Card>
                 <CardHeader>
                   <CardTitle>Member Profile</CardTitle>
-                  <CardDescription>Personal information and address</CardDescription>
+                  <CardDescription>
+                    Personal information and address
+                  </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="space-y-2">
@@ -345,7 +376,9 @@ export default function AdminUserEditPage() {
                     <Input
                       id="address"
                       value={formData.address}
-                      onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                      onChange={(e) =>
+                        setFormData({ ...formData, address: e.target.value })
+                      }
                     />
                   </div>
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
@@ -354,7 +387,9 @@ export default function AdminUserEditPage() {
                       <Input
                         id="city"
                         value={formData.city}
-                        onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+                        onChange={(e) =>
+                          setFormData({ ...formData, city: e.target.value })
+                        }
                       />
                     </div>
                     <div className="space-y-2">
@@ -362,7 +397,9 @@ export default function AdminUserEditPage() {
                       <Input
                         id="state"
                         value={formData.state}
-                        onChange={(e) => setFormData({ ...formData, state: e.target.value })}
+                        onChange={(e) =>
+                          setFormData({ ...formData, state: e.target.value })
+                        }
                       />
                     </div>
                     <div className="space-y-2">
@@ -370,7 +407,9 @@ export default function AdminUserEditPage() {
                       <Input
                         id="zip"
                         value={formData.zip}
-                        onChange={(e) => setFormData({ ...formData, zip: e.target.value })}
+                        onChange={(e) =>
+                          setFormData({ ...formData, zip: e.target.value })
+                        }
                       />
                     </div>
                   </div>
@@ -379,7 +418,9 @@ export default function AdminUserEditPage() {
                     <Input
                       id="homeCity"
                       value={formData.homeCity}
-                      onChange={(e) => setFormData({ ...formData, homeCity: e.target.value })}
+                      onChange={(e) =>
+                        setFormData({ ...formData, homeCity: e.target.value })
+                      }
                     />
                   </div>
                 </CardContent>
@@ -400,7 +441,12 @@ export default function AdminUserEditPage() {
                       <Input
                         id="businessName"
                         value={formData.businessName}
-                        onChange={(e) => setFormData({ ...formData, businessName: e.target.value })}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            businessName: e.target.value,
+                          })
+                        }
                       />
                     </div>
                     <div className="space-y-2">
@@ -408,7 +454,12 @@ export default function AdminUserEditPage() {
                       <Input
                         id="merchantCity"
                         value={formData.merchantCity}
-                        onChange={(e) => setFormData({ ...formData, merchantCity: e.target.value })}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            merchantCity: e.target.value,
+                          })
+                        }
                       />
                     </div>
                   </div>
@@ -419,7 +470,12 @@ export default function AdminUserEditPage() {
                         id="merchantPhone"
                         type="tel"
                         value={formData.merchantPhone}
-                        onChange={(e) => setFormData({ ...formData, merchantPhone: formatPhoneNumber(e.target.value) })}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            merchantPhone: formatPhoneNumber(e.target.value),
+                          })
+                        }
                         placeholder="(425) 451-8599"
                       />
                     </div>
@@ -429,7 +485,9 @@ export default function AdminUserEditPage() {
                         id="website"
                         type="url"
                         value={formData.website}
-                        onChange={(e) => setFormData({ ...formData, website: e.target.value })}
+                        onChange={(e) =>
+                          setFormData({ ...formData, website: e.target.value })
+                        }
                         placeholder="https://"
                       />
                     </div>
@@ -439,7 +497,12 @@ export default function AdminUserEditPage() {
                     <Input
                       id="description"
                       value={formData.description}
-                      onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          description: e.target.value,
+                        })
+                      }
                     />
                   </div>
                   <div className="flex items-center justify-between pt-2">
@@ -452,7 +515,9 @@ export default function AdminUserEditPage() {
                     <Switch
                       id="verified"
                       checked={formData.verified}
-                      onCheckedChange={(checked) => setFormData({ ...formData, verified: checked })}
+                      onCheckedChange={(checked) =>
+                        setFormData({ ...formData, verified: checked })
+                      }
                     />
                   </div>
                 </CardContent>
@@ -461,7 +526,10 @@ export default function AdminUserEditPage() {
 
             {/* Actions */}
             <div className="flex items-center gap-3 justify-end">
-              <Button variant="outline" onClick={() => router.push("/admin/users")}>
+              <Button
+                variant="outline"
+                onClick={() => router.push("/admin/users")}
+              >
                 Cancel
               </Button>
               <Button onClick={handleSave} disabled={saving}>
@@ -476,7 +544,6 @@ export default function AdminUserEditPage() {
           </div>
         </>
       )}
-
     </DashboardLayout>
   );
 }

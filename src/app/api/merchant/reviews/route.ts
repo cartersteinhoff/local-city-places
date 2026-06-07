@@ -1,12 +1,15 @@
-import { NextRequest, NextResponse } from "next/server";
+import { desc, eq, sql } from "drizzle-orm";
+import { type NextRequest, NextResponse } from "next/server";
+import { db, members, merchants, reviews, users } from "@/db";
 import { getSession } from "@/lib/auth";
-import { db, reviews, merchants, members, users } from "@/db";
-import { eq, desc, sql } from "drizzle-orm";
 
 export async function GET(request: NextRequest) {
   try {
     const session = await getSession();
-    if (!session || (session.user.role !== "merchant" && session.user.role !== "admin")) {
+    if (
+      !session ||
+      (session.user.role !== "merchant" && session.user.role !== "admin")
+    ) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -18,12 +21,15 @@ export async function GET(request: NextRequest) {
       .limit(1);
 
     if (!merchant) {
-      return NextResponse.json({ error: "Merchant not found" }, { status: 404 });
+      return NextResponse.json(
+        { error: "Merchant not found" },
+        { status: 404 },
+      );
     }
 
     const searchParams = request.nextUrl.searchParams;
-    const page = parseInt(searchParams.get("page") || "1");
-    const limit = parseInt(searchParams.get("limit") || "10");
+    const page = parseInt(searchParams.get("page") || "1", 10);
+    const limit = parseInt(searchParams.get("limit") || "10", 10);
     const offset = (page - 1) * limit;
 
     // Get total count
@@ -55,13 +61,17 @@ export async function GET(request: NextRequest) {
     // Calculate stats
     const avgWordCount =
       reviewsRaw.length > 0
-        ? Math.round(reviewsRaw.reduce((sum, r) => sum + r.wordCount, 0) / reviewsRaw.length)
+        ? Math.round(
+            reviewsRaw.reduce((sum, r) => sum + r.wordCount, 0) /
+              reviewsRaw.length,
+          )
         : 0;
 
     // Since we don't have ratings, we'll use word count as a proxy for "quality"
     // Reviews with 100+ words are considered "detailed/positive"
     const detailedReviews = reviewsRaw.filter((r) => r.wordCount >= 75).length;
-    const detailedPercent = total > 0 ? Math.round((detailedReviews / total) * 100) : 0;
+    const detailedPercent =
+      total > 0 ? Math.round((detailedReviews / total) * 100) : 0;
 
     const formattedReviews = reviewsRaw.map((r) => ({
       id: r.id,
@@ -92,7 +102,7 @@ export async function GET(request: NextRequest) {
     console.error("Reviews API error:", error);
     return NextResponse.json(
       { error: "Internal server error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

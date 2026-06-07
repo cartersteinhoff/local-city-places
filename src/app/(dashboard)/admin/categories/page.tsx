@@ -1,20 +1,17 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import { DashboardLayout } from "@/components/layout";
-import { PageHeader } from "@/components/ui/page-header";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { EmptyState } from "@/components/ui/empty-state";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+  FolderOpen,
+  Loader2,
+  Pencil,
+  Plus,
+  RefreshCw,
+  Trash2,
+} from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { DashboardLayout } from "@/components/layout";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -23,15 +20,18 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { EmptyState } from "@/components/ui/empty-state";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { PageHeader } from "@/components/ui/page-header";
 import {
-  Plus,
-  Pencil,
-  Trash2,
-  Loader2,
-  RefreshCw,
-  FolderOpen,
-} from "lucide-react";
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { useUser } from "@/hooks/use-user";
 import { adminNavItems } from "../nav";
 
@@ -53,7 +53,9 @@ export default function CategoriesPage() {
   const [addDialogOpen, setAddDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [selectedCategory, setSelectedCategory] = useState<CategoryData | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState<CategoryData | null>(
+    null,
+  );
   const [categoryName, setCategoryName] = useState("");
 
   useEffect(() => {
@@ -81,7 +83,7 @@ export default function CategoriesPage() {
     if (!authLoading && isAuthenticated) {
       fetchCategories();
     }
-  }, [authLoading, isAuthenticated]);
+  }, [authLoading, isAuthenticated, fetchCategories]);
 
   const handleAdd = async () => {
     if (!categoryName.trim()) return;
@@ -182,10 +184,22 @@ export default function CategoriesPage() {
               description="Manage business categories for merchants"
             />
             <div className="flex gap-2">
-              <Button variant="outline" size="icon" onClick={fetchCategories} disabled={isLoading}>
-                <RefreshCw className={`w-4 h-4 ${isLoading ? "animate-spin" : ""}`} />
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={fetchCategories}
+                disabled={isLoading}
+              >
+                <RefreshCw
+                  className={`w-4 h-4 ${isLoading ? "animate-spin" : ""}`}
+                />
               </Button>
-              <Button onClick={() => { setCategoryName(""); setAddDialogOpen(true); }}>
+              <Button
+                onClick={() => {
+                  setCategoryName("");
+                  setAddDialogOpen(true);
+                }}
+              >
                 <Plus className="w-4 h-4 mr-2" />
                 Add Category
               </Button>
@@ -204,7 +218,12 @@ export default function CategoriesPage() {
               title="No categories yet"
               description="Create your first category to organize merchants."
               action={
-                <Button onClick={() => { setCategoryName(""); setAddDialogOpen(true); }}>
+                <Button
+                  onClick={() => {
+                    setCategoryName("");
+                    setAddDialogOpen(true);
+                  }}
+                >
                   <Plus className="w-4 h-4 mr-2" />
                   Add Category
                 </Button>
@@ -216,16 +235,24 @@ export default function CategoriesPage() {
                 <TableHeader>
                   <TableRow>
                     <TableHead>Category</TableHead>
-                    <TableHead className="w-[120px] text-center">Merchants</TableHead>
+                    <TableHead className="w-[120px] text-center">
+                      Merchants
+                    </TableHead>
                     <TableHead className="w-[150px]">Created</TableHead>
-                    <TableHead className="w-[100px] text-right">Actions</TableHead>
+                    <TableHead className="w-[100px] text-right">
+                      Actions
+                    </TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {categories.map((category) => (
                     <TableRow key={category.id}>
-                      <TableCell className="font-medium">{category.name}</TableCell>
-                      <TableCell className="text-center">{category.merchantCount}</TableCell>
+                      <TableCell className="font-medium">
+                        {category.name}
+                      </TableCell>
+                      <TableCell className="text-center">
+                        {category.merchantCount}
+                      </TableCell>
                       <TableCell className="text-muted-foreground">
                         {new Date(category.createdAt).toLocaleDateString()}
                       </TableCell>
@@ -278,11 +305,19 @@ export default function CategoriesPage() {
                 />
               </div>
               <DialogFooter>
-                <Button variant="outline" onClick={() => setAddDialogOpen(false)}>
+                <Button
+                  variant="outline"
+                  onClick={() => setAddDialogOpen(false)}
+                >
                   Cancel
                 </Button>
-                <Button onClick={handleAdd} disabled={!categoryName.trim() || processing}>
-                  {processing ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+                <Button
+                  onClick={handleAdd}
+                  disabled={!categoryName.trim() || processing}
+                >
+                  {processing ? (
+                    <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                  ) : null}
                   Add Category
                 </Button>
               </DialogFooter>
@@ -294,9 +329,7 @@ export default function CategoriesPage() {
             <DialogContent>
               <DialogHeader>
                 <DialogTitle>Edit Category</DialogTitle>
-                <DialogDescription>
-                  Update the category name.
-                </DialogDescription>
+                <DialogDescription>Update the category name.</DialogDescription>
               </DialogHeader>
               <div>
                 <Label>Category Name</Label>
@@ -308,11 +341,19 @@ export default function CategoriesPage() {
                 />
               </div>
               <DialogFooter>
-                <Button variant="outline" onClick={() => setEditDialogOpen(false)}>
+                <Button
+                  variant="outline"
+                  onClick={() => setEditDialogOpen(false)}
+                >
                   Cancel
                 </Button>
-                <Button onClick={handleEdit} disabled={!categoryName.trim() || processing}>
-                  {processing ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+                <Button
+                  onClick={handleEdit}
+                  disabled={!categoryName.trim() || processing}
+                >
+                  {processing ? (
+                    <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                  ) : null}
                   Save Changes
                 </Button>
               </DialogFooter>
@@ -325,15 +366,25 @@ export default function CategoriesPage() {
               <DialogHeader>
                 <DialogTitle>Delete Category</DialogTitle>
                 <DialogDescription>
-                  Are you sure you want to delete &quot;{selectedCategory?.name}&quot;? This action cannot be undone.
+                  Are you sure you want to delete &quot;{selectedCategory?.name}
+                  &quot;? This action cannot be undone.
                 </DialogDescription>
               </DialogHeader>
               <DialogFooter>
-                <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>
+                <Button
+                  variant="outline"
+                  onClick={() => setDeleteDialogOpen(false)}
+                >
                   Cancel
                 </Button>
-                <Button variant="destructive" onClick={handleDelete} disabled={processing}>
-                  {processing ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+                <Button
+                  variant="destructive"
+                  onClick={handleDelete}
+                  disabled={processing}
+                >
+                  {processing ? (
+                    <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                  ) : null}
                   Delete
                 </Button>
               </DialogFooter>

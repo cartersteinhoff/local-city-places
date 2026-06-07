@@ -26,7 +26,7 @@ export async function GET(request: NextRequest) {
     .where(and(eq(merchants.phone, phone), eq(merchants.isPublicPage, true)))
     .limit(1);
 
-  if (!merchant || !merchant.city || !merchant.state || !merchant.slug) {
+  if (!merchant?.city || !merchant.state || !merchant.slug) {
     return NextResponse.json({
       found: false,
       error: "No merchant page was found for that phone number.",

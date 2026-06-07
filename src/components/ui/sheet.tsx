@@ -1,8 +1,8 @@
 "use client";
 
-import * as React from "react";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { XIcon } from "lucide-react";
+import type * as React from "react";
 
 import { cn } from "@/lib/utils";
 
@@ -41,7 +41,7 @@ function SheetOverlay({
         "fixed inset-0 z-50 bg-black/70",
         "data-[state=open]:animate-in data-[state=closed]:animate-out",
         "data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
-        className
+        className,
       )}
       {...props}
     />
@@ -71,12 +71,14 @@ function SheetContent({
           "data-[state=open]:animate-in data-[state=closed]:animate-out",
           "data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-bottom",
           "duration-300",
-          className
+          className,
         )}
         {...props}
       >
         {/* Visually hidden title for accessibility */}
-        <DialogPrimitive.Title className="sr-only">{title}</DialogPrimitive.Title>
+        <DialogPrimitive.Title className="sr-only">
+          {title}
+        </DialogPrimitive.Title>
         {/* Drag handle */}
         <div className="flex justify-center pt-3 pb-2">
           <div className="h-1.5 w-12 rounded-full bg-muted-foreground/30" />

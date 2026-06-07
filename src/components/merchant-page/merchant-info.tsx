@@ -1,4 +1,4 @@
-import { Phone, Globe, Tag } from "lucide-react";
+import { Globe, Phone, Tag } from "lucide-react";
 import { formatPhoneNumber } from "@/lib/utils";
 
 interface MerchantInfoProps {
@@ -8,7 +8,12 @@ interface MerchantInfoProps {
   categoryName?: string | null;
 }
 
-export function MerchantInfo({ phone, website, description, categoryName }: MerchantInfoProps) {
+export function MerchantInfo({
+  phone,
+  website,
+  description,
+  categoryName,
+}: MerchantInfoProps) {
   const hasContactInfo = phone || website;
   const hasAbout = description || categoryName;
 
@@ -34,13 +39,17 @@ export function MerchantInfo({ phone, website, description, categoryName }: Merc
             )}
             {website && (
               <a
-                href={website.startsWith("http") ? website : `https://${website}`}
+                href={
+                  website.startsWith("http") ? website : `https://${website}`
+                }
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center gap-3 text-muted-foreground hover:text-foreground transition-colors"
               >
                 <Globe className="w-5 h-5 flex-shrink-0" />
-                <span className="truncate">{website.replace(/^https?:\/\//, "")}</span>
+                <span className="truncate">
+                  {website.replace(/^https?:\/\//, "")}
+                </span>
               </a>
             )}
           </div>
@@ -59,7 +68,9 @@ export function MerchantInfo({ phone, website, description, categoryName }: Merc
       {description && (
         <div className="space-y-3">
           <h2 className="text-lg font-semibold">About</h2>
-          <p className="text-muted-foreground whitespace-pre-wrap">{description}</p>
+          <p className="text-muted-foreground whitespace-pre-wrap">
+            {description}
+          </p>
         </div>
       )}
     </div>

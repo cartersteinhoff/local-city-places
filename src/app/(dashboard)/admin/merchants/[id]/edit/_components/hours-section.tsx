@@ -1,9 +1,15 @@
 "use client";
 
+import { Calendar, ChevronDown, Clock, Copy } from "lucide-react";
 import { useCallback } from "react";
-import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Switch } from "@/components/ui/switch";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -11,16 +17,18 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Clock, ChevronDown, Copy, Calendar } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
 
-const DAYS = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"] as const;
-type Day = typeof DAYS[number];
+const DAYS = [
+  "monday",
+  "tuesday",
+  "wednesday",
+  "thursday",
+  "friday",
+  "saturday",
+  "sunday",
+] as const;
+type Day = (typeof DAYS)[number];
 
 const DAY_LABELS: Record<Day, string> = {
   monday: "Monday",
@@ -86,7 +94,11 @@ export interface Hours {
 }
 
 // Parse stored format "HH:MM-HH:MM" or legacy "H:MM AM - H:MM PM"
-function parseHours(value: string | undefined): { isOpen: boolean; open: string; close: string } {
+function parseHours(value: string | undefined): {
+  isOpen: boolean;
+  open: string;
+  close: string;
+} {
   if (!value || value.toLowerCase() === "closed") {
     return { isOpen: false, open: "09:00", close: "17:00" };
   }
@@ -107,21 +119,33 @@ function parseHours(value: string | undefined): { isOpen: boolean; open: string;
   }
 
   // Try parsing legacy "H:MM AM - H:MM PM" format
-  const matchLegacy = value.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)\s*-\s*(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
+  const matchLegacy = value.match(
+    /^(\d{1,2}):(\d{2})\s*(AM|PM)\s*-\s*(\d{1,2}):(\d{2})\s*(AM|PM)$/i,
+  );
   if (matchLegacy) {
-    const openHour = parseInt(matchLegacy[1]);
+    const openHour = parseInt(matchLegacy[1], 10);
     const openMin = matchLegacy[2];
     const openAmpm = matchLegacy[3].toUpperCase();
-    const closeHour = parseInt(matchLegacy[4]);
+    const closeHour = parseInt(matchLegacy[4], 10);
     const closeMin = matchLegacy[5];
     const closeAmpm = matchLegacy[6].toUpperCase();
 
-    const open24 = openAmpm === "AM"
-      ? (openHour === 12 ? 0 : openHour)
-      : (openHour === 12 ? 12 : openHour + 12);
-    const close24 = closeAmpm === "AM"
-      ? (closeHour === 12 ? 0 : closeHour)
-      : (closeHour === 12 ? 12 : closeHour + 12);
+    const open24 =
+      openAmpm === "AM"
+        ? openHour === 12
+          ? 0
+          : openHour
+        : openHour === 12
+          ? 12
+          : openHour + 12;
+    const close24 =
+      closeAmpm === "AM"
+        ? closeHour === 12
+          ? 0
+          : closeHour
+        : closeHour === 12
+          ? 12
+          : closeHour + 12;
 
     return {
       isOpen: true,
@@ -135,7 +159,11 @@ function parseHours(value: string | undefined): { isOpen: boolean; open: string;
 }
 
 // Format to storage format "HH:MM-HH:MM"
-function formatHours(isOpen: boolean, open: string, close: string): string | undefined {
+function formatHours(
+  isOpen: boolean,
+  open: string,
+  close: string,
+): string | undefined {
   if (!isOpen) return "Closed";
   if (open === "00:00" && close === "23:59") return "24 Hours";
   return `${open}-${close}`;
@@ -166,12 +194,15 @@ interface HoursSectionProps {
 }
 
 export function HoursSection({ value, onChange }: HoursSectionProps) {
-  const updateDay = useCallback((day: Day, isOpen: boolean, open: string, close: string) => {
-    onChange({
-      ...value,
-      [day]: formatHours(isOpen, open, close),
-    });
-  }, [value, onChange]);
+  const updateDay = useCallback(
+    (day: Day, isOpen: boolean, open: string, close: string) => {
+      onChange({
+        ...value,
+        [day]: formatHours(isOpen, open, close),
+      });
+    },
+    [value, onChange],
+  );
 
   const applyToWeekdays = useCallback(() => {
     const mondayValue = value.monday;
@@ -197,14 +228,17 @@ export function HoursSection({ value, onChange }: HoursSectionProps) {
     onChange(newHours);
   }, [value, onChange]);
 
-  const applyPreset = useCallback((preset: typeof PRESETS[number]) => {
-    const formatted = formatHours(true, preset.open, preset.close);
-    const newHours: Hours = {};
-    DAYS.forEach((day) => {
-      newHours[day] = formatted;
-    });
-    onChange(newHours);
-  }, [onChange]);
+  const applyPreset = useCallback(
+    (preset: (typeof PRESETS)[number]) => {
+      const formatted = formatHours(true, preset.open, preset.close);
+      const newHours: Hours = {};
+      DAYS.forEach((day) => {
+        newHours[day] = formatted;
+      });
+      onChange(newHours);
+    },
+    [onChange],
+  );
 
   const setAllClosed = useCallback(() => {
     const newHours: Hours = {};
@@ -288,7 +322,9 @@ export function HoursSection({ value, onChange }: HoursSectionProps) {
               <div className="flex items-center gap-2">
                 <Switch
                   checked={parsed.isOpen}
-                  onCheckedChange={(isOpen) => updateDay(day, isOpen, parsed.open, parsed.close)}
+                  onCheckedChange={(isOpen) =>
+                    updateDay(day, isOpen, parsed.open, parsed.close)
+                  }
                 />
                 <span className="text-xs text-muted-foreground w-10">
                   {parsed.isOpen ? "Open" : "Closed"}
@@ -300,7 +336,9 @@ export function HoursSection({ value, onChange }: HoursSectionProps) {
                 <div className="flex items-center gap-2 flex-1">
                   <Select
                     value={parsed.open}
-                    onValueChange={(open) => updateDay(day, true, open, parsed.close)}
+                    onValueChange={(open) =>
+                      updateDay(day, true, open, parsed.close)
+                    }
                   >
                     <SelectTrigger className="w-[110px]">
                       <SelectValue />
@@ -318,7 +356,9 @@ export function HoursSection({ value, onChange }: HoursSectionProps) {
 
                   <Select
                     value={parsed.close}
-                    onValueChange={(close) => updateDay(day, true, parsed.open, close)}
+                    onValueChange={(close) =>
+                      updateDay(day, true, parsed.open, close)
+                    }
                   >
                     <SelectTrigger className="w-[110px]">
                       <SelectValue />
@@ -344,7 +384,8 @@ export function HoursSection({ value, onChange }: HoursSectionProps) {
       </div>
 
       <p className="text-xs text-muted-foreground">
-        Toggle each day on/off and set opening hours. Use presets for quick setup.
+        Toggle each day on/off and set opening hours. Use presets for quick
+        setup.
       </p>
     </div>
   );

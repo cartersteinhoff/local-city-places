@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
+import { useEffect, useState } from "react";
 import { Footer } from "@/components/footer";
 import { HomeHeader } from "@/components/home-header";
 import { PhotoStripDesign } from "@/components/merchant-page/designs/photo-strip";

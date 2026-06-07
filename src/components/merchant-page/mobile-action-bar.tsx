@@ -1,8 +1,8 @@
 "use client";
 
-import { Phone, Globe, Share2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Globe, Phone, Share2 } from "lucide-react";
 import { useState } from "react";
+import { Button } from "@/components/ui/button";
 
 interface MobileActionBarProps {
   businessName: string;
@@ -10,15 +10,19 @@ interface MobileActionBarProps {
   website?: string | null;
 }
 
-export function MobileActionBar({ businessName, phone, website }: MobileActionBarProps) {
-  const [copied, setCopied] = useState(false);
+export function MobileActionBar({
+  businessName,
+  phone,
+  website,
+}: MobileActionBarProps) {
+  const [_copied, setCopied] = useState(false);
 
   const handleShare = async () => {
     const url = window.location.href;
     if (navigator.share) {
       try {
         await navigator.share({ title: businessName, url });
-      } catch (e) {
+      } catch (_e) {
         // User cancelled
       }
     } else {
@@ -48,14 +52,30 @@ export function MobileActionBar({ businessName, phone, website }: MobileActionBa
             </Button>
           )}
           {website && (
-            <Button variant="outline" className="flex-1 gap-2" size="lg" asChild>
-              <a href={website.startsWith("http") ? website : `https://${website}`} target="_blank" rel="noopener noreferrer">
+            <Button
+              variant="outline"
+              className="flex-1 gap-2"
+              size="lg"
+              asChild
+            >
+              <a
+                href={
+                  website.startsWith("http") ? website : `https://${website}`
+                }
+                target="_blank"
+                rel="noopener noreferrer"
+              >
                 <Globe className="w-5 h-5" />
                 Website
               </a>
             </Button>
           )}
-          <Button variant="outline" size="lg" className="px-4" onClick={handleShare}>
+          <Button
+            variant="outline"
+            size="lg"
+            className="px-4"
+            onClick={handleShare}
+          >
             <Share2 className="w-5 h-5" />
           </Button>
         </div>

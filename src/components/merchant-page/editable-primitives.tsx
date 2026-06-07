@@ -1,15 +1,15 @@
 "use client";
 
-import { useState, useRef, useEffect, ReactNode } from "react";
-import { useEditor } from "./editor-context";
-import { Pencil, Upload, Plus, Trash2, GripVertical } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { Pencil, Upload } from "lucide-react";
+import { type ReactNode, useEffect, useRef, useState } from "react";
 import { Input } from "@/components/ui/input";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { cn } from "@/lib/utils";
+import { useEditor } from "./editor-context";
 
 // =============================================================================
 // EDITABLE TEXT
@@ -50,7 +50,7 @@ export function EditableText({
   const adjustHeight = () => {
     const textarea = textareaRef.current;
     if (textarea) {
-      textarea.style.height = 'auto';
+      textarea.style.height = "auto";
       textarea.style.height = `${textarea.scrollHeight}px`;
     }
   };
@@ -61,13 +61,13 @@ export function EditableText({
       textareaRef.current.select();
       adjustHeight();
     }
-  }, [isEditing]);
+  }, [isEditing, adjustHeight]);
 
   useEffect(() => {
     if (isEditing) {
       adjustHeight();
     }
-  }, [localValue, isEditing]);
+  }, [isEditing, adjustHeight]);
 
   const handleSave = () => {
     setIsEditing(false);
@@ -106,7 +106,7 @@ export function EditableText({
         rows={1}
         className={cn(
           "w-full bg-transparent border-2 border-[#D4AF37]/50 focus:border-[#D4AF37] rounded-md px-2 py-1 outline-none resize-none overflow-hidden",
-          inputClassName
+          inputClassName,
         )}
       />
     );
@@ -118,7 +118,8 @@ export function EditableText({
       className={cn(
         className,
         "cursor-pointer group relative",
-        showEditHints && "hover:ring-1 hover:ring-[#D4AF37]/50 hover:ring-offset-2 hover:ring-offset-transparent rounded"
+        showEditHints &&
+          "hover:ring-1 hover:ring-[#D4AF37]/50 hover:ring-offset-2 hover:ring-offset-transparent rounded",
       )}
       onClick={() => setIsEditing(true)}
     >
@@ -157,11 +158,13 @@ export function EditableImage({
   aspectRatio,
   onUpload,
 }: EditableImageProps) {
-  const { editable, onUpdate, onLogoUpload, onPhotoUpload, showEditHints } = useEditor();
+  const { editable, onUpdate, onLogoUpload, onPhotoUpload, showEditHints } =
+    useEditor();
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const uploadHandler = onUpload || (field === "logoUrl" ? onLogoUpload : onPhotoUpload);
+  const uploadHandler =
+    onUpload || (field === "logoUrl" ? onLogoUpload : onPhotoUpload);
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -195,7 +198,7 @@ export function EditableImage({
       <div
         className={cn(
           "border-2 border-dashed border-[#D4AF37]/30 flex flex-col items-center justify-center gap-2 cursor-pointer hover:border-[#D4AF37]/60 hover:bg-[#D4AF37]/5 transition-colors",
-          className
+          className,
         )}
         style={{ aspectRatio }}
         onClick={handleClick}
@@ -215,13 +218,7 @@ export function EditableImage({
 
   // View mode with image
   if (!editable) {
-    return (
-      <img
-        src={value!}
-        alt={alt}
-        className={className}
-      />
-    );
+    return <img src={value!} alt={alt} className={className} />;
   }
 
   // Edit mode with image
@@ -231,11 +228,7 @@ export function EditableImage({
       style={{ aspectRatio }}
       onClick={handleClick}
     >
-      <img
-        src={value!}
-        alt={alt}
-        className="w-full h-full object-cover"
-      />
+      <img src={value!} alt={alt} className="w-full h-full object-cover" />
       {showEditHints && (
         <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
           {isUploading ? (
@@ -292,12 +285,7 @@ export function EditableLink({
   if (!editable) {
     if (!href && !value) return null;
     return (
-      <a
-        href={href || value}
-        className={className}
-        target={target}
-        rel={rel}
-      >
+      <a href={href || value} className={className} target={target} rel={rel}>
         {children}
       </a>
     );
@@ -311,7 +299,7 @@ export function EditableLink({
           className={cn(
             className,
             "cursor-pointer",
-            showEditHints && "hover:ring-1 hover:ring-[#D4AF37]/50 rounded"
+            showEditHints && "hover:ring-1 hover:ring-[#D4AF37]/50 rounded",
           )}
           onClick={(e) => e.preventDefault()}
         >
@@ -375,7 +363,8 @@ export function EditableSelect({
           className={cn(
             className,
             "cursor-pointer text-left",
-            showEditHints && "hover:ring-1 hover:ring-[#D4AF37]/50 rounded px-2 py-1"
+            showEditHints &&
+              "hover:ring-1 hover:ring-[#D4AF37]/50 rounded px-2 py-1",
           )}
         >
           {displayValue}
@@ -388,7 +377,7 @@ export function EditableSelect({
               key={option.value}
               className={cn(
                 "w-full text-left px-3 py-2 hover:bg-muted transition-colors",
-                option.value === value && "bg-muted"
+                option.value === value && "bg-muted",
               )}
               onClick={() => onUpdate(field, option.value)}
             >

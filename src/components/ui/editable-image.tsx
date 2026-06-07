@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useRef, useCallback } from "react";
-import { cn } from "@/lib/utils";
-import { Camera, Loader2, X, Upload } from "lucide-react";
+import { Camera, Loader2, Upload, X } from "lucide-react";
 import Image from "next/image";
+import { useCallback, useRef, useState } from "react";
+import { cn } from "@/lib/utils";
 
 interface EditableImageProps {
   value: string | null | undefined;
@@ -35,29 +35,32 @@ export function EditableImage({
   const [error, setError] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const handleFile = useCallback(async (file: File) => {
-    if (!file.type.startsWith("image/")) {
-      setError("Please select an image file");
-      return;
-    }
+  const handleFile = useCallback(
+    async (file: File) => {
+      if (!file.type.startsWith("image/")) {
+        setError("Please select an image file");
+        return;
+      }
 
-    if (file.size > 10 * 1024 * 1024) {
-      setError("Image must be less than 10MB");
-      return;
-    }
+      if (file.size > 10 * 1024 * 1024) {
+        setError("Image must be less than 10MB");
+        return;
+      }
 
-    setIsUploading(true);
-    setError(null);
+      setIsUploading(true);
+      setError(null);
 
-    try {
-      const url = await onUpload(file);
-      onChange(url);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Upload failed");
-    } finally {
-      setIsUploading(false);
-    }
-  }, [onUpload, onChange]);
+      try {
+        const url = await onUpload(file);
+        onChange(url);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Upload failed");
+      } finally {
+        setIsUploading(false);
+      }
+    },
+    [onUpload, onChange],
+  );
 
   const handleClick = () => {
     inputRef.current?.click();
@@ -111,7 +114,7 @@ export function EditableImage({
         "transition-all duration-150",
         isDragging && "ring-2 ring-blue-500 ring-offset-2",
         aspectClasses[aspectRatio],
-        className
+        className,
       )}
     >
       <input
@@ -132,7 +135,7 @@ export function EditableImage({
             height={height}
             className={cn(
               "object-cover transition-transform group-hover:scale-105",
-              width && height ? "" : "absolute inset-0"
+              width && height ? "" : "absolute inset-0",
             )}
           />
           {/* Hover overlay */}

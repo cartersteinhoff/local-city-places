@@ -1,17 +1,17 @@
-import { NextRequest, NextResponse } from "next/server";
-import { getSession, createMagicLinkToken } from "@/lib/auth";
+import { type NextRequest, NextResponse } from "next/server";
+import { createMagicLinkToken, getSession } from "@/lib/auth";
+import { sendMerchantWelcomeEmail } from "@/lib/email";
 import {
   createMerchantAccount,
   validateEmailForMerchant,
 } from "@/lib/merchant-onboarding";
-import { sendMerchantWelcomeEmail } from "@/lib/email";
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
 
 export async function POST(request: NextRequest) {
   try {
     const session = await getSession();
-    if (!session || session.user.role !== "admin") {
+    if (session?.user.role !== "admin") {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -34,7 +34,7 @@ export async function POST(request: NextRequest) {
     if (!email || !businessName) {
       return NextResponse.json(
         { error: "Email and business name are required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -43,7 +43,7 @@ export async function POST(request: NextRequest) {
     if (validationError) {
       return NextResponse.json(
         { error: validationError.message, errorType: validationError.type },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -90,7 +90,8 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error("Error creating merchant:", error);
-    const errorMessage = error instanceof Error ? error.message : "Failed to create merchant";
+    const errorMessage =
+      error instanceof Error ? error.message : "Failed to create merchant";
     return NextResponse.json({ error: errorMessage }, { status: 500 });
   }
 }

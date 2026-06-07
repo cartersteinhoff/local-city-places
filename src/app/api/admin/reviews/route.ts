@@ -1,19 +1,22 @@
-import { NextRequest, NextResponse } from "next/server";
+import { and, desc, eq, ilike, isNotNull, isNull, or, sql } from "drizzle-orm";
+import { type NextRequest, NextResponse } from "next/server";
 import { db } from "@/db";
-import { reviews, merchants, reviewPhotos } from "@/db/schema";
-import { eq, desc, sql, and, isNull, isNotNull, ilike, or } from "drizzle-orm";
+import { merchants, reviewPhotos, reviews } from "@/db/schema";
 import { getSession } from "@/lib/auth";
 
 export async function GET(request: NextRequest) {
   try {
     const session = await getSession();
-    if (!session || session.user.role !== "admin") {
+    if (session?.user.role !== "admin") {
       return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
     }
 
     const { searchParams } = new URL(request.url);
-    const page = Math.max(1, parseInt(searchParams.get("page") || "1"));
-    const limit = Math.min(100, Math.max(1, parseInt(searchParams.get("limit") || "20")));
+    const page = Math.max(1, parseInt(searchParams.get("page") || "1", 10));
+    const limit = Math.min(
+      100,
+      Math.max(1, parseInt(searchParams.get("limit") || "20", 10)),
+    );
     const offset = (page - 1) * limit;
     const status = searchParams.get("status") || "";
     const search = searchParams.get("search") || "";
@@ -23,7 +26,9 @@ export async function GET(request: NextRequest) {
     const conditions: any[] = [];
 
     if (status && status !== "all") {
-      conditions.push(eq(reviews.status, status as "pending" | "approved" | "rejected"));
+      conditions.push(
+        eq(reviews.status, status as "pending" | "approved" | "rejected"),
+      );
     }
 
     if (source === "migrated") {
@@ -38,8 +43,8 @@ export async function GET(request: NextRequest) {
           ilike(reviews.reviewerFirstName, `%${search}%`),
           ilike(reviews.reviewerLastName, `%${search}%`),
           ilike(reviews.content, `%${search}%`),
-          ilike(merchants.businessName, `%${search}%`)
-        )
+          ilike(merchants.businessName, `%${search}%`),
+        ),
       );
     }
 
@@ -122,7 +127,7 @@ export async function GET(request: NextRequest) {
     console.error("Error fetching reviews:", error);
     return NextResponse.json(
       { error: "Failed to fetch reviews" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

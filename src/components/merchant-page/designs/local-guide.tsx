@@ -12,8 +12,8 @@ import {
   Award,
   CalendarDays,
   Camera,
-  ChevronLeft,
   Check,
+  ChevronLeft,
   ChevronRight,
   Clock,
   Copy,
@@ -577,17 +577,15 @@ export function LocalGuideDesign({
         setLightboxIndex(null);
       }
       if (event.key === "ArrowLeft" && cleanPhotos.length > 1) {
-        setLightboxIndex(
-          (current) =>
-            current !== null
-              ? (current - 1 + cleanPhotos.length) % cleanPhotos.length
-              : current,
+        setLightboxIndex((current) =>
+          current !== null
+            ? (current - 1 + cleanPhotos.length) % cleanPhotos.length
+            : current,
         );
       }
       if (event.key === "ArrowRight" && cleanPhotos.length > 1) {
-        setLightboxIndex(
-          (current) =>
-            current !== null ? (current + 1) % cleanPhotos.length : current,
+        setLightboxIndex((current) =>
+          current !== null ? (current + 1) % cleanPhotos.length : current,
         );
       }
     };

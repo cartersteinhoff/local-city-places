@@ -1,8 +1,8 @@
-import { NextRequest, NextResponse } from "next/server";
+import { eq } from "drizzle-orm";
+import { type NextRequest, NextResponse } from "next/server";
+import { db, users } from "@/db";
 import { createMagicLinkToken } from "@/lib/auth";
 import { sendMagicLinkEmail } from "@/lib/email";
-import { db, users } from "@/db";
-import { eq } from "drizzle-orm";
 
 // Rate limiting: simple in-memory store (use Redis in production)
 const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
@@ -32,10 +32,7 @@ export async function POST(request: NextRequest) {
     const { email, callbackUrl } = body;
 
     if (!email || typeof email !== "string") {
-      return NextResponse.json(
-        { error: "Email is required" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Email is required" }, { status: 400 });
     }
 
     const normalizedEmail = email.toLowerCase().trim();
@@ -45,7 +42,7 @@ export async function POST(request: NextRequest) {
     if (!emailRegex.test(normalizedEmail)) {
       return NextResponse.json(
         { error: "Invalid email format" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -53,7 +50,7 @@ export async function POST(request: NextRequest) {
     if (isRateLimited(normalizedEmail)) {
       return NextResponse.json(
         { error: "Too many requests. Please try again later." },
-        { status: 429 }
+        { status: 429 },
       );
     }
 
@@ -69,7 +66,8 @@ export async function POST(request: NextRequest) {
       // Return same success message to prevent email enumeration
       return NextResponse.json({
         success: true,
-        message: "If you have an account, check your email for the sign-in link",
+        message:
+          "If you have an account, check your email for the sign-in link",
       });
     }
 
@@ -87,7 +85,7 @@ export async function POST(request: NextRequest) {
     console.error("Magic link error:", error);
     return NextResponse.json(
       { error: "Failed to send magic link" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

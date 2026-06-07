@@ -1,8 +1,8 @@
-import { clsx, type ClassValue } from "clsx"
-import { twMerge } from "tailwind-merge"
+import { type ClassValue, clsx } from "clsx";
+import { twMerge } from "tailwind-merge";
 
 export function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs))
+  return twMerge(clsx(inputs));
 }
 
 /**
@@ -59,7 +59,11 @@ export function generateMerchantSlug(businessName: string, id: string): string {
  * @param slug - Merchant slug
  * @returns Full URL path (e.g., "/business/denver/co/cobblestone-auto-spa-abc12345")
  */
-export function getMerchantPageUrl(city: string, state: string, slug: string): string {
+export function getMerchantPageUrl(
+  city: string,
+  state: string,
+  slug: string,
+): string {
   const citySlug = slugify(city);
   const stateSlug = state.toLowerCase();
   return `/business/${citySlug}/${stateSlug}/${slug}`;
@@ -96,10 +100,10 @@ export function formatHoursDisplay(value: string | undefined): string {
       return `${h12}:${m.toString().padStart(2, "0")} ${ampm}`;
     };
 
-    const openH = parseInt(match[1]);
-    const openM = parseInt(match[2]);
-    const closeH = parseInt(match[3]);
-    const closeM = parseInt(match[4]);
+    const openH = parseInt(match[1], 10);
+    const openM = parseInt(match[2], 10);
+    const closeH = parseInt(match[3], 10);
+    const closeM = parseInt(match[4], 10);
 
     if (openH === 0 && openM === 0 && closeH === 23 && closeM === 59) {
       return "24 Hours";

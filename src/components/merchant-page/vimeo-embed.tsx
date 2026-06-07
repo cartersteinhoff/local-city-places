@@ -18,10 +18,11 @@ export function VimeoEmbed({ url, title = "Featured Video" }: VimeoEmbedProps) {
 
   return (
     <div className="space-y-3">
-      {title && (
-        <h2 className="text-lg font-semibold">{title}</h2>
-      )}
-      <div className="relative w-full overflow-hidden rounded-lg bg-muted" style={{ aspectRatio: "16/9" }}>
+      {title && <h2 className="text-lg font-semibold">{title}</h2>}
+      <div
+        className="relative w-full overflow-hidden rounded-lg bg-muted"
+        style={{ aspectRatio: "16/9" }}
+      >
         <iframe
           src={embedUrl}
           className="absolute inset-0 w-full h-full"

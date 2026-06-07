@@ -8,13 +8,27 @@
  * Elegant script and serif typography.
  */
 
+import {
+  Clock,
+  Globe,
+  Heart,
+  Image,
+  MapPin,
+  Navigation,
+  Phone,
+  Share2,
+  Star,
+} from "lucide-react";
 import { Cormorant_Garamond, Great_Vibes } from "next/font/google";
+import { useState } from "react";
 import { Facebook, Instagram } from "@/components/icons/social-icons";
-import { MapPin, Phone, Globe, Share2, Star, Heart, Clock, Navigation, Image } from "lucide-react";
 import { formatPhoneNumber } from "@/lib/utils";
 import { extractVimeoId, getVimeoEmbedUrl } from "@/lib/vimeo";
-import { useState } from "react";
-import { GoogleMapEmbed, getGoogleMapsDirectionsUrl, formatFullAddress } from "../google-map-embed";
+import {
+  formatFullAddress,
+  GoogleMapEmbed,
+  getGoogleMapsDirectionsUrl,
+} from "../google-map-embed";
 
 const cormorant = Cormorant_Garamond({
   weight: ["300", "400", "500", "600"],
@@ -83,7 +97,14 @@ export function ParisianEleganceDesign({
   const location = [city, state].filter(Boolean).join(", ");
   const fullAddress = formatFullAddress(streetAddress, city, state, zipCode);
   const videoId = vimeoUrl ? extractVimeoId(vimeoUrl) : null;
-  const directionsUrl = getGoogleMapsDirectionsUrl(businessName, streetAddress, city, state, zipCode, googlePlaceId);
+  const directionsUrl = getGoogleMapsDirectionsUrl(
+    businessName,
+    streetAddress,
+    city,
+    state,
+    zipCode,
+    googlePlaceId,
+  );
 
   const initials = businessName
     .split(" ")
@@ -104,20 +125,23 @@ export function ParisianEleganceDesign({
   };
 
   return (
-    <div className="min-h-screen text-[#2C1810]" style={{
-      background: `
+    <div
+      className="min-h-screen text-[#2C1810]"
+      style={{
+        background: `
         radial-gradient(ellipse at top, rgba(184, 134, 11, 0.06) 0%, transparent 50%),
         radial-gradient(ellipse at bottom right, rgba(232, 213, 196, 0.4) 0%, transparent 40%),
         radial-gradient(ellipse at bottom left, rgba(232, 213, 196, 0.4) 0%, transparent 40%),
         linear-gradient(to bottom, #FDF8F5, #FAF5F0)
-      `
-    }}>
+      `,
+      }}
+    >
       {/* French damask/fleur pattern overlay */}
       <div
         className="fixed inset-0 pointer-events-none opacity-[0.06]"
         style={{
           backgroundImage: `url("data:image/svg+xml,%3Csvg width='48' height='48' viewBox='0 0 48 48' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' stroke='%23B8860B' stroke-width='0.8'%3E%3Cpath d='M24 4 Q28 12 24 20 Q20 12 24 4'/%3E%3Cpath d='M24 28 Q28 36 24 44 Q20 36 24 28'/%3E%3Cpath d='M4 24 Q12 28 20 24 Q12 20 4 24'/%3E%3Cpath d='M28 24 Q36 28 44 24 Q36 20 28 24'/%3E%3Ccircle cx='24' cy='24' r='3'/%3E%3Cpath d='M12 12 Q18 18 12 24 Q6 18 12 12'/%3E%3Cpath d='M36 12 Q42 18 36 24 Q30 18 36 12'/%3E%3Cpath d='M12 24 Q18 30 12 36 Q6 30 12 24'/%3E%3Cpath d='M36 24 Q42 30 36 36 Q30 30 36 24'/%3E%3C/g%3E%3C/svg%3E")`,
-          backgroundSize: '48px 48px',
+          backgroundSize: "48px 48px",
         }}
       />
 
@@ -129,7 +153,11 @@ export function ParisianEleganceDesign({
         <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Heart className="w-5 h-5 text-[#B8860B]" />
-            <span className={`text-sm tracking-widest uppercase text-[#B8860B]/70 ${cormorant.className}`}>Local City Places</span>
+            <span
+              className={`text-sm tracking-widest uppercase text-[#B8860B]/70 ${cormorant.className}`}
+            >
+              Local City Places
+            </span>
           </div>
           <button
             onClick={handleShare}
@@ -146,19 +174,49 @@ export function ParisianEleganceDesign({
         <div className="max-w-6xl mx-auto px-4">
           <div className="scrollbar-x-site scrollbar-x-parisian flex items-center justify-center gap-1 sm:gap-2 overflow-x-auto py-2">
             {aboutStory && (
-              <a href="#story" className={`px-3 py-2 text-xs tracking-widest uppercase text-[#B8860B]/60 hover:text-[#B8860B] transition-all ${cormorant.className}`}>Story</a>
+              <a
+                href="#story"
+                className={`px-3 py-2 text-xs tracking-widest uppercase text-[#B8860B]/60 hover:text-[#B8860B] transition-all ${cormorant.className}`}
+              >
+                Story
+              </a>
             )}
             {hours && Object.values(hours).some(Boolean) && (
-              <a href="#hours" className={`px-3 py-2 text-xs tracking-widest uppercase text-[#B8860B]/60 hover:text-[#B8860B] transition-all ${cormorant.className}`}>Hours</a>
+              <a
+                href="#hours"
+                className={`px-3 py-2 text-xs tracking-widest uppercase text-[#B8860B]/60 hover:text-[#B8860B] transition-all ${cormorant.className}`}
+              >
+                Hours
+              </a>
             )}
-            <a href="#location" className={`px-3 py-2 text-xs tracking-widest uppercase text-[#B8860B]/60 hover:text-[#B8860B] transition-all ${cormorant.className}`}>Location</a>
+            <a
+              href="#location"
+              className={`px-3 py-2 text-xs tracking-widest uppercase text-[#B8860B]/60 hover:text-[#B8860B] transition-all ${cormorant.className}`}
+            >
+              Location
+            </a>
             {services && services.length > 0 && (
-              <a href="#services" className={`px-3 py-2 text-xs tracking-widest uppercase text-[#B8860B]/60 hover:text-[#B8860B] transition-all ${cormorant.className}`}>Services</a>
+              <a
+                href="#services"
+                className={`px-3 py-2 text-xs tracking-widest uppercase text-[#B8860B]/60 hover:text-[#B8860B] transition-all ${cormorant.className}`}
+              >
+                Services
+              </a>
             )}
             {photos && photos.length > 0 && (
-              <a href="#gallery" className={`px-3 py-2 text-xs tracking-widest uppercase text-[#B8860B]/60 hover:text-[#B8860B] transition-all ${cormorant.className}`}>Gallery</a>
+              <a
+                href="#gallery"
+                className={`px-3 py-2 text-xs tracking-widest uppercase text-[#B8860B]/60 hover:text-[#B8860B] transition-all ${cormorant.className}`}
+              >
+                Gallery
+              </a>
             )}
-            <a href="#reviews" className={`px-3 py-2 text-xs tracking-widest uppercase text-[#B8860B]/60 hover:text-[#B8860B] transition-all ${cormorant.className}`}>Reviews</a>
+            <a
+              href="#reviews"
+              className={`px-3 py-2 text-xs tracking-widest uppercase text-[#B8860B]/60 hover:text-[#B8860B] transition-all ${cormorant.className}`}
+            >
+              Reviews
+            </a>
           </div>
         </div>
       </nav>
@@ -168,29 +226,60 @@ export function ParisianEleganceDesign({
         <div className="max-w-6xl mx-auto px-4 py-4">
           <div className="flex flex-wrap items-center justify-center gap-8">
             {phone && (
-              <a href={`tel:${phone}`} className="flex items-center gap-3 hover:opacity-80 transition-opacity">
+              <a
+                href={`tel:${phone}`}
+                className="flex items-center gap-3 hover:opacity-80 transition-opacity"
+              >
                 <Phone className="w-5 h-5 text-[#B8860B]" />
                 <div>
-                  <p className="text-[10px] uppercase tracking-widest text-[#B8860B]/70">Telephone</p>
-                  <p className={`font-medium ${cormorant.className}`}>{formatPhoneNumber(phone)}</p>
+                  <p className="text-[10px] uppercase tracking-widest text-[#B8860B]/70">
+                    Telephone
+                  </p>
+                  <p className={`font-medium ${cormorant.className}`}>
+                    {formatPhoneNumber(phone)}
+                  </p>
                 </div>
               </a>
             )}
             {website && (
-              <a href={website.startsWith("http") ? website : `https://${website}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
+              <a
+                href={
+                  website.startsWith("http") ? website : `https://${website}`
+                }
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-3 hover:opacity-80 transition-opacity"
+              >
                 <Globe className="w-5 h-5 text-[#B8860B]" />
                 <div>
-                  <p className="text-[10px] uppercase tracking-widest text-[#B8860B]/70">Website</p>
-                  <p className={`font-medium ${cormorant.className}`}>{website.replace(/^https?:\/\//, "")}</p>
+                  <p className="text-[10px] uppercase tracking-widest text-[#B8860B]/70">
+                    Website
+                  </p>
+                  <p className={`font-medium ${cormorant.className}`}>
+                    {website.replace(/^https?:\/\//, "")}
+                  </p>
                 </div>
               </a>
             )}
             {(fullAddress || location) && (
-              <a href={directionsUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
+              <a
+                href={directionsUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-3 hover:opacity-80 transition-opacity"
+              >
                 <MapPin className="w-5 h-5 text-[#B8860B]" />
                 <div>
-                  <p className="text-[10px] uppercase tracking-widest text-[#B8860B]/70">Location</p>
-                  <p className={`font-medium whitespace-nowrap ${cormorant.className}`}>{[streetAddress, city, state, zipCode].filter(Boolean).join(", ") || location}</p>
+                  <p className="text-[10px] uppercase tracking-widest text-[#B8860B]/70">
+                    Location
+                  </p>
+                  <p
+                    className={`font-medium whitespace-nowrap ${cormorant.className}`}
+                  >
+                    {[streetAddress, city, state, zipCode]
+                      .filter(Boolean)
+                      .join(", ") || location}
+                  </p>
                 </div>
               </a>
             )}
@@ -208,27 +297,59 @@ export function ParisianEleganceDesign({
               <div className="inline-block mb-8">
                 <div className="relative">
                   {/* Decorative corners */}
-                  <svg className="absolute -top-4 -left-4 w-8 h-8 text-[#B8860B]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1">
+                  <svg
+                    className="absolute -top-4 -left-4 w-8 h-8 text-[#B8860B]"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1"
+                  >
                     <path d="M2 12 C2 6, 6 2, 12 2" />
                     <path d="M2 8 C2 4, 4 2, 8 2" />
                   </svg>
-                  <svg className="absolute -top-4 -right-4 w-8 h-8 text-[#B8860B] rotate-90" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1">
+                  <svg
+                    className="absolute -top-4 -right-4 w-8 h-8 text-[#B8860B] rotate-90"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1"
+                  >
                     <path d="M2 12 C2 6, 6 2, 12 2" />
                     <path d="M2 8 C2 4, 4 2, 8 2" />
                   </svg>
-                  <svg className="absolute -bottom-4 -left-4 w-8 h-8 text-[#B8860B] -rotate-90" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1">
+                  <svg
+                    className="absolute -bottom-4 -left-4 w-8 h-8 text-[#B8860B] -rotate-90"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1"
+                  >
                     <path d="M2 12 C2 6, 6 2, 12 2" />
                     <path d="M2 8 C2 4, 4 2, 8 2" />
                   </svg>
-                  <svg className="absolute -bottom-4 -right-4 w-8 h-8 text-[#B8860B] rotate-180" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1">
+                  <svg
+                    className="absolute -bottom-4 -right-4 w-8 h-8 text-[#B8860B] rotate-180"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1"
+                  >
                     <path d="M2 12 C2 6, 6 2, 12 2" />
                     <path d="M2 8 C2 4, 4 2, 8 2" />
                   </svg>
                   <div className="w-28 h-28 rounded-full bg-white border-2 border-[#B8860B]/30 flex items-center justify-center overflow-hidden shadow-lg">
                     {logoUrl ? (
-                      <img src={logoUrl} alt={businessName} className="w-full h-full object-cover" />
+                      <img
+                        src={logoUrl}
+                        alt={businessName}
+                        className="w-full h-full object-cover"
+                      />
                     ) : (
-                      <span className={`text-4xl text-[#B8860B] ${greatVibes.className}`}>{initials}</span>
+                      <span
+                        className={`text-4xl text-[#B8860B] ${greatVibes.className}`}
+                      >
+                        {initials}
+                      </span>
                     )}
                   </div>
                 </div>
@@ -237,7 +358,9 @@ export function ParisianEleganceDesign({
               {/* Category */}
               {categoryName && (
                 <div className="mb-4">
-                  <span className={`inline-flex items-center gap-3 text-sm tracking-widest uppercase text-[#B8860B] ${cormorant.className}`}>
+                  <span
+                    className={`inline-flex items-center gap-3 text-sm tracking-widest uppercase text-[#B8860B] ${cormorant.className}`}
+                  >
                     <span className="w-8 h-px bg-[#B8860B]/30" />
                     {categoryName}
                     <span className="w-8 h-px bg-[#B8860B]/30" />
@@ -246,13 +369,17 @@ export function ParisianEleganceDesign({
               )}
 
               {/* Business Name */}
-              <h1 className={`text-5xl sm:text-6xl lg:text-7xl mb-6 leading-tight text-[#2C1810] ${greatVibes.className}`}>
+              <h1
+                className={`text-5xl sm:text-6xl lg:text-7xl mb-6 leading-tight text-[#2C1810] ${greatVibes.className}`}
+              >
                 {businessName}
               </h1>
 
               {/* Description */}
               {description && (
-                <p className={`text-lg text-[#2C1810]/70 leading-relaxed max-w-lg mx-auto lg:mx-0 mb-10 italic ${cormorant.className}`}>
+                <p
+                  className={`text-lg text-[#2C1810]/70 leading-relaxed max-w-lg mx-auto lg:mx-0 mb-10 italic ${cormorant.className}`}
+                >
                   {description}
                 </p>
               )}
@@ -260,18 +387,35 @@ export function ParisianEleganceDesign({
               {/* CTAs */}
               <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
                 {phone && (
-                  <a href={`tel:${phone}`} className={`inline-flex items-center justify-center gap-3 px-8 py-4 bg-[#B8860B] text-white font-medium hover:bg-[#9A7209] transition-colors cursor-pointer rounded-full ${cormorant.className}`}>
+                  <a
+                    href={`tel:${phone}`}
+                    className={`inline-flex items-center justify-center gap-3 px-8 py-4 bg-[#B8860B] text-white font-medium hover:bg-[#9A7209] transition-colors cursor-pointer rounded-full ${cormorant.className}`}
+                  >
                     <Phone className="w-5 h-5" />
                     Call Now
                   </a>
                 )}
                 {website && (
-                  <a href={website.startsWith("http") ? website : `https://${website}`} target="_blank" rel="noopener noreferrer" className={`inline-flex items-center justify-center gap-3 px-8 py-4 border-2 border-[#B8860B] text-[#B8860B] hover:bg-[#B8860B]/10 transition-colors cursor-pointer rounded-full ${cormorant.className}`}>
+                  <a
+                    href={
+                      website.startsWith("http")
+                        ? website
+                        : `https://${website}`
+                    }
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={`inline-flex items-center justify-center gap-3 px-8 py-4 border-2 border-[#B8860B] text-[#B8860B] hover:bg-[#B8860B]/10 transition-colors cursor-pointer rounded-full ${cormorant.className}`}
+                  >
                     <Globe className="w-5 h-5" />
                     Visit Website
                   </a>
                 )}
-                <a href={directionsUrl} target="_blank" rel="noopener noreferrer" className={`inline-flex items-center justify-center gap-3 px-8 py-4 border-2 border-[#B8860B] text-[#B8860B] hover:bg-[#B8860B]/10 transition-colors cursor-pointer rounded-full ${cormorant.className}`}>
+                <a
+                  href={directionsUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={`inline-flex items-center justify-center gap-3 px-8 py-4 border-2 border-[#B8860B] text-[#B8860B] hover:bg-[#B8860B]/10 transition-colors cursor-pointer rounded-full ${cormorant.className}`}
+                >
                   <Navigation className="w-5 h-5" />
                   Directions
                 </a>
@@ -283,32 +427,139 @@ export function ParisianEleganceDesign({
               <div className="flex justify-center lg:justify-end">
                 <div className="relative">
                   {/* Ornate flourish frame - top left */}
-                  <svg className="absolute -top-8 -left-8 w-20 h-20 text-[#B8860B]" viewBox="0 0 80 80" fill="none">
-                    <path d="M40 10 Q20 10 15 25 Q10 40 15 50 Q5 45 5 30 Q5 15 20 8 Q35 1 50 5" stroke="currentColor" strokeWidth="1.5" fill="none" />
-                    <path d="M10 40 Q10 20 25 15" stroke="currentColor" strokeWidth="1" fill="none" />
-                    <circle cx="50" cy="5" r="2" fill="currentColor" opacity="0.6" />
-                    <circle cx="5" cy="30" r="1.5" fill="currentColor" opacity="0.4" />
+                  <svg
+                    className="absolute -top-8 -left-8 w-20 h-20 text-[#B8860B]"
+                    viewBox="0 0 80 80"
+                    fill="none"
+                  >
+                    <path
+                      d="M40 10 Q20 10 15 25 Q10 40 15 50 Q5 45 5 30 Q5 15 20 8 Q35 1 50 5"
+                      stroke="currentColor"
+                      strokeWidth="1.5"
+                      fill="none"
+                    />
+                    <path
+                      d="M10 40 Q10 20 25 15"
+                      stroke="currentColor"
+                      strokeWidth="1"
+                      fill="none"
+                    />
+                    <circle
+                      cx="50"
+                      cy="5"
+                      r="2"
+                      fill="currentColor"
+                      opacity="0.6"
+                    />
+                    <circle
+                      cx="5"
+                      cy="30"
+                      r="1.5"
+                      fill="currentColor"
+                      opacity="0.4"
+                    />
                   </svg>
                   {/* Ornate flourish frame - top right */}
-                  <svg className="absolute -top-8 -right-8 w-20 h-20 text-[#B8860B]" viewBox="0 0 80 80" fill="none" style={{ transform: 'scaleX(-1)' }}>
-                    <path d="M40 10 Q20 10 15 25 Q10 40 15 50 Q5 45 5 30 Q5 15 20 8 Q35 1 50 5" stroke="currentColor" strokeWidth="1.5" fill="none" />
-                    <path d="M10 40 Q10 20 25 15" stroke="currentColor" strokeWidth="1" fill="none" />
-                    <circle cx="50" cy="5" r="2" fill="currentColor" opacity="0.6" />
-                    <circle cx="5" cy="30" r="1.5" fill="currentColor" opacity="0.4" />
+                  <svg
+                    className="absolute -top-8 -right-8 w-20 h-20 text-[#B8860B]"
+                    viewBox="0 0 80 80"
+                    fill="none"
+                    style={{ transform: "scaleX(-1)" }}
+                  >
+                    <path
+                      d="M40 10 Q20 10 15 25 Q10 40 15 50 Q5 45 5 30 Q5 15 20 8 Q35 1 50 5"
+                      stroke="currentColor"
+                      strokeWidth="1.5"
+                      fill="none"
+                    />
+                    <path
+                      d="M10 40 Q10 20 25 15"
+                      stroke="currentColor"
+                      strokeWidth="1"
+                      fill="none"
+                    />
+                    <circle
+                      cx="50"
+                      cy="5"
+                      r="2"
+                      fill="currentColor"
+                      opacity="0.6"
+                    />
+                    <circle
+                      cx="5"
+                      cy="30"
+                      r="1.5"
+                      fill="currentColor"
+                      opacity="0.4"
+                    />
                   </svg>
                   {/* Ornate flourish frame - bottom left */}
-                  <svg className="absolute -bottom-8 -left-8 w-20 h-20 text-[#B8860B]" viewBox="0 0 80 80" fill="none" style={{ transform: 'scaleY(-1)' }}>
-                    <path d="M40 10 Q20 10 15 25 Q10 40 15 50 Q5 45 5 30 Q5 15 20 8 Q35 1 50 5" stroke="currentColor" strokeWidth="1.5" fill="none" />
-                    <path d="M10 40 Q10 20 25 15" stroke="currentColor" strokeWidth="1" fill="none" />
-                    <circle cx="50" cy="5" r="2" fill="currentColor" opacity="0.6" />
-                    <circle cx="5" cy="30" r="1.5" fill="currentColor" opacity="0.4" />
+                  <svg
+                    className="absolute -bottom-8 -left-8 w-20 h-20 text-[#B8860B]"
+                    viewBox="0 0 80 80"
+                    fill="none"
+                    style={{ transform: "scaleY(-1)" }}
+                  >
+                    <path
+                      d="M40 10 Q20 10 15 25 Q10 40 15 50 Q5 45 5 30 Q5 15 20 8 Q35 1 50 5"
+                      stroke="currentColor"
+                      strokeWidth="1.5"
+                      fill="none"
+                    />
+                    <path
+                      d="M10 40 Q10 20 25 15"
+                      stroke="currentColor"
+                      strokeWidth="1"
+                      fill="none"
+                    />
+                    <circle
+                      cx="50"
+                      cy="5"
+                      r="2"
+                      fill="currentColor"
+                      opacity="0.6"
+                    />
+                    <circle
+                      cx="5"
+                      cy="30"
+                      r="1.5"
+                      fill="currentColor"
+                      opacity="0.4"
+                    />
                   </svg>
                   {/* Ornate flourish frame - bottom right */}
-                  <svg className="absolute -bottom-8 -right-8 w-20 h-20 text-[#B8860B]" viewBox="0 0 80 80" fill="none" style={{ transform: 'scale(-1, -1)' }}>
-                    <path d="M40 10 Q20 10 15 25 Q10 40 15 50 Q5 45 5 30 Q5 15 20 8 Q35 1 50 5" stroke="currentColor" strokeWidth="1.5" fill="none" />
-                    <path d="M10 40 Q10 20 25 15" stroke="currentColor" strokeWidth="1" fill="none" />
-                    <circle cx="50" cy="5" r="2" fill="currentColor" opacity="0.6" />
-                    <circle cx="5" cy="30" r="1.5" fill="currentColor" opacity="0.4" />
+                  <svg
+                    className="absolute -bottom-8 -right-8 w-20 h-20 text-[#B8860B]"
+                    viewBox="0 0 80 80"
+                    fill="none"
+                    style={{ transform: "scale(-1, -1)" }}
+                  >
+                    <path
+                      d="M40 10 Q20 10 15 25 Q10 40 15 50 Q5 45 5 30 Q5 15 20 8 Q35 1 50 5"
+                      stroke="currentColor"
+                      strokeWidth="1.5"
+                      fill="none"
+                    />
+                    <path
+                      d="M10 40 Q10 20 25 15"
+                      stroke="currentColor"
+                      strokeWidth="1"
+                      fill="none"
+                    />
+                    <circle
+                      cx="50"
+                      cy="5"
+                      r="2"
+                      fill="currentColor"
+                      opacity="0.6"
+                    />
+                    <circle
+                      cx="5"
+                      cy="30"
+                      r="1.5"
+                      fill="currentColor"
+                      opacity="0.4"
+                    />
                   </svg>
                   {/* Side flourish accents - left */}
                   <div className="absolute top-1/2 -left-6 -translate-y-1/2 w-4 flex flex-col items-center gap-8">
@@ -326,7 +577,10 @@ export function ParisianEleganceDesign({
                     <div className="w-1 h-16 bg-gradient-to-b from-transparent via-[#B8860B]/30 to-transparent" />
                     <div className="w-2 h-2 rounded-full bg-[#B8860B]/40" />
                   </div>
-                  <div className="w-[280px] sm:w-[320px] rounded-2xl overflow-hidden border-4 border-[#E8D5C4] shadow-xl bg-white" style={{ aspectRatio: '9/16' }}>
+                  <div
+                    className="w-[280px] sm:w-[320px] rounded-2xl overflow-hidden border-4 border-[#E8D5C4] shadow-xl bg-white"
+                    style={{ aspectRatio: "9/16" }}
+                  >
                     <iframe
                       src={`${getVimeoEmbedUrl(videoId)}?background=0&autoplay=0&title=0&byline=0&portrait=0`}
                       className="absolute inset-0 w-full h-full"
@@ -360,9 +614,17 @@ export function ParisianEleganceDesign({
         {/* About Section */}
         {aboutStory && (
           <div id="story" className="max-w-6xl mx-auto px-4 py-12 scroll-mt-16">
-            <h2 className={`text-4xl text-[#B8860B] text-center mb-8 ${greatVibes.className}`}>Our Story</h2>
+            <h2
+              className={`text-4xl text-[#B8860B] text-center mb-8 ${greatVibes.className}`}
+            >
+              Our Story
+            </h2>
             <div className="border border-[#B8860B]/20 p-8 bg-white/50 rounded-2xl">
-              <p className={`text-lg text-[#2C1810]/80 leading-relaxed whitespace-pre-line ${cormorant.className}`}>{aboutStory}</p>
+              <p
+                className={`text-lg text-[#2C1810]/80 leading-relaxed whitespace-pre-line ${cormorant.className}`}
+              >
+                {aboutStory}
+              </p>
             </div>
           </div>
         )}
@@ -372,7 +634,9 @@ export function ParisianEleganceDesign({
           <div id="hours" className="max-w-6xl mx-auto px-4 py-12 scroll-mt-16">
             <div className="flex items-center justify-center gap-4 mb-8">
               <Clock className="w-6 h-6 text-[#B8860B]" />
-              <h2 className={`text-4xl text-[#B8860B] ${greatVibes.className}`}>Hours</h2>
+              <h2 className={`text-4xl text-[#B8860B] ${greatVibes.className}`}>
+                Hours
+              </h2>
             </div>
             <div className="grid sm:grid-cols-2 gap-4 border border-[#B8860B]/20 p-8 bg-white/50 rounded-2xl">
               {[
@@ -384,9 +648,16 @@ export function ParisianEleganceDesign({
                 { day: "Saturday", value: hours.saturday },
                 { day: "Sunday", value: hours.sunday },
               ].map(({ day, value }) => (
-                <div key={day} className="flex justify-between py-2 border-b border-[#B8860B]/10 last:border-0">
-                  <span className={`text-[#B8860B] ${cormorant.className}`}>{day}</span>
-                  <span className={`text-[#2C1810]/70 ${cormorant.className}`}>{value || "Closed"}</span>
+                <div
+                  key={day}
+                  className="flex justify-between py-2 border-b border-[#B8860B]/10 last:border-0"
+                >
+                  <span className={`text-[#B8860B] ${cormorant.className}`}>
+                    {day}
+                  </span>
+                  <span className={`text-[#2C1810]/70 ${cormorant.className}`}>
+                    {value || "Closed"}
+                  </span>
                 </div>
               ))}
             </div>
@@ -394,29 +665,71 @@ export function ParisianEleganceDesign({
         )}
 
         {/* Location Section */}
-        <div id="location" className="max-w-6xl mx-auto px-4 py-12 scroll-mt-16">
+        <div
+          id="location"
+          className="max-w-6xl mx-auto px-4 py-12 scroll-mt-16"
+        >
           <div className="flex items-center justify-center gap-4 mb-8">
             <MapPin className="w-6 h-6 text-[#B8860B]" />
-            <h2 className={`text-4xl text-[#B8860B] ${greatVibes.className}`}>Location</h2>
+            <h2 className={`text-4xl text-[#B8860B] ${greatVibes.className}`}>
+              Location
+            </h2>
           </div>
-          {fullAddress && <p className={`text-center text-[#2C1810]/70 mb-6 ${cormorant.className}`}>{fullAddress}</p>}
+          {fullAddress && (
+            <p
+              className={`text-center text-[#2C1810]/70 mb-6 ${cormorant.className}`}
+            >
+              {fullAddress}
+            </p>
+          )}
           <div className="border-2 border-[#E8D5C4] rounded-2xl overflow-hidden shadow-lg">
-            <GoogleMapEmbed businessName={businessName} streetAddress={streetAddress} city={city} state={state} zipCode={zipCode} googlePlaceId={googlePlaceId} height="300px" mapStyle="warm" />
+            <GoogleMapEmbed
+              businessName={businessName}
+              streetAddress={streetAddress}
+              city={city}
+              state={state}
+              zipCode={zipCode}
+              googlePlaceId={googlePlaceId}
+              height="300px"
+              mapStyle="warm"
+            />
           </div>
         </div>
 
         {/* Services Section */}
         {services && services.length > 0 && (
-          <div id="services" className="max-w-6xl mx-auto px-4 py-12 scroll-mt-16">
-            <h2 className={`text-4xl text-[#B8860B] text-center mb-8 ${greatVibes.className}`}>Services</h2>
+          <div
+            id="services"
+            className="max-w-6xl mx-auto px-4 py-12 scroll-mt-16"
+          >
+            <h2
+              className={`text-4xl text-[#B8860B] text-center mb-8 ${greatVibes.className}`}
+            >
+              Services
+            </h2>
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {services.map((service, idx) => (
-                <div key={idx} className="border border-[#B8860B]/20 p-6 bg-white/50 rounded-2xl hover:shadow-lg transition-shadow">
+                <div
+                  key={idx}
+                  className="border border-[#B8860B]/20 p-6 bg-white/50 rounded-2xl hover:shadow-lg transition-shadow"
+                >
                   <div className="flex justify-between items-start mb-2">
-                    <h3 className={`text-xl text-[#B8860B] ${greatVibes.className}`}>{service.name}</h3>
-                    {service.price && <span className={`text-[#B8860B] ${cormorant.className}`}>{service.price}</span>}
+                    <h3
+                      className={`text-xl text-[#B8860B] ${greatVibes.className}`}
+                    >
+                      {service.name}
+                    </h3>
+                    {service.price && (
+                      <span className={`text-[#B8860B] ${cormorant.className}`}>
+                        {service.price}
+                      </span>
+                    )}
                   </div>
-                  {service.description && <p className={`text-[#2C1810]/60 ${cormorant.className}`}>{service.description}</p>}
+                  {service.description && (
+                    <p className={`text-[#2C1810]/60 ${cormorant.className}`}>
+                      {service.description}
+                    </p>
+                  )}
                 </div>
               ))}
             </div>
@@ -425,15 +738,27 @@ export function ParisianEleganceDesign({
 
         {/* Gallery Section */}
         {photos && photos.length > 0 && (
-          <div id="gallery" className="max-w-6xl mx-auto px-4 py-12 scroll-mt-16">
+          <div
+            id="gallery"
+            className="max-w-6xl mx-auto px-4 py-12 scroll-mt-16"
+          >
             <div className="flex items-center justify-center gap-4 mb-8">
               <Image className="w-6 h-6 text-[#B8860B]" />
-              <h2 className={`text-4xl text-[#B8860B] ${greatVibes.className}`}>Gallery</h2>
+              <h2 className={`text-4xl text-[#B8860B] ${greatVibes.className}`}>
+                Gallery
+              </h2>
             </div>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {photos.map((photo, idx) => (
-                <div key={idx} className="aspect-square border-2 border-[#E8D5C4] overflow-hidden rounded-2xl group shadow-md">
-                  <img src={photo} alt={`${businessName} photo ${idx + 1}`} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                <div
+                  key={idx}
+                  className="aspect-square border-2 border-[#E8D5C4] overflow-hidden rounded-2xl group shadow-md"
+                >
+                  <img
+                    src={photo}
+                    alt={`${businessName} photo ${idx + 1}`}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                  />
                 </div>
               ))}
             </div>
@@ -442,11 +767,19 @@ export function ParisianEleganceDesign({
 
         {/* Reviews Section */}
         <div id="reviews" className="max-w-6xl mx-auto px-4 py-12 scroll-mt-16">
-          <h2 className={`text-4xl text-[#B8860B] text-center mb-8 ${greatVibes.className}`}>Reviews</h2>
+          <h2
+            className={`text-4xl text-[#B8860B] text-center mb-8 ${greatVibes.className}`}
+          >
+            Reviews
+          </h2>
           <div className="border border-[#B8860B]/20 p-12 text-center bg-white/50 rounded-2xl">
             <Star className="w-10 h-10 text-[#B8860B]/40 mx-auto mb-4" />
-            <p className={`text-[#2C1810]/50 ${cormorant.className}`}>No reviews yet</p>
-            <p className={`text-[#2C1810]/30 text-sm ${cormorant.className}`}>Be the first to share your experience</p>
+            <p className={`text-[#2C1810]/50 ${cormorant.className}`}>
+              No reviews yet
+            </p>
+            <p className={`text-[#2C1810]/30 text-sm ${cormorant.className}`}>
+              Be the first to share your experience
+            </p>
           </div>
         </div>
 
@@ -454,21 +787,42 @@ export function ParisianEleganceDesign({
         {(instagramUrl || facebookUrl || tiktokUrl) && (
           <div className="border-t border-[#B8860B]/20 py-8">
             <div className="flex items-center justify-center gap-6">
-              <span className={`text-[#2C1810]/50 ${cormorant.className}`}>Follow Us</span>
+              <span className={`text-[#2C1810]/50 ${cormorant.className}`}>
+                Follow Us
+              </span>
               {instagramUrl && (
-                <a href={instagramUrl} target="_blank" rel="noopener noreferrer" className="w-12 h-12 border border-[#B8860B]/30 rounded-full flex items-center justify-center hover:bg-[#B8860B]/10 transition-all">
+                <a
+                  href={instagramUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-12 h-12 border border-[#B8860B]/30 rounded-full flex items-center justify-center hover:bg-[#B8860B]/10 transition-all"
+                >
                   <Instagram className="w-5 h-5 text-[#B8860B]" />
                 </a>
               )}
               {facebookUrl && (
-                <a href={facebookUrl} target="_blank" rel="noopener noreferrer" className="w-12 h-12 border border-[#B8860B]/30 rounded-full flex items-center justify-center hover:bg-[#B8860B]/10 transition-all">
+                <a
+                  href={facebookUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-12 h-12 border border-[#B8860B]/30 rounded-full flex items-center justify-center hover:bg-[#B8860B]/10 transition-all"
+                >
                   <Facebook className="w-5 h-5 text-[#B8860B]" />
                 </a>
               )}
               {tiktokUrl && (
-                <a href={tiktokUrl} target="_blank" rel="noopener noreferrer" className="w-12 h-12 border border-[#B8860B]/30 rounded-full flex items-center justify-center hover:bg-[#B8860B]/10 transition-all">
-                  <svg className="w-5 h-5 text-[#B8860B]" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-5.2 1.74 2.89 2.89 0 012.31-4.64 2.93 2.93 0 01.88.13V9.4a6.84 6.84 0 00-1-.05A6.33 6.33 0 005 20.1a6.34 6.34 0 0010.86-4.43v-7a8.16 8.16 0 004.77 1.52v-3.4a4.85 4.85 0 01-1-.1z"/>
+                <a
+                  href={tiktokUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-12 h-12 border border-[#B8860B]/30 rounded-full flex items-center justify-center hover:bg-[#B8860B]/10 transition-all"
+                >
+                  <svg
+                    className="w-5 h-5 text-[#B8860B]"
+                    viewBox="0 0 24 24"
+                    fill="currentColor"
+                  >
+                    <path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-5.2 1.74 2.89 2.89 0 012.31-4.64 2.93 2.93 0 01.88.13V9.4a6.84 6.84 0 00-1-.05A6.33 6.33 0 005 20.1a6.34 6.34 0 0010.86-4.43v-7a8.16 8.16 0 004.77 1.52v-3.4a4.85 4.85 0 01-1-.1z" />
                   </svg>
                 </a>
               )}
@@ -478,7 +832,11 @@ export function ParisianEleganceDesign({
 
         {/* Footer */}
         <footer className="border-t border-[#B8860B]/20 py-6">
-          <p className={`text-center text-xs text-[#2C1810]/30 tracking-widest uppercase ${cormorant.className}`}>© Local City Places</p>
+          <p
+            className={`text-center text-xs text-[#2C1810]/30 tracking-widest uppercase ${cormorant.className}`}
+          >
+            © Local City Places
+          </p>
         </footer>
       </div>
 
@@ -486,12 +844,20 @@ export function ParisianEleganceDesign({
       <div className="fixed bottom-0 left-0 right-0 lg:hidden z-50 bg-[#FDF8F5]/95 border-t border-[#B8860B]/30 p-4">
         <div className="flex gap-3">
           {phone && (
-            <a href={`tel:${phone}`} className="flex-1 flex items-center justify-center gap-2 py-3 bg-[#B8860B] text-white font-medium rounded-full">
+            <a
+              href={`tel:${phone}`}
+              className="flex-1 flex items-center justify-center gap-2 py-3 bg-[#B8860B] text-white font-medium rounded-full"
+            >
               <Phone className="w-4 h-4" /> Call
             </a>
           )}
           {website && (
-            <a href={website.startsWith("http") ? website : `https://${website}`} target="_blank" rel="noopener noreferrer" className="flex-1 flex items-center justify-center gap-2 py-3 border border-[#B8860B] text-[#B8860B] rounded-full">
+            <a
+              href={website.startsWith("http") ? website : `https://${website}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex-1 flex items-center justify-center gap-2 py-3 border border-[#B8860B] text-[#B8860B] rounded-full"
+            >
               <Globe className="w-4 h-4" /> Website
             </a>
           )}

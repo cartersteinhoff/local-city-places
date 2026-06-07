@@ -1,17 +1,22 @@
 "use client";
 
-import { Suspense, useCallback, useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { Suspense, useCallback, useEffect, useState } from "react";
 import { WizardContainer } from "@/components/registration";
-import { ConfirmEmailStep, PersonalInfoStep } from "@/components/registration/steps";
+import {
+  ConfirmEmailStep,
+  PersonalInfoStep,
+} from "@/components/registration/steps";
 import type { PersonalInfo } from "@/lib/validations/member";
 
 const STEPS = ["Confirm Email", "Personal Info"];
 
 function MemberRegisterContent() {
   const router = useRouter();
-  const [user, setUser] = useState<{ email: string; role: string } | null>(null);
+  const [user, setUser] = useState<{ email: string; role: string } | null>(
+    null,
+  );
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [currentStep, setCurrentStep] = useState(1);
@@ -45,29 +50,32 @@ function MemberRegisterContent() {
     fetchUser();
   }, [router]);
 
-  const handlePersonalInfo = useCallback(async (data: PersonalInfo) => {
-    setIsSubmitting(true);
-    setError(null);
+  const handlePersonalInfo = useCallback(
+    async (data: PersonalInfo) => {
+      setIsSubmitting(true);
+      setError(null);
 
-    try {
-      const res = await fetch("/api/member/register", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-      });
+      try {
+        const res = await fetch("/api/member/register", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(data),
+        });
 
-      if (!res.ok) {
-        const errorData = await res.json();
-        throw new Error(errorData.error || "Failed to save profile");
+        if (!res.ok) {
+          const errorData = await res.json();
+          throw new Error(errorData.error || "Failed to save profile");
+        }
+
+        setPersonalInfo(data);
+        router.push("/member");
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Failed to save profile");
+        setIsSubmitting(false);
       }
-
-      setPersonalInfo(data);
-      router.push("/member");
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to save profile");
-      setIsSubmitting(false);
-    }
-  }, [router]);
+    },
+    [router],
+  );
 
   if (loading) {
     return (
@@ -106,7 +114,11 @@ function MemberRegisterContent() {
       onBack={() => setCurrentStep(1)}
       showBack={currentStep > 1}
       title={currentStep === 1 ? "Welcome" : "Personal Information"}
-      description={currentStep === 1 ? "Let's get your account set up." : "Tell us a bit about yourself."}
+      description={
+        currentStep === 1
+          ? "Let's get your account set up."
+          : "Tell us a bit about yourself."
+      }
     >
       {error && (
         <div className="bg-destructive/10 text-destructive px-4 py-3 rounded-lg mb-4 text-sm">

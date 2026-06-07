@@ -8,13 +8,27 @@
  * Elegant serif typography with art deco flair.
  */
 
-import { Playfair_Display, Cormorant_Garamond } from "next/font/google";
+import {
+  Clock,
+  Globe,
+  Image,
+  MapPin,
+  Navigation,
+  Phone,
+  Share2,
+  Sparkles,
+  Star,
+} from "lucide-react";
+import { Cormorant_Garamond, Playfair_Display } from "next/font/google";
+import { useState } from "react";
 import { Facebook, Instagram } from "@/components/icons/social-icons";
-import { MapPin, Phone, Globe, Share2, Star, Sparkles, Clock, Navigation, Image } from "lucide-react";
 import { formatPhoneNumber } from "@/lib/utils";
 import { extractVimeoId, getVimeoEmbedUrl } from "@/lib/vimeo";
-import { useState } from "react";
-import { GoogleMapEmbed, getGoogleMapsDirectionsUrl, formatFullAddress } from "../google-map-embed";
+import {
+  formatFullAddress,
+  GoogleMapEmbed,
+  getGoogleMapsDirectionsUrl,
+} from "../google-map-embed";
 
 const playfair = Playfair_Display({
   weight: ["400", "600", "700"],
@@ -83,7 +97,14 @@ export function GatsbyGlamourDesign({
   const location = [city, state].filter(Boolean).join(", ");
   const fullAddress = formatFullAddress(streetAddress, city, state, zipCode);
   const videoId = vimeoUrl ? extractVimeoId(vimeoUrl) : null;
-  const directionsUrl = getGoogleMapsDirectionsUrl(businessName, streetAddress, city, state, zipCode, googlePlaceId);
+  const directionsUrl = getGoogleMapsDirectionsUrl(
+    businessName,
+    streetAddress,
+    city,
+    state,
+    zipCode,
+    googlePlaceId,
+  );
 
   const initials = businessName
     .split(" ")
@@ -104,19 +125,22 @@ export function GatsbyGlamourDesign({
   };
 
   return (
-    <div className="min-h-screen text-[#F8F4E8]" style={{
-      background: `
+    <div
+      className="min-h-screen text-[#F8F4E8]"
+      style={{
+        background: `
         radial-gradient(ellipse at top, rgba(201, 169, 98, 0.08) 0%, transparent 50%),
         radial-gradient(ellipse at bottom, rgba(201, 169, 98, 0.05) 0%, transparent 50%),
         linear-gradient(to bottom, #0a0a0a, #000000)
-      `
-    }}>
+      `,
+      }}
+    >
       {/* Art Deco fan/sunburst pattern overlay */}
       <div
         className="fixed inset-0 pointer-events-none opacity-[0.08]"
         style={{
           backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' stroke='%23C9A962' stroke-width='1'%3E%3Cpath d='M30 0 L30 30 M0 30 L30 30 M60 30 L30 30 M30 60 L30 30'/%3E%3Cpath d='M10 10 L30 30 M50 10 L30 30 M10 50 L30 30 M50 50 L30 30'/%3E%3Ccircle cx='30' cy='30' r='8'/%3E%3Ccircle cx='30' cy='30' r='15'/%3E%3C/g%3E%3C/svg%3E")`,
-          backgroundSize: '60px 60px',
+          backgroundSize: "60px 60px",
         }}
       />
 
@@ -128,7 +152,11 @@ export function GatsbyGlamourDesign({
         <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Sparkles className="w-6 h-6 text-[#C9A962]" />
-            <span className={`text-sm tracking-widest uppercase text-[#C9A962]/70 ${cormorant.className}`}>Local City Places</span>
+            <span
+              className={`text-sm tracking-widest uppercase text-[#C9A962]/70 ${cormorant.className}`}
+            >
+              Local City Places
+            </span>
           </div>
           <button
             onClick={handleShare}
@@ -145,19 +173,49 @@ export function GatsbyGlamourDesign({
         <div className="max-w-6xl mx-auto px-4">
           <div className="scrollbar-x-site scrollbar-x-gold flex items-center justify-center gap-1 sm:gap-2 overflow-x-auto py-2">
             {aboutStory && (
-              <a href="#story" className={`px-3 py-2 text-xs tracking-widest uppercase text-[#C9A962]/60 hover:text-[#C9A962] transition-all ${cormorant.className}`}>Story</a>
+              <a
+                href="#story"
+                className={`px-3 py-2 text-xs tracking-widest uppercase text-[#C9A962]/60 hover:text-[#C9A962] transition-all ${cormorant.className}`}
+              >
+                Story
+              </a>
             )}
             {hours && Object.values(hours).some(Boolean) && (
-              <a href="#hours" className={`px-3 py-2 text-xs tracking-widest uppercase text-[#C9A962]/60 hover:text-[#C9A962] transition-all ${cormorant.className}`}>Hours</a>
+              <a
+                href="#hours"
+                className={`px-3 py-2 text-xs tracking-widest uppercase text-[#C9A962]/60 hover:text-[#C9A962] transition-all ${cormorant.className}`}
+              >
+                Hours
+              </a>
             )}
-            <a href="#location" className={`px-3 py-2 text-xs tracking-widest uppercase text-[#C9A962]/60 hover:text-[#C9A962] transition-all ${cormorant.className}`}>Location</a>
+            <a
+              href="#location"
+              className={`px-3 py-2 text-xs tracking-widest uppercase text-[#C9A962]/60 hover:text-[#C9A962] transition-all ${cormorant.className}`}
+            >
+              Location
+            </a>
             {services && services.length > 0 && (
-              <a href="#services" className={`px-3 py-2 text-xs tracking-widest uppercase text-[#C9A962]/60 hover:text-[#C9A962] transition-all ${cormorant.className}`}>Services</a>
+              <a
+                href="#services"
+                className={`px-3 py-2 text-xs tracking-widest uppercase text-[#C9A962]/60 hover:text-[#C9A962] transition-all ${cormorant.className}`}
+              >
+                Services
+              </a>
             )}
             {photos && photos.length > 0 && (
-              <a href="#gallery" className={`px-3 py-2 text-xs tracking-widest uppercase text-[#C9A962]/60 hover:text-[#C9A962] transition-all ${cormorant.className}`}>Gallery</a>
+              <a
+                href="#gallery"
+                className={`px-3 py-2 text-xs tracking-widest uppercase text-[#C9A962]/60 hover:text-[#C9A962] transition-all ${cormorant.className}`}
+              >
+                Gallery
+              </a>
             )}
-            <a href="#reviews" className={`px-3 py-2 text-xs tracking-widest uppercase text-[#C9A962]/60 hover:text-[#C9A962] transition-all ${cormorant.className}`}>Reviews</a>
+            <a
+              href="#reviews"
+              className={`px-3 py-2 text-xs tracking-widest uppercase text-[#C9A962]/60 hover:text-[#C9A962] transition-all ${cormorant.className}`}
+            >
+              Reviews
+            </a>
           </div>
         </div>
       </nav>
@@ -167,29 +225,60 @@ export function GatsbyGlamourDesign({
         <div className="max-w-6xl mx-auto px-4 py-4">
           <div className="flex flex-wrap items-center justify-center gap-8">
             {phone && (
-              <a href={`tel:${phone}`} className="flex items-center gap-3 hover:opacity-80 transition-opacity">
+              <a
+                href={`tel:${phone}`}
+                className="flex items-center gap-3 hover:opacity-80 transition-opacity"
+              >
                 <Phone className="w-5 h-5" />
                 <div>
-                  <p className="text-[10px] uppercase tracking-widest opacity-60">Call</p>
-                  <p className={`font-medium ${cormorant.className}`}>{formatPhoneNumber(phone)}</p>
+                  <p className="text-[10px] uppercase tracking-widest opacity-60">
+                    Call
+                  </p>
+                  <p className={`font-medium ${cormorant.className}`}>
+                    {formatPhoneNumber(phone)}
+                  </p>
                 </div>
               </a>
             )}
             {website && (
-              <a href={website.startsWith("http") ? website : `https://${website}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
+              <a
+                href={
+                  website.startsWith("http") ? website : `https://${website}`
+                }
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-3 hover:opacity-80 transition-opacity"
+              >
                 <Globe className="w-5 h-5" />
                 <div>
-                  <p className="text-[10px] uppercase tracking-widest opacity-60">Website</p>
-                  <p className={`font-medium ${cormorant.className}`}>{website.replace(/^https?:\/\//, "")}</p>
+                  <p className="text-[10px] uppercase tracking-widest opacity-60">
+                    Website
+                  </p>
+                  <p className={`font-medium ${cormorant.className}`}>
+                    {website.replace(/^https?:\/\//, "")}
+                  </p>
                 </div>
               </a>
             )}
             {(fullAddress || location) && (
-              <a href={directionsUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
+              <a
+                href={directionsUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-3 hover:opacity-80 transition-opacity"
+              >
                 <MapPin className="w-5 h-5" />
                 <div>
-                  <p className="text-[10px] uppercase tracking-widest opacity-60">Location</p>
-                  <p className={`font-medium whitespace-nowrap ${cormorant.className}`}>{[streetAddress, city, state, zipCode].filter(Boolean).join(", ") || location}</p>
+                  <p className="text-[10px] uppercase tracking-widest opacity-60">
+                    Location
+                  </p>
+                  <p
+                    className={`font-medium whitespace-nowrap ${cormorant.className}`}
+                  >
+                    {[streetAddress, city, state, zipCode]
+                      .filter(Boolean)
+                      .join(", ") || location}
+                  </p>
                 </div>
               </a>
             )}
@@ -211,15 +300,25 @@ export function GatsbyGlamourDesign({
                     <div
                       key={i}
                       className="absolute top-1/2 left-1/2 w-1 h-24 bg-gradient-to-t from-[#C9A962] to-transparent origin-bottom"
-                      style={{ transform: `translate(-50%, -100%) rotate(${i * 30}deg)` }}
+                      style={{
+                        transform: `translate(-50%, -100%) rotate(${i * 30}deg)`,
+                      }}
                     />
                   ))}
                 </div>
                 <div className="relative w-28 h-28 rounded-full bg-black border-4 border-[#C9A962] flex items-center justify-center overflow-hidden">
                   {logoUrl ? (
-                    <img src={logoUrl} alt={businessName} className="w-full h-full object-cover" />
+                    <img
+                      src={logoUrl}
+                      alt={businessName}
+                      className="w-full h-full object-cover"
+                    />
                   ) : (
-                    <span className={`text-4xl text-[#C9A962] ${playfair.className}`}>{initials}</span>
+                    <span
+                      className={`text-4xl text-[#C9A962] ${playfair.className}`}
+                    >
+                      {initials}
+                    </span>
                   )}
                 </div>
               </div>
@@ -227,20 +326,26 @@ export function GatsbyGlamourDesign({
               {/* Category */}
               {categoryName && (
                 <div className="mb-4">
-                  <span className={`inline-block px-6 py-1 border border-[#C9A962]/50 text-[#C9A962] text-sm tracking-widest uppercase ${cormorant.className}`}>
+                  <span
+                    className={`inline-block px-6 py-1 border border-[#C9A962]/50 text-[#C9A962] text-sm tracking-widest uppercase ${cormorant.className}`}
+                  >
                     {categoryName}
                   </span>
                 </div>
               )}
 
               {/* Business Name */}
-              <h1 className={`text-5xl sm:text-6xl lg:text-7xl font-bold mb-6 leading-tight text-[#C9A962] ${playfair.className}`}>
+              <h1
+                className={`text-5xl sm:text-6xl lg:text-7xl font-bold mb-6 leading-tight text-[#C9A962] ${playfair.className}`}
+              >
                 {businessName}
               </h1>
 
               {/* Description */}
               {description && (
-                <p className={`text-xl text-[#F8F4E8]/70 leading-relaxed max-w-lg mx-auto lg:mx-0 mb-10 ${cormorant.className}`}>
+                <p
+                  className={`text-xl text-[#F8F4E8]/70 leading-relaxed max-w-lg mx-auto lg:mx-0 mb-10 ${cormorant.className}`}
+                >
                   {description}
                 </p>
               )}
@@ -248,18 +353,35 @@ export function GatsbyGlamourDesign({
               {/* CTAs */}
               <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
                 {phone && (
-                  <a href={`tel:${phone}`} className={`inline-flex items-center justify-center gap-3 px-8 py-4 bg-[#C9A962] text-black font-semibold hover:bg-[#B8994D] transition-colors cursor-pointer ${playfair.className}`}>
+                  <a
+                    href={`tel:${phone}`}
+                    className={`inline-flex items-center justify-center gap-3 px-8 py-4 bg-[#C9A962] text-black font-semibold hover:bg-[#B8994D] transition-colors cursor-pointer ${playfair.className}`}
+                  >
                     <Phone className="w-5 h-5" />
                     Call Now
                   </a>
                 )}
                 {website && (
-                  <a href={website.startsWith("http") ? website : `https://${website}`} target="_blank" rel="noopener noreferrer" className={`inline-flex items-center justify-center gap-3 px-8 py-4 border-2 border-[#C9A962] text-[#C9A962] hover:bg-[#C9A962]/10 transition-colors cursor-pointer ${playfair.className}`}>
+                  <a
+                    href={
+                      website.startsWith("http")
+                        ? website
+                        : `https://${website}`
+                    }
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={`inline-flex items-center justify-center gap-3 px-8 py-4 border-2 border-[#C9A962] text-[#C9A962] hover:bg-[#C9A962]/10 transition-colors cursor-pointer ${playfair.className}`}
+                  >
                     <Globe className="w-5 h-5" />
                     Visit Website
                   </a>
                 )}
-                <a href={directionsUrl} target="_blank" rel="noopener noreferrer" className={`inline-flex items-center justify-center gap-3 px-8 py-4 border-2 border-[#C9A962] text-[#C9A962] hover:bg-[#C9A962]/10 transition-colors cursor-pointer ${playfair.className}`}>
+                <a
+                  href={directionsUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={`inline-flex items-center justify-center gap-3 px-8 py-4 border-2 border-[#C9A962] text-[#C9A962] hover:bg-[#C9A962]/10 transition-colors cursor-pointer ${playfair.className}`}
+                >
                   <Navigation className="w-5 h-5" />
                   Directions
                 </a>
@@ -289,7 +411,10 @@ export function GatsbyGlamourDesign({
                   </div>
 
                   {/* Video container */}
-                  <div className="relative w-[280px] sm:w-[320px] border-4 border-[#C9A962] bg-black overflow-hidden" style={{ aspectRatio: '9/16' }}>
+                  <div
+                    className="relative w-[280px] sm:w-[320px] border-4 border-[#C9A962] bg-black overflow-hidden"
+                    style={{ aspectRatio: "9/16" }}
+                  >
                     <iframe
                       src={`${getVimeoEmbedUrl(videoId)}?background=0&autoplay=0&title=0&byline=0&portrait=0`}
                       className="absolute inset-0 w-full h-full"
@@ -302,7 +427,11 @@ export function GatsbyGlamourDesign({
 
                   {/* Label */}
                   <div className="absolute -bottom-12 left-1/2 -translate-x-1/2 text-center">
-                    <p className={`text-[10px] tracking-[0.3em] uppercase text-[#C9A962]/70 ${cormorant.className}`}>Featured Presentation</p>
+                    <p
+                      className={`text-[10px] tracking-[0.3em] uppercase text-[#C9A962]/70 ${cormorant.className}`}
+                    >
+                      Featured Presentation
+                    </p>
                   </div>
                 </div>
               </div>
@@ -328,9 +457,17 @@ export function GatsbyGlamourDesign({
         {/* About Section */}
         {aboutStory && (
           <div id="story" className="max-w-6xl mx-auto px-4 py-12 scroll-mt-16">
-            <h2 className={`text-3xl text-[#C9A962] text-center mb-8 ${playfair.className}`}>Our Story</h2>
+            <h2
+              className={`text-3xl text-[#C9A962] text-center mb-8 ${playfair.className}`}
+            >
+              Our Story
+            </h2>
             <div className="border border-[#C9A962]/30 p-8 bg-[#C9A962]/5">
-              <p className={`text-lg text-[#F8F4E8]/80 leading-relaxed whitespace-pre-line ${cormorant.className}`}>{aboutStory}</p>
+              <p
+                className={`text-lg text-[#F8F4E8]/80 leading-relaxed whitespace-pre-line ${cormorant.className}`}
+              >
+                {aboutStory}
+              </p>
             </div>
           </div>
         )}
@@ -340,7 +477,9 @@ export function GatsbyGlamourDesign({
           <div id="hours" className="max-w-6xl mx-auto px-4 py-12 scroll-mt-16">
             <div className="flex items-center justify-center gap-4 mb-8">
               <Clock className="w-6 h-6 text-[#C9A962]" />
-              <h2 className={`text-3xl text-[#C9A962] ${playfair.className}`}>Hours</h2>
+              <h2 className={`text-3xl text-[#C9A962] ${playfair.className}`}>
+                Hours
+              </h2>
             </div>
             <div className="grid sm:grid-cols-2 gap-4 border border-[#C9A962]/30 p-8 bg-[#C9A962]/5">
               {[
@@ -352,9 +491,16 @@ export function GatsbyGlamourDesign({
                 { day: "Saturday", value: hours.saturday },
                 { day: "Sunday", value: hours.sunday },
               ].map(({ day, value }) => (
-                <div key={day} className="flex justify-between py-2 border-b border-[#C9A962]/20 last:border-0">
-                  <span className={`text-[#C9A962] ${cormorant.className}`}>{day}</span>
-                  <span className={`text-[#F8F4E8]/70 ${cormorant.className}`}>{value || "Closed"}</span>
+                <div
+                  key={day}
+                  className="flex justify-between py-2 border-b border-[#C9A962]/20 last:border-0"
+                >
+                  <span className={`text-[#C9A962] ${cormorant.className}`}>
+                    {day}
+                  </span>
+                  <span className={`text-[#F8F4E8]/70 ${cormorant.className}`}>
+                    {value || "Closed"}
+                  </span>
                 </div>
               ))}
             </div>
@@ -362,29 +508,71 @@ export function GatsbyGlamourDesign({
         )}
 
         {/* Location Section */}
-        <div id="location" className="max-w-6xl mx-auto px-4 py-12 scroll-mt-16">
+        <div
+          id="location"
+          className="max-w-6xl mx-auto px-4 py-12 scroll-mt-16"
+        >
           <div className="flex items-center justify-center gap-4 mb-8">
             <MapPin className="w-6 h-6 text-[#C9A962]" />
-            <h2 className={`text-3xl text-[#C9A962] ${playfair.className}`}>Location</h2>
+            <h2 className={`text-3xl text-[#C9A962] ${playfair.className}`}>
+              Location
+            </h2>
           </div>
-          {fullAddress && <p className={`text-center text-[#F8F4E8]/70 mb-6 ${cormorant.className}`}>{fullAddress}</p>}
+          {fullAddress && (
+            <p
+              className={`text-center text-[#F8F4E8]/70 mb-6 ${cormorant.className}`}
+            >
+              {fullAddress}
+            </p>
+          )}
           <div className="border-2 border-[#C9A962]/30">
-            <GoogleMapEmbed businessName={businessName} streetAddress={streetAddress} city={city} state={state} zipCode={zipCode} googlePlaceId={googlePlaceId} height="300px" mapStyle="dark" />
+            <GoogleMapEmbed
+              businessName={businessName}
+              streetAddress={streetAddress}
+              city={city}
+              state={state}
+              zipCode={zipCode}
+              googlePlaceId={googlePlaceId}
+              height="300px"
+              mapStyle="dark"
+            />
           </div>
         </div>
 
         {/* Services Section */}
         {services && services.length > 0 && (
-          <div id="services" className="max-w-6xl mx-auto px-4 py-12 scroll-mt-16">
-            <h2 className={`text-3xl text-[#C9A962] text-center mb-8 ${playfair.className}`}>Services</h2>
+          <div
+            id="services"
+            className="max-w-6xl mx-auto px-4 py-12 scroll-mt-16"
+          >
+            <h2
+              className={`text-3xl text-[#C9A962] text-center mb-8 ${playfair.className}`}
+            >
+              Services
+            </h2>
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {services.map((service, idx) => (
-                <div key={idx} className="border border-[#C9A962]/30 p-6 bg-[#C9A962]/5 hover:bg-[#C9A962]/10 transition-colors">
+                <div
+                  key={idx}
+                  className="border border-[#C9A962]/30 p-6 bg-[#C9A962]/5 hover:bg-[#C9A962]/10 transition-colors"
+                >
                   <div className="flex justify-between items-start mb-2">
-                    <h3 className={`text-xl text-[#C9A962] ${playfair.className}`}>{service.name}</h3>
-                    {service.price && <span className={`text-[#C9A962] ${cormorant.className}`}>{service.price}</span>}
+                    <h3
+                      className={`text-xl text-[#C9A962] ${playfair.className}`}
+                    >
+                      {service.name}
+                    </h3>
+                    {service.price && (
+                      <span className={`text-[#C9A962] ${cormorant.className}`}>
+                        {service.price}
+                      </span>
+                    )}
                   </div>
-                  {service.description && <p className={`text-[#F8F4E8]/60 ${cormorant.className}`}>{service.description}</p>}
+                  {service.description && (
+                    <p className={`text-[#F8F4E8]/60 ${cormorant.className}`}>
+                      {service.description}
+                    </p>
+                  )}
                 </div>
               ))}
             </div>
@@ -393,15 +581,27 @@ export function GatsbyGlamourDesign({
 
         {/* Gallery Section */}
         {photos && photos.length > 0 && (
-          <div id="gallery" className="max-w-6xl mx-auto px-4 py-12 scroll-mt-16">
+          <div
+            id="gallery"
+            className="max-w-6xl mx-auto px-4 py-12 scroll-mt-16"
+          >
             <div className="flex items-center justify-center gap-4 mb-8">
               <Image className="w-6 h-6 text-[#C9A962]" />
-              <h2 className={`text-3xl text-[#C9A962] ${playfair.className}`}>Gallery</h2>
+              <h2 className={`text-3xl text-[#C9A962] ${playfair.className}`}>
+                Gallery
+              </h2>
             </div>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {photos.map((photo, idx) => (
-                <div key={idx} className="aspect-square border-2 border-[#C9A962]/30 overflow-hidden group">
-                  <img src={photo} alt={`${businessName} photo ${idx + 1}`} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                <div
+                  key={idx}
+                  className="aspect-square border-2 border-[#C9A962]/30 overflow-hidden group"
+                >
+                  <img
+                    src={photo}
+                    alt={`${businessName} photo ${idx + 1}`}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                  />
                 </div>
               ))}
             </div>
@@ -410,11 +610,19 @@ export function GatsbyGlamourDesign({
 
         {/* Reviews Section */}
         <div id="reviews" className="max-w-6xl mx-auto px-4 py-12 scroll-mt-16">
-          <h2 className={`text-3xl text-[#C9A962] text-center mb-8 ${playfair.className}`}>Reviews</h2>
+          <h2
+            className={`text-3xl text-[#C9A962] text-center mb-8 ${playfair.className}`}
+          >
+            Reviews
+          </h2>
           <div className="border border-[#C9A962]/30 p-12 text-center bg-[#C9A962]/5">
             <Star className="w-10 h-10 text-[#C9A962]/40 mx-auto mb-4" />
-            <p className={`text-[#F8F4E8]/50 ${cormorant.className}`}>No reviews yet</p>
-            <p className={`text-[#F8F4E8]/30 text-sm ${cormorant.className}`}>Be the first to share your experience</p>
+            <p className={`text-[#F8F4E8]/50 ${cormorant.className}`}>
+              No reviews yet
+            </p>
+            <p className={`text-[#F8F4E8]/30 text-sm ${cormorant.className}`}>
+              Be the first to share your experience
+            </p>
           </div>
         </div>
 
@@ -422,21 +630,42 @@ export function GatsbyGlamourDesign({
         {(instagramUrl || facebookUrl || tiktokUrl) && (
           <div className="border-t border-[#C9A962]/20 py-8">
             <div className="flex items-center justify-center gap-6">
-              <span className={`text-[#F8F4E8]/50 ${cormorant.className}`}>Follow Us</span>
+              <span className={`text-[#F8F4E8]/50 ${cormorant.className}`}>
+                Follow Us
+              </span>
               {instagramUrl && (
-                <a href={instagramUrl} target="_blank" rel="noopener noreferrer" className="w-12 h-12 border border-[#C9A962]/30 flex items-center justify-center hover:bg-[#C9A962]/10 transition-all">
+                <a
+                  href={instagramUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-12 h-12 border border-[#C9A962]/30 flex items-center justify-center hover:bg-[#C9A962]/10 transition-all"
+                >
                   <Instagram className="w-5 h-5 text-[#C9A962]" />
                 </a>
               )}
               {facebookUrl && (
-                <a href={facebookUrl} target="_blank" rel="noopener noreferrer" className="w-12 h-12 border border-[#C9A962]/30 flex items-center justify-center hover:bg-[#C9A962]/10 transition-all">
+                <a
+                  href={facebookUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-12 h-12 border border-[#C9A962]/30 flex items-center justify-center hover:bg-[#C9A962]/10 transition-all"
+                >
                   <Facebook className="w-5 h-5 text-[#C9A962]" />
                 </a>
               )}
               {tiktokUrl && (
-                <a href={tiktokUrl} target="_blank" rel="noopener noreferrer" className="w-12 h-12 border border-[#C9A962]/30 flex items-center justify-center hover:bg-[#C9A962]/10 transition-all">
-                  <svg className="w-5 h-5 text-[#C9A962]" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-5.2 1.74 2.89 2.89 0 012.31-4.64 2.93 2.93 0 01.88.13V9.4a6.84 6.84 0 00-1-.05A6.33 6.33 0 005 20.1a6.34 6.34 0 0010.86-4.43v-7a8.16 8.16 0 004.77 1.52v-3.4a4.85 4.85 0 01-1-.1z"/>
+                <a
+                  href={tiktokUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-12 h-12 border border-[#C9A962]/30 flex items-center justify-center hover:bg-[#C9A962]/10 transition-all"
+                >
+                  <svg
+                    className="w-5 h-5 text-[#C9A962]"
+                    viewBox="0 0 24 24"
+                    fill="currentColor"
+                  >
+                    <path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-5.2 1.74 2.89 2.89 0 012.31-4.64 2.93 2.93 0 01.88.13V9.4a6.84 6.84 0 00-1-.05A6.33 6.33 0 005 20.1a6.34 6.34 0 0010.86-4.43v-7a8.16 8.16 0 004.77 1.52v-3.4a4.85 4.85 0 01-1-.1z" />
                   </svg>
                 </a>
               )}
@@ -446,7 +675,11 @@ export function GatsbyGlamourDesign({
 
         {/* Footer */}
         <footer className="border-t border-[#C9A962]/20 py-6">
-          <p className={`text-center text-xs text-[#F8F4E8]/30 tracking-widest uppercase ${cormorant.className}`}>© Local City Places</p>
+          <p
+            className={`text-center text-xs text-[#F8F4E8]/30 tracking-widest uppercase ${cormorant.className}`}
+          >
+            © Local City Places
+          </p>
         </footer>
       </div>
 
@@ -454,12 +687,20 @@ export function GatsbyGlamourDesign({
       <div className="fixed bottom-0 left-0 right-0 lg:hidden z-50 bg-black/95 border-t border-[#C9A962]/30 p-4">
         <div className="flex gap-3">
           {phone && (
-            <a href={`tel:${phone}`} className="flex-1 flex items-center justify-center gap-2 py-3 bg-[#C9A962] text-black font-medium">
+            <a
+              href={`tel:${phone}`}
+              className="flex-1 flex items-center justify-center gap-2 py-3 bg-[#C9A962] text-black font-medium"
+            >
               <Phone className="w-4 h-4" /> Call
             </a>
           )}
           {website && (
-            <a href={website.startsWith("http") ? website : `https://${website}`} target="_blank" rel="noopener noreferrer" className="flex-1 flex items-center justify-center gap-2 py-3 border border-[#C9A962] text-[#C9A962]">
+            <a
+              href={website.startsWith("http") ? website : `https://${website}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex-1 flex items-center justify-center gap-2 py-3 border border-[#C9A962] text-[#C9A962]"
+            >
               <Globe className="w-4 h-4" /> Website
             </a>
           )}

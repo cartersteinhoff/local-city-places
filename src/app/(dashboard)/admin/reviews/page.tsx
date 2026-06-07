@@ -1,20 +1,23 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import {
+  CheckCircle2,
+  Clock,
+  Image,
+  Loader2,
+  MessageSquare,
+  RefreshCw,
+  Search,
+  Star,
+  XCircle,
+} from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useCallback, useEffect, useState } from "react";
 import { DashboardLayout } from "@/components/layout";
-import { PageHeader } from "@/components/ui/page-header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PageHeader } from "@/components/ui/page-header";
 import { Pagination } from "@/components/ui/pagination";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import {
   Select,
   SelectContent,
@@ -23,19 +26,16 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
-  MessageSquare,
-  Search,
-  RefreshCw,
-  CheckCircle2,
-  XCircle,
-  Clock,
-  Star,
-  Image,
-  Loader2,
-} from "lucide-react";
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { useUser } from "@/hooks/use-user";
-import { adminNavItems } from "../nav";
 import { cn } from "@/lib/utils";
+import { adminNavItems } from "../nav";
 
 interface ReviewData {
   id: string;
@@ -66,7 +66,12 @@ export default function AdminReviewsPage() {
 
   const [reviews, setReviews] = useState<ReviewData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [stats, setStats] = useState<Stats>({ total: 0, pending: 0, approved: 0, rejected: 0 });
+  const [stats, setStats] = useState<Stats>({
+    total: 0,
+    pending: 0,
+    approved: 0,
+    rejected: 0,
+  });
 
   // Filters
   const [filter, setFilter] = useState("pending");
@@ -100,7 +105,10 @@ export default function AdminReviewsPage() {
   const fetchReviews = useCallback(async () => {
     setIsLoading(true);
     try {
-      const params = new URLSearchParams({ page: page.toString(), limit: "20" });
+      const params = new URLSearchParams({
+        page: page.toString(),
+        limit: "20",
+      });
       if (filter && filter !== "all") params.set("status", filter);
       if (sourceFilter) params.set("source", sourceFilter);
       if (debouncedSearch) params.set("search", debouncedSearch);
@@ -136,7 +144,10 @@ export default function AdminReviewsPage() {
     setPage(1);
   };
 
-  const handleStatusUpdate = async (reviewId: string, status: "approved" | "rejected") => {
+  const handleStatusUpdate = async (
+    reviewId: string,
+    status: "approved" | "rejected",
+  ) => {
     setProcessingId(reviewId);
     try {
       const res = await fetch(`/api/admin/reviews/${reviewId}`, {
@@ -155,7 +166,8 @@ export default function AdminReviewsPage() {
   };
 
   const renderStars = (rating: number | null) => {
-    if (!rating) return <span className="text-muted-foreground text-sm">-</span>;
+    if (!rating)
+      return <span className="text-muted-foreground text-sm">-</span>;
     return (
       <div className="flex items-center gap-0.5">
         {Array.from({ length: 5 }).map((_, i) => (
@@ -163,7 +175,9 @@ export default function AdminReviewsPage() {
             key={i}
             className={cn(
               "w-3.5 h-3.5",
-              i < rating ? "fill-yellow-400 text-yellow-400" : "text-muted-foreground/30"
+              i < rating
+                ? "fill-yellow-400 text-yellow-400"
+                : "text-muted-foreground/30",
             )}
           />
         ))}
@@ -178,28 +192,39 @@ export default function AdminReviewsPage() {
       rejected: "bg-red-100 text-red-700",
     };
     return (
-      <span className={cn("text-xs px-2 py-0.5 rounded-full font-medium", styles[status] || "bg-muted")}>
+      <span
+        className={cn(
+          "text-xs px-2 py-0.5 rounded-full font-medium",
+          styles[status] || "bg-muted",
+        )}
+      >
         {status}
       </span>
     );
   };
 
   const sourceBadge = (source: string) => (
-    <span className={cn(
-      "text-xs px-2 py-0.5 rounded-full font-medium",
-      source === "member" ? "bg-blue-100 text-blue-700" : "bg-gray-100 text-gray-600"
-    )}>
+    <span
+      className={cn(
+        "text-xs px-2 py-0.5 rounded-full font-medium",
+        source === "member"
+          ? "bg-blue-100 text-blue-700"
+          : "bg-gray-100 text-gray-600",
+      )}
+    >
       {source === "member" ? "Member" : "Migrated"}
     </span>
   );
 
   const reviewerName = (r: ReviewData) => {
-    const name = [r.reviewerFirstName, r.reviewerLastName].filter(Boolean).join(" ");
+    const name = [r.reviewerFirstName, r.reviewerLastName]
+      .filter(Boolean)
+      .join(" ");
     return name || "Anonymous";
   };
 
-  const truncate = (text: string, maxLen: number) =>
-    text.length > maxLen ? text.slice(0, maxLen) + "..." : text;
+  const _truncate = (text: string, maxLen: number) =>
+    text.length > maxLen ? `${text.slice(0, maxLen)}...` : text;
 
   return (
     <DashboardLayout navItems={adminNavItems}>
@@ -228,21 +253,27 @@ export default function AdminReviewsPage() {
                 <Clock className="w-4 h-4" />
                 <span className="text-xs sm:text-sm">Pending</span>
               </div>
-              <div className="text-lg sm:text-2xl font-bold">{stats.pending}</div>
+              <div className="text-lg sm:text-2xl font-bold">
+                {stats.pending}
+              </div>
             </div>
             <div className="bg-card border rounded-lg p-3 sm:p-4">
               <div className="flex items-center gap-2 text-muted-foreground mb-1">
                 <CheckCircle2 className="w-4 h-4" />
                 <span className="text-xs sm:text-sm">Approved</span>
               </div>
-              <div className="text-lg sm:text-2xl font-bold">{stats.approved}</div>
+              <div className="text-lg sm:text-2xl font-bold">
+                {stats.approved}
+              </div>
             </div>
             <div className="bg-card border rounded-lg p-3 sm:p-4">
               <div className="flex items-center gap-2 text-muted-foreground mb-1">
                 <XCircle className="w-4 h-4" />
                 <span className="text-xs sm:text-sm">Rejected</span>
               </div>
-              <div className="text-lg sm:text-2xl font-bold">{stats.rejected}</div>
+              <div className="text-lg sm:text-2xl font-bold">
+                {stats.rejected}
+              </div>
             </div>
           </div>
 
@@ -275,7 +306,10 @@ export default function AdminReviewsPage() {
               </Button>
             ))}
 
-            <Select value={sourceFilter || "all"} onValueChange={handleSourceChange}>
+            <Select
+              value={sourceFilter || "all"}
+              onValueChange={handleSourceChange}
+            >
               <SelectTrigger className="w-[130px] h-8 text-sm">
                 <SelectValue placeholder="All sources" />
               </SelectTrigger>
@@ -286,8 +320,16 @@ export default function AdminReviewsPage() {
               </SelectContent>
             </Select>
 
-            <Button variant="ghost" size="sm" onClick={fetchReviews} disabled={isLoading} className="ml-auto">
-              <RefreshCw className={cn("w-4 h-4", isLoading && "animate-spin")} />
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={fetchReviews}
+              disabled={isLoading}
+              className="ml-auto"
+            >
+              <RefreshCw
+                className={cn("w-4 h-4", isLoading && "animate-spin")}
+              />
             </Button>
           </div>
 
@@ -308,7 +350,9 @@ export default function AdminReviewsPage() {
           {/* Mobile cards */}
           <div className="md:hidden divide-y divide-border border rounded-lg">
             {!isLoading && reviews.length === 0 ? (
-              <div className="p-8 text-center text-muted-foreground">No reviews found</div>
+              <div className="p-8 text-center text-muted-foreground">
+                No reviews found
+              </div>
             ) : (
               reviews.map((review) => (
                 <div key={review.id} className="p-4">
@@ -323,13 +367,19 @@ export default function AdminReviewsPage() {
                       ) : (
                         <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
                           <span className="text-xs font-medium text-muted-foreground">
-                            {(review.reviewerFirstName?.[0] || "?").toUpperCase()}
+                            {(
+                              review.reviewerFirstName?.[0] || "?"
+                            ).toUpperCase()}
                           </span>
                         </div>
                       )}
                       <div className="min-w-0">
-                        <h3 className="font-semibold text-sm truncate">{reviewerName(review)}</h3>
-                        <p className="text-xs text-muted-foreground truncate">{review.merchantName}</p>
+                        <h3 className="font-semibold text-sm truncate">
+                          {reviewerName(review)}
+                        </h3>
+                        <p className="text-xs text-muted-foreground truncate">
+                          {review.merchantName}
+                        </p>
                       </div>
                     </div>
                     <div className="flex flex-col items-end gap-1 flex-shrink-0">
@@ -348,11 +398,16 @@ export default function AdminReviewsPage() {
                     {review.photoCount > 0 && (
                       <>
                         <Image className="w-3 h-3" />
-                        <span>{review.photoCount} photo{review.photoCount !== 1 ? "s" : ""}</span>
+                        <span>
+                          {review.photoCount} photo
+                          {review.photoCount !== 1 ? "s" : ""}
+                        </span>
                         <span>·</span>
                       </>
                     )}
-                    <span>{new Date(review.createdAt).toLocaleDateString()}</span>
+                    <span>
+                      {new Date(review.createdAt).toLocaleDateString()}
+                    </span>
                   </div>
 
                   {review.status === "pending" && (
@@ -361,7 +416,9 @@ export default function AdminReviewsPage() {
                         size="sm"
                         className="flex-1"
                         disabled={processingId === review.id}
-                        onClick={() => handleStatusUpdate(review.id, "approved")}
+                        onClick={() =>
+                          handleStatusUpdate(review.id, "approved")
+                        }
                       >
                         <CheckCircle2 className="w-4 h-4 mr-1" />
                         Approve
@@ -371,7 +428,9 @@ export default function AdminReviewsPage() {
                         size="sm"
                         className="flex-1"
                         disabled={processingId === review.id}
-                        onClick={() => handleStatusUpdate(review.id, "rejected")}
+                        onClick={() =>
+                          handleStatusUpdate(review.id, "rejected")
+                        }
                       >
                         <XCircle className="w-4 h-4 mr-1" />
                         Reject
@@ -385,7 +444,9 @@ export default function AdminReviewsPage() {
                           size="sm"
                           variant="outline"
                           disabled={processingId === review.id}
-                          onClick={() => handleStatusUpdate(review.id, "approved")}
+                          onClick={() =>
+                            handleStatusUpdate(review.id, "approved")
+                          }
                         >
                           <CheckCircle2 className="w-4 h-4 mr-1" />
                           Approve
@@ -396,7 +457,9 @@ export default function AdminReviewsPage() {
                           size="sm"
                           variant="outline"
                           disabled={processingId === review.id}
-                          onClick={() => handleStatusUpdate(review.id, "rejected")}
+                          onClick={() =>
+                            handleStatusUpdate(review.id, "rejected")
+                          }
                         >
                           <XCircle className="w-4 h-4 mr-1" />
                           Reject
@@ -427,7 +490,10 @@ export default function AdminReviewsPage() {
               <TableBody>
                 {!isLoading && reviews.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={8} className="px-4 py-8 text-center text-muted-foreground">
+                    <TableCell
+                      colSpan={8}
+                      className="px-4 py-8 text-center text-muted-foreground"
+                    >
                       No reviews found
                     </TableCell>
                   </TableRow>
@@ -445,11 +511,15 @@ export default function AdminReviewsPage() {
                           ) : (
                             <div className="w-7 h-7 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
                               <span className="text-xs font-medium text-muted-foreground">
-                                {(review.reviewerFirstName?.[0] || "?").toUpperCase()}
+                                {(
+                                  review.reviewerFirstName?.[0] || "?"
+                                ).toUpperCase()}
                               </span>
                             </div>
                           )}
-                          <span className="font-medium text-sm truncate">{reviewerName(review)}</span>
+                          <span className="font-medium text-sm truncate">
+                            {reviewerName(review)}
+                          </span>
                         </div>
                       </TableCell>
                       <TableCell>{renderStars(review.rating)}</TableCell>
@@ -464,9 +534,15 @@ export default function AdminReviewsPage() {
                           </div>
                         )}
                       </TableCell>
-                      <TableCell className="text-sm truncate">{review.merchantName}</TableCell>
-                      <TableCell className="text-center">{sourceBadge(review.source)}</TableCell>
-                      <TableCell className="text-center">{statusBadge(review.status || "approved")}</TableCell>
+                      <TableCell className="text-sm truncate">
+                        {review.merchantName}
+                      </TableCell>
+                      <TableCell className="text-center">
+                        {sourceBadge(review.source)}
+                      </TableCell>
+                      <TableCell className="text-center">
+                        {statusBadge(review.status || "approved")}
+                      </TableCell>
                       <TableCell className="text-sm text-muted-foreground">
                         {new Date(review.createdAt).toLocaleDateString()}
                       </TableCell>
@@ -478,7 +554,9 @@ export default function AdminReviewsPage() {
                               size="icon"
                               className="h-8 w-8 text-green-600 hover:text-green-700"
                               disabled={processingId === review.id}
-                              onClick={() => handleStatusUpdate(review.id, "approved")}
+                              onClick={() =>
+                                handleStatusUpdate(review.id, "approved")
+                              }
                               title="Approve"
                             >
                               <CheckCircle2 className="w-4 h-4" />
@@ -490,7 +568,9 @@ export default function AdminReviewsPage() {
                               size="icon"
                               className="h-8 w-8 text-red-600 hover:text-red-700"
                               disabled={processingId === review.id}
-                              onClick={() => handleStatusUpdate(review.id, "rejected")}
+                              onClick={() =>
+                                handleStatusUpdate(review.id, "rejected")
+                              }
                               title="Reject"
                             >
                               <XCircle className="w-4 h-4" />

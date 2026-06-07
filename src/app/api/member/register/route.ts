@@ -1,20 +1,17 @@
-import { NextRequest, NextResponse } from "next/server";
+import { eq } from "drizzle-orm";
+import { type NextRequest, NextResponse } from "next/server";
 import { db } from "@/db";
 import { members, users } from "@/db/schema";
-import { eq } from "drizzle-orm";
 import { getSession } from "@/lib/auth";
-import { memberRegistrationSchema } from "@/lib/validations/member";
 import { stripPhoneNumber } from "@/lib/utils";
+import { memberRegistrationSchema } from "@/lib/validations/member";
 
 export async function POST(request: NextRequest) {
   try {
     // Verify user is authenticated
     const session = await getSession();
     if (!session) {
-      return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     // Check if user already has a member profile
@@ -27,7 +24,7 @@ export async function POST(request: NextRequest) {
     if (existingMember.length > 0) {
       return NextResponse.json(
         { error: "Member profile already exists" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -38,11 +35,12 @@ export async function POST(request: NextRequest) {
     if (!result.success) {
       return NextResponse.json(
         { error: "Invalid data", details: result.error.flatten() },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
-    const { firstName, lastName, phone, address, city, state, zip } = result.data;
+    const { firstName, lastName, phone, address, city, state, zip } =
+      result.data;
 
     // Save firstName, lastName, and phone to users table
     await db
@@ -76,7 +74,7 @@ export async function POST(request: NextRequest) {
     console.error("Error creating member profile:", error);
     return NextResponse.json(
       { error: "Failed to create member profile" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

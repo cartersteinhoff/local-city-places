@@ -1,9 +1,9 @@
-import { NextRequest, NextResponse } from "next/server";
-import { db } from "@/db";
-import { users } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { SignJWT } from "jose";
 import { cookies } from "next/headers";
+import { NextRequest, NextResponse } from "next/server";
+import { db } from "@/db";
+import { users } from "@/db/schema";
 
 const JWT_SECRET = process.env.JWT_SECRET;
 
@@ -20,14 +20,14 @@ export async function POST(request: NextRequest) {
   if (process.env.NODE_ENV === "production") {
     return NextResponse.json(
       { error: "This endpoint is only available in development" },
-      { status: 403 }
+      { status: 403 },
     );
   }
 
   if (!JWT_SECRET) {
     return NextResponse.json(
       { error: "JWT_SECRET not configured" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 
@@ -35,10 +35,7 @@ export async function POST(request: NextRequest) {
     const { email } = await request.json();
 
     if (!email) {
-      return NextResponse.json(
-        { error: "Email is required" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Email is required" }, { status: 400 });
     }
 
     // Find user
@@ -51,7 +48,7 @@ export async function POST(request: NextRequest) {
     if (!user) {
       return NextResponse.json(
         { error: `User not found: ${email}` },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
@@ -90,7 +87,7 @@ export async function POST(request: NextRequest) {
     console.error("Dev auth error:", error);
     return NextResponse.json(
       { error: "Authentication failed" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -100,7 +97,7 @@ export async function GET(request: NextRequest) {
   if (process.env.NODE_ENV === "production") {
     return NextResponse.json(
       { error: "This endpoint is only available in development" },
-      { status: 403 }
+      { status: 403 },
     );
   }
 
@@ -119,7 +116,8 @@ export async function GET(request: NextRequest) {
       .limit(20);
 
     return NextResponse.json({
-      message: "Dev auth endpoint. Provide ?email=user@example.com to authenticate",
+      message:
+        "Dev auth endpoint. Provide ?email=user@example.com to authenticate",
       availableUsers: allUsers,
     });
   }

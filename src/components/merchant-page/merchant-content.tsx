@@ -1,4 +1,12 @@
-import { Phone, Globe, Clock, Star, MessageSquare, Info, Sparkles } from "lucide-react";
+import {
+  Clock,
+  Globe,
+  Info,
+  MessageSquare,
+  Phone,
+  Sparkles,
+  Star,
+} from "lucide-react";
 import { formatPhoneNumber } from "@/lib/utils";
 
 interface MerchantContentProps {
@@ -91,7 +99,9 @@ export function MerchantContent({
 
               {website && (
                 <a
-                  href={website.startsWith("http") ? website : `https://${website}`}
+                  href={
+                    website.startsWith("http") ? website : `https://${website}`
+                  }
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center gap-4 p-3 rounded-xl bg-muted/50 hover:bg-muted transition-colors group"
@@ -101,7 +111,9 @@ export function MerchantContent({
                   </div>
                   <div className="min-w-0">
                     <p className="text-sm text-muted-foreground">Website</p>
-                    <p className="font-medium truncate">{website.replace(/^https?:\/\//, "")}</p>
+                    <p className="font-medium truncate">
+                      {website.replace(/^https?:\/\//, "")}
+                    </p>
                   </div>
                 </a>
               )}
@@ -113,7 +125,9 @@ export function MerchantContent({
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Hours</p>
-                  <p className="text-sm text-muted-foreground/70">Coming soon</p>
+                  <p className="text-sm text-muted-foreground/70">
+                    Coming soon
+                  </p>
                 </div>
               </div>
             </div>
@@ -123,7 +137,9 @@ export function MerchantContent({
               <div className="flex items-start gap-3">
                 <Sparkles className="w-5 h-5 text-primary mt-0.5" />
                 <div>
-                  <p className="text-sm font-medium">Local City Places Partner</p>
+                  <p className="text-sm font-medium">
+                    Local City Places Partner
+                  </p>
                   <p className="text-xs text-muted-foreground mt-1">
                     Earn rewards when you shop here
                   </p>

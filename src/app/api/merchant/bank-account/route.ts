@@ -1,13 +1,16 @@
-import { NextResponse } from "next/server";
-import { getSession } from "@/lib/auth";
-import { db } from "@/db";
-import { merchants, merchantBankAccounts } from "@/db/schema";
 import { eq } from "drizzle-orm";
+import { NextResponse } from "next/server";
+import { db } from "@/db";
+import { merchantBankAccounts, merchants } from "@/db/schema";
+import { getSession } from "@/lib/auth";
 
 export async function GET() {
   try {
     const session = await getSession();
-    if (!session || (session.user.role !== "merchant" && session.user.role !== "admin")) {
+    if (
+      !session ||
+      (session.user.role !== "merchant" && session.user.role !== "admin")
+    ) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -18,7 +21,10 @@ export async function GET() {
       .limit(1);
 
     if (!merchant) {
-      return NextResponse.json({ error: "Merchant not found" }, { status: 404 });
+      return NextResponse.json(
+        { error: "Merchant not found" },
+        { status: 404 },
+      );
     }
 
     const [bankAccount] = await db
@@ -44,7 +50,7 @@ export async function GET() {
     console.error("Get bank account error:", error);
     return NextResponse.json(
       { error: "Internal server error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -52,7 +58,10 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const session = await getSession();
-    if (!session || (session.user.role !== "merchant" && session.user.role !== "admin")) {
+    if (
+      !session ||
+      (session.user.role !== "merchant" && session.user.role !== "admin")
+    ) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -63,11 +72,20 @@ export async function POST(request: Request) {
       .limit(1);
 
     if (!merchant) {
-      return NextResponse.json({ error: "Merchant not found" }, { status: 404 });
+      return NextResponse.json(
+        { error: "Merchant not found" },
+        { status: 404 },
+      );
     }
 
     const body = await request.json();
-    const { bankName, accountHolderName, routingNumber, accountNumber, checkImageUrl } = body;
+    const {
+      bankName,
+      accountHolderName,
+      routingNumber,
+      accountNumber,
+      checkImageUrl,
+    } = body;
 
     // Check if bank account exists
     const [existingAccount] = await db
@@ -81,7 +99,8 @@ export async function POST(request: Request) {
       const updateData: Record<string, string | null> = {};
 
       if (bankName !== undefined) updateData.bankName = bankName;
-      if (accountHolderName !== undefined) updateData.accountHolderName = accountHolderName;
+      if (accountHolderName !== undefined)
+        updateData.accountHolderName = accountHolderName;
       if (routingNumber) updateData.routingNumberEncrypted = routingNumber;
       if (accountNumber) updateData.accountNumberEncrypted = accountNumber;
       if (checkImageUrl !== undefined) updateData.checkImageUrl = checkImageUrl;
@@ -113,7 +132,7 @@ export async function POST(request: Request) {
       if (!bankName || !accountHolderName || !routingNumber || !accountNumber) {
         return NextResponse.json(
           { error: "All fields are required for new bank account" },
-          { status: 400 }
+          { status: 400 },
         );
       }
 
@@ -145,7 +164,7 @@ export async function POST(request: Request) {
     console.error("Save bank account error:", error);
     return NextResponse.json(
       { error: "Internal server error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

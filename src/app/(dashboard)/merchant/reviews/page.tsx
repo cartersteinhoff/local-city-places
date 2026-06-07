@@ -1,23 +1,23 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import { DashboardLayout } from "@/components/layout";
-import { PageHeader } from "@/components/ui/page-header";
-import { StatCard } from "@/components/ui/stat-card";
-import { Button } from "@/components/ui/button";
-import { EmptyState } from "@/components/ui/empty-state";
+import { format, formatDistanceToNow } from "date-fns";
 import {
-  Star,
-  MessageSquare,
-  TrendingUp,
   ChevronLeft,
   ChevronRight,
+  MessageSquare,
   Quote,
+  Star,
+  TrendingUp,
 } from "lucide-react";
-import { merchantNavItems } from "../nav";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { DashboardLayout } from "@/components/layout";
+import { Button } from "@/components/ui/button";
+import { EmptyState } from "@/components/ui/empty-state";
+import { PageHeader } from "@/components/ui/page-header";
+import { StatCard } from "@/components/ui/stat-card";
 import { useUser } from "@/hooks/use-user";
-import { format, formatDistanceToNow } from "date-fns";
+import { merchantNavItems } from "../nav";
 
 interface Review {
   id: string;
@@ -46,11 +46,15 @@ export default function ReviewsPage() {
   const router = useRouter();
   const { user, userName, isLoading: loading, isAuthenticated } = useUser();
   const [data, setData] = useState<ReviewsData | null>(null);
-  const [dataLoading, setDataLoading] = useState(true);
+  const [_dataLoading, setDataLoading] = useState(true);
   const [page, setPage] = useState(1);
 
   useEffect(() => {
-    if (!loading && (!isAuthenticated || (user?.role !== "merchant" && user?.role !== "admin"))) {
+    if (
+      !loading &&
+      (!isAuthenticated ||
+        (user?.role !== "merchant" && user?.role !== "admin"))
+    ) {
       router.push("/");
     }
   }, [loading, isAuthenticated, user?.role, router]);
@@ -126,7 +130,9 @@ export default function ReviewsPage() {
                         <div>
                           <p className="font-medium">{review.memberName}</p>
                           <p className="text-sm text-muted-foreground">
-                            {formatDistanceToNow(new Date(review.createdAt), { addSuffix: true })}
+                            {formatDistanceToNow(new Date(review.createdAt), {
+                              addSuffix: true,
+                            })}
                           </p>
                         </div>
                       </div>
@@ -137,12 +143,18 @@ export default function ReviewsPage() {
 
                     <div className="relative pl-4 border-l-2 border-primary/30">
                       <Quote className="absolute -left-3 -top-1 w-5 h-5 text-primary/40 bg-card" />
-                      <p className="text-foreground leading-relaxed">{review.content}</p>
+                      <p className="text-foreground leading-relaxed">
+                        {review.content}
+                      </p>
                     </div>
 
                     <div className="mt-4 pt-4 border-t border-border">
                       <p className="text-xs text-muted-foreground">
-                        Submitted on {format(new Date(review.createdAt), "MMMM d, yyyy 'at' h:mm a")}
+                        Submitted on{" "}
+                        {format(
+                          new Date(review.createdAt),
+                          "MMMM d, yyyy 'at' h:mm a",
+                        )}
                       </p>
                     </div>
                   </div>
@@ -153,9 +165,13 @@ export default function ReviewsPage() {
               {data.pagination.totalPages > 1 && (
                 <div className="mt-6 flex items-center justify-between">
                   <p className="text-sm text-muted-foreground">
-                    Showing {(data.pagination.page - 1) * data.pagination.limit + 1}-
-                    {Math.min(data.pagination.page * data.pagination.limit, data.pagination.total)} of{" "}
-                    {data.pagination.total} reviews
+                    Showing{" "}
+                    {(data.pagination.page - 1) * data.pagination.limit + 1}-
+                    {Math.min(
+                      data.pagination.page * data.pagination.limit,
+                      data.pagination.total,
+                    )}{" "}
+                    of {data.pagination.total} reviews
                   </p>
                   <div className="flex items-center gap-2">
                     <Button
@@ -167,12 +183,17 @@ export default function ReviewsPage() {
                       <ChevronLeft className="w-4 h-4" />
                     </Button>
                     <span className="text-sm">
-                      Page {data.pagination.page} of {data.pagination.totalPages}
+                      Page {data.pagination.page} of{" "}
+                      {data.pagination.totalPages}
                     </span>
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => setPage((p) => Math.min(data.pagination.totalPages, p + 1))}
+                      onClick={() =>
+                        setPage((p) =>
+                          Math.min(data.pagination.totalPages, p + 1),
+                        )
+                      }
                       disabled={page === data.pagination.totalPages}
                     >
                       <ChevronRight className="w-4 h-4" />

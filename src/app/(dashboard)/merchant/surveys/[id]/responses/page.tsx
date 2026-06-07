@@ -1,14 +1,14 @@
 "use client";
 
-import { useEffect, useState, use } from "react";
-import { useRouter } from "next/navigation";
-import { DashboardLayout } from "@/components/layout";
-import { PageHeader } from "@/components/ui/page-header";
-import { Button } from "@/components/ui/button";
-import { ArrowLeft, Download, MessageSquare } from "lucide-react";
-import { merchantNavItems } from "../../../nav";
-import { useUser } from "@/hooks/use-user";
 import { format } from "date-fns";
+import { ArrowLeft, Download, MessageSquare } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { use, useEffect, useState } from "react";
+import { DashboardLayout } from "@/components/layout";
+import { Button } from "@/components/ui/button";
+import { PageHeader } from "@/components/ui/page-header";
+import { useUser } from "@/hooks/use-user";
+import { merchantNavItems } from "../../../nav";
 
 interface Question {
   id: string;
@@ -44,7 +44,11 @@ interface ResponsesData {
   totalResponses: number;
 }
 
-export default function SurveyResponsesPage({ params }: { params: Promise<{ id: string }> }) {
+export default function SurveyResponsesPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
   const { id } = use(params);
   const router = useRouter();
   const { user, userName, isLoading: loading, isAuthenticated } = useUser();
@@ -53,7 +57,11 @@ export default function SurveyResponsesPage({ params }: { params: Promise<{ id: 
   const [showAllText, setShowAllText] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
-    if (!loading && (!isAuthenticated || (user?.role !== "merchant" && user?.role !== "admin"))) {
+    if (
+      !loading &&
+      (!isAuthenticated ||
+        (user?.role !== "merchant" && user?.role !== "admin"))
+    ) {
       router.push("/");
     }
   }, [loading, isAuthenticated, user?.role, router]);
@@ -78,14 +86,20 @@ export default function SurveyResponsesPage({ params }: { params: Promise<{ id: 
   const handleExportCSV = () => {
     if (!data) return;
 
-    const headers = ["Member", "Date", ...data.survey.questions.map((q) => q.text)];
+    const headers = [
+      "Member",
+      "Date",
+      ...data.survey.questions.map((q) => q.text),
+    ];
     const rows = data.responses.map((r) => [
       r.memberName,
       format(new Date(r.createdAt), "yyyy-MM-dd"),
       ...data.survey.questions.map((q) => r.answers[q.id] || ""),
     ]);
 
-    const csv = [headers, ...rows].map((row) => row.map((cell) => `"${cell}"`).join(",")).join("\n");
+    const csv = [headers, ...rows]
+      .map((row) => row.map((cell) => `"${cell}"`).join(","))
+      .join("\n");
     const blob = new Blob([csv], { type: "text/csv" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -149,34 +163,41 @@ export default function SurveyResponsesPage({ params }: { params: Promise<{ id: 
                   >
                     <h3 className="font-semibold mb-4">
                       {question.text}
-                      {question.required && <span className="text-red-500 ml-1">*</span>}
+                      {question.required && (
+                        <span className="text-red-500 ml-1">*</span>
+                      )}
                     </h3>
 
-                    {question.type === "multiple_choice" && questionSummary?.type === "multiple_choice" ? (
+                    {question.type === "multiple_choice" &&
+                    questionSummary?.type === "multiple_choice" ? (
                       <div className="space-y-3">
-                        {Object.entries(questionSummary.options).map(([option, count]) => {
-                          const percent =
-                            data.totalResponses > 0
-                              ? Math.round((count / data.totalResponses) * 100)
-                              : 0;
+                        {Object.entries(questionSummary.options).map(
+                          ([option, count]) => {
+                            const percent =
+                              data.totalResponses > 0
+                                ? Math.round(
+                                    (count / data.totalResponses) * 100,
+                                  )
+                                : 0;
 
-                          return (
-                            <div key={option}>
-                              <div className="flex items-center justify-between text-sm mb-1">
-                                <span>{option}</span>
-                                <span className="text-muted-foreground">
-                                  {percent}% ({count})
-                                </span>
+                            return (
+                              <div key={option}>
+                                <div className="flex items-center justify-between text-sm mb-1">
+                                  <span>{option}</span>
+                                  <span className="text-muted-foreground">
+                                    {percent}% ({count})
+                                  </span>
+                                </div>
+                                <div className="h-3 bg-muted rounded-full overflow-hidden">
+                                  <div
+                                    className="h-full bg-primary rounded-full transition-all duration-500"
+                                    style={{ width: `${percent}%` }}
+                                  />
+                                </div>
                               </div>
-                              <div className="h-3 bg-muted rounded-full overflow-hidden">
-                                <div
-                                  className="h-full bg-primary rounded-full transition-all duration-500"
-                                  style={{ width: `${percent}%` }}
-                                />
-                              </div>
-                            </div>
-                          );
-                        })}
+                            );
+                          },
+                        )}
                       </div>
                     ) : questionSummary?.type === "text" ? (
                       <div className="space-y-2">
@@ -205,7 +226,9 @@ export default function SurveyResponsesPage({ params }: { params: Promise<{ id: 
                         )}
                       </div>
                     ) : (
-                      <p className="text-muted-foreground text-sm">No responses</p>
+                      <p className="text-muted-foreground text-sm">
+                        No responses
+                      </p>
                     )}
                   </div>
                 );
@@ -223,7 +246,10 @@ export default function SurveyResponsesPage({ params }: { params: Promise<{ id: 
                         <th className="text-left p-3 font-medium">Member</th>
                         <th className="text-left p-3 font-medium">Date</th>
                         {data.survey.questions.map((q) => (
-                          <th key={q.id} className="text-left p-3 font-medium max-w-[200px] truncate">
+                          <th
+                            key={q.id}
+                            className="text-left p-3 font-medium max-w-[200px] truncate"
+                          >
                             {q.text}
                           </th>
                         ))}
@@ -232,12 +258,20 @@ export default function SurveyResponsesPage({ params }: { params: Promise<{ id: 
                     <tbody className="divide-y divide-border">
                       {data.responses.map((response) => (
                         <tr key={response.id}>
-                          <td className="p-3 font-medium">{response.memberName}</td>
+                          <td className="p-3 font-medium">
+                            {response.memberName}
+                          </td>
                           <td className="p-3 text-muted-foreground">
-                            {format(new Date(response.createdAt), "MMM d, yyyy")}
+                            {format(
+                              new Date(response.createdAt),
+                              "MMM d, yyyy",
+                            )}
                           </td>
                           {data.survey.questions.map((q) => (
-                            <td key={q.id} className="p-3 max-w-[200px] truncate">
+                            <td
+                              key={q.id}
+                              className="p-3 max-w-[200px] truncate"
+                            >
                               {response.answers[q.id] || "-"}
                             </td>
                           ))}

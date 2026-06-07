@@ -1,8 +1,8 @@
 "use client";
 
+import { GripVertical, Plus, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
-import { Plus, Trash2, GripVertical } from "lucide-react";
 import { EditableText } from "./editable-text";
 
 interface Service {
@@ -24,7 +24,7 @@ interface EditableServicesProps {
       updateDescription: (desc: string) => void;
       updatePrice: (price: string) => void;
       remove: () => void;
-    }
+    },
   ) => React.ReactNode;
 }
 
@@ -84,7 +84,8 @@ export function EditableServices({
       {value.map((service, index) => {
         const handlers = {
           updateName: (name: string) => updateService(index, { name }),
-          updateDescription: (desc: string) => updateService(index, { description: desc }),
+          updateDescription: (desc: string) =>
+            updateService(index, { description: desc }),
           updatePrice: (price: string) => updateService(index, { price }),
           remove: () => removeService(index),
         };
@@ -101,7 +102,9 @@ export function EditableServices({
               className={cn(
                 "transition-all duration-150",
                 dragIndex === index && "opacity-50",
-                dropIndex === index && dragIndex !== index && "border-t-2 border-blue-500"
+                dropIndex === index &&
+                  dragIndex !== index &&
+                  "border-t-2 border-blue-500",
               )}
             >
               {renderItem(service, index, handlers)}
@@ -121,8 +124,10 @@ export function EditableServices({
             className={cn(
               "group relative p-4 border rounded-lg bg-white/5 hover:bg-white/10 transition-all",
               dragIndex === index && "opacity-50",
-              dropIndex === index && dragIndex !== index && "border-t-2 border-blue-500",
-              itemClassName
+              dropIndex === index &&
+                dragIndex !== index &&
+                "border-t-2 border-blue-500",
+              itemClassName,
             )}
           >
             <div className="absolute left-2 top-1/2 -translate-y-1/2 cursor-grab opacity-0 group-hover:opacity-50 hover:opacity-100">

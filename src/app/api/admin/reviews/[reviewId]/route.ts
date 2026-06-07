@@ -1,16 +1,16 @@
-import { NextRequest, NextResponse } from "next/server";
+import { eq } from "drizzle-orm";
+import { type NextRequest, NextResponse } from "next/server";
 import { db } from "@/db";
 import { reviews } from "@/db/schema";
-import { eq } from "drizzle-orm";
 import { getSession } from "@/lib/auth";
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: Promise<{ reviewId: string }> }
+  { params }: { params: Promise<{ reviewId: string }> },
 ) {
   try {
     const session = await getSession();
-    if (!session || session.user.role !== "admin") {
+    if (session?.user.role !== "admin") {
       return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
     }
 
@@ -21,7 +21,7 @@ export async function PUT(
     if (!status || !["approved", "rejected"].includes(status)) {
       return NextResponse.json(
         { error: "Status must be 'approved' or 'rejected'" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -40,7 +40,7 @@ export async function PUT(
     console.error("Error updating review:", error);
     return NextResponse.json(
       { error: "Failed to update review" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

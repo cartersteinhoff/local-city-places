@@ -1,15 +1,18 @@
-import { NextRequest, NextResponse } from "next/server";
+import { and, desc, eq } from "drizzle-orm";
+import { type NextRequest, NextResponse } from "next/server";
+import { db, members, merchants, surveyResponses, surveys, users } from "@/db";
 import { getSession } from "@/lib/auth";
-import { db, surveys, surveyResponses, merchants, members, users } from "@/db";
-import { eq, and, desc, sql } from "drizzle-orm";
 
 export async function GET(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  _request: NextRequest,
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     const session = await getSession();
-    if (!session || (session.user.role !== "merchant" && session.user.role !== "admin")) {
+    if (
+      !session ||
+      (session.user.role !== "merchant" && session.user.role !== "admin")
+    ) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -23,7 +26,10 @@ export async function GET(
       .limit(1);
 
     if (!merchant) {
-      return NextResponse.json({ error: "Merchant not found" }, { status: 404 });
+      return NextResponse.json(
+        { error: "Merchant not found" },
+        { status: 404 },
+      );
     }
 
     // Get survey
@@ -74,7 +80,9 @@ export async function GET(
       if (question.type === "multiple_choice") {
         summary[question.id] = {
           type: "multiple_choice",
-          options: Object.fromEntries((question.options || []).map((opt) => [opt, 0])),
+          options: Object.fromEntries(
+            (question.options || []).map((opt) => [opt, 0]),
+          ),
         };
       } else {
         summary[question.id] = {
@@ -96,7 +104,7 @@ export async function GET(
             questionSummary.options[answer]++;
           }
         } else {
-          if (answer && answer.trim()) {
+          if (answer?.trim()) {
             questionSummary.answers.push(answer);
           }
         }
@@ -129,7 +137,7 @@ export async function GET(
     console.error("Survey responses error:", error);
     return NextResponse.json(
       { error: "Internal server error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

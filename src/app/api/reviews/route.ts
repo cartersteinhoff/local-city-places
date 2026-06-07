@@ -1,8 +1,8 @@
-import { NextRequest, NextResponse } from "next/server";
+import { type NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
 import { db } from "@/db";
 import { reviews } from "@/db/schema";
 import { getSession } from "@/lib/auth";
-import { z } from "zod";
 
 const createReviewSchema = z.object({
   merchantId: z.string().uuid(),
@@ -21,7 +21,7 @@ export async function POST(request: NextRequest) {
     if (!session.member) {
       return NextResponse.json(
         { error: "Member profile required" },
-        { status: 403 }
+        { status: 403 },
       );
     }
 
@@ -31,7 +31,7 @@ export async function POST(request: NextRequest) {
     if (!result.success) {
       return NextResponse.json(
         { error: "Invalid data", details: result.error.flatten() },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -70,7 +70,7 @@ export async function POST(request: NextRequest) {
     console.error("Error creating review:", error);
     return NextResponse.json(
       { error: "Failed to create review" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

@@ -1,19 +1,25 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { Camera, Loader2, Save, User } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
 import { DashboardLayout } from "@/components/layout";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
-import { Camera, Loader2, Save, User } from "lucide-react";
-import { memberNavItems } from "../nav";
+import { Switch } from "@/components/ui/switch";
 import { useUser } from "@/hooks/use-user";
 import { formatPhoneNumber, stripPhoneNumber } from "@/lib/utils";
+import { memberNavItems } from "../nav";
 
 interface ProfileData {
   email: string;
@@ -34,17 +40,29 @@ interface ProfileData {
 
 export default function MemberProfilePage() {
   const router = useRouter();
-  const { user, userName, isLoading: authLoading, isAuthenticated, mutate } = useUser();
+  const {
+    user,
+    userName,
+    isLoading: authLoading,
+    isAuthenticated,
+    mutate,
+  } = useUser();
   const [profile, setProfile] = useState<ProfileData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
-  const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
+  const [message, setMessage] = useState<{
+    type: "success" | "error";
+    text: string;
+  } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [pendingPhoto, setPendingPhoto] = useState<string | null>(null);
 
   // Redirect if not authenticated
   useEffect(() => {
-    if (!authLoading && (!isAuthenticated || (user?.role !== "member" && user?.role !== "admin"))) {
+    if (
+      !authLoading &&
+      (!isAuthenticated || (user?.role !== "member" && user?.role !== "admin"))
+    ) {
       router.push("/");
     }
   }, [authLoading, isAuthenticated, user?.role, router]);
@@ -53,7 +71,7 @@ export default function MemberProfilePage() {
     if (!authLoading && isAuthenticated) {
       fetchProfile();
     }
-  }, [authLoading, isAuthenticated]);
+  }, [authLoading, isAuthenticated, fetchProfile]);
 
   async function fetchProfile() {
     try {
@@ -109,7 +127,7 @@ export default function MemberProfilePage() {
       const data = await response.json();
       if (data.profilePhotoUrl) {
         setProfile((prev) =>
-          prev ? { ...prev, profilePhotoUrl: data.profilePhotoUrl } : null
+          prev ? { ...prev, profilePhotoUrl: data.profilePhotoUrl } : null,
         );
         // Revalidate user data to update header
         mutate();
@@ -138,11 +156,17 @@ export default function MemberProfilePage() {
     reader.readAsDataURL(file);
   }
 
-  function updateField<K extends keyof ProfileData>(field: K, value: ProfileData[K]) {
+  function updateField<K extends keyof ProfileData>(
+    field: K,
+    value: ProfileData[K],
+  ) {
     setProfile((prev) => (prev ? { ...prev, [field]: value } : null));
   }
 
-  function updateNotificationPref(key: keyof ProfileData["notificationPrefs"], value: boolean) {
+  function updateNotificationPref(
+    key: keyof ProfileData["notificationPrefs"],
+    value: boolean,
+  ) {
     setProfile((prev) =>
       prev
         ? {
@@ -152,7 +176,7 @@ export default function MemberProfilePage() {
               [key]: value,
             },
           }
-        : null
+        : null,
     );
   }
 
@@ -280,7 +304,9 @@ export default function MemberProfilePage() {
                   id="phone"
                   type="tel"
                   value={profile.phone || ""}
-                  onChange={(e) => updateField("phone", formatPhoneNumber(e.target.value))}
+                  onChange={(e) =>
+                    updateField("phone", formatPhoneNumber(e.target.value))
+                  }
                   placeholder="(425) 451-8599"
                 />
               </div>

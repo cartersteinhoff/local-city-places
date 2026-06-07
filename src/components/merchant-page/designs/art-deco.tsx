@@ -12,19 +12,49 @@
  * Wrap with EditorProvider to enable editing.
  */
 
+import {
+  Check,
+  ChevronLeft,
+  ChevronRight,
+  Clock,
+  Copy,
+  Gem,
+  Globe,
+  GripVertical,
+  Heart,
+  Image as ImageIcon,
+  LogIn,
+  MapPin,
+  Navigation,
+  Pencil,
+  Phone,
+  Plus,
+  Quote,
+  Share2,
+  Sparkles,
+  Star,
+  ThumbsUp,
+  Trash2,
+  Upload,
+  X,
+} from "lucide-react";
 import { Poiret_One, Raleway } from "next/font/google";
 import { Facebook, Instagram } from "@/components/icons/social-icons";
-import { MapPin, Phone, Globe, Share2, Gem, Navigation, Clock, Image as ImageIcon, Sparkles, Upload, Plus, Trash2, GripVertical, Pencil, X, ChevronLeft, ChevronRight, Star, Quote, ThumbsUp, Heart, Copy, Check, LogIn } from "lucide-react";
-import { formatPhoneNumber, formatHoursDisplay, cn } from "@/lib/utils";
-import { useEditor, useEditable } from "../editor-context";
-import { EditableText, EditableImage, EditableLink, PreventLink } from "../editable-primitives";
-import { SortableGrid } from "@/components/ui/sortable-grid";
-import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from "@/components/ui/tooltip";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { SortableGrid } from "@/components/ui/sortable-grid";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { cn, formatHoursDisplay, formatPhoneNumber } from "@/lib/utils";
+import { EditableImage, EditableText } from "../editable-primitives";
+import { useEditor } from "../editor-context";
 
 const poiretOne = Poiret_One({
   weight: "400",
@@ -37,10 +67,15 @@ const raleway = Raleway({
   subsets: ["latin"],
   display: "swap",
 });
-import { extractVimeoId, getVimeoEmbedUrl } from "@/lib/vimeo";
-import { useState, useRef, useEffect } from "react";
-import { GoogleMapEmbed, getGoogleMapsDirectionsUrl, formatFullAddress } from "../google-map-embed";
+
+import { useEffect, useRef, useState } from "react";
 import { useUser } from "@/hooks/use-user";
+import { extractVimeoId, getVimeoEmbedUrl } from "@/lib/vimeo";
+import {
+  formatFullAddress,
+  GoogleMapEmbed,
+  getGoogleMapsDirectionsUrl,
+} from "../google-map-embed";
 
 // =============================================================================
 // EDITABLE CONTACT FIELD
@@ -50,7 +85,12 @@ import { useUser } from "@/hooks/use-user";
 interface EditableContactFieldProps {
   field: string;
   value: string | null | undefined;
-  secondaryFields?: { city?: string | null; state?: string | null; zipCode?: string | null; googlePlaceId?: string | null };
+  secondaryFields?: {
+    city?: string | null;
+    state?: string | null;
+    zipCode?: string | null;
+    googlePlaceId?: string | null;
+  };
   icon: React.ReactNode;
   label: string;
   displayValue?: string;
@@ -79,7 +119,9 @@ function EditableContactField({
 
   // Google Places state
   const [searchQuery, setSearchQuery] = useState("");
-  const [predictions, setPredictions] = useState<Array<{ place_id: string; description: string }>>([]);
+  const [predictions, setPredictions] = useState<
+    Array<{ place_id: string; description: string }>
+  >([]);
   const [isSearching, setIsSearching] = useState(false);
   const [isScriptLoaded, setIsScriptLoaded] = useState(false);
   const autocompleteService = useRef<any>(null);
@@ -120,9 +162,12 @@ function EditableContactField({
     const initServices = () => {
       if (!window.google?.maps?.places) return;
 
-      autocompleteService.current = new window.google.maps.places.AutocompleteService();
+      autocompleteService.current =
+        new window.google.maps.places.AutocompleteService();
       if (dummyDiv.current) {
-        placesService.current = new window.google.maps.places.PlacesService(dummyDiv.current);
+        placesService.current = new window.google.maps.places.PlacesService(
+          dummyDiv.current,
+        );
       }
       setIsScriptLoaded(true);
     };
@@ -186,23 +231,29 @@ function EditableContactField({
         (results: any[] | null, status: string) => {
           setIsSearching(false);
           if (status === "OK" && results) {
-            setPredictions(results.map((r: any) => ({ place_id: r.place_id, description: r.description })));
+            setPredictions(
+              results.map((r: any) => ({
+                place_id: r.place_id,
+                description: r.description,
+              })),
+            );
           } else {
             setPredictions([]);
           }
-        }
+        },
       );
     }, 300);
   };
 
   // Select a place from predictions
   const handleSelectPlace = (placeId: string) => {
-
     if (!placesService.current) {
       console.error("PlacesService not initialized");
       // Try to initialize it now
       if (window.google?.maps?.places && dummyDiv.current) {
-        placesService.current = new window.google.maps.places.PlacesService(dummyDiv.current);
+        placesService.current = new window.google.maps.places.PlacesService(
+          dummyDiv.current,
+        );
       } else {
         return;
       }
@@ -254,7 +305,7 @@ function EditableContactField({
           onUpdate("zipCode", zipCode || null);
           onUpdate("googlePlaceId", placeId);
         }
-      }
+      },
     );
   };
 
@@ -285,7 +336,9 @@ function EditableContactField({
       >
         {icon}
         <div className="min-w-0">
-          <p className="text-[10px] uppercase tracking-wider opacity-70">{label}</p>
+          <p className="text-[10px] uppercase tracking-wider opacity-70">
+            {label}
+          </p>
           <p className={`font-semibold truncate ${raleway.className}`}>
             {displayValue || value}
           </p>
@@ -301,15 +354,24 @@ function EditableContactField({
         <div
           className={cn(
             "flex items-center gap-3 cursor-pointer transition-all group",
-            showEditHints && "hover:bg-[#0D1F22]/20 rounded-lg px-3 py-2 -mx-3 -my-2"
+            showEditHints &&
+              "hover:bg-[#0D1F22]/20 rounded-lg px-3 py-2 -mx-3 -my-2",
           )}
         >
           {icon}
           <div>
-            <p className="text-[10px] uppercase tracking-wider opacity-70">{label}</p>
-            <p className={`font-semibold ${raleway.className} flex items-center gap-2`}>
-              {displayValue || value || <span className="opacity-50">{placeholder}</span>}
-              {showEditHints && <Pencil className="w-3 h-3 opacity-0 group-hover:opacity-70" />}
+            <p className="text-[10px] uppercase tracking-wider opacity-70">
+              {label}
+            </p>
+            <p
+              className={`font-semibold ${raleway.className} flex items-center gap-2`}
+            >
+              {displayValue || value || (
+                <span className="opacity-50">{placeholder}</span>
+              )}
+              {showEditHints && (
+                <Pencil className="w-3 h-3 opacity-0 group-hover:opacity-70" />
+              )}
             </p>
           </div>
         </div>
@@ -324,14 +386,21 @@ function EditableContactField({
               {/* Google Places Search */}
               <div className="relative">
                 <label className="text-xs text-[#D4AF37]/70 block mb-1">
-                  Search Address {!isScriptLoaded && <span className="text-[#D4AF37]/50">(loading...)</span>}
+                  Search Address{" "}
+                  {!isScriptLoaded && (
+                    <span className="text-[#D4AF37]/50">(loading...)</span>
+                  )}
                 </label>
                 <div className="relative">
                   <input
                     type="text"
                     value={searchQuery}
                     onChange={(e) => handleSearch(e.target.value)}
-                    placeholder={isScriptLoaded ? "Type to search..." : "Loading Google Places..."}
+                    placeholder={
+                      isScriptLoaded
+                        ? "Type to search..."
+                        : "Loading Google Places..."
+                    }
                     disabled={!isScriptLoaded}
                     className="w-full bg-[#0D1F22] border border-[#D4AF37]/30 rounded px-3 py-2 text-sm focus:border-[#D4AF37] outline-none disabled:opacity-50"
                   />
@@ -357,7 +426,9 @@ function EditableContactField({
               </div>
 
               <div className="border-t border-[#D4AF37]/20 pt-3">
-                <label className="text-xs text-[#D4AF37]/70 block mb-1">Street Address</label>
+                <label className="text-xs text-[#D4AF37]/70 block mb-1">
+                  Street Address
+                </label>
                 <input
                   type="text"
                   value={localValue}
@@ -368,7 +439,9 @@ function EditableContactField({
               </div>
               <div className="grid grid-cols-3 gap-2">
                 <div className="col-span-1">
-                  <label className="text-xs text-[#D4AF37]/70 block mb-1">City</label>
+                  <label className="text-xs text-[#D4AF37]/70 block mb-1">
+                    City
+                  </label>
                   <input
                     type="text"
                     value={localCity}
@@ -378,18 +451,24 @@ function EditableContactField({
                   />
                 </div>
                 <div>
-                  <label className="text-xs text-[#D4AF37]/70 block mb-1">State</label>
+                  <label className="text-xs text-[#D4AF37]/70 block mb-1">
+                    State
+                  </label>
                   <input
                     type="text"
                     value={localState}
-                    onChange={(e) => setLocalState(e.target.value.toUpperCase())}
+                    onChange={(e) =>
+                      setLocalState(e.target.value.toUpperCase())
+                    }
                     placeholder="CO"
                     maxLength={2}
                     className="w-full bg-[#0D1F22] border border-[#D4AF37]/30 rounded px-3 py-2 text-sm focus:border-[#D4AF37] outline-none uppercase"
                   />
                 </div>
                 <div>
-                  <label className="text-xs text-[#D4AF37]/70 block mb-1">ZIP</label>
+                  <label className="text-xs text-[#D4AF37]/70 block mb-1">
+                    ZIP
+                  </label>
                   <input
                     type="text"
                     value={localZip}
@@ -403,14 +482,15 @@ function EditableContactField({
           ) : (
             // Single field (phone, website)
             <div>
-              <label className="text-xs text-[#D4AF37]/70 block mb-1">{label}</label>
+              <label className="text-xs text-[#D4AF37]/70 block mb-1">
+                {label}
+              </label>
               <input
                 type="text"
                 value={localValue}
                 onChange={(e) => setLocalValue(e.target.value)}
                 placeholder={placeholder}
                 className="w-full bg-[#0D1F22] border border-[#D4AF37]/30 rounded px-3 py-2 text-sm focus:border-[#D4AF37] outline-none"
-                autoFocus
               />
             </div>
           )}
@@ -440,7 +520,11 @@ function EditableContactField({
 // Handles video display with URL editing in edit mode
 // =============================================================================
 
-function EditableVideoEmbed({ vimeoUrl }: { vimeoUrl: string | null | undefined }) {
+function EditableVideoEmbed({
+  vimeoUrl,
+}: {
+  vimeoUrl: string | null | undefined;
+}) {
   const { editable, onUpdate, showEditHints } = useEditor();
   const [isEditing, setIsEditing] = useState(false);
   const [localUrl, setLocalUrl] = useState(vimeoUrl || "");
@@ -483,7 +567,7 @@ function EditableVideoEmbed({ vimeoUrl }: { vimeoUrl: string | null | undefined 
           {/* Placeholder container */}
           <div
             className="relative w-[260px] sm:w-[300px] border-2 border-dashed border-[#D4AF37]/30 bg-[#0D1F22] flex flex-col items-center justify-center gap-4 cursor-pointer hover:border-[#D4AF37]/60 transition-colors"
-            style={{ aspectRatio: '9/16' }}
+            style={{ aspectRatio: "9/16" }}
             onClick={() => setIsEditing(true)}
           >
             {isEditing ? (
@@ -494,17 +578,23 @@ function EditableVideoEmbed({ vimeoUrl }: { vimeoUrl: string | null | undefined 
                   onChange={(e) => setLocalUrl(e.target.value)}
                   placeholder="https://vimeo.com/..."
                   className="w-full bg-transparent border-b border-[#D4AF37]/50 focus:border-[#D4AF37] outline-none text-sm text-[#F5F1E6] px-2 py-1"
-                  autoFocus
                 />
                 <div className="flex gap-2">
                   <button
-                    onClick={(e) => { e.stopPropagation(); handleSave(); }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleSave();
+                    }}
                     className="flex-1 text-xs bg-[#D4AF37] text-[#0D1F22] py-1 px-2 hover:bg-[#E5C97B]"
                   >
                     Save
                   </button>
                   <button
-                    onClick={(e) => { e.stopPropagation(); setIsEditing(false); setLocalUrl(vimeoUrl || ""); }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setIsEditing(false);
+                      setLocalUrl(vimeoUrl || "");
+                    }}
                     className="flex-1 text-xs border border-[#D4AF37]/50 text-[#D4AF37] py-1 px-2 hover:bg-[#D4AF37]/10"
                   >
                     Cancel
@@ -519,7 +609,6 @@ function EditableVideoEmbed({ vimeoUrl }: { vimeoUrl: string | null | undefined 
               </>
             )}
           </div>
-
         </div>
       </div>
     );
@@ -548,9 +637,7 @@ function EditableVideoEmbed({ vimeoUrl }: { vimeoUrl: string | null | undefined 
         </div>
 
         {/* Video container */}
-        <div
-          className="relative w-[260px] sm:w-[300px] h-[430px] sm:h-[500px] border-2 border-[#D4AF37] bg-black overflow-hidden"
-        >
+        <div className="relative w-[260px] sm:w-[300px] h-[430px] sm:h-[500px] border-2 border-[#D4AF37] bg-black overflow-hidden">
           <iframe
             src={`${getVimeoEmbedUrl(videoId!)}?background=0&autoplay=0&title=0&byline=0&portrait=0`}
             className="absolute inset-0 w-full h-full scale-[1.15] origin-bottom"
@@ -567,14 +654,16 @@ function EditableVideoEmbed({ vimeoUrl }: { vimeoUrl: string | null | undefined 
               onClick={() => setIsEditing(true)}
             >
               {isEditing ? (
-                <div className="p-4 w-full space-y-3" onClick={(e) => e.stopPropagation()}>
+                <div
+                  className="p-4 w-full space-y-3"
+                  onClick={(e) => e.stopPropagation()}
+                >
                   <input
                     type="text"
                     value={localUrl}
                     onChange={(e) => setLocalUrl(e.target.value)}
                     placeholder="https://vimeo.com/..."
                     className="w-full bg-transparent border-b border-white/50 focus:border-white outline-none text-sm text-white px-2 py-1"
-                    autoFocus
                   />
                   <div className="flex gap-2">
                     <button
@@ -584,7 +673,10 @@ function EditableVideoEmbed({ vimeoUrl }: { vimeoUrl: string | null | undefined 
                       Save
                     </button>
                     <button
-                      onClick={() => { setIsEditing(false); setLocalUrl(vimeoUrl || ""); }}
+                      onClick={() => {
+                        setIsEditing(false);
+                        setLocalUrl(vimeoUrl || "");
+                      }}
                       className="flex-1 text-xs border border-white/50 text-white py-1 px-2 hover:bg-white/10"
                     >
                       Cancel
@@ -592,12 +684,13 @@ function EditableVideoEmbed({ vimeoUrl }: { vimeoUrl: string | null | undefined 
                   </div>
                 </div>
               ) : (
-                <span className="text-white text-sm">Click to edit video URL</span>
+                <span className="text-white text-sm">
+                  Click to edit video URL
+                </span>
               )}
             </div>
           )}
         </div>
-
       </div>
     </div>
   );
@@ -618,7 +711,15 @@ interface Hours {
   sunday?: string;
 }
 
-const DAYS: (keyof Hours)[] = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"];
+const DAYS: (keyof Hours)[] = [
+  "monday",
+  "tuesday",
+  "wednesday",
+  "thursday",
+  "friday",
+  "saturday",
+  "sunday",
+];
 const DAY_LABELS: Record<keyof Hours, string> = {
   monday: "Monday",
   tuesday: "Tuesday",
@@ -630,15 +731,49 @@ const DAY_LABELS: Record<keyof Hours, string> = {
 };
 
 const TIME_OPTIONS = [
-  "6:00 AM", "6:30 AM", "7:00 AM", "7:30 AM", "8:00 AM", "8:30 AM",
-  "9:00 AM", "9:30 AM", "10:00 AM", "10:30 AM", "11:00 AM", "11:30 AM",
-  "12:00 PM", "12:30 PM", "1:00 PM", "1:30 PM", "2:00 PM", "2:30 PM",
-  "3:00 PM", "3:30 PM", "4:00 PM", "4:30 PM", "5:00 PM", "5:30 PM",
-  "6:00 PM", "6:30 PM", "7:00 PM", "7:30 PM", "8:00 PM", "8:30 PM",
-  "9:00 PM", "9:30 PM", "10:00 PM", "10:30 PM", "11:00 PM", "11:30 PM",
+  "6:00 AM",
+  "6:30 AM",
+  "7:00 AM",
+  "7:30 AM",
+  "8:00 AM",
+  "8:30 AM",
+  "9:00 AM",
+  "9:30 AM",
+  "10:00 AM",
+  "10:30 AM",
+  "11:00 AM",
+  "11:30 AM",
+  "12:00 PM",
+  "12:30 PM",
+  "1:00 PM",
+  "1:30 PM",
+  "2:00 PM",
+  "2:30 PM",
+  "3:00 PM",
+  "3:30 PM",
+  "4:00 PM",
+  "4:30 PM",
+  "5:00 PM",
+  "5:30 PM",
+  "6:00 PM",
+  "6:30 PM",
+  "7:00 PM",
+  "7:30 PM",
+  "8:00 PM",
+  "8:30 PM",
+  "9:00 PM",
+  "9:30 PM",
+  "10:00 PM",
+  "10:30 PM",
+  "11:00 PM",
+  "11:30 PM",
 ];
 
-function parseHoursValue(value: string | undefined): { isOpen: boolean; open: string; close: string } {
+function parseHoursValue(value: string | undefined): {
+  isOpen: boolean;
+  open: string;
+  close: string;
+} {
   if (!value || value.toLowerCase() === "closed") {
     return { isOpen: false, open: "9:00 AM", close: "5:00 PM" };
   }
@@ -648,12 +783,20 @@ function parseHoursValue(value: string | undefined): { isOpen: boolean; open: st
   // Try to parse display format "9:00 AM - 5:00 PM"
   const displayMatch = value.match(/^(.+?)\s*[-–]\s*(.+)$/);
   if (displayMatch) {
-    return { isOpen: true, open: displayMatch[1].trim(), close: displayMatch[2].trim() };
+    return {
+      isOpen: true,
+      open: displayMatch[1].trim(),
+      close: displayMatch[2].trim(),
+    };
   }
   return { isOpen: true, open: "9:00 AM", close: "5:00 PM" };
 }
 
-function formatHoursForStorage(isOpen: boolean, open: string, close: string): string {
+function formatHoursForStorage(
+  isOpen: boolean,
+  open: string,
+  close: string,
+): string {
   if (!isOpen) return "Closed";
   return `${open} - ${close}`;
 }
@@ -686,7 +829,9 @@ function HoursEditorRow({
     return (
       <div className="flex justify-between items-center py-2 border-b border-[#D4AF37]/10 last:border-0">
         <span className={`text-[#D4AF37] ${raleway.className}`}>{label}</span>
-        <span className={`text-[#F5F1E6]/70 ${raleway.className}`}>{formatHoursDisplay(value)}</span>
+        <span className={`text-[#F5F1E6]/70 ${raleway.className}`}>
+          {formatHoursDisplay(value)}
+        </span>
       </div>
     );
   }
@@ -698,13 +843,17 @@ function HoursEditorRow({
         <div
           className={cn(
             "flex justify-between items-center py-2 border-b border-[#D4AF37]/10 last:border-0 cursor-pointer group",
-            showEditHints && "hover:bg-[#D4AF37]/10 rounded px-2 -mx-2"
+            showEditHints && "hover:bg-[#D4AF37]/10 rounded px-2 -mx-2",
           )}
         >
           <span className={`text-[#D4AF37] ${raleway.className}`}>{label}</span>
-          <span className={`text-[#F5F1E6]/70 ${raleway.className} flex items-center gap-2`}>
+          <span
+            className={`text-[#F5F1E6]/70 ${raleway.className} flex items-center gap-2`}
+          >
             {formatHoursDisplay(value)}
-            {showEditHints && <Pencil className="w-3 h-3 opacity-0 group-hover:opacity-50 text-[#D4AF37]" />}
+            {showEditHints && (
+              <Pencil className="w-3 h-3 opacity-0 group-hover:opacity-50 text-[#D4AF37]" />
+            )}
           </span>
         </div>
       </PopoverTrigger>
@@ -726,26 +875,34 @@ function HoursEditorRow({
           {isOpenToday && (
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="text-xs text-[#D4AF37]/70 block mb-1">Opens</label>
+                <label className="text-xs text-[#D4AF37]/70 block mb-1">
+                  Opens
+                </label>
                 <select
                   value={openTime}
                   onChange={(e) => setOpenTime(e.target.value)}
                   className="w-full bg-[#0D1F22] border border-[#D4AF37]/30 rounded px-2 py-1.5 text-sm focus:border-[#D4AF37] outline-none"
                 >
                   {TIME_OPTIONS.map((t) => (
-                    <option key={t} value={t}>{t}</option>
+                    <option key={t} value={t}>
+                      {t}
+                    </option>
                   ))}
                 </select>
               </div>
               <div>
-                <label className="text-xs text-[#D4AF37]/70 block mb-1">Closes</label>
+                <label className="text-xs text-[#D4AF37]/70 block mb-1">
+                  Closes
+                </label>
                 <select
                   value={closeTime}
                   onChange={(e) => setCloseTime(e.target.value)}
                   className="w-full bg-[#0D1F22] border border-[#D4AF37]/30 rounded px-2 py-1.5 text-sm focus:border-[#D4AF37] outline-none"
                 >
                   {TIME_OPTIONS.map((t) => (
-                    <option key={t} value={t}>{t}</option>
+                    <option key={t} value={t}>
+                      {t}
+                    </option>
                   ))}
                 </select>
               </div>
@@ -811,7 +968,10 @@ function EditableServicesList({ services }: { services: Service[] }) {
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
 
   const handleAdd = () => {
-    const newServices = [...services, { name: "New Service", description: "", price: "" }];
+    const newServices = [
+      ...services,
+      { name: "New Service", description: "", price: "" },
+    ];
     onUpdate("services", newServices);
     setEditingIndex(newServices.length - 1);
   };
@@ -822,9 +982,13 @@ function EditableServicesList({ services }: { services: Service[] }) {
     if (editingIndex === index) setEditingIndex(null);
   };
 
-  const handleUpdateService = (index: number, field: keyof Service, value: string) => {
+  const handleUpdateService = (
+    index: number,
+    field: keyof Service,
+    value: string,
+  ) => {
     const newServices = services.map((s, i) =>
-      i === index ? { ...s, [field]: value } : s
+      i === index ? { ...s, [field]: value } : s,
     );
     onUpdate("services", newServices);
   };
@@ -834,10 +998,12 @@ function EditableServicesList({ services }: { services: Service[] }) {
   };
 
   const renderServiceItem = (service: Service, idx: number) => (
-    <div className={cn(
-      "border border-[#D4AF37]/20 p-6 hover:border-[#D4AF37]/40 transition-colors relative group h-full bg-[#0D1F22]",
-      editable && editingIndex !== idx && "cursor-grab"
-    )}>
+    <div
+      className={cn(
+        "border border-[#D4AF37]/20 p-6 hover:border-[#D4AF37]/40 transition-colors relative group h-full bg-[#0D1F22]",
+        editable && editingIndex !== idx && "cursor-grab",
+      )}
+    >
       {editable && editingIndex === idx ? (
         // Edit mode for this service
         <div className="space-y-3">
@@ -847,7 +1013,6 @@ function EditableServicesList({ services }: { services: Service[] }) {
             onChange={(e) => handleUpdateService(idx, "name", e.target.value)}
             placeholder="Service name"
             className="w-full bg-transparent border-b border-[#D4AF37]/50 focus:border-[#D4AF37] outline-none text-lg text-[#D4AF37] font-medium"
-            autoFocus
             onClick={(e) => e.stopPropagation()}
           />
           <input
@@ -860,14 +1025,19 @@ function EditableServicesList({ services }: { services: Service[] }) {
           />
           <textarea
             value={service.description || ""}
-            onChange={(e) => handleUpdateService(idx, "description", e.target.value)}
+            onChange={(e) =>
+              handleUpdateService(idx, "description", e.target.value)
+            }
             placeholder="Description (optional)"
             className="w-full bg-transparent border-b border-[#D4AF37]/50 focus:border-[#D4AF37] outline-none text-sm text-[#F5F1E6]/60 resize-none"
             rows={2}
             onClick={(e) => e.stopPropagation()}
           />
           <button
-            onClick={(e) => { e.stopPropagation(); setEditingIndex(null); }}
+            onClick={(e) => {
+              e.stopPropagation();
+              setEditingIndex(null);
+            }}
             className="text-xs text-[#D4AF37] hover:underline"
           >
             Done
@@ -887,17 +1057,27 @@ function EditableServicesList({ services }: { services: Service[] }) {
 
           <div
             className="flex justify-between items-start mb-2 cursor-pointer"
-            onClick={(e) => { e.stopPropagation(); editable && setEditingIndex(idx); }}
+            onClick={(e) => {
+              e.stopPropagation();
+              editable && setEditingIndex(idx);
+            }}
           >
-            <h3 className={`text-lg text-[#D4AF37] ${poiretOne.className}`}>{service.name}</h3>
+            <h3 className={`text-lg text-[#D4AF37] ${poiretOne.className}`}>
+              {service.name}
+            </h3>
             {service.price && (
-              <span className={`text-[#E5C97B] ${raleway.className}`}>{service.price}</span>
+              <span className={`text-[#E5C97B] ${raleway.className}`}>
+                {service.price}
+              </span>
             )}
           </div>
           {service.description && (
             <p
               className={`text-sm text-[#F5F1E6]/60 ${raleway.className} cursor-pointer`}
-              onClick={(e) => { e.stopPropagation(); editable && setEditingIndex(idx); }}
+              onClick={(e) => {
+                e.stopPropagation();
+                editable && setEditingIndex(idx);
+              }}
             >
               {service.description}
             </p>
@@ -906,7 +1086,10 @@ function EditableServicesList({ services }: { services: Service[] }) {
           {/* Edit mode: delete button */}
           {editable && showEditHints && (
             <button
-              onClick={(e) => { e.stopPropagation(); handleRemove(idx); }}
+              onClick={(e) => {
+                e.stopPropagation();
+                handleRemove(idx);
+              }}
               className="absolute top-2 right-2 w-6 h-6 bg-red-500/80 hover:bg-red-500 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-10"
             >
               <Trash2 className="w-3 h-3 text-white" />
@@ -956,7 +1139,13 @@ function EditableServicesList({ services }: { services: Service[] }) {
 // Handles photo display with edit/add/remove in edit mode
 // =============================================================================
 
-function EditablePhotoGallery({ photos, businessName }: { photos: string[]; businessName: string }) {
+function EditablePhotoGallery({
+  photos,
+  businessName,
+}: {
+  photos: string[];
+  businessName: string;
+}) {
   const { editable, onUpdate, onPhotoUpload, showEditHints } = useEditor();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isUploading, setIsUploading] = useState(false);
@@ -970,9 +1159,13 @@ function EditablePhotoGallery({ photos, businessName }: { photos: string[]; busi
       if (e.key === "Escape") {
         setLightboxIndex(null);
       } else if (e.key === "ArrowLeft") {
-        setLightboxIndex((prev) => (prev !== null && prev > 0 ? prev - 1 : photos.length - 1));
+        setLightboxIndex((prev) =>
+          prev !== null && prev > 0 ? prev - 1 : photos.length - 1,
+        );
       } else if (e.key === "ArrowRight") {
-        setLightboxIndex((prev) => (prev !== null && prev < photos.length - 1 ? prev + 1 : 0));
+        setLightboxIndex((prev) =>
+          prev !== null && prev < photos.length - 1 ? prev + 1 : 0,
+        );
       }
     };
 
@@ -1023,7 +1216,7 @@ function EditablePhotoGallery({ photos, businessName }: { photos: string[]; busi
     <div
       className={cn(
         "relative aspect-square border-2 border-[#D4AF37]/30 overflow-hidden group",
-        editable ? "cursor-grab" : "cursor-pointer"
+        editable ? "cursor-grab" : "cursor-pointer",
       )}
       onClick={() => handlePhotoClick(idx)}
     >
@@ -1078,7 +1271,9 @@ function EditablePhotoGallery({ photos, businessName }: { photos: string[]; busi
         <button
           onClick={(e) => {
             e.stopPropagation();
-            setLightboxIndex((prev) => (prev !== null && prev > 0 ? prev - 1 : photos.length - 1));
+            setLightboxIndex((prev) =>
+              prev !== null && prev > 0 ? prev - 1 : photos.length - 1,
+            );
           }}
           className="absolute left-4 top-1/2 -translate-y-1/2 w-12 h-12 flex items-center justify-center text-white/70 hover:text-white bg-black/30 hover:bg-black/50 rounded-full transition-all z-10"
         >
@@ -1091,7 +1286,9 @@ function EditablePhotoGallery({ photos, businessName }: { photos: string[]; busi
         <button
           onClick={(e) => {
             e.stopPropagation();
-            setLightboxIndex((prev) => (prev !== null && prev < photos.length - 1 ? prev + 1 : 0));
+            setLightboxIndex((prev) =>
+              prev !== null && prev < photos.length - 1 ? prev + 1 : 0,
+            );
           }}
           className="absolute right-4 top-1/2 -translate-y-1/2 w-12 h-12 flex items-center justify-center text-white/70 hover:text-white bg-black/30 hover:bg-black/50 rounded-full transition-all z-10"
         >
@@ -1182,7 +1379,10 @@ function EditableSocialLinks({
   const [editingField, setEditingField] = useState<string | null>(null);
   const [localValue, setLocalValue] = useState("");
 
-  const startEditing = (field: string, currentValue: string | null | undefined) => {
+  const startEditing = (
+    field: string,
+    currentValue: string | null | undefined,
+  ) => {
     setEditingField(field);
     setLocalValue(currentValue || "");
   };
@@ -1193,15 +1393,29 @@ function EditableSocialLinks({
   };
 
   const socialLinks = [
-    { field: "instagramUrl", url: instagramUrl, icon: Instagram, label: "Instagram" },
-    { field: "facebookUrl", url: facebookUrl, icon: Facebook, label: "Facebook" },
+    {
+      field: "instagramUrl",
+      url: instagramUrl,
+      icon: Instagram,
+      label: "Instagram",
+    },
+    {
+      field: "facebookUrl",
+      url: facebookUrl,
+      icon: Facebook,
+      label: "Facebook",
+    },
     {
       field: "tiktokUrl",
       url: tiktokUrl,
       label: "TikTok",
       customIcon: (
-        <svg className="w-5 h-5 text-[#D4AF37]" viewBox="0 0 24 24" fill="currentColor">
-          <path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-5.2 1.74 2.89 2.89 0 012.31-4.64 2.93 2.93 0 01.88.13V9.4a6.84 6.84 0 00-1-.05A6.33 6.33 0 005 20.1a6.34 6.34 0 0010.86-4.43v-7a8.16 8.16 0 004.77 1.52v-3.4a4.85 4.85 0 01-1-.1z"/>
+        <svg
+          className="w-5 h-5 text-[#D4AF37]"
+          viewBox="0 0 24 24"
+          fill="currentColor"
+        >
+          <path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-5.2 1.74 2.89 2.89 0 012.31-4.64 2.93 2.93 0 01.88.13V9.4a6.84 6.84 0 00-1-.05A6.33 6.33 0 005 20.1a6.34 6.34 0 0010.86-4.43v-7a8.16 8.16 0 004.77 1.52v-3.4a4.85 4.85 0 01-1-.1z" />
         </svg>
       ),
     },
@@ -1217,68 +1431,82 @@ function EditableSocialLinks({
     <div className="border-t border-[#D4AF37]/20">
       <div className="max-w-6xl mx-auto px-4 py-8">
         <div className="flex items-center justify-center gap-6">
-          <span className={`text-sm text-[#F5F1E6]/50 ${raleway.className}`}>Follow Us</span>
+          <span className={`text-sm text-[#F5F1E6]/50 ${raleway.className}`}>
+            Follow Us
+          </span>
           <div className="flex items-center gap-4">
-            {socialLinks.map(({ field, url, icon: Icon, customIcon, label }) => {
-              const isEditing = editingField === field;
-              const hasValue = !!url;
+            {socialLinks.map(
+              ({ field, url, icon: Icon, customIcon, label }) => {
+                const isEditing = editingField === field;
+                const hasValue = !!url;
 
-              // In view mode, only show links that have values
-              if (!editable && !hasValue) return null;
+                // In view mode, only show links that have values
+                if (!editable && !hasValue) return null;
 
-              return (
-                <div key={field} className="relative">
-                  {isEditing ? (
-                    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 bg-[#0D1F22] border border-[#D4AF37]/30 p-3 rounded shadow-lg z-10 w-64">
-                      <input
-                        type="text"
-                        value={localValue}
-                        onChange={(e) => setLocalValue(e.target.value)}
-                        placeholder={`${label} URL...`}
-                        className="w-full bg-transparent border-b border-[#D4AF37]/50 focus:border-[#D4AF37] outline-none text-sm text-[#F5F1E6] px-1 py-1"
-                        autoFocus
-                      />
-                      <div className="flex gap-2 mt-2">
-                        <button
-                          onClick={() => handleSave(field)}
-                          className="flex-1 text-xs bg-[#D4AF37] text-[#0D1F22] py-1 px-2"
-                        >
-                          Save
-                        </button>
-                        <button
-                          onClick={() => setEditingField(null)}
-                          className="flex-1 text-xs border border-[#D4AF37]/50 text-[#D4AF37] py-1 px-2"
-                        >
-                          Cancel
-                        </button>
+                return (
+                  <div key={field} className="relative">
+                    {isEditing ? (
+                      <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 bg-[#0D1F22] border border-[#D4AF37]/30 p-3 rounded shadow-lg z-10 w-64">
+                        <input
+                          type="text"
+                          value={localValue}
+                          onChange={(e) => setLocalValue(e.target.value)}
+                          placeholder={`${label} URL...`}
+                          className="w-full bg-transparent border-b border-[#D4AF37]/50 focus:border-[#D4AF37] outline-none text-sm text-[#F5F1E6] px-1 py-1"
+                        />
+                        <div className="flex gap-2 mt-2">
+                          <button
+                            onClick={() => handleSave(field)}
+                            className="flex-1 text-xs bg-[#D4AF37] text-[#0D1F22] py-1 px-2"
+                          >
+                            Save
+                          </button>
+                          <button
+                            onClick={() => setEditingField(null)}
+                            className="flex-1 text-xs border border-[#D4AF37]/50 text-[#D4AF37] py-1 px-2"
+                          >
+                            Cancel
+                          </button>
+                        </div>
                       </div>
-                    </div>
-                  ) : null}
+                    ) : null}
 
-                  {hasValue ? (
-                    <a
-                      href={editable ? undefined : url!}
-                      target={editable ? undefined : "_blank"}
-                      rel={editable ? undefined : "noopener noreferrer"}
-                      onClick={editable ? (e) => { e.preventDefault(); startEditing(field, url); } : undefined}
-                      className={cn(
-                        "w-12 h-12 border border-[#D4AF37]/30 flex items-center justify-center hover:border-[#D4AF37] hover:bg-[#D4AF37]/10 transition-all",
-                        editable && "cursor-pointer"
-                      )}
-                    >
-                      {customIcon || (Icon && <Icon className="w-5 h-5 text-[#D4AF37]" />)}
-                    </a>
-                  ) : editable ? (
-                    <button
-                      onClick={() => startEditing(field, url)}
-                      className="w-12 h-12 border border-dashed border-[#D4AF37]/30 flex items-center justify-center hover:border-[#D4AF37]/60 hover:bg-[#D4AF37]/5 transition-all"
-                    >
-                      {customIcon || (Icon && <Icon className="w-5 h-5 text-[#D4AF37]/40" />)}
-                    </button>
-                  ) : null}
-                </div>
-              );
-            })}
+                    {hasValue ? (
+                      <a
+                        href={editable ? undefined : url!}
+                        target={editable ? undefined : "_blank"}
+                        rel={editable ? undefined : "noopener noreferrer"}
+                        onClick={
+                          editable
+                            ? (e) => {
+                                e.preventDefault();
+                                startEditing(field, url);
+                              }
+                            : undefined
+                        }
+                        className={cn(
+                          "w-12 h-12 border border-[#D4AF37]/30 flex items-center justify-center hover:border-[#D4AF37] hover:bg-[#D4AF37]/10 transition-all",
+                          editable && "cursor-pointer",
+                        )}
+                      >
+                        {customIcon ||
+                          (Icon && <Icon className="w-5 h-5 text-[#D4AF37]" />)}
+                      </a>
+                    ) : editable ? (
+                      <button
+                        onClick={() => startEditing(field, url)}
+                        className="w-12 h-12 border border-dashed border-[#D4AF37]/30 flex items-center justify-center hover:border-[#D4AF37]/60 hover:bg-[#D4AF37]/5 transition-all"
+                      >
+                        {customIcon ||
+                          (Icon && (
+                            <Icon className="w-5 h-5 text-[#D4AF37]/40" />
+                          ))}
+                      </button>
+                    ) : null}
+                  </div>
+                );
+              },
+            )}
           </div>
         </div>
       </div>
@@ -1385,14 +1613,31 @@ export function ArtDecoDesign({
   const [hoverRating, setHoverRating] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [reviewError, setReviewError] = useState("");
-  const [lightboxPhoto, setLightboxPhoto] = useState<{ photos: string[]; index: number } | null>(null);
+  const [lightboxPhoto, setLightboxPhoto] = useState<{
+    photos: string[];
+    index: number;
+  } | null>(null);
 
   useEffect(() => {
     if (!lightboxPhoto) return;
     const handleKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") setLightboxPhoto(null);
-      if (e.key === "ArrowLeft") setLightboxPhoto(prev => prev ? { ...prev, index: (prev.index - 1 + prev.photos.length) % prev.photos.length } : null);
-      if (e.key === "ArrowRight") setLightboxPhoto(prev => prev ? { ...prev, index: (prev.index + 1) % prev.photos.length } : null);
+      if (e.key === "ArrowLeft")
+        setLightboxPhoto((prev) =>
+          prev
+            ? {
+                ...prev,
+                index:
+                  (prev.index - 1 + prev.photos.length) % prev.photos.length,
+              }
+            : null,
+        );
+      if (e.key === "ArrowRight")
+        setLightboxPhoto((prev) =>
+          prev
+            ? { ...prev, index: (prev.index + 1) % prev.photos.length }
+            : null,
+        );
     };
     window.addEventListener("keydown", handleKey);
     return () => window.removeEventListener("keydown", handleKey);
@@ -1402,9 +1647,16 @@ export function ArtDecoDesign({
   const location = [city, state].filter(Boolean).join(", ");
   const fullAddress = formatFullAddress(streetAddress, city, state, zipCode);
   const videoId = vimeoUrl ? extractVimeoId(vimeoUrl) : null;
-  const directionsUrl = getGoogleMapsDirectionsUrl(businessName, streetAddress, city, state, zipCode, googlePlaceId);
+  const directionsUrl = getGoogleMapsDirectionsUrl(
+    businessName,
+    streetAddress,
+    city,
+    state,
+    zipCode,
+    googlePlaceId,
+  );
 
-  const initials = businessName
+  const _initials = businessName
     .split(" ")
     .slice(0, 2)
     .map((word) => word[0])
@@ -1433,7 +1685,11 @@ export function ArtDecoDesign({
       const res = await fetch("/api/reviews", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ merchantId, content: reviewContent, rating: reviewRating }),
+        body: JSON.stringify({
+          merchantId,
+          content: reviewContent,
+          rating: reviewRating,
+        }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -1471,7 +1727,9 @@ export function ArtDecoDesign({
             <div className="w-7 h-7 border-2 border-[#D4AF37] flex items-center justify-center rotate-45">
               <Gem className="w-3.5 h-3.5 text-[#D4AF37] -rotate-45" />
             </div>
-            <span className="text-sm sm:text-base font-medium tracking-[0.15em] sm:tracking-[0.3em] uppercase text-[#D4AF37]/70 ml-1 sm:ml-2">Local City Places</span>
+            <span className="text-sm sm:text-base font-medium tracking-[0.15em] sm:tracking-[0.3em] uppercase text-[#D4AF37]/70 ml-1 sm:ml-2">
+              Local City Places
+            </span>
           </div>
           <div className="flex items-center gap-4">
             <a
@@ -1504,7 +1762,9 @@ export function ArtDecoDesign({
                 <div
                   key={i}
                   className="snap-start shrink-0 w-48 h-36 sm:w-64 sm:h-48 relative cursor-pointer hover:opacity-90 transition-opacity"
-                  onClick={() => setLightboxPhoto({ photos: allReviewPhotos, index: i })}
+                  onClick={() =>
+                    setLightboxPhoto({ photos: allReviewPhotos, index: i })
+                  }
                 >
                   <img
                     src={photo}
@@ -1541,7 +1801,13 @@ export function ArtDecoDesign({
               label="Website"
               displayValue={website?.replace(/^https?:\/\//, "")}
               placeholder="www.example.com"
-              href={website ? (website.startsWith("http") ? website : `https://${website}`) : undefined}
+              href={
+                website
+                  ? website.startsWith("http")
+                    ? website
+                    : `https://${website}`
+                  : undefined
+              }
               target="_blank"
             />
             <EditableContactField
@@ -1587,7 +1853,9 @@ export function ArtDecoDesign({
                       value={logoUrl}
                       alt={businessName}
                       className="relative w-32 h-32 bg-[#0D1F22] border-2 border-[#D4AF37] flex items-center justify-center overflow-hidden"
-                      placeholderIcon={<Gem className="w-8 h-8 text-[#D4AF37]/60" />}
+                      placeholderIcon={
+                        <Gem className="w-8 h-8 text-[#D4AF37]/60" />
+                      }
                       placeholderText="Add Logo"
                     />
                   </div>
@@ -1650,7 +1918,11 @@ export function ArtDecoDesign({
                       className="flex-1 flex items-center justify-center gap-2 px-3 py-3 text-black font-bold cursor-pointer"
                     >
                       <Phone className="w-4 h-4" />
-                      <span className={`${raleway.className} text-xs font-bold tracking-wide`}>{formatPhoneNumber(phone)}</span>
+                      <span
+                        className={`${raleway.className} text-xs font-bold tracking-wide`}
+                      >
+                        {formatPhoneNumber(phone)}
+                      </span>
                     </a>
                     <button
                       onClick={() => {
@@ -1661,19 +1933,41 @@ export function ArtDecoDesign({
                       className="flex items-center gap-1 px-2 border-l border-black/20 text-black/70 hover:text-black transition-colors cursor-pointer"
                       title="Copy phone number"
                     >
-                      {phoneCopied ? <><Check className="w-3.5 h-3.5" /><span className={`${raleway.className} text-[10px]`}>Copied</span></> : <><Copy className="w-3.5 h-3.5" /><span className={`${raleway.className} text-[10px]`}>Copy</span></>}
+                      {phoneCopied ? (
+                        <>
+                          <Check className="w-3.5 h-3.5" />
+                          <span className={`${raleway.className} text-[10px]`}>
+                            Copied
+                          </span>
+                        </>
+                      ) : (
+                        <>
+                          <Copy className="w-3.5 h-3.5" />
+                          <span className={`${raleway.className} text-[10px]`}>
+                            Copy
+                          </span>
+                        </>
+                      )}
                     </button>
                   </div>
                 )}
                 {website && (
                   <a
-                    href={website.startsWith("http") ? website : `https://${website}`}
+                    href={
+                      website.startsWith("http")
+                        ? website
+                        : `https://${website}`
+                    }
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex items-center justify-center gap-2 px-3 py-3 border border-[#D4AF37] hover:bg-[#D4AF37]/10 transition-colors cursor-pointer"
                   >
                     <Globe className="w-4 h-4 text-[#D4AF37]" />
-                    <span className={`${raleway.className} text-xs font-bold tracking-wide`}>Website</span>
+                    <span
+                      className={`${raleway.className} text-xs font-bold tracking-wide`}
+                    >
+                      Website
+                    </span>
                   </a>
                 )}
                 <a
@@ -1683,28 +1977,51 @@ export function ArtDecoDesign({
                   className="flex items-center justify-center gap-2 px-3 py-3 border border-[#D4AF37] hover:bg-[#D4AF37]/10 transition-colors cursor-pointer"
                 >
                   <Navigation className="w-4 h-4 text-[#D4AF37]" />
-                  <span className={`${raleway.className} text-xs font-bold tracking-wide`}>Directions</span>
+                  <span
+                    className={`${raleway.className} text-xs font-bold tracking-wide`}
+                  >
+                    Directions
+                  </span>
                 </a>
-                {allReviews.length > 0 && (() => {
-                  const rated = allReviews.filter((r) => r.rating != null);
-                  const avg = rated.length > 0 ? Math.round(rated.reduce((sum, r) => sum + (r.rating || 0), 0) / rated.length * 10) / 10 : 0;
-                  return (
-                    <a
-                      href="#reviews"
-                      className="flex items-center justify-center gap-2 px-3 py-3 border border-[#D4AF37] hover:bg-[#D4AF37]/10 transition-colors cursor-pointer"
-                    >
-                      <Star className="w-4 h-4 text-[#D4AF37] fill-[#D4AF37]" />
-                      <span className={`${raleway.className} text-xs font-bold tracking-wide`}>{avg > 0 ? `${avg.toFixed(1)}` : ""} ★ · {allReviews.length} Review{allReviews.length !== 1 ? "s" : ""}</span>
-                    </a>
-                  );
-                })()}
+                {allReviews.length > 0 &&
+                  (() => {
+                    const rated = allReviews.filter((r) => r.rating != null);
+                    const avg =
+                      rated.length > 0
+                        ? Math.round(
+                            (rated.reduce(
+                              (sum, r) => sum + (r.rating || 0),
+                              0,
+                            ) /
+                              rated.length) *
+                              10,
+                          ) / 10
+                        : 0;
+                    return (
+                      <a
+                        href="#reviews"
+                        className="flex items-center justify-center gap-2 px-3 py-3 border border-[#D4AF37] hover:bg-[#D4AF37]/10 transition-colors cursor-pointer"
+                      >
+                        <Star className="w-4 h-4 text-[#D4AF37] fill-[#D4AF37]" />
+                        <span
+                          className={`${raleway.className} text-xs font-bold tracking-wide`}
+                        >
+                          {avg > 0 ? `${avg.toFixed(1)}` : ""} ★ ·{" "}
+                          {allReviews.length} Review
+                          {allReviews.length !== 1 ? "s" : ""}
+                        </span>
+                      </a>
+                    );
+                  })()}
               </div>
             </div>
 
             {/* Right - Vertical Video with Art Deco Frame */}
             {(videoId || editable) && (
               <div className="flex flex-col items-center">
-                <p className="text-sm tracking-[0.3em] uppercase text-[#D4AF37]/70 text-center mb-4 whitespace-nowrap">Merchant Tracks</p>
+                <p className="text-sm tracking-[0.3em] uppercase text-[#D4AF37]/70 text-center mb-4 whitespace-nowrap">
+                  Merchant Tracks
+                </p>
                 <EditableVideoEmbed vimeoUrl={vimeoUrl} />
               </div>
             )}
@@ -1720,14 +2037,22 @@ export function ArtDecoDesign({
               <div className="w-32 h-px bg-gradient-to-l from-transparent to-[#D4AF37]/40" />
             </div>
 
-            <div id="favorite-merchant" className="max-w-6xl mx-auto px-4 py-12 scroll-mt-16">
+            <div
+              id="favorite-merchant"
+              className="max-w-6xl mx-auto px-4 py-12 scroll-mt-16"
+            >
               <div className="flex items-center gap-4 mb-4">
                 <Sparkles className="w-6 h-6 text-[#D4AF37]" />
-                <h2 className={`text-2xl ${poiretOne.className}`}>Nominated As A Favorite Merchant</h2>
+                <h2 className={`text-2xl ${poiretOne.className}`}>
+                  Nominated As A Favorite Merchant
+                </h2>
                 <div className="flex-1 h-px bg-gradient-to-r from-[#D4AF37]/30 to-transparent" />
               </div>
-              <p className={`text-[#F5F1E6]/65 text-sm mb-8 max-w-3xl ${raleway.className}`}>
-                Members in the Favorite Merchant Sweepstakes nominated this business and shared why it stands out in the community.
+              <p
+                className={`text-[#F5F1E6]/65 text-sm mb-8 max-w-3xl ${raleway.className}`}
+              >
+                Members in the Favorite Merchant Sweepstakes nominated this
+                business and shared why it stands out in the community.
               </p>
 
               <div className="grid md:grid-cols-2 gap-6">
@@ -1735,7 +2060,10 @@ export function ArtDecoDesign({
                   const firstName = testimonial.memberFirstName || "";
                   const lastName = testimonial.memberLastName || "";
                   const displayName =
-                    [firstName, lastName.charAt(0) ? `${lastName.charAt(0)}.` : ""]
+                    [
+                      firstName,
+                      lastName.charAt(0) ? `${lastName.charAt(0)}.` : "",
+                    ]
                       .filter(Boolean)
                       .join(" ") || "Community Member";
                   const initials =
@@ -1745,7 +2073,10 @@ export function ArtDecoDesign({
                       .toUpperCase() || "FM";
 
                   return (
-                    <div key={testimonial.id} className="border border-[#D4AF37]/20 p-6 bg-[#D4AF37]/5">
+                    <div
+                      key={testimonial.id}
+                      className="border border-[#D4AF37]/20 p-6 bg-[#D4AF37]/5"
+                    >
                       <div className="flex items-start gap-4 mb-4">
                         {testimonial.memberPhotoUrl ? (
                           <img
@@ -1755,48 +2086,64 @@ export function ArtDecoDesign({
                           />
                         ) : (
                           <div className="w-12 h-12 bg-[#D4AF37]/20 border border-[#D4AF37]/30 flex items-center justify-center">
-                            <span className={`text-[#D4AF37] font-medium ${raleway.className}`}>{initials}</span>
+                            <span
+                              className={`text-[#D4AF37] font-medium ${raleway.className}`}
+                            >
+                              {initials}
+                            </span>
                           </div>
                         )}
                         <div className="flex-1">
                           <div className="flex items-center justify-between gap-4">
-                            <h4 className={`font-medium text-[#F5F1E6] ${raleway.className}`}>{displayName}</h4>
-                            <span className={`text-base text-[#F5F1E6]/60 ${raleway.className}`}>
+                            <h4
+                              className={`font-medium text-[#F5F1E6] ${raleway.className}`}
+                            >
+                              {displayName}
+                            </h4>
+                            <span
+                              className={`text-base text-[#F5F1E6]/60 ${raleway.className}`}
+                            >
                               {formatReviewDate(testimonial.createdAt)}
                             </span>
                           </div>
-                          <p className={`text-xs uppercase tracking-[0.15em] text-[#D4AF37]/80 mt-1 ${raleway.className}`}>
+                          <p
+                            className={`text-xs uppercase tracking-[0.15em] text-[#D4AF37]/80 mt-1 ${raleway.className}`}
+                          >
                             Favorite Merchant Nomination
                           </p>
                         </div>
                       </div>
 
                       <Quote className="w-5 h-5 text-[#D4AF37]/30 mb-2" />
-                      <p className={`text-[#F5F1E6]/70 text-base leading-relaxed ${raleway.className}`}>
+                      <p
+                        className={`text-[#F5F1E6]/70 text-base leading-relaxed ${raleway.className}`}
+                      >
                         {testimonial.content}
                       </p>
 
                       {testimonial.photos.length > 0 && (
                         <div className="grid grid-cols-3 gap-3 mt-5">
-                          {testimonial.photos.slice(0, 3).map((photo, index) => (
-                            <button
-                              key={`${photo}-${index}`}
-                              type="button"
-                              onClick={() =>
-                                setLightboxPhoto({
-                                  photos: testimonial.photos,
-                                  index,
-                                })
-                              }
-                              className="relative h-24 overflow-hidden border border-[#D4AF37]/20"
-                            >
-                              <img
-                                src={photo}
-                                alt={`${businessName} favorite merchant photo ${index + 1}`}
-                                className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
-                              />
-                            </button>
-                          ))}
+                          {testimonial.photos
+                            .slice(0, 3)
+                            .map((photo, index) => (
+                              <button
+                                key={`${photo}-${index}`}
+                                type="button"
+                                onClick={() =>
+                                  setLightboxPhoto({
+                                    photos: testimonial.photos,
+                                    index,
+                                  })
+                                }
+                                className="relative h-24 overflow-hidden border border-[#D4AF37]/20"
+                              >
+                                <img
+                                  src={photo}
+                                  alt={`${businessName} favorite merchant photo ${index + 1}`}
+                                  className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+                                />
+                              </button>
+                            ))}
                         </div>
                       )}
                     </div>
@@ -1816,10 +2163,15 @@ export function ArtDecoDesign({
               <div className="w-32 h-px bg-gradient-to-l from-transparent to-[#D4AF37]/40" />
             </div>
 
-            <div id="reviews" className="max-w-6xl mx-auto px-4 py-12 scroll-mt-16">
+            <div
+              id="reviews"
+              className="max-w-6xl mx-auto px-4 py-12 scroll-mt-16"
+            >
               <div className="flex items-center gap-4 mb-8">
                 <Star className="w-6 h-6 text-[#D4AF37] fill-[#D4AF37]" />
-                <h2 className={`text-2xl ${poiretOne.className}`}>Customer Reviews</h2>
+                <h2 className={`text-2xl ${poiretOne.className}`}>
+                  Customer Reviews
+                </h2>
                 <div className="flex-1 h-px bg-gradient-to-r from-[#D4AF37]/30 to-transparent" />
                 {isAuthenticated && member && !showReviewForm && (
                   <button
@@ -1834,9 +2186,15 @@ export function ArtDecoDesign({
               {/* Write Review Form */}
               {showReviewForm && (
                 <div className="border border-[#D4AF37]/30 p-6 mb-8 bg-[#D4AF37]/5">
-                  <h3 className={`text-lg mb-4 ${poiretOne.className}`}>Write Your Review</h3>
+                  <h3 className={`text-lg mb-4 ${poiretOne.className}`}>
+                    Write Your Review
+                  </h3>
                   <div className="flex items-center gap-1 mb-4">
-                    <span className={`text-sm text-[#F5F1E6]/60 mr-2 ${raleway.className}`}>Rating:</span>
+                    <span
+                      className={`text-sm text-[#F5F1E6]/60 mr-2 ${raleway.className}`}
+                    >
+                      Rating:
+                    </span>
                     {[1, 2, 3, 4, 5].map((star) => (
                       <button
                         key={star}
@@ -1849,7 +2207,9 @@ export function ArtDecoDesign({
                         <Star
                           className={cn(
                             "w-6 h-6 transition-colors",
-                            star <= (hoverRating || reviewRating) ? "text-[#D4AF37] fill-[#D4AF37]" : "text-[#D4AF37]/30"
+                            star <= (hoverRating || reviewRating)
+                              ? "text-[#D4AF37] fill-[#D4AF37]"
+                              : "text-[#D4AF37]/30",
                           )}
                         />
                       </button>
@@ -1863,11 +2223,18 @@ export function ArtDecoDesign({
                     className={`w-full bg-[#0D1F22] border border-[#D4AF37]/30 text-[#F5F1E6] p-4 text-sm focus:outline-none focus:border-[#D4AF37]/60 placeholder-[#F5F1E6]/30 resize-none ${raleway.className}`}
                   />
                   {reviewError && (
-                    <p className={`text-red-400 text-sm mt-2 ${raleway.className}`}>{reviewError}</p>
+                    <p
+                      className={`text-red-400 text-sm mt-2 ${raleway.className}`}
+                    >
+                      {reviewError}
+                    </p>
                   )}
                   <div className="flex items-center justify-end gap-3 mt-4">
                     <button
-                      onClick={() => { setShowReviewForm(false); setReviewError(""); }}
+                      onClick={() => {
+                        setShowReviewForm(false);
+                        setReviewError("");
+                      }}
                       className={`px-4 py-2 text-xs tracking-[0.15em] uppercase text-[#F5F1E6]/50 hover:text-[#F5F1E6] transition-colors ${raleway.className}`}
                     >
                       Cancel
@@ -1884,40 +2251,83 @@ export function ArtDecoDesign({
               )}
 
               {/* Overall Rating */}
-              {allReviews.length > 0 && (() => {
-                const rated = allReviews.filter((r) => r.rating != null);
-                const avg = rated.length > 0 ? rated.reduce((sum, r) => sum + (r.rating || 0), 0) / rated.length : 0;
-                const rounded = Math.round(avg * 10) / 10;
-                return (
-                  <div className="flex items-center gap-6 mb-8 p-6 border border-[#D4AF37]/20 bg-[#D4AF37]/5">
-                    <div className="text-center">
-                      <div className={`text-5xl font-light text-[#D4AF37] ${poiretOne.className}`}>{rounded.toFixed(1)}</div>
-                      <div className="flex items-center gap-1 mt-2">
-                        {[1, 2, 3, 4, 5].map((star) => (
-                          <Star key={star} className={cn("w-4 h-4", star <= Math.round(avg) ? "text-[#D4AF37] fill-[#D4AF37]" : "text-[#D4AF37]/30")} />
-                        ))}
+              {allReviews.length > 0 &&
+                (() => {
+                  const rated = allReviews.filter((r) => r.rating != null);
+                  const avg =
+                    rated.length > 0
+                      ? rated.reduce((sum, r) => sum + (r.rating || 0), 0) /
+                        rated.length
+                      : 0;
+                  const rounded = Math.round(avg * 10) / 10;
+                  return (
+                    <div className="flex items-center gap-6 mb-8 p-6 border border-[#D4AF37]/20 bg-[#D4AF37]/5">
+                      <div className="text-center">
+                        <div
+                          className={`text-5xl font-light text-[#D4AF37] ${poiretOne.className}`}
+                        >
+                          {rounded.toFixed(1)}
+                        </div>
+                        <div className="flex items-center gap-1 mt-2">
+                          {[1, 2, 3, 4, 5].map((star) => (
+                            <Star
+                              key={star}
+                              className={cn(
+                                "w-4 h-4",
+                                star <= Math.round(avg)
+                                  ? "text-[#D4AF37] fill-[#D4AF37]"
+                                  : "text-[#D4AF37]/30",
+                              )}
+                            />
+                          ))}
+                        </div>
+                        <p
+                          className={`text-sm text-[#F5F1E6]/50 mt-1 ${raleway.className}`}
+                        >
+                          {allReviews.length} review
+                          {allReviews.length !== 1 ? "s" : ""}
+                        </p>
                       </div>
-                      <p className={`text-sm text-[#F5F1E6]/50 mt-1 ${raleway.className}`}>{allReviews.length} review{allReviews.length !== 1 ? "s" : ""}</p>
+                      <div className="h-16 w-px bg-[#D4AF37]/20" />
+                      <div
+                        className={`flex-1 text-[#F5F1E6]/70 ${raleway.className}`}
+                      >
+                        <p className="italic">
+                          &quot;
+                          {allReviews[0].content.length > 120
+                            ? `${allReviews[0].content.slice(0, 120)}...`
+                            : allReviews[0].content}
+                          &quot;
+                        </p>
+                      </div>
                     </div>
-                    <div className="h-16 w-px bg-[#D4AF37]/20" />
-                    <div className={`flex-1 text-[#F5F1E6]/70 ${raleway.className}`}>
-                      <p className="italic">&quot;{allReviews[0].content.length > 120 ? allReviews[0].content.slice(0, 120) + "..." : allReviews[0].content}&quot;</p>
-                    </div>
-                  </div>
-                );
-              })()}
+                  );
+                })()}
 
               {/* Individual Reviews */}
               <div className="grid md:grid-cols-2 gap-6">
                 {allReviews.map((review) => {
                   const firstName = review.reviewerFirstName || "";
                   const lastName = review.reviewerLastName || "";
-                  const displayName = [firstName, lastName.charAt(0) ? `${lastName.charAt(0)}.` : ""].filter(Boolean).join(" ") || "Anonymous";
-                  const reviewInitials = [firstName.charAt(0), lastName.charAt(0)].filter(Boolean).join("").toUpperCase() || "?";
+                  const displayName =
+                    [
+                      firstName,
+                      lastName.charAt(0) ? `${lastName.charAt(0)}.` : "",
+                    ]
+                      .filter(Boolean)
+                      .join(" ") || "Anonymous";
+                  const reviewInitials =
+                    [firstName.charAt(0), lastName.charAt(0)]
+                      .filter(Boolean)
+                      .join("")
+                      .toUpperCase() || "?";
                   const timeAgo = formatReviewDate(review.createdAt);
 
                   return (
-                    <div key={review.id} className="border border-[#D4AF37]/20 p-6 hover:border-[#D4AF37]/40 transition-colors">
+                    <div
+                      key={review.id}
+                      className="border border-[#D4AF37]/20 p-6 hover:border-[#D4AF37]/40 transition-colors"
+                    >
                       <div className="flex items-start gap-4 mb-4">
                         {review.reviewerPhotoUrl ? (
                           <img
@@ -1927,13 +2337,25 @@ export function ArtDecoDesign({
                           />
                         ) : (
                           <div className="w-12 h-12 bg-[#D4AF37]/20 border border-[#D4AF37]/30 flex items-center justify-center">
-                            <span className={`text-[#D4AF37] font-medium ${raleway.className}`}>{reviewInitials}</span>
+                            <span
+                              className={`text-[#D4AF37] font-medium ${raleway.className}`}
+                            >
+                              {reviewInitials}
+                            </span>
                           </div>
                         )}
                         <div className="flex-1">
                           <div className="flex items-center justify-between">
-                            <h4 className={`font-medium text-[#F5F1E6] ${raleway.className}`}>{displayName}</h4>
-                            <span className={`text-base text-[#F5F1E6]/60 ${raleway.className}`}>{timeAgo}</span>
+                            <h4
+                              className={`font-medium text-[#F5F1E6] ${raleway.className}`}
+                            >
+                              {displayName}
+                            </h4>
+                            <span
+                              className={`text-base text-[#F5F1E6]/60 ${raleway.className}`}
+                            >
+                              {timeAgo}
+                            </span>
                           </div>
                           {review.rating && (
                             <div className="flex items-center gap-0.5 mt-1">
@@ -1942,7 +2364,9 @@ export function ArtDecoDesign({
                                   key={star}
                                   className={cn(
                                     "w-3.5 h-3.5",
-                                    star <= review.rating! ? "text-[#D4AF37] fill-[#D4AF37]" : "text-[#D4AF37]/30"
+                                    star <= review.rating!
+                                      ? "text-[#D4AF37] fill-[#D4AF37]"
+                                      : "text-[#D4AF37]/30",
                                   )}
                                 />
                               ))}
@@ -1951,7 +2375,9 @@ export function ArtDecoDesign({
                         </div>
                       </div>
                       <Quote className="w-5 h-5 text-[#D4AF37]/30 mb-2" />
-                      <p className={`text-[#F5F1E6]/70 text-base leading-relaxed ${raleway.className}`}>
+                      <p
+                        className={`text-[#F5F1E6]/70 text-base leading-relaxed ${raleway.className}`}
+                      >
                         {review.content}
                       </p>
                       {review.photos.length > 0 && (
@@ -1962,40 +2388,75 @@ export function ArtDecoDesign({
                               src={photo}
                               alt={`Review photo ${i + 1}`}
                               className="w-32 h-32 object-cover border border-[#D4AF37]/20 flex-shrink-0 cursor-pointer hover:opacity-90 transition-opacity"
-                              onClick={() => setLightboxPhoto({ photos: review.photos, index: i })}
+                              onClick={() =>
+                                setLightboxPhoto({
+                                  photos: review.photos,
+                                  index: i,
+                                })
+                              }
                             />
                           ))}
                         </div>
                       )}
                       {/* Reactions */}
                       {(() => {
-                        const seed = review.id.charCodeAt(0) * 31 + review.id.charCodeAt(1);
+                        const seed =
+                          review.id.charCodeAt(0) * 31 +
+                          review.id.charCodeAt(1);
                         const thumbs = Math.floor(seededRandom(seed) * 4);
                         const hearts = Math.floor(seededRandom(seed + 10) * 4);
                         const claps = Math.floor(seededRandom(seed + 20) * 4);
                         const fires = Math.floor(seededRandom(seed + 30) * 4);
                         if (thumbs + hearts + claps + fires === 0) return null;
                         const reactions = [
-                          { count: thumbs, icon: <ThumbsUp className="w-3.5 h-3.5" />, color: "text-[#D4AF37]" },
-                          { count: hearts, icon: <Heart className="w-3.5 h-3.5" />, color: "text-red-400" },
-                          { count: claps, icon: <span className="text-sm leading-none">👏</span>, color: "text-[#F5F1E6]" },
-                          { count: fires, icon: <span className="text-sm leading-none">🔥</span>, color: "text-orange-400" },
-                        ].filter(r => r.count > 0);
+                          {
+                            count: thumbs,
+                            icon: <ThumbsUp className="w-3.5 h-3.5" />,
+                            color: "text-[#D4AF37]",
+                          },
+                          {
+                            count: hearts,
+                            icon: <Heart className="w-3.5 h-3.5" />,
+                            color: "text-red-400",
+                          },
+                          {
+                            count: claps,
+                            icon: (
+                              <span className="text-sm leading-none">👏</span>
+                            ),
+                            color: "text-[#F5F1E6]",
+                          },
+                          {
+                            count: fires,
+                            icon: (
+                              <span className="text-sm leading-none">🔥</span>
+                            ),
+                            color: "text-orange-400",
+                          },
+                        ].filter((r) => r.count > 0);
                         return (
                           <TooltipProvider>
-                          <div className={`flex items-center gap-2 mt-4 pt-3 border-t border-[#D4AF37]/10 ${raleway.className}`}>
-                            {reactions.map((r, i) => (
-                              <Tooltip key={i}>
-                                <TooltipTrigger asChild>
-                                  <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-[#D4AF37]/15 bg-[#D4AF37]/5 ${r.color}/80 hover:${r.color} hover:bg-[#D4AF37]/10 hover:border-[#D4AF37]/30 transition-all cursor-pointer text-xs`}>
-                                    {r.icon}
-                                    <span className="font-medium">{r.count}</span>
-                                  </span>
-                                </TooltipTrigger>
-                                <TooltipContent>Log in to react</TooltipContent>
-                              </Tooltip>
-                            ))}
-                          </div>
+                            <div
+                              className={`flex items-center gap-2 mt-4 pt-3 border-t border-[#D4AF37]/10 ${raleway.className}`}
+                            >
+                              {reactions.map((r, i) => (
+                                <Tooltip key={i}>
+                                  <TooltipTrigger asChild>
+                                    <span
+                                      className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-[#D4AF37]/15 bg-[#D4AF37]/5 ${r.color}/80 hover:${r.color} hover:bg-[#D4AF37]/10 hover:border-[#D4AF37]/30 transition-all cursor-pointer text-xs`}
+                                    >
+                                      {r.icon}
+                                      <span className="font-medium">
+                                        {r.count}
+                                      </span>
+                                    </span>
+                                  </TooltipTrigger>
+                                  <TooltipContent>
+                                    Log in to react
+                                  </TooltipContent>
+                                </Tooltip>
+                              ))}
+                            </div>
                           </TooltipProvider>
                         );
                       })()}
@@ -2015,7 +2476,10 @@ export function ArtDecoDesign({
               <div className="w-3 h-3 rotate-45 border border-[#D4AF37]/50" />
               <div className="w-32 h-px bg-gradient-to-l from-transparent to-[#D4AF37]/40" />
             </div>
-            <div id="location" className="max-w-6xl mx-auto px-4 py-12 scroll-mt-16">
+            <div
+              id="location"
+              className="max-w-6xl mx-auto px-4 py-12 scroll-mt-16"
+            >
               <div className="flex items-center justify-between mb-8">
                 <div className="flex items-center gap-4">
                   <h2 className={`text-2xl ${poiretOne.className}`}>
@@ -2034,7 +2498,9 @@ export function ArtDecoDesign({
                 </a>
               </div>
               {fullAddress && (
-                <p className={`text-[#F5F1E6]/70 mb-6 ${raleway.className}`}>{fullAddress}</p>
+                <p className={`text-[#F5F1E6]/70 mb-6 ${raleway.className}`}>
+                  {fullAddress}
+                </p>
               )}
               <div className="relative">
                 {/* Art deco frame for map */}
@@ -2062,7 +2528,10 @@ export function ArtDecoDesign({
               <div className="w-3 h-3 rotate-45 border border-[#D4AF37]/50" />
               <div className="w-32 h-px bg-gradient-to-l from-transparent to-[#D4AF37]/40" />
             </div>
-            <div id="story" className="max-w-6xl mx-auto px-4 py-12 scroll-mt-16">
+            <div
+              id="story"
+              className="max-w-6xl mx-auto px-4 py-12 scroll-mt-16"
+            >
               <div className="flex items-center gap-4 mb-8">
                 <h2 className={`text-2xl ${poiretOne.className}`}>Our Story</h2>
                 <div className="flex-1 h-px bg-gradient-to-r from-[#D4AF37]/30 to-transparent" />
@@ -2089,10 +2558,15 @@ export function ArtDecoDesign({
               <div className="w-3 h-3 rotate-45 border border-[#D4AF37]/50" />
               <div className="w-32 h-px bg-gradient-to-l from-transparent to-[#D4AF37]/40" />
             </div>
-            <div id="hours" className="max-w-6xl mx-auto px-4 py-12 scroll-mt-16">
+            <div
+              id="hours"
+              className="max-w-6xl mx-auto px-4 py-12 scroll-mt-16"
+            >
               <div className="flex items-center gap-4 mb-8">
                 <Clock className="w-6 h-6 text-[#D4AF37]" />
-                <h2 className={`text-2xl ${poiretOne.className}`}>Hours of Operation</h2>
+                <h2 className={`text-2xl ${poiretOne.className}`}>
+                  Hours of Operation
+                </h2>
                 <div className="flex-1 h-px bg-gradient-to-r from-[#D4AF37]/30 to-transparent" />
               </div>
               <EditableHours hours={hours || {}} />
@@ -2108,10 +2582,15 @@ export function ArtDecoDesign({
               <div className="w-3 h-3 rotate-45 border border-[#D4AF37]/50" />
               <div className="w-32 h-px bg-gradient-to-l from-transparent to-[#D4AF37]/40" />
             </div>
-            <div id="services" className="max-w-6xl mx-auto px-4 py-12 scroll-mt-16">
+            <div
+              id="services"
+              className="max-w-6xl mx-auto px-4 py-12 scroll-mt-16"
+            >
               <div className="flex items-center gap-4 mb-8">
                 <Sparkles className="w-6 h-6 text-[#D4AF37]" />
-                <h2 className={`text-2xl ${poiretOne.className}`}>Our Services</h2>
+                <h2 className={`text-2xl ${poiretOne.className}`}>
+                  Our Services
+                </h2>
                 <div className="flex-1 h-px bg-gradient-to-r from-[#D4AF37]/30 to-transparent" />
               </div>
               <EditableServicesList services={services || []} />
@@ -2127,7 +2606,10 @@ export function ArtDecoDesign({
               <div className="w-3 h-3 rotate-45 border border-[#D4AF37]/50" />
               <div className="w-32 h-px bg-gradient-to-l from-transparent to-[#D4AF37]/40" />
             </div>
-            <div id="gallery" className="max-w-6xl mx-auto px-4 py-12 scroll-mt-16">
+            <div
+              id="gallery"
+              className="max-w-6xl mx-auto px-4 py-12 scroll-mt-16"
+            >
               <div className="flex items-center gap-4 mb-8">
                 <ImageIcon className="w-6 h-6 text-[#D4AF37]" />
                 <h2 className={`text-2xl ${poiretOne.className}`}>Gallery</h2>
@@ -2141,7 +2623,7 @@ export function ArtDecoDesign({
           </>
         )}
 
-{/* Reviews Section - will show when reviews data is available */}
+        {/* Reviews Section - will show when reviews data is available */}
 
         {/* Social Links */}
         <EditableSocialLinks
@@ -2156,7 +2638,9 @@ export function ArtDecoDesign({
             <div className="flex items-center justify-center gap-4">
               <Gem className="w-6 h-6 text-[#D4AF37]" />
               <div className="text-center">
-                <p className={`text-lg text-[#D4AF37] font-medium ${poiretOne.className}`}>
+                <p
+                  className={`text-lg text-[#D4AF37] font-medium ${poiretOne.className}`}
+                >
                   Exclusive Partner Establishment
                 </p>
               </div>
@@ -2190,7 +2674,9 @@ export function ArtDecoDesign({
             )}
             {website && (
               <a
-                href={website.startsWith("http") ? website : `https://${website}`}
+                href={
+                  website.startsWith("http") ? website : `https://${website}`
+                }
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex-1 flex items-center justify-center gap-2 py-3 border border-[#D4AF37]/50"
@@ -2203,7 +2689,6 @@ export function ArtDecoDesign({
         </div>
       </div>
       <div className="h-20 lg:hidden" />
-
 
       {/* Photo Lightbox */}
       {lightboxPhoto && (
@@ -2224,7 +2709,9 @@ export function ArtDecoDesign({
                   e.stopPropagation();
                   setLightboxPhoto({
                     photos: lightboxPhoto.photos,
-                    index: (lightboxPhoto.index - 1 + lightboxPhoto.photos.length) % lightboxPhoto.photos.length,
+                    index:
+                      (lightboxPhoto.index - 1 + lightboxPhoto.photos.length) %
+                      lightboxPhoto.photos.length,
                   });
                 }}
                 className="absolute left-4 text-white/70 hover:text-white z-10 cursor-pointer"
@@ -2236,7 +2723,8 @@ export function ArtDecoDesign({
                   e.stopPropagation();
                   setLightboxPhoto({
                     photos: lightboxPhoto.photos,
-                    index: (lightboxPhoto.index + 1) % lightboxPhoto.photos.length,
+                    index:
+                      (lightboxPhoto.index + 1) % lightboxPhoto.photos.length,
                   });
                 }}
                 className="absolute right-4 text-white/70 hover:text-white z-10 cursor-pointer"

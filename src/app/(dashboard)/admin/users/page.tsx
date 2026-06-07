@@ -1,14 +1,25 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { format } from "date-fns";
+import {
+  CheckCircle,
+  Loader2,
+  Pencil,
+  RefreshCw,
+  Search,
+  Shield,
+  Store,
+  Trash2,
+  UserCircle,
+  UserPlus,
+  Users,
+} from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useCallback, useEffect, useState } from "react";
+import { InviteMerchantDialog } from "@/components/admin/invite-merchant-dialog";
 import { DashboardLayout } from "@/components/layout";
-import { PageHeader } from "@/components/ui/page-header";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Pagination } from "@/components/ui/pagination";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -17,23 +28,12 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import {
-  Search,
-  RefreshCw,
-  Shield,
-  Store,
-  UserCircle,
-  Pencil,
-  Trash2,
-  Loader2,
-  CheckCircle,
-  UserPlus,
-  Users,
-} from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { PageHeader } from "@/components/ui/page-header";
+import { Pagination } from "@/components/ui/pagination";
 import { useUser } from "@/hooks/use-user";
-import { format } from "date-fns";
 import { cn } from "@/lib/utils";
-import { InviteMerchantDialog } from "@/components/admin/invite-merchant-dialog";
 import { adminNavItems } from "../nav";
 
 interface UserData {
@@ -76,7 +76,12 @@ export default function AdminUsersPage() {
   // Data state
   const [users, setUsers] = useState<UserData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [stats, setStats] = useState<Stats>({ total: 0, admins: 0, merchants: 0, members: 0 });
+  const [stats, setStats] = useState<Stats>({
+    total: 0,
+    admins: 0,
+    merchants: 0,
+    members: 0,
+  });
 
   // Filter state
   const [filter, setFilter] = useState("all");
@@ -268,7 +273,10 @@ export default function AdminUsersPage() {
             description="View and manage all user accounts"
             actions={
               <div className="flex gap-2">
-                <Button variant="outline" onClick={() => setShowAddAdminDialog(true)}>
+                <Button
+                  variant="outline"
+                  onClick={() => setShowAddAdminDialog(true)}
+                >
                   <Shield className="w-4 h-4 mr-2" />
                   Add Admin
                 </Button>
@@ -294,21 +302,27 @@ export default function AdminUsersPage() {
                 <Shield className="w-4 h-4" />
                 <span className="text-xs sm:text-sm">Admins</span>
               </div>
-              <div className="text-lg sm:text-2xl font-bold">{stats.admins}</div>
+              <div className="text-lg sm:text-2xl font-bold">
+                {stats.admins}
+              </div>
             </div>
             <div className="bg-card border rounded-lg p-3 sm:p-4">
               <div className="flex items-center gap-2 text-muted-foreground mb-1">
                 <Store className="w-4 h-4" />
                 <span className="text-xs sm:text-sm">Merchants</span>
               </div>
-              <div className="text-lg sm:text-2xl font-bold">{stats.merchants}</div>
+              <div className="text-lg sm:text-2xl font-bold">
+                {stats.merchants}
+              </div>
             </div>
             <div className="bg-card border rounded-lg p-3 sm:p-4">
               <div className="flex items-center gap-2 text-muted-foreground mb-1">
                 <UserCircle className="w-4 h-4" />
                 <span className="text-xs sm:text-sm">Members</span>
               </div>
-              <div className="text-lg sm:text-2xl font-bold">{stats.members}</div>
+              <div className="text-lg sm:text-2xl font-bold">
+                {stats.members}
+              </div>
             </div>
           </div>
 
@@ -363,7 +377,9 @@ export default function AdminUsersPage() {
               disabled={isLoading}
               className="ml-auto"
             >
-              <RefreshCw className={cn("w-4 h-4", isLoading && "animate-spin")} />
+              <RefreshCw
+                className={cn("w-4 h-4", isLoading && "animate-spin")}
+              />
             </Button>
           </div>
 
@@ -375,7 +391,9 @@ export default function AdminUsersPage() {
                 <div className="p-8 text-center text-muted-foreground">
                   <p>No users found</p>
                   <p className="text-sm mt-1">
-                    {searchQuery || filter !== "all" ? "Try adjusting your filters" : "No users in the system yet"}
+                    {searchQuery || filter !== "all"
+                      ? "Try adjusting your filters"
+                      : "No users in the system yet"}
                   </p>
                 </div>
               ) : (
@@ -386,30 +404,42 @@ export default function AdminUsersPage() {
                       <div className="flex items-center gap-3 min-w-0">
                         <Avatar className="h-10 w-10 shrink-0">
                           <AvatarImage src={u.profilePhotoUrl || undefined} />
-                          <AvatarFallback className="text-xs">{getInitials(u)}</AvatarFallback>
+                          <AvatarFallback className="text-xs">
+                            {getInitials(u)}
+                          </AvatarFallback>
                         </Avatar>
                         <div className="min-w-0">
                           <div className="flex items-center gap-2">
-                            <h3 className="font-semibold truncate">{getUserName(u)}</h3>
+                            <h3 className="font-semibold truncate">
+                              {getUserName(u)}
+                            </h3>
                             {u.merchantVerified && (
                               <CheckCircle className="w-4 h-4 text-green-500 shrink-0" />
                             )}
                           </div>
-                          <p className="text-sm text-muted-foreground truncate">{u.email}</p>
+                          <p className="text-sm text-muted-foreground truncate">
+                            {u.email}
+                          </p>
                         </div>
                       </div>
-                      <span className={cn(
-                        "text-xs px-2.5 py-1 rounded-full font-medium capitalize shrink-0",
-                        getRoleBadge(u.role)
-                      )}>
+                      <span
+                        className={cn(
+                          "text-xs px-2.5 py-1 rounded-full font-medium capitalize shrink-0",
+                          getRoleBadge(u.role),
+                        )}
+                      >
                         {u.role}
                       </span>
                     </div>
 
                     {/* Meta info */}
                     <div className="flex items-center justify-between text-sm text-muted-foreground mb-3">
-                      <span>{u.memberCity || u.merchantCity || "No location"}</span>
-                      <span>Joined {format(new Date(u.createdAt), "MMM d, yyyy")}</span>
+                      <span>
+                        {u.memberCity || u.merchantCity || "No location"}
+                      </span>
+                      <span>
+                        Joined {format(new Date(u.createdAt), "MMM d, yyyy")}
+                      </span>
                     </div>
 
                     {/* Actions */}
@@ -449,19 +479,36 @@ export default function AdminUsersPage() {
               </colgroup>
               <thead className="bg-muted/50 border-b">
                 <tr>
-                  <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">User</th>
-                  <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Email</th>
-                  <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Role</th>
-                  <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Location</th>
-                  <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Joined</th>
-                  <th className="px-4 py-3 text-right text-sm font-medium text-muted-foreground">Actions</th>
+                  <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
+                    User
+                  </th>
+                  <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
+                    Email
+                  </th>
+                  <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
+                    Role
+                  </th>
+                  <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
+                    Location
+                  </th>
+                  <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
+                    Joined
+                  </th>
+                  <th className="px-4 py-3 text-right text-sm font-medium text-muted-foreground">
+                    Actions
+                  </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
                 {!isLoading && users.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="px-4 py-8 text-center text-muted-foreground">
-                      {searchQuery || filter !== "all" ? "No users found matching your filters" : "No users in the system yet"}
+                    <td
+                      colSpan={6}
+                      className="px-4 py-8 text-center text-muted-foreground"
+                    >
+                      {searchQuery || filter !== "all"
+                        ? "No users found matching your filters"
+                        : "No users in the system yet"}
                     </td>
                   </tr>
                 ) : (
@@ -471,10 +518,14 @@ export default function AdminUsersPage() {
                         <div className="flex items-center gap-3">
                           <Avatar className="h-8 w-8 shrink-0">
                             <AvatarImage src={u.profilePhotoUrl || undefined} />
-                            <AvatarFallback className="text-xs">{getInitials(u)}</AvatarFallback>
+                            <AvatarFallback className="text-xs">
+                              {getInitials(u)}
+                            </AvatarFallback>
                           </Avatar>
                           <div className="flex items-center gap-2 min-w-0">
-                            <span className="font-medium text-sm truncate">{getUserName(u)}</span>
+                            <span className="font-medium text-sm truncate">
+                              {getUserName(u)}
+                            </span>
                             {u.merchantVerified && (
                               <CheckCircle className="w-4 h-4 text-green-500 shrink-0" />
                             )}
@@ -482,13 +533,17 @@ export default function AdminUsersPage() {
                         </div>
                       </td>
                       <td className="px-4 py-3">
-                        <span className="text-sm text-muted-foreground truncate block">{u.email}</span>
+                        <span className="text-sm text-muted-foreground truncate block">
+                          {u.email}
+                        </span>
                       </td>
                       <td className="px-4 py-3">
-                        <span className={cn(
-                          "text-xs px-2.5 py-1 rounded-full font-medium capitalize",
-                          getRoleBadge(u.role)
-                        )}>
+                        <span
+                          className={cn(
+                            "text-xs px-2.5 py-1 rounded-full font-medium capitalize",
+                            getRoleBadge(u.role),
+                          )}
+                        >
                           {u.role}
                         </span>
                       </td>
@@ -545,15 +600,25 @@ export default function AdminUsersPage() {
               <DialogHeader>
                 <DialogTitle>Delete User</DialogTitle>
                 <DialogDescription>
-                  Are you sure you want to delete {deletingUser?.email}? This action cannot be undone.
+                  Are you sure you want to delete {deletingUser?.email}? This
+                  action cannot be undone.
                 </DialogDescription>
               </DialogHeader>
               <DialogFooter>
-                <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>
+                <Button
+                  variant="outline"
+                  onClick={() => setDeleteDialogOpen(false)}
+                >
                   Cancel
                 </Button>
-                <Button variant="destructive" onClick={handleConfirmDelete} disabled={deleting}>
-                  {deleting ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+                <Button
+                  variant="destructive"
+                  onClick={handleConfirmDelete}
+                  disabled={deleting}
+                >
+                  {deleting ? (
+                    <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                  ) : null}
                   Delete
                 </Button>
               </DialogFooter>
@@ -561,15 +626,24 @@ export default function AdminUsersPage() {
           </Dialog>
 
           {/* Add Admin Dialog */}
-          <Dialog open={showAddAdminDialog} onOpenChange={(open) => {
-            setShowAddAdminDialog(open);
-            if (!open) { setAdminFirstName(""); setAdminLastName(""); setAdminEmail(""); setAddAdminError(""); }
-          }}>
+          <Dialog
+            open={showAddAdminDialog}
+            onOpenChange={(open) => {
+              setShowAddAdminDialog(open);
+              if (!open) {
+                setAdminFirstName("");
+                setAdminLastName("");
+                setAdminEmail("");
+                setAddAdminError("");
+              }
+            }}
+          >
             <DialogContent>
               <DialogHeader>
                 <DialogTitle>Add Admin User</DialogTitle>
                 <DialogDescription>
-                  Create a new admin user. They will receive an email with a login link.
+                  Create a new admin user. They will receive an email with a
+                  login link.
                 </DialogDescription>
               </DialogHeader>
               <div className="space-y-4">
@@ -610,11 +684,26 @@ export default function AdminUsersPage() {
                 </div>
               )}
               <DialogFooter>
-                <Button variant="outline" onClick={() => setShowAddAdminDialog(false)}>
+                <Button
+                  variant="outline"
+                  onClick={() => setShowAddAdminDialog(false)}
+                >
                   Cancel
                 </Button>
-                <Button onClick={handleAddAdmin} disabled={addingAdmin || !adminEmail || !adminFirstName || !adminLastName}>
-                  {addingAdmin ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Shield className="w-4 h-4 mr-2" />}
+                <Button
+                  onClick={handleAddAdmin}
+                  disabled={
+                    addingAdmin ||
+                    !adminEmail ||
+                    !adminFirstName ||
+                    !adminLastName
+                  }
+                >
+                  {addingAdmin ? (
+                    <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                  ) : (
+                    <Shield className="w-4 h-4 mr-2" />
+                  )}
                   {addingAdmin ? "Adding..." : "Add Admin"}
                 </Button>
               </DialogFooter>

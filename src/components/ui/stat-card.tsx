@@ -21,7 +21,12 @@ export function StatCard({
   className,
 }: StatCardProps) {
   return (
-    <div className={cn("p-4 md:p-6 bg-card rounded-xl border border-border", className)}>
+    <div
+      className={cn(
+        "p-4 md:p-6 bg-card rounded-xl border border-border",
+        className,
+      )}
+    >
       <div className="flex items-start justify-between">
         <div>
           <p className="text-sm font-medium text-muted-foreground">{label}</p>
@@ -40,7 +45,7 @@ export function StatCard({
           <span
             className={cn(
               "font-medium",
-              trend.value >= 0 ? "text-success" : "text-destructive"
+              trend.value >= 0 ? "text-success" : "text-destructive",
             )}
           >
             {trend.value >= 0 ? "+" : ""}

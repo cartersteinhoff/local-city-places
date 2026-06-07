@@ -1,8 +1,17 @@
-import { NextRequest, NextResponse } from "next/server";
-import { getSession } from "@/lib/auth";
-import { generateToken, hashToken } from "@/lib/auth";
+import {
+  and,
+  desc,
+  eq,
+  gt,
+  isNotNull,
+  isNull,
+  lt,
+  type SQL,
+  sql,
+} from "drizzle-orm";
+import { type NextRequest, NextResponse } from "next/server";
 import { db, merchantInvites, users } from "@/db";
-import { eq, desc, sql, and, gt, isNull, isNotNull, lt } from "drizzle-orm";
+import { generateToken, getSession, hashToken } from "@/lib/auth";
 import { sendMerchantInviteEmail } from "@/lib/email";
 import { validateEmailForMerchant } from "@/lib/merchant-onboarding";
 
@@ -12,25 +21,28 @@ const DEFAULT_EXPIRY_DAYS = 7;
 export async function GET(request: NextRequest) {
   try {
     const session = await getSession();
-    if (!session || session.user.role !== "admin") {
+    if (session?.user.role !== "admin") {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const { searchParams } = new URL(request.url);
-    const page = Math.max(1, parseInt(searchParams.get("page") || "1"));
-    const limit = Math.min(100, Math.max(1, parseInt(searchParams.get("limit") || "20")));
+    const page = Math.max(1, parseInt(searchParams.get("page") || "1", 10));
+    const limit = Math.min(
+      100,
+      Math.max(1, parseInt(searchParams.get("limit") || "20", 10)),
+    );
     const status = searchParams.get("status") || "all";
     const offset = (page - 1) * limit;
 
     const now = new Date();
 
     // Build where clause based on status
-    let whereClause;
+    let whereClause: SQL | undefined;
     switch (status) {
       case "pending":
         whereClause = and(
           isNull(merchantInvites.usedAt),
-          gt(merchantInvites.expiresAt, now)
+          gt(merchantInvites.expiresAt, now),
         );
         break;
       case "used":
@@ -39,7 +51,7 @@ export async function GET(request: NextRequest) {
       case "expired":
         whereClause = and(
           isNull(merchantInvites.usedAt),
-          lt(merchantInvites.expiresAt, now)
+          lt(merchantInvites.expiresAt, now),
         );
         break;
       default:
@@ -94,7 +106,9 @@ export async function GET(request: NextRequest) {
     const [pendingCount] = await db
       .select({ count: sql<number>`count(*)` })
       .from(merchantInvites)
-      .where(and(isNull(merchantInvites.usedAt), gt(merchantInvites.expiresAt, now)));
+      .where(
+        and(isNull(merchantInvites.usedAt), gt(merchantInvites.expiresAt, now)),
+      );
 
     const [usedCount] = await db
       .select({ count: sql<number>`count(*)` })
@@ -104,7 +118,9 @@ export async function GET(request: NextRequest) {
     const [expiredCount] = await db
       .select({ count: sql<number>`count(*)` })
       .from(merchantInvites)
-      .where(and(isNull(merchantInvites.usedAt), lt(merchantInvites.expiresAt, now)));
+      .where(
+        and(isNull(merchantInvites.usedAt), lt(merchantInvites.expiresAt, now)),
+      );
 
     return NextResponse.json({
       invites: invitesWithStatus,
@@ -118,40 +134,58 @@ export async function GET(request: NextRequest) {
         pending: Number(pendingCount.count),
         used: Number(usedCount.count),
         expired: Number(expiredCount.count),
-        total: Number(pendingCount.count) + Number(usedCount.count) + Number(expiredCount.count),
+        total:
+          Number(pendingCount.count) +
+          Number(usedCount.count) +
+          Number(expiredCount.count),
       },
     });
   } catch (error) {
     console.error("Error fetching merchant invites:", error);
-    return NextResponse.json({ error: "Failed to fetch invites" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Failed to fetch invites" },
+      { status: 500 },
+    );
   }
 }
 
 export async function POST(request: NextRequest) {
   try {
     const session = await getSession();
-    if (!session || session.user.role !== "admin") {
+    if (session?.user.role !== "admin") {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const body = await request.json();
-    const { email, expiresInDays = DEFAULT_EXPIRY_DAYS, sendEmail = true } = body;
+    const {
+      email,
+      expiresInDays = DEFAULT_EXPIRY_DAYS,
+      sendEmail = true,
+    } = body;
 
     // If email is provided, validate it's not already in use
     if (email) {
       const validationError = await validateEmailForMerchant(email);
       if (validationError) {
-        return NextResponse.json({ error: validationError.message }, { status: 400 });
+        return NextResponse.json(
+          { error: validationError.message },
+          { status: 400 },
+        );
       }
     }
 
     // Validate expiry days
-    const validExpiryDays = Math.min(30, Math.max(1, parseInt(expiresInDays) || DEFAULT_EXPIRY_DAYS));
+    const validExpiryDays = Math.min(
+      30,
+      Math.max(1, parseInt(expiresInDays, 10) || DEFAULT_EXPIRY_DAYS),
+    );
 
     // Generate token
     const token = generateToken();
     const hashedToken = hashToken(token);
-    const expiresAt = new Date(Date.now() + validExpiryDays * 24 * 60 * 60 * 1000);
+    const expiresAt = new Date(
+      Date.now() + validExpiryDays * 24 * 60 * 60 * 1000,
+    );
 
     // Create invite record
     const [invite] = await db
@@ -188,6 +222,9 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error("Error creating merchant invite:", error);
-    return NextResponse.json({ error: "Failed to create invite" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Failed to create invite" },
+      { status: 500 },
+    );
   }
 }

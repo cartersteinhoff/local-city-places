@@ -1,10 +1,10 @@
 "use client";
 
-import { MapPin, Phone, Globe, Share2, ChevronDown } from "lucide-react";
+import { ChevronDown, Globe, MapPin, Phone, Share2 } from "lucide-react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { formatPhoneNumber } from "@/lib/utils";
 import { extractVimeoId, getVimeoEmbedUrl } from "@/lib/vimeo";
-import { useState } from "react";
 
 interface MerchantHeroProps {
   businessName: string;
@@ -44,7 +44,7 @@ export function MerchantHero({
     if (navigator.share) {
       try {
         await navigator.share({ title: businessName, url });
-      } catch (e) {
+      } catch (_e) {
         // User cancelled
       }
     } else {
@@ -135,7 +135,13 @@ export function MerchantHero({
                 className="border-white/20 bg-white/10 text-white hover:bg-white/20 backdrop-blur-sm gap-2"
                 asChild
               >
-                <a href={website.startsWith("http") ? website : `https://${website}`} target="_blank" rel="noopener noreferrer">
+                <a
+                  href={
+                    website.startsWith("http") ? website : `https://${website}`
+                  }
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
                   <Globe className="w-5 h-5" />
                   Visit Website
                 </a>
@@ -173,7 +179,9 @@ export function MerchantHero({
           {/* Scroll indicator */}
           <div className="flex justify-center mt-8 sm:mt-12">
             <div className="flex flex-col items-center gap-2 text-white/40">
-              <span className="text-xs uppercase tracking-wider">Scroll for more</span>
+              <span className="text-xs uppercase tracking-wider">
+                Scroll for more
+              </span>
               <ChevronDown className="w-5 h-5 animate-bounce" />
             </div>
           </div>

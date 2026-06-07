@@ -1,10 +1,20 @@
-import { NextRequest, NextResponse } from "next/server";
-import { db } from "@/db";
-import { users, merchants, categories, merchantBankAccounts } from "@/db/schema";
 import { eq } from "drizzle-orm";
+import { type NextRequest, NextResponse } from "next/server";
+import { db } from "@/db";
+import {
+  categories,
+  merchantBankAccounts,
+  merchants,
+  users,
+} from "@/db/schema";
 import { getSession } from "@/lib/auth";
-import { uploadProfilePhoto, uploadMerchantLogo, validateImageFormat, validateImageSize } from "@/lib/storage";
 import { revalidateMerchantPublicPaths } from "@/lib/merchant-public-revalidation";
+import {
+  uploadMerchantLogo,
+  uploadProfilePhoto,
+  validateImageFormat,
+  validateImageSize,
+} from "@/lib/storage";
 
 export async function GET() {
   try {
@@ -46,7 +56,7 @@ export async function GET() {
     if (!merchant) {
       return NextResponse.json(
         { error: "Merchant profile not found" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -80,14 +90,16 @@ export async function GET() {
         website: merchant.website,
         googlePlaceId: merchant.googlePlaceId,
         verified: merchant.verified,
-        bankAccount: bankAccount ? {
-          bankName: bankAccount.bankName,
-          accountHolderName: bankAccount.accountHolderName,
-          routingLast4: bankAccount.routingNumberEncrypted?.slice(-4) || "",
-          accountLast4: bankAccount.accountNumberEncrypted?.slice(-4) || "",
-          hasCheckImage: !!bankAccount.checkImageUrl,
-          hasAccount: true,
-        } : null,
+        bankAccount: bankAccount
+          ? {
+              bankName: bankAccount.bankName,
+              accountHolderName: bankAccount.accountHolderName,
+              routingLast4: bankAccount.routingNumberEncrypted?.slice(-4) || "",
+              accountLast4: bankAccount.accountNumberEncrypted?.slice(-4) || "",
+              hasCheckImage: !!bankAccount.checkImageUrl,
+              hasAccount: true,
+            }
+          : null,
       },
       categories: allCategories,
     });
@@ -95,7 +107,7 @@ export async function GET() {
     console.error("Error fetching merchant profile:", error);
     return NextResponse.json(
       { error: "Failed to fetch profile" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -133,7 +145,7 @@ export async function PATCH(request: NextRequest) {
     if (!merchant) {
       return NextResponse.json(
         { error: "Merchant profile not found" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -144,18 +156,21 @@ export async function PATCH(request: NextRequest) {
       if (!formatValidation.valid) {
         return NextResponse.json(
           { error: formatValidation.error },
-          { status: 400 }
+          { status: 400 },
         );
       }
 
       const sizeValidation = validateImageSize(profilePhoto, 5 * 1024 * 1024);
       if (!sizeValidation.valid) {
-        return NextResponse.json({ error: sizeValidation.error }, { status: 413 });
+        return NextResponse.json(
+          { error: sizeValidation.error },
+          { status: 413 },
+        );
       }
 
       profilePhotoUrl = await uploadProfilePhoto(
         profilePhoto,
-        `merchant-${merchant.id}.jpg`
+        `merchant-${merchant.id}.jpg`,
       );
     }
 
@@ -166,13 +181,16 @@ export async function PATCH(request: NextRequest) {
       if (!formatValidation.valid) {
         return NextResponse.json(
           { error: formatValidation.error },
-          { status: 400 }
+          { status: 400 },
         );
       }
 
       const sizeValidation = validateImageSize(logo, 5 * 1024 * 1024);
       if (!sizeValidation.valid) {
-        return NextResponse.json({ error: sizeValidation.error }, { status: 413 });
+        return NextResponse.json(
+          { error: sizeValidation.error },
+          { status: 413 },
+        );
       }
 
       logoUrl = await uploadMerchantLogo(logo, `logo-${merchant.id}.jpg`);
@@ -180,7 +198,8 @@ export async function PATCH(request: NextRequest) {
 
     // Update user table (notification prefs, profile photo)
     const userUpdates: Record<string, unknown> = {};
-    if (notificationPrefs !== undefined) userUpdates.notificationPrefs = notificationPrefs;
+    if (notificationPrefs !== undefined)
+      userUpdates.notificationPrefs = notificationPrefs;
     if (profilePhotoUrl) userUpdates.profilePhotoUrl = profilePhotoUrl;
 
     if (Object.keys(userUpdates).length > 0) {
@@ -199,7 +218,8 @@ export async function PATCH(request: NextRequest) {
     if (description !== undefined) merchantUpdates.description = description;
     if (phone !== undefined) merchantUpdates.phone = phone;
     if (website !== undefined) merchantUpdates.website = website;
-    if (googlePlaceId !== undefined) merchantUpdates.googlePlaceId = googlePlaceId;
+    if (googlePlaceId !== undefined)
+      merchantUpdates.googlePlaceId = googlePlaceId;
     if (logoUrl) merchantUpdates.logoUrl = logoUrl;
 
     if (Object.keys(merchantUpdates).length > 0) {
@@ -220,11 +240,16 @@ export async function PATCH(request: NextRequest) {
       if (existingBankAccount) {
         // Build update object with only provided fields
         const bankAccountUpdate: Record<string, string | null> = {};
-        if (bankAccount.bankName !== undefined) bankAccountUpdate.bankName = bankAccount.bankName || null;
-        if (bankAccount.accountHolderName !== undefined) bankAccountUpdate.accountHolderName = bankAccount.accountHolderName;
-        if (bankAccount.routingNumber) bankAccountUpdate.routingNumberEncrypted = bankAccount.routingNumber;
-        if (bankAccount.accountNumber) bankAccountUpdate.accountNumberEncrypted = bankAccount.accountNumber;
-        if (bankAccount.checkImageUrl !== undefined) bankAccountUpdate.checkImageUrl = bankAccount.checkImageUrl;
+        if (bankAccount.bankName !== undefined)
+          bankAccountUpdate.bankName = bankAccount.bankName || null;
+        if (bankAccount.accountHolderName !== undefined)
+          bankAccountUpdate.accountHolderName = bankAccount.accountHolderName;
+        if (bankAccount.routingNumber)
+          bankAccountUpdate.routingNumberEncrypted = bankAccount.routingNumber;
+        if (bankAccount.accountNumber)
+          bankAccountUpdate.accountNumberEncrypted = bankAccount.accountNumber;
+        if (bankAccount.checkImageUrl !== undefined)
+          bankAccountUpdate.checkImageUrl = bankAccount.checkImageUrl;
 
         if (Object.keys(bankAccountUpdate).length > 0) {
           await db
@@ -261,10 +286,8 @@ export async function PATCH(request: NextRequest) {
     return NextResponse.json({ success: true, profilePhotoUrl, logoUrl });
   } catch (error) {
     console.error("Error updating merchant profile:", error);
-    const message = error instanceof Error ? error.message : "Failed to update profile";
-    return NextResponse.json(
-      { error: message },
-      { status: 500 }
-    );
+    const message =
+      error instanceof Error ? error.message : "Failed to update profile";
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }

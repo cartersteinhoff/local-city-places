@@ -1,9 +1,9 @@
 "use client";
 
+import { Eye, Monitor, Smartphone, Tablet } from "lucide-react";
 import { useState } from "react";
 import { PhotoStripDesign } from "@/components/merchant-page/designs/photo-strip";
 import { Button } from "@/components/ui/button";
-import { Eye, Monitor, Tablet, Smartphone } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export type DeviceType = "desktop" | "tablet" | "mobile";
@@ -55,10 +55,7 @@ interface LivePreviewProps {
   className?: string;
 }
 
-export function LivePreview({
-  data,
-  className,
-}: LivePreviewProps) {
+export function LivePreview({ data, className }: LivePreviewProps) {
   const [device, setDevice] = useState<DeviceType>("desktop");
 
   const deviceConfig = DEVICES.find((d) => d.id === device) || DEVICES[0];

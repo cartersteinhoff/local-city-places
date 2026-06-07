@@ -1,13 +1,13 @@
-import { NextRequest, NextResponse } from "next/server";
-import { getSession } from "@/lib/auth";
+import { and, eq, isNotNull, or, sql } from "drizzle-orm";
+import { type NextRequest, NextResponse } from "next/server";
 import { db } from "@/db";
 import { users } from "@/db/schema";
-import { eq, and, or, isNotNull, sql } from "drizzle-orm";
+import { getSession } from "@/lib/auth";
 
 export async function GET(request: NextRequest) {
   try {
     const session = await getSession();
-    if (!session || session.user.role !== "admin") {
+    if (session?.user.role !== "admin") {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -43,6 +43,9 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ count: Number(result?.count) || 0 });
   } catch (error) {
     console.error("Recipient count error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 },
+    );
   }
 }

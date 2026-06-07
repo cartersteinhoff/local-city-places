@@ -1,7 +1,7 @@
-import { NextRequest, NextResponse } from "next/server";
+import { eq, sql } from "drizzle-orm";
+import { type NextRequest, NextResponse } from "next/server";
 import { db } from "@/db";
 import { campaignRecipients, emailCampaigns } from "@/db/schema";
-import { eq, sql } from "drizzle-orm";
 
 // Postmark webhook event types
 interface PostmarkOpenEvent {
@@ -111,8 +111,13 @@ export async function POST(request: NextRequest) {
     if (!recipient) {
       // Message ID not found - could be a transactional email, not a campaign
       // Return 200 to acknowledge receipt
-      console.log(`Postmark webhook: Message ID ${event.MessageID} not found in campaign recipients`);
-      return NextResponse.json({ status: "ok", message: "Not a campaign email" });
+      console.log(
+        `Postmark webhook: Message ID ${event.MessageID} not found in campaign recipients`,
+      );
+      return NextResponse.json({
+        status: "ok",
+        message: "Not a campaign email",
+      });
     }
 
     switch (event.RecordType) {
@@ -187,7 +192,9 @@ export async function POST(request: NextRequest) {
       case "Delivery": {
         // We already mark as sent when we send, but this confirms delivery
         // Could update status to "delivered" if you want more granularity
-        console.log(`Postmark webhook: Email delivered to ${(event as PostmarkDeliveryEvent).Recipient}`);
+        console.log(
+          `Postmark webhook: Email delivered to ${(event as PostmarkDeliveryEvent).Recipient}`,
+        );
         break;
       }
 

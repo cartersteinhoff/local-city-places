@@ -214,9 +214,7 @@ export async function generateMetadata({
   };
 }
 
-export default async function MerchantPage({
-  params,
-}: PageProps) {
+export default async function MerchantPage({ params }: PageProps) {
   const { slug } = await params;
   const merchant = await getMerchantBySlug(slug);
 

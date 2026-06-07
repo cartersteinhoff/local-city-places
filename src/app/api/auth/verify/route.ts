@@ -1,8 +1,13 @@
-import { NextRequest, NextResponse } from "next/server";
-import { verifyMagicLinkToken, getRedirectPath, isValidCallbackUrl, SESSION_COOKIE_NAME } from "@/lib/auth";
-import { db, members, merchants } from "@/db";
-import { confirmSweepstakesEntry } from "@/lib/sweepstakes";
 import { eq } from "drizzle-orm";
+import { type NextRequest, NextResponse } from "next/server";
+import { db, members, merchants } from "@/db";
+import {
+  getRedirectPath,
+  isValidCallbackUrl,
+  SESSION_COOKIE_NAME,
+  verifyMagicLinkToken,
+} from "@/lib/auth";
+import { confirmSweepstakesEntry } from "@/lib/sweepstakes";
 
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
@@ -17,20 +22,27 @@ export async function GET(request: NextRequest) {
 
     if (!result.success) {
       return NextResponse.redirect(
-        new URL(`/?error=${encodeURIComponent(result.error || "invalid_token")}`, request.url)
+        new URL(
+          `/?error=${encodeURIComponent(result.error || "invalid_token")}`,
+          request.url,
+        ),
       );
     }
 
     if (result.userId && isValidCallbackUrl(result.callbackUrl)) {
       try {
         const callbackUrlObj = new URL(result.callbackUrl!, request.url);
-        const sweepstakesEntryId = callbackUrlObj.searchParams.get("sweepstakesEntryId");
+        const sweepstakesEntryId =
+          callbackUrlObj.searchParams.get("sweepstakesEntryId");
 
         if (sweepstakesEntryId) {
           await confirmSweepstakesEntry(sweepstakesEntryId, result.userId);
         }
       } catch (error) {
-        console.error("Failed to confirm sweepstakes entry during auth verify:", error);
+        console.error(
+          "Failed to confirm sweepstakes entry during auth verify:",
+          error,
+        );
       }
     }
 
@@ -91,6 +103,8 @@ export async function GET(request: NextRequest) {
     return response;
   } catch (error) {
     console.error("Verification error:", error);
-    return NextResponse.redirect(new URL("/?error=verification_failed", request.url));
+    return NextResponse.redirect(
+      new URL("/?error=verification_failed", request.url),
+    );
   }
 }

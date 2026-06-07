@@ -9,8 +9,8 @@
  */
 
 import { useEffect, useState } from "react";
-import { EditorProvider } from "@/components/merchant-page/editor-context";
 import { PhotoStripDesign } from "@/components/merchant-page/designs/photo-strip";
+import { EditorProvider } from "@/components/merchant-page/editor-context";
 
 interface Hours {
   monday?: string;
@@ -76,7 +76,10 @@ export default function PreviewPage() {
     window.addEventListener("message", handleMessage);
 
     // Notify parent that iframe is ready
-    window.parent.postMessage({ type: "preview-ready" }, window.location.origin);
+    window.parent.postMessage(
+      { type: "preview-ready" },
+      window.location.origin,
+    );
 
     return () => window.removeEventListener("message", handleMessage);
   }, []);
@@ -86,7 +89,7 @@ export default function PreviewPage() {
     // Send update back to parent
     window.parent.postMessage(
       { type: "preview-update", field, value },
-      window.location.origin
+      window.location.origin,
     );
   };
 
@@ -117,7 +120,11 @@ export default function PreviewPage() {
         description={formData.description || null}
         vimeoUrl={formData.vimeoUrl || null}
         googlePlaceId={formData.googlePlaceId || null}
-        hours={formData.hours && Object.keys(formData.hours).length > 0 ? formData.hours : null}
+        hours={
+          formData.hours && Object.keys(formData.hours).length > 0
+            ? formData.hours
+            : null
+        }
         instagramUrl={formData.instagramUrl || null}
         facebookUrl={formData.facebookUrl || null}
         tiktokUrl={formData.tiktokUrl || null}

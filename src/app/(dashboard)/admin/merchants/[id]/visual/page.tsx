@@ -1,30 +1,30 @@
 "use client";
 
-import { useEffect, useState, useCallback, use, useRef } from "react";
-import { useRouter } from "next/navigation";
-import Link from "next/link";
-import { DashboardLayout } from "@/components/layout";
-import { Button } from "@/components/ui/button";
 import {
   ArrowLeft,
-  Loader2,
-  Save,
-  RefreshCw,
-  PanelLeft,
   Eye,
   EyeOff,
+  Import,
+  Loader2,
   Monitor,
-  Tablet,
+  PanelLeft,
+  RefreshCw,
+  Save,
   Smartphone,
+  Tablet,
   ZoomIn,
   ZoomOut,
-  Import,
 } from "lucide-react";
-import { ImportGoogleDialog } from "./_components/import-google-dialog";
-import { useUser } from "@/hooks/use-user";
-import { adminNavItems } from "../../../nav";
-import { formatPhoneNumber, stripPhoneNumber, cn } from "@/lib/utils";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { use, useCallback, useEffect, useRef, useState } from "react";
+import { DashboardLayout } from "@/components/layout";
+import { Button } from "@/components/ui/button";
 import { useManualSave } from "@/hooks/use-manual-save";
+import { useUser } from "@/hooks/use-user";
+import { cn, formatPhoneNumber, stripPhoneNumber } from "@/lib/utils";
+import { adminNavItems } from "../../../nav";
+import { ImportGoogleDialog } from "./_components/import-google-dialog";
 
 // Device configurations for visual editor
 type DeviceType = "desktop" | "tablet" | "mobile";
@@ -116,14 +116,18 @@ const INITIAL_FORM_DATA: FormData = {
   services: [],
 };
 
-export default function VisualEditorPage({ params }: { params: Promise<{ id: string }> }) {
+export default function VisualEditorPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
   const { id } = use(params);
   const router = useRouter();
   const { user, isLoading: authLoading, isAuthenticated } = useUser();
 
   const [formData, setFormData] = useState<FormData>(INITIAL_FORM_DATA);
   const [originalData, setOriginalData] = useState<FormData>(INITIAL_FORM_DATA);
-  const [categories, setCategories] = useState<Category[]>([]);
+  const [_categories, setCategories] = useState<Category[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
   const [showEditHints, setShowEditHints] = useState(true);
@@ -146,80 +150,92 @@ export default function VisualEditorPage({ params }: { params: Promise<{ id: str
   }, []);
 
   // Handler for importing from Google Places
-  const handleImport = useCallback((data: {
-    businessName: string;
-    googlePlaceId: string;
-    streetAddress: string;
-    city: string;
-    state: string;
-    zipCode: string;
-    phone: string;
-    website: string;
-    hours: Hours;
-  }) => {
-    setFormData(prev => ({
-      ...prev,
-      businessName: data.businessName || prev.businessName,
-      googlePlaceId: data.googlePlaceId || prev.googlePlaceId,
-      streetAddress: data.streetAddress || prev.streetAddress,
-      city: data.city || prev.city,
-      state: data.state || prev.state,
-      zipCode: data.zipCode || prev.zipCode,
-      phone: data.phone ? formatPhoneNumber(data.phone) : prev.phone,
-      website: data.website || prev.website,
-      hours: {
-        monday: data.hours.monday || prev.hours.monday,
-        tuesday: data.hours.tuesday || prev.hours.tuesday,
-        wednesday: data.hours.wednesday || prev.hours.wednesday,
-        thursday: data.hours.thursday || prev.hours.thursday,
-        friday: data.hours.friday || prev.hours.friday,
-        saturday: data.hours.saturday || prev.hours.saturday,
-        sunday: data.hours.sunday || prev.hours.sunday,
-      },
-    }));
-  }, []);
+  const handleImport = useCallback(
+    (data: {
+      businessName: string;
+      googlePlaceId: string;
+      streetAddress: string;
+      city: string;
+      state: string;
+      zipCode: string;
+      phone: string;
+      website: string;
+      hours: Hours;
+    }) => {
+      setFormData((prev) => ({
+        ...prev,
+        businessName: data.businessName || prev.businessName,
+        googlePlaceId: data.googlePlaceId || prev.googlePlaceId,
+        streetAddress: data.streetAddress || prev.streetAddress,
+        city: data.city || prev.city,
+        state: data.state || prev.state,
+        zipCode: data.zipCode || prev.zipCode,
+        phone: data.phone ? formatPhoneNumber(data.phone) : prev.phone,
+        website: data.website || prev.website,
+        hours: {
+          monday: data.hours.monday || prev.hours.monday,
+          tuesday: data.hours.tuesday || prev.hours.tuesday,
+          wednesday: data.hours.wednesday || prev.hours.wednesday,
+          thursday: data.hours.thursday || prev.hours.thursday,
+          friday: data.hours.friday || prev.hours.friday,
+          saturday: data.hours.saturday || prev.hours.saturday,
+          sunday: data.hours.sunday || prev.hours.sunday,
+        },
+      }));
+    },
+    [],
+  );
 
   // Update a single field
-  const updateField = useCallback(<K extends keyof FormData>(field: K, value: FormData[K]) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
-  }, []);
+  const updateField = useCallback(
+    <K extends keyof FormData>(field: K, value: FormData[K]) => {
+      setFormData((prev) => ({ ...prev, [field]: value }));
+    },
+    [],
+  );
 
   // Save handler
-  const handleSave = useCallback(async (data: FormData) => {
-    const strippedPhone = stripPhoneNumber(data.phone || "");
+  const handleSave = useCallback(
+    async (data: FormData) => {
+      const strippedPhone = stripPhoneNumber(data.phone || "");
 
-    const res = await fetch(`/api/admin/merchant-pages/${id}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        businessName: data.businessName?.trim() || "",
-        streetAddress: data.streetAddress?.trim() || null,
-        city: data.city?.trim() || "",
-        state: data.state?.trim()?.toUpperCase() || "",
-        zipCode: data.zipCode?.trim() || null,
-        phone: strippedPhone,
-        website: data.website?.trim() || null,
-        categoryId: data.categoryId || null,
-        description: data.description?.trim() || null,
-        vimeoUrl: data.vimeoUrl?.trim() || null,
-        googlePlaceId: data.googlePlaceId || null,
-        logoUrl: data.logoUrl?.trim() || null,
-        hours: data.hours && Object.keys(data.hours).length > 0 ? data.hours : null,
-        instagramUrl: data.instagramUrl?.trim() || null,
-        facebookUrl: data.facebookUrl?.trim() || null,
-        tiktokUrl: data.tiktokUrl?.trim() || null,
-        photos: data.photos?.length > 0 ? data.photos : null,
-        services: data.services?.length > 0 ? data.services : null,
-        aboutStory: data.aboutStory?.trim() || null,
-      }),
-    });
+      const res = await fetch(`/api/admin/merchant-pages/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          businessName: data.businessName?.trim() || "",
+          streetAddress: data.streetAddress?.trim() || null,
+          city: data.city?.trim() || "",
+          state: data.state?.trim()?.toUpperCase() || "",
+          zipCode: data.zipCode?.trim() || null,
+          phone: strippedPhone,
+          website: data.website?.trim() || null,
+          categoryId: data.categoryId || null,
+          description: data.description?.trim() || null,
+          vimeoUrl: data.vimeoUrl?.trim() || null,
+          googlePlaceId: data.googlePlaceId || null,
+          logoUrl: data.logoUrl?.trim() || null,
+          hours:
+            data.hours && Object.keys(data.hours).length > 0
+              ? data.hours
+              : null,
+          instagramUrl: data.instagramUrl?.trim() || null,
+          facebookUrl: data.facebookUrl?.trim() || null,
+          tiktokUrl: data.tiktokUrl?.trim() || null,
+          photos: data.photos?.length > 0 ? data.photos : null,
+          services: data.services?.length > 0 ? data.services : null,
+          aboutStory: data.aboutStory?.trim() || null,
+        }),
+      });
 
-    const result = await res.json();
-    if (!res.ok) {
-      throw new Error(result.error || "Failed to save");
-    }
-    setOriginalData(data);
-  }, [id]);
+      const result = await res.json();
+      if (!res.ok) {
+        throw new Error(result.error || "Failed to save");
+      }
+      setOriginalData(data);
+    },
+    [id],
+  );
 
   const { status, isDirty, isSaving, save } = useManualSave({
     data: formData,
@@ -231,51 +247,59 @@ export default function VisualEditorPage({ params }: { params: Promise<{ id: str
   const handleRebuild = useCallback(async () => {
     setIsRebuilding(true);
     try {
-      await fetch(`/api/admin/merchant-pages/${id}/revalidate`, { method: "POST" });
+      await fetch(`/api/admin/merchant-pages/${id}/revalidate`, {
+        method: "POST",
+      });
     } finally {
       setIsRebuilding(false);
     }
   }, [id]);
 
   // Photo upload handler
-  const handlePhotoUpload = useCallback(async (file: File): Promise<string> => {
-    const formDataUpload = new FormData();
-    formDataUpload.append("file", file);
-    formDataUpload.append("type", "photo");
+  const _handlePhotoUpload = useCallback(
+    async (file: File): Promise<string> => {
+      const formDataUpload = new FormData();
+      formDataUpload.append("file", file);
+      formDataUpload.append("type", "photo");
 
-    const res = await fetch(`/api/admin/merchant-pages/${id}/upload-photo`, {
-      method: "POST",
-      body: formDataUpload,
-    });
+      const res = await fetch(`/api/admin/merchant-pages/${id}/upload-photo`, {
+        method: "POST",
+        body: formDataUpload,
+      });
 
-    if (!res.ok) {
-      const data = await res.json();
-      throw new Error(data.error || "Upload failed");
-    }
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || "Upload failed");
+      }
 
-    const { url } = await res.json();
-    return url;
-  }, [id]);
+      const { url } = await res.json();
+      return url;
+    },
+    [id],
+  );
 
   // Logo upload handler
-  const handleLogoUpload = useCallback(async (file: File): Promise<string> => {
-    const formDataUpload = new FormData();
-    formDataUpload.append("file", file);
-    formDataUpload.append("type", "logo");
+  const _handleLogoUpload = useCallback(
+    async (file: File): Promise<string> => {
+      const formDataUpload = new FormData();
+      formDataUpload.append("file", file);
+      formDataUpload.append("type", "logo");
 
-    const res = await fetch(`/api/admin/merchant-pages/${id}/upload-photo`, {
-      method: "POST",
-      body: formDataUpload,
-    });
+      const res = await fetch(`/api/admin/merchant-pages/${id}/upload-photo`, {
+        method: "POST",
+        body: formDataUpload,
+      });
 
-    if (!res.ok) {
-      const data = await res.json();
-      throw new Error(data.error || "Upload failed");
-    }
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || "Upload failed");
+      }
 
-    const { url } = await res.json();
-    return url;
-  }, [id]);
+      const { url } = await res.json();
+      return url;
+    },
+    [id],
+  );
 
   // Auth check
   useEffect(() => {
@@ -367,13 +391,13 @@ export default function VisualEditorPage({ params }: { params: Promise<{ id: str
     if (iframeReady && iframeRef.current?.contentWindow) {
       iframeRef.current.contentWindow.postMessage(
         { type: "preview-data", data: formData, showEditHints },
-        window.location.origin
+        window.location.origin,
       );
     }
   }, [iframeReady, formData, showEditHints]);
 
   // Calculate scale based on zoom and available container width
-  const deviceConfig = DEVICES.find(d => d.id === device) || DEVICES[0];
+  const deviceConfig = DEVICES.find((d) => d.id === device) || DEVICES[0];
   const scale = zoom / 100;
 
   return (
@@ -414,7 +438,11 @@ export default function VisualEditorPage({ params }: { params: Promise<{ id: str
                 onClick={() => setShowEditHints(!showEditHints)}
                 title={showEditHints ? "Hide edit hints" : "Show edit hints"}
               >
-                {showEditHints ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
+                {showEditHints ? (
+                  <Eye className="w-4 h-4" />
+                ) : (
+                  <EyeOff className="w-4 h-4" />
+                )}
               </Button>
 
               {/* Import from Google */}
@@ -436,10 +464,14 @@ export default function VisualEditorPage({ params }: { params: Promise<{ id: str
               </Button>
 
               {/* Status indicator */}
-              <span className={cn(
-                "text-sm",
-                status === "error" ? "text-destructive" : "text-muted-foreground"
-              )}>
+              <span
+                className={cn(
+                  "text-sm",
+                  status === "error"
+                    ? "text-destructive"
+                    : "text-muted-foreground",
+                )}
+              >
                 {status === "dirty" && "Unsaved changes"}
                 {status === "saving" && "Saving..."}
                 {status === "saved" && "Saved"}
@@ -448,11 +480,7 @@ export default function VisualEditorPage({ params }: { params: Promise<{ id: str
               </span>
 
               {/* Save button */}
-              <Button
-                size="sm"
-                onClick={save}
-                disabled={isSaving || !isDirty}
-              >
+              <Button size="sm" onClick={save} disabled={isSaving || !isDirty}>
                 {isSaving ? (
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                 ) : (
@@ -490,7 +518,8 @@ export default function VisualEditorPage({ params }: { params: Promise<{ id: str
                   onClick={() => handleDeviceChange(d.id)}
                   className={cn(
                     "h-8 px-3 gap-2",
-                    device === d.id && "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground"
+                    device === d.id &&
+                      "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground",
                   )}
                   title={`${d.label} (${d.width}px)`}
                 >
@@ -551,21 +580,25 @@ export default function VisualEditorPage({ params }: { params: Promise<{ id: str
                 <div
                   className={cn(
                     "origin-top-left transition-all duration-300 shadow-2xl",
-                    device === "mobile" && "rounded-[24px] ring-8 ring-gray-800",
-                    device === "tablet" && "rounded-[16px] ring-4 ring-gray-700",
-                    device === "desktop" && "rounded-t-lg ring-1 ring-gray-300"
+                    device === "mobile" &&
+                      "rounded-[24px] ring-8 ring-gray-800",
+                    device === "tablet" &&
+                      "rounded-[16px] ring-4 ring-gray-700",
+                    device === "desktop" && "rounded-t-lg ring-1 ring-gray-300",
                   )}
                   style={{
                     width: deviceConfig.width,
                     transform: `scale(${scale})`,
                   }}
                 >
-                  <div className={cn(
-                    "overflow-hidden",
-                    device === "mobile" && "rounded-[16px]",
-                    device === "tablet" && "rounded-[12px]",
-                    device === "desktop" && "rounded-t-md"
-                  )}>
+                  <div
+                    className={cn(
+                      "overflow-hidden",
+                      device === "mobile" && "rounded-[16px]",
+                      device === "tablet" && "rounded-[12px]",
+                      device === "desktop" && "rounded-t-md",
+                    )}
+                  >
                     {/* Iframe for preview - CSS media queries respond to iframe width, not viewport */}
                     <iframe
                       ref={iframeRef}

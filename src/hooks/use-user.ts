@@ -37,12 +37,13 @@ export function useUser(enabled: boolean = true) {
       revalidateOnFocus: false,
       revalidateOnReconnect: false,
       dedupingInterval: 60000,
-    }
+    },
   );
 
-  const userName = data?.user?.firstName && data?.user?.lastName
-    ? `${data.user.firstName} ${data.user.lastName}`
-    : data?.merchant?.businessName || undefined;
+  const userName =
+    data?.user?.firstName && data?.user?.lastName
+      ? `${data.user.firstName} ${data.user.lastName}`
+      : data?.merchant?.businessName || undefined;
 
   return {
     user: data?.user,

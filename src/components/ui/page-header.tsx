@@ -58,7 +58,9 @@ export function PageHeader({
             <p className="text-muted-foreground mt-1">{description}</p>
           )}
         </div>
-        {actionsContent && <div className="flex items-center gap-3">{actionsContent}</div>}
+        {actionsContent && (
+          <div className="flex items-center gap-3">{actionsContent}</div>
+        )}
       </div>
     </div>
   );

@@ -1,13 +1,16 @@
-import { NextRequest, NextResponse } from "next/server";
 import { and, eq, ilike } from "drizzle-orm";
-import { getSession } from "@/lib/auth";
+import { type NextRequest, NextResponse } from "next/server";
 import { db, merchants } from "@/db";
+import { getSession } from "@/lib/auth";
 
 export async function GET(request: NextRequest) {
   try {
     const session = await getSession();
 
-    if (!session || (session.user.role !== "member" && session.user.role !== "admin")) {
+    if (
+      !session ||
+      (session.user.role !== "member" && session.user.role !== "admin")
+    ) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -18,25 +21,27 @@ export async function GET(request: NextRequest) {
     const state = searchParams.get("state")?.trim()?.toUpperCase();
 
     if (!placeId && !name) {
-      return NextResponse.json({ error: "placeId or name is required" }, { status: 400 });
+      return NextResponse.json(
+        { error: "placeId or name is required" },
+        { status: 400 },
+      );
     }
 
-    let merchant =
-      placeId
-        ? (
-            await db
-              .select({
-                id: merchants.id,
-                businessName: merchants.businessName,
-                city: merchants.city,
-                state: merchants.state,
-                googlePlaceId: merchants.googlePlaceId,
-              })
-              .from(merchants)
-              .where(eq(merchants.googlePlaceId, placeId))
-              .limit(1)
-          )[0]
-        : undefined;
+    let merchant = placeId
+      ? (
+          await db
+            .select({
+              id: merchants.id,
+              businessName: merchants.businessName,
+              city: merchants.city,
+              state: merchants.state,
+              googlePlaceId: merchants.googlePlaceId,
+            })
+            .from(merchants)
+            .where(eq(merchants.googlePlaceId, placeId))
+            .limit(1)
+        )[0]
+      : undefined;
 
     if (!merchant && name) {
       merchant = (
@@ -53,8 +58,8 @@ export async function GET(request: NextRequest) {
             and(
               ilike(merchants.businessName, name),
               city ? ilike(merchants.city, city) : undefined,
-              state ? eq(merchants.state, state) : undefined
-            )
+              state ? eq(merchants.state, state) : undefined,
+            ),
           )
           .limit(1)
       )[0];
@@ -68,7 +73,7 @@ export async function GET(request: NextRequest) {
     console.error("Favorite merchant match error:", error);
     return NextResponse.json(
       { error: "Failed to match merchant" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

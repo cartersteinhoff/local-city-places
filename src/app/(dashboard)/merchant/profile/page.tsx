@@ -1,16 +1,35 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import {
+  Building2,
+  Camera,
+  CheckCircle,
+  FileCheck,
+  Loader2,
+  Lock,
+  Save,
+  Upload,
+  X,
+} from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
 import { DashboardLayout } from "@/components/layout";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  GooglePlacesAutocomplete,
+  type PlaceDetails,
+} from "@/components/ui/google-places-autocomplete";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Separator } from "@/components/ui/separator";
-import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
@@ -18,12 +37,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
-import { Camera, Loader2, Save, Building2, CheckCircle, Lock, Upload, FileCheck, X } from "lucide-react";
-import { merchantNavItems } from "../nav";
+import { Separator } from "@/components/ui/separator";
+import { Switch } from "@/components/ui/switch";
+import { Textarea } from "@/components/ui/textarea";
 import { useUser } from "@/hooks/use-user";
-import { GooglePlacesAutocomplete, PlaceDetails } from "@/components/ui/google-places-autocomplete";
 import { formatPhoneNumber, stripPhoneNumber } from "@/lib/utils";
+import { merchantNavItems } from "../nav";
 
 interface Category {
   id: string;
@@ -64,9 +83,12 @@ export default function MerchantProfilePage() {
   const { user, isLoading: authLoading, isAuthenticated, mutate } = useUser();
   const [profile, setProfile] = useState<ProfileData | null>(null);
   const [categories, setCategories] = useState<Category[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [_isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
-  const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
+  const [message, setMessage] = useState<{
+    type: "success" | "error";
+    text: string;
+  } | null>(null);
   const photoInputRef = useRef<HTMLInputElement>(null);
   const logoInputRef = useRef<HTMLInputElement>(null);
   const [pendingPhoto, setPendingPhoto] = useState<string | null>(null);
@@ -78,7 +100,9 @@ export default function MerchantProfilePage() {
   const [bankAccount, setBankAccount] = useState("");
   const [isEditingBankAccount, setIsEditingBankAccount] = useState(false);
   const checkImageInputRef = useRef<HTMLInputElement>(null);
-  const [checkImagePreview, setCheckImagePreview] = useState<string | null>(null);
+  const [checkImagePreview, setCheckImagePreview] = useState<string | null>(
+    null,
+  );
   const [checkImageUrl, setCheckImageUrl] = useState<string | null>(null);
   const [isUploadingCheck, setIsUploadingCheck] = useState(false);
   const [googlePlaceName, setGooglePlaceName] = useState("");
@@ -86,7 +110,11 @@ export default function MerchantProfilePage() {
 
   // Redirect if not authenticated
   useEffect(() => {
-    if (!authLoading && (!isAuthenticated || (user?.role !== "merchant" && user?.role !== "admin"))) {
+    if (
+      !authLoading &&
+      (!isAuthenticated ||
+        (user?.role !== "merchant" && user?.role !== "admin"))
+    ) {
       router.push("/");
     }
   }, [authLoading, isAuthenticated, user?.role, router]);
@@ -95,7 +123,7 @@ export default function MerchantProfilePage() {
     if (!authLoading && isAuthenticated) {
       fetchProfile();
     }
-  }, [authLoading, isAuthenticated]);
+  }, [authLoading, isAuthenticated, fetchProfile]);
 
   async function fetchProfile() {
     try {
@@ -126,7 +154,7 @@ export default function MerchantProfilePage() {
 
   // Parse cityState into separate city and state values
   function parseCityState(value: string): { city: string; state: string } {
-    const parts = value.split(",").map(p => p.trim());
+    const parts = value.split(",").map((p) => p.trim());
     if (parts.length >= 2) {
       const state = parts[parts.length - 1].toUpperCase().slice(0, 2);
       const city = parts.slice(0, -1).join(", ");
@@ -192,14 +220,14 @@ export default function MerchantProfilePage() {
       const data = await response.json();
       if (data.profilePhotoUrl) {
         setProfile((prev) =>
-          prev ? { ...prev, profilePhotoUrl: data.profilePhotoUrl } : null
+          prev ? { ...prev, profilePhotoUrl: data.profilePhotoUrl } : null,
         );
         // Revalidate user data to update header
         mutate();
       }
       if (data.logoUrl) {
         setProfile((prev) =>
-          prev ? { ...prev, logoUrl: data.logoUrl } : null
+          prev ? { ...prev, logoUrl: data.logoUrl } : null,
         );
       }
       setPendingPhoto(null);
@@ -207,17 +235,20 @@ export default function MerchantProfilePage() {
       // Reset bank account editing state
       if (bankRouting && bankAccount) {
         setProfile((prev) =>
-          prev ? {
-            ...prev,
-            bankAccount: {
-              bankName,
-              accountHolderName: bankAccountName,
-              routingLast4: bankRouting.slice(-4),
-              accountLast4: bankAccount.slice(-4),
-              hasCheckImage: !!checkImageUrl || prev.bankAccount?.hasCheckImage || false,
-              hasAccount: true,
-            }
-          } : null
+          prev
+            ? {
+                ...prev,
+                bankAccount: {
+                  bankName,
+                  accountHolderName: bankAccountName,
+                  routingLast4: bankRouting.slice(-4),
+                  accountLast4: bankAccount.slice(-4),
+                  hasCheckImage:
+                    !!checkImageUrl || prev.bankAccount?.hasCheckImage || false,
+                  hasAccount: true,
+                },
+              }
+            : null,
         );
         setBankRouting("");
         setBankAccount("");
@@ -225,13 +256,15 @@ export default function MerchantProfilePage() {
       } else if (checkImageUrl && profile?.bankAccount?.hasAccount) {
         // Just updated check image
         setProfile((prev) =>
-          prev && prev.bankAccount ? {
-            ...prev,
-            bankAccount: {
-              ...prev.bankAccount,
-              hasCheckImage: true,
-            }
-          } : prev
+          prev?.bankAccount
+            ? {
+                ...prev,
+                bankAccount: {
+                  ...prev.bankAccount,
+                  hasCheckImage: true,
+                },
+              }
+            : prev,
         );
       }
       // Clear check image state
@@ -267,7 +300,11 @@ export default function MerchantProfilePage() {
     reader.readAsDataURL(file);
   }
 
-  function handleGooglePlaceSelect(name: string, placeId: string, details?: PlaceDetails) {
+  function handleGooglePlaceSelect(
+    name: string,
+    placeId: string,
+    details?: PlaceDetails,
+  ) {
     setGooglePlaceName(name);
     if (details) {
       // Update cityState combined field
@@ -275,17 +312,25 @@ export default function MerchantProfilePage() {
         const parts = [details.city, details.state].filter(Boolean);
         setCityState(parts.join(", "));
       }
-      setProfile((prev) => prev ? {
-        ...prev,
-        businessName: details.name || prev.businessName,
-        phone: details.phone ? formatPhoneNumber(details.phone) : prev.phone,
-        website: details.website || prev.website,
-        googlePlaceId: placeId || prev.googlePlaceId,
-      } : null);
+      setProfile((prev) =>
+        prev
+          ? {
+              ...prev,
+              businessName: details.name || prev.businessName,
+              phone: details.phone
+                ? formatPhoneNumber(details.phone)
+                : prev.phone,
+              website: details.website || prev.website,
+              googlePlaceId: placeId || prev.googlePlaceId,
+            }
+          : null,
+      );
     }
   }
 
-  async function handleCheckImageSelect(e: React.ChangeEvent<HTMLInputElement>) {
+  async function handleCheckImageSelect(
+    e: React.ChangeEvent<HTMLInputElement>,
+  ) {
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -319,11 +364,17 @@ export default function MerchantProfilePage() {
     }
   }
 
-  function updateField<K extends keyof ProfileData>(field: K, value: ProfileData[K]) {
+  function updateField<K extends keyof ProfileData>(
+    field: K,
+    value: ProfileData[K],
+  ) {
     setProfile((prev) => (prev ? { ...prev, [field]: value } : null));
   }
 
-  function updateNotificationPref(key: keyof ProfileData["notificationPrefs"], value: boolean) {
+  function updateNotificationPref(
+    key: keyof ProfileData["notificationPrefs"],
+    value: boolean,
+  ) {
     setProfile((prev) =>
       prev
         ? {
@@ -333,11 +384,11 @@ export default function MerchantProfilePage() {
               [key]: value,
             },
           }
-        : null
+        : null,
     );
   }
 
-  const userName = profile?.businessName;
+  const _userName = profile?.businessName;
 
   const initials = profile
     ? profile.businessName
@@ -392,7 +443,10 @@ export default function MerchantProfilePage() {
             <CardContent>
               <div className="flex items-center gap-6">
                 <Avatar className="w-24 h-24 rounded-lg">
-                  <AvatarImage src={displayLogo || undefined} className="object-cover" />
+                  <AvatarImage
+                    src={displayLogo || undefined}
+                    className="object-cover"
+                  />
                   <AvatarFallback className="text-2xl rounded-lg">
                     {initials || <Building2 className="w-10 h-10" />}
                   </AvatarFallback>
@@ -544,7 +598,9 @@ export default function MerchantProfilePage() {
                     id="phone"
                     type="tel"
                     value={profile?.phone || ""}
-                    onChange={(e) => updateField("phone", formatPhoneNumber(e.target.value))}
+                    onChange={(e) =>
+                      updateField("phone", formatPhoneNumber(e.target.value))
+                    }
                     placeholder="(425) 451-8599"
                   />
                 </div>
@@ -643,7 +699,9 @@ export default function MerchantProfilePage() {
               <div className="space-y-4">
                 <div className="flex items-center gap-2">
                   <Building2 className="w-4 h-4 text-muted-foreground" />
-                  <h4 className="font-medium">Bank Account for Business Check</h4>
+                  <h4 className="font-medium">
+                    Bank Account for Business Check
+                  </h4>
                 </div>
 
                 {profile?.bankAccount?.hasAccount && !isEditingBankAccount ? (
@@ -651,12 +709,17 @@ export default function MerchantProfilePage() {
                     <div className="p-4 rounded-lg bg-muted/50 space-y-2">
                       <div className="flex items-start justify-between">
                         <div>
-                          <p className="font-medium">{profile.bankAccount.accountHolderName}</p>
+                          <p className="font-medium">
+                            {profile.bankAccount.accountHolderName}
+                          </p>
                           {profile.bankAccount.bankName && (
-                            <p className="text-sm text-muted-foreground">{profile.bankAccount.bankName}</p>
+                            <p className="text-sm text-muted-foreground">
+                              {profile.bankAccount.bankName}
+                            </p>
                           )}
                           <p className="text-sm text-muted-foreground font-mono">
-                            Routing: ****{profile.bankAccount.routingLast4} | Account: ****{profile.bankAccount.accountLast4}
+                            Routing: ****{profile.bankAccount.routingLast4} |
+                            Account: ****{profile.bankAccount.accountLast4}
                           </p>
                         </div>
                         <CheckCircle className="w-5 h-5 text-green-600" />
@@ -675,14 +738,20 @@ export default function MerchantProfilePage() {
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
                           <FileCheck className="w-4 h-4 text-muted-foreground" />
-                          <span className="font-medium text-sm">Check Image</span>
+                          <span className="font-medium text-sm">
+                            Check Image
+                          </span>
                         </div>
-                        {profile.bankAccount.hasCheckImage && !checkImagePreview && (
-                          <Badge variant="secondary" className="text-green-600 bg-green-50">
-                            <CheckCircle className="w-3 h-3 mr-1" />
-                            On file
-                          </Badge>
-                        )}
+                        {profile.bankAccount.hasCheckImage &&
+                          !checkImagePreview && (
+                            <Badge
+                              variant="secondary"
+                              className="text-green-600 bg-green-50"
+                            >
+                              <CheckCircle className="w-3 h-3 mr-1" />
+                              On file
+                            </Badge>
+                          )}
                       </div>
 
                       {checkImagePreview ? (
@@ -729,10 +798,13 @@ export default function MerchantProfilePage() {
                             disabled={isUploadingCheck}
                           >
                             <Upload className="w-4 h-4 mr-2" />
-                            {profile.bankAccount.hasCheckImage ? "Replace Check Image" : "Upload Check Image"}
+                            {profile.bankAccount.hasCheckImage
+                              ? "Replace Check Image"
+                              : "Upload Check Image"}
                           </Button>
                           <p className="text-xs text-muted-foreground mt-2">
-                            Upload a voided check or bank document showing your account info
+                            Upload a voided check or bank document showing your
+                            account info
                           </p>
                         </div>
                       )}
@@ -750,7 +822,9 @@ export default function MerchantProfilePage() {
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="bankAccountName">Account Holder Name</Label>
+                      <Label htmlFor="bankAccountName">
+                        Account Holder Name
+                      </Label>
                       <Input
                         id="bankAccountName"
                         value={bankAccountName}
@@ -764,18 +838,28 @@ export default function MerchantProfilePage() {
                         <Input
                           id="bankRouting"
                           value={bankRouting}
-                          onChange={(e) => setBankRouting(e.target.value.replace(/\D/g, "").slice(0, 9))}
+                          onChange={(e) =>
+                            setBankRouting(
+                              e.target.value.replace(/\D/g, "").slice(0, 9),
+                            )
+                          }
                           placeholder="123456789"
                           className="font-mono"
                           maxLength={9}
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="bankAccountNumber">Account Number</Label>
+                        <Label htmlFor="bankAccountNumber">
+                          Account Number
+                        </Label>
                         <Input
                           id="bankAccountNumber"
                           value={bankAccount}
-                          onChange={(e) => setBankAccount(e.target.value.replace(/\D/g, "").slice(0, 17))}
+                          onChange={(e) =>
+                            setBankAccount(
+                              e.target.value.replace(/\D/g, "").slice(0, 17),
+                            )
+                          }
                           placeholder="••••••••1234"
                           className="font-mono"
                           maxLength={17}
@@ -833,21 +917,22 @@ export default function MerchantProfilePage() {
                         Upload a voided check or bank document
                       </p>
                     </div>
-                    {profile?.bankAccount?.hasAccount && isEditingBankAccount && (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setIsEditingBankAccount(false);
-                          setBankRouting("");
-                          setBankAccount("");
-                          setCheckImagePreview(null);
-                          setCheckImageUrl(null);
-                        }}
-                        className="text-sm text-muted-foreground hover:text-foreground"
-                      >
-                        Cancel
-                      </button>
-                    )}
+                    {profile?.bankAccount?.hasAccount &&
+                      isEditingBankAccount && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setIsEditingBankAccount(false);
+                            setBankRouting("");
+                            setBankAccount("");
+                            setCheckImagePreview(null);
+                            setCheckImageUrl(null);
+                          }}
+                          className="text-sm text-muted-foreground hover:text-foreground"
+                        >
+                          Cancel
+                        </button>
+                      )}
                   </div>
                 )}
 
@@ -858,7 +943,6 @@ export default function MerchantProfilePage() {
               </div>
 
               <Separator />
-
             </CardContent>
           </Card>
 

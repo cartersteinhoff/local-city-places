@@ -1,17 +1,24 @@
-import { NextRequest, NextResponse } from "next/server";
-import { getSession } from "@/lib/auth";
+import { and, eq, inArray, isNotNull, or } from "drizzle-orm";
+import { type NextRequest, NextResponse } from "next/server";
 import { db } from "@/db";
-import { emailCampaigns, campaignRecipients, users, members, merchants, emailPreferences } from "@/db/schema";
-import { eq, and, or, inArray, isNotNull } from "drizzle-orm";
+import {
+  campaignRecipients,
+  emailCampaigns,
+  emailPreferences,
+  members,
+  merchants,
+  users,
+} from "@/db/schema";
+import { getSession } from "@/lib/auth";
 import { sendBroadcastEmail } from "@/lib/email/postmark-broadcast";
 
 export async function POST(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  _request: NextRequest,
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     const session = await getSession();
-    if (!session || session.user.role !== "admin") {
+    if (session?.user.role !== "admin") {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -24,11 +31,17 @@ export async function POST(
       .where(eq(emailCampaigns.id, id));
 
     if (!campaign) {
-      return NextResponse.json({ error: "Campaign not found" }, { status: 404 });
+      return NextResponse.json(
+        { error: "Campaign not found" },
+        { status: 404 },
+      );
     }
 
     if (campaign.status !== "draft") {
-      return NextResponse.json({ error: "Campaign has already been sent" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Campaign has already been sent" },
+        { status: 400 },
+      );
     }
 
     // Update status to sending
@@ -38,9 +51,17 @@ export async function POST(
       .where(eq(emailCampaigns.id, id));
 
     // Get recipients based on type
-    let recipientUsers: Array<{ id: string; email: string | null; name: string | null; role: string }> = [];
+    let recipientUsers: Array<{
+      id: string;
+      email: string | null;
+      name: string | null;
+      role: string;
+    }> = [];
 
-    if (campaign.recipientType === "individual" && campaign.individualRecipientId) {
+    if (
+      campaign.recipientType === "individual" &&
+      campaign.individualRecipientId
+    ) {
       const [result] = await db
         .select({
           id: users.id,
@@ -56,14 +77,17 @@ export async function POST(
         .where(eq(users.id, campaign.individualRecipientId));
 
       if (result) {
-        recipientUsers = [{
-          id: result.id,
-          email: result.email,
-          role: result.role,
-          name: result.memberFirstName && result.memberLastName
-            ? `${result.memberFirstName} ${result.memberLastName}`
-            : result.merchantBusinessName || null,
-        }];
+        recipientUsers = [
+          {
+            id: result.id,
+            email: result.email,
+            role: result.role,
+            name:
+              result.memberFirstName && result.memberLastName
+                ? `${result.memberFirstName} ${result.memberLastName}`
+                : result.merchantBusinessName || null,
+          },
+        ];
       }
     } else if (campaign.recipientLists && campaign.recipientLists.length > 0) {
       // Build conditions for each list
@@ -94,13 +118,14 @@ export async function POST(
           .leftJoin(merchants, eq(users.id, merchants.userId))
           .where(and(isNotNull(users.email), or(...conditions)));
 
-        recipientUsers = results.map(r => ({
+        recipientUsers = results.map((r) => ({
           id: r.id,
           email: r.email,
           role: r.role,
-          name: r.memberFirstName && r.memberLastName
-            ? `${r.memberFirstName} ${r.memberLastName}`
-            : r.merchantBusinessName || null,
+          name:
+            r.memberFirstName && r.memberLastName
+              ? `${r.memberFirstName} ${r.memberLastName}`
+              : r.merchantBusinessName || null,
         }));
       }
     }
@@ -110,7 +135,10 @@ export async function POST(
         .update(emailCampaigns)
         .set({ status: "failed" })
         .where(eq(emailCampaigns.id, id));
-      return NextResponse.json({ error: "No recipients found" }, { status: 400 });
+      return NextResponse.json(
+        { error: "No recipients found" },
+        { status: 400 },
+      );
     }
 
     // Filter out unsubscribed users
@@ -139,7 +167,10 @@ export async function POST(
         .update(emailCampaigns)
         .set({ status: "failed" })
         .where(eq(emailCampaigns.id, id));
-      return NextResponse.json({ error: "All recipients have unsubscribed" }, { status: 400 });
+      return NextResponse.json(
+        { error: "All recipients have unsubscribed" },
+        { status: 400 },
+      );
     }
 
     // Create recipient records
@@ -151,7 +182,10 @@ export async function POST(
       status: "pending" as const,
     }));
 
-    await db.insert(campaignRecipients).values(recipientRecords).onConflictDoNothing();
+    await db
+      .insert(campaignRecipients)
+      .values(recipientRecords)
+      .onConflictDoNothing();
 
     // Send emails
     const broadcastRecipients = eligibleRecipients
@@ -193,8 +227,8 @@ export async function POST(
         .where(
           and(
             eq(campaignRecipients.campaignId, id),
-            eq(campaignRecipients.email, success.email)
-          )
+            eq(campaignRecipients.email, success.email),
+          ),
         );
     }
 
@@ -208,8 +242,8 @@ export async function POST(
         .where(
           and(
             eq(campaignRecipients.campaignId, id),
-            eq(campaignRecipients.email, failure.email)
-          )
+            eq(campaignRecipients.email, failure.email),
+          ),
         );
     }
 
@@ -220,6 +254,9 @@ export async function POST(
     });
   } catch (error) {
     console.error("Send campaign error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 },
+    );
   }
 }

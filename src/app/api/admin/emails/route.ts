@@ -1,20 +1,23 @@
-import { NextRequest, NextResponse } from "next/server";
-import { getSession } from "@/lib/auth";
+import { and, desc, eq, ilike, sql } from "drizzle-orm";
+import { type NextRequest, NextResponse } from "next/server";
 import { db } from "@/db";
 import { emailCampaigns, users } from "@/db/schema";
-import { eq, desc, sql, and, ilike } from "drizzle-orm";
+import { getSession } from "@/lib/auth";
 
 export async function GET(request: NextRequest) {
   try {
     const session = await getSession();
-    if (!session || session.user.role !== "admin") {
+    if (session?.user.role !== "admin") {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     // Parse query params
     const { searchParams } = new URL(request.url);
-    const page = Math.max(1, parseInt(searchParams.get("page") || "1"));
-    const limit = Math.min(100, Math.max(1, parseInt(searchParams.get("limit") || "20")));
+    const page = Math.max(1, parseInt(searchParams.get("page") || "1", 10));
+    const limit = Math.min(
+      100,
+      Math.max(1, parseInt(searchParams.get("limit") || "20", 10)),
+    );
     const status = searchParams.get("status"); // draft, sent, failed, or null for all
     const search = searchParams.get("search")?.trim();
 
@@ -23,7 +26,12 @@ export async function GET(request: NextRequest) {
     // Build where conditions
     const conditions = [];
     if (status && ["draft", "sending", "sent", "failed"].includes(status)) {
-      conditions.push(eq(emailCampaigns.status, status as "draft" | "sending" | "sent" | "failed"));
+      conditions.push(
+        eq(
+          emailCampaigns.status,
+          status as "draft" | "sending" | "sent" | "failed",
+        ),
+      );
     }
     if (search) {
       conditions.push(ilike(emailCampaigns.subject, `%${search}%`));
@@ -78,7 +86,7 @@ export async function GET(request: NextRequest) {
       .from(emailCampaigns);
 
     return NextResponse.json({
-      campaigns: campaigns.map(c => ({
+      campaigns: campaigns.map((c) => ({
         ...c,
         totalSent: c.totalSent || 0,
         totalOpened: c.totalOpened || 0,
@@ -104,7 +112,7 @@ export async function GET(request: NextRequest) {
     console.error("Admin emails API error:", error);
     return NextResponse.json(
       { error: "Internal server error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -113,17 +121,24 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const session = await getSession();
-    if (!session || session.user.role !== "admin") {
+    if (session?.user.role !== "admin") {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const body = await request.json();
-    const { subject, previewText, content, recipientType, recipientLists, recipientCount } = body;
+    const {
+      subject,
+      previewText,
+      content,
+      recipientType,
+      recipientLists,
+      recipientCount,
+    } = body;
 
     if (!subject || !content || !recipientType) {
       return NextResponse.json(
         { error: "Subject, content, and recipient type are required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -146,7 +161,7 @@ export async function POST(request: NextRequest) {
     console.error("Create campaign error:", error);
     return NextResponse.json(
       { error: "Internal server error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

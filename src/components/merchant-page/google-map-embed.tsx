@@ -66,9 +66,10 @@ export function GoogleMapEmbed({
   } else {
     // Fall back to address query
     const addressParts = [streetAddress, city, state, zipCode].filter(Boolean);
-    const query = addressParts.length > 0
-      ? `${businessName}, ${addressParts.join(", ")}`
-      : businessName;
+    const query =
+      addressParts.length > 0
+        ? `${businessName}, ${addressParts.join(", ")}`
+        : businessName;
     embedUrl = `https://www.google.com/maps/embed/v1/place?key=${apiKey}&q=${encodeURIComponent(query)}`;
   }
 
@@ -99,16 +100,17 @@ export function getGoogleMapsDirectionsUrl(
   city?: string | null,
   state?: string | null,
   zipCode?: string | null,
-  googlePlaceId?: string | null
+  googlePlaceId?: string | null,
 ): string {
   if (googlePlaceId) {
     return `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(businessName)}&destination_place_id=${googlePlaceId}`;
   }
 
   const addressParts = [streetAddress, city, state, zipCode].filter(Boolean);
-  const query = addressParts.length > 0
-    ? `${businessName}, ${addressParts.join(", ")}`
-    : businessName;
+  const query =
+    addressParts.length > 0
+      ? `${businessName}, ${addressParts.join(", ")}`
+      : businessName;
 
   return `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(query)}`;
 }
@@ -120,7 +122,7 @@ export function formatFullAddress(
   streetAddress?: string | null,
   city?: string | null,
   state?: string | null,
-  zipCode?: string | null
+  zipCode?: string | null,
 ): string | null {
   const line1 = streetAddress;
   const line2Parts = [city, state].filter(Boolean);

@@ -31,7 +31,7 @@ export default async function PhoneRedirectPage({ params }: PageProps) {
     )
     .limit(1);
 
-  if (!merchant || !merchant.city || !merchant.state || !merchant.slug) {
+  if (!merchant?.city || !merchant.state || !merchant.slug) {
     redirect(`/merchantpage?phone=${phoneNumber}&status=not-found`);
   }
 

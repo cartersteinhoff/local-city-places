@@ -1,8 +1,8 @@
-import { NextRequest, NextResponse } from "next/server";
-import { db, users, members, merchants } from "@/db";
-import { getSession, createMagicLinkToken } from "@/lib/auth";
+import { count, desc, eq, ilike, or, sql } from "drizzle-orm";
+import { type NextRequest, NextResponse } from "next/server";
+import { db, members, merchants, users } from "@/db";
+import { createMagicLinkToken, getSession } from "@/lib/auth";
 import { sendWelcomeEmail } from "@/lib/email";
-import { eq, ilike, or, sql, count, desc } from "drizzle-orm";
 
 export async function GET(request: NextRequest) {
   try {
@@ -17,8 +17,8 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const role = searchParams.get("role");
     const search = searchParams.get("search");
-    const page = parseInt(searchParams.get("page") || "1");
-    const limit = parseInt(searchParams.get("limit") || "20");
+    const page = parseInt(searchParams.get("page") || "1", 10);
+    const limit = parseInt(searchParams.get("limit") || "20", 10);
     const offset = (page - 1) * limit;
 
     const conditions = [];
@@ -33,14 +33,15 @@ export async function GET(request: NextRequest) {
           ilike(users.email, `%${search}%`),
           ilike(users.firstName, `%${search}%`),
           ilike(users.lastName, `%${search}%`),
-          ilike(merchants.businessName, `%${search}%`)
-        )
+          ilike(merchants.businessName, `%${search}%`),
+        ),
       );
     }
 
-    const whereClause = conditions.length > 0
-      ? sql`${conditions.reduce((acc, cond, i) => i === 0 ? cond : sql`${acc} AND ${cond}`)}`
-      : undefined;
+    const whereClause =
+      conditions.length > 0
+        ? sql`${conditions.reduce((acc, cond, i) => (i === 0 ? cond : sql`${acc} AND ${cond}`))}`
+        : undefined;
 
     const baseQuery = db
       .select({ id: users.id, merchantId: merchants.id })
@@ -53,7 +54,9 @@ export async function GET(request: NextRequest) {
       : await baseQuery;
 
     const total = allMatchingUsers.length;
-    const matchingUserIds = allMatchingUsers.slice(offset, offset + limit).map(u => u.id);
+    const matchingUserIds = allMatchingUsers
+      .slice(offset, offset + limit)
+      .map((u) => u.id);
 
     // Fetch users with their profiles (paginated)
     let userList: {
@@ -91,7 +94,12 @@ export async function GET(request: NextRequest) {
         .from(users)
         .leftJoin(members, eq(users.id, members.userId))
         .leftJoin(merchants, eq(users.id, merchants.userId))
-        .where(sql`${users.id} IN (${sql.join(matchingUserIds.map(id => sql`${id}`), sql`, `)})`)
+        .where(
+          sql`${users.id} IN (${sql.join(
+            matchingUserIds.map((id) => sql`${id}`),
+            sql`, `,
+          )})`,
+        )
         .orderBy(desc(users.createdAt));
     }
 
@@ -111,9 +119,7 @@ export async function GET(request: NextRequest) {
       .from(users)
       .where(eq(users.role, "member"));
 
-    const [totalCount] = await db
-      .select({ count: count() })
-      .from(users);
+    const [totalCount] = await db.select({ count: count() }).from(users);
 
     return NextResponse.json({
       users: userList,
@@ -132,7 +138,10 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     console.error("Error fetching users:", error);
-    return NextResponse.json({ error: "Failed to fetch users" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Failed to fetch users" },
+      { status: 500 },
+    );
   }
 }
 
@@ -148,7 +157,13 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { email, role = "member", sendInvite = true, firstName, lastName } = body;
+    const {
+      email,
+      role = "member",
+      sendInvite = true,
+      firstName,
+      lastName,
+    } = body;
 
     if (!email || typeof email !== "string") {
       return NextResponse.json({ error: "Email is required" }, { status: 400 });
@@ -159,7 +174,10 @@ export async function POST(request: NextRequest) {
     // Validate email format
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(normalizedEmail)) {
-      return NextResponse.json({ error: "Invalid email format" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Invalid email format" },
+        { status: 400 },
+      );
     }
 
     // Validate role
@@ -175,7 +193,10 @@ export async function POST(request: NextRequest) {
       .limit(1);
 
     if (existingUser) {
-      return NextResponse.json({ error: "User already exists" }, { status: 409 });
+      return NextResponse.json(
+        { error: "User already exists" },
+        { status: 409 },
+      );
     }
 
     // Create the user
@@ -202,6 +223,9 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error("Error creating user:", error);
-    return NextResponse.json({ error: "Failed to create user" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Failed to create user" },
+      { status: 500 },
+    );
   }
 }

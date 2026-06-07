@@ -1,16 +1,15 @@
 "use client";
 
-import { ReactNode, useState } from "react";
 import {
-  DndContext,
   closestCenter,
+  DndContext,
+  type DragEndEvent,
+  DragOverlay,
+  type DragStartEvent,
   KeyboardSensor,
   PointerSensor,
   useSensor,
   useSensors,
-  DragEndEvent,
-  DragStartEvent,
-  DragOverlay,
 } from "@dnd-kit/core";
 import {
   arrayMove,
@@ -21,6 +20,7 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { GripVertical } from "lucide-react";
+import { type ReactNode, useState } from "react";
 import { cn } from "@/lib/utils";
 
 interface SortableItemProps {
@@ -29,7 +29,11 @@ interface SortableItemProps {
   disabled?: boolean;
 }
 
-export function SortableItem({ id, children, disabled = false }: SortableItemProps) {
+export function SortableItem({
+  id,
+  children,
+  disabled = false,
+}: SortableItemProps) {
   const {
     attributes,
     listeners,
@@ -48,10 +52,7 @@ export function SortableItem({ id, children, disabled = false }: SortableItemPro
     <div
       ref={setNodeRef}
       style={style}
-      className={cn(
-        "relative",
-        isDragging && "opacity-50"
-      )}
+      className={cn("relative", isDragging && "opacity-50")}
     >
       <div className="flex items-start gap-2">
         {!disabled && (
@@ -99,7 +100,7 @@ export function SortableList<T>({
     }),
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,
-    })
+    }),
   );
 
   const handleDragStart = (event: DragStartEvent) => {
@@ -117,7 +118,9 @@ export function SortableList<T>({
     }
   };
 
-  const activeItem = activeId ? items.find((item) => getItemId(item) === activeId) : null;
+  const activeItem = activeId
+    ? items.find((item) => getItemId(item) === activeId)
+    : null;
 
   return (
     <DndContext
@@ -133,7 +136,11 @@ export function SortableList<T>({
       >
         <div className={cn("space-y-3", className)}>
           {items.map((item, index) => (
-            <SortableItem key={getItemId(item)} id={getItemId(item)} disabled={disabled}>
+            <SortableItem
+              key={getItemId(item)}
+              id={getItemId(item)}
+              disabled={disabled}
+            >
               {renderItem(item, index)}
             </SortableItem>
           ))}
@@ -160,7 +167,12 @@ interface SortableImageGridProps {
   className?: string;
 }
 
-function SortableImageItem({ id, url, onRemove, disabled }: {
+function SortableImageItem({
+  id,
+  url,
+  onRemove,
+  disabled,
+}: {
   id: string;
   url: string;
   onRemove?: () => void;
@@ -186,7 +198,7 @@ function SortableImageItem({ id, url, onRemove, disabled }: {
       style={style}
       className={cn(
         "relative group aspect-video",
-        isDragging && "opacity-50 z-50"
+        isDragging && "opacity-50 z-50",
       )}
     >
       <img
@@ -214,8 +226,18 @@ function SortableImageItem({ id, url, onRemove, disabled }: {
               }}
               className="absolute top-2 right-2 p-1.5 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity z-10"
             >
-              <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              <svg
+                className="w-3 h-3"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12"
+                />
               </svg>
             </button>
           )}
@@ -242,7 +264,7 @@ export function SortableImageGrid({
     }),
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,
-    })
+    }),
   );
 
   // Use index as ID since URLs might have special chars
@@ -272,7 +294,11 @@ export function SortableImageGrid({
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
     >
-      <SortableContext items={ids} strategy={verticalListSortingStrategy} disabled={disabled}>
+      <SortableContext
+        items={ids}
+        strategy={verticalListSortingStrategy}
+        disabled={disabled}
+      >
         <div className={cn("grid grid-cols-2 sm:grid-cols-3 gap-3", className)}>
           {images.map((url, index) => (
             <SortableImageItem

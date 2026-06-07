@@ -1,6 +1,8 @@
 "use client";
 
-import { useState, useRef, useEffect, useCallback } from "react";
+import { Building2, Check, Loader2, MapPin, Search } from "lucide-react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -8,10 +10,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, MapPin, Loader2, Check, Building2 } from "lucide-react";
-import { cn } from "@/lib/utils";
 
 interface Hours {
   monday: string;
@@ -89,9 +88,12 @@ export function ImportGoogleDialog({
 
     const initServices = () => {
       setIsScriptLoaded(true);
-      autocompleteService.current = new window.google.maps.places.AutocompleteService();
+      autocompleteService.current =
+        new window.google.maps.places.AutocompleteService();
       if (dummyDiv.current) {
-        placesService.current = new window.google.maps.places.PlacesService(dummyDiv.current);
+        placesService.current = new window.google.maps.places.PlacesService(
+          dummyDiv.current,
+        );
       }
     };
 
@@ -149,7 +151,7 @@ export function ImportGoogleDialog({
         } else {
           setPredictions([]);
         }
-      }
+      },
     );
   }, []);
 
@@ -254,11 +256,14 @@ export function ImportGoogleDialog({
               }
             }
 
-            const streetAddress = [streetNumber, route].filter(Boolean).join(" ");
+            const streetAddress = [streetNumber, route]
+              .filter(Boolean)
+              .join(" ");
             const hours = parseHours(place.opening_hours);
 
             setSelectedPlace({
-              businessName: place.name || prediction.structured_formatting.main_text,
+              businessName:
+                place.name || prediction.structured_formatting.main_text,
               googlePlaceId: prediction.place_id,
               streetAddress,
               city,
@@ -269,7 +274,7 @@ export function ImportGoogleDialog({
               hours,
             });
           }
-        }
+        },
       );
     }
   };
@@ -290,7 +295,8 @@ export function ImportGoogleDialog({
             Import from Google Places
           </DialogTitle>
           <DialogDescription>
-            Search for your business to auto-fill name, address, phone, website, and hours.
+            Search for your business to auto-fill name, address, phone, website,
+            and hours.
           </DialogDescription>
         </DialogHeader>
 
@@ -312,7 +318,9 @@ export function ImportGoogleDialog({
           </div>
 
           {!isScriptLoaded && (
-            <p className="text-sm text-muted-foreground">Loading Google Places...</p>
+            <p className="text-sm text-muted-foreground">
+              Loading Google Places...
+            </p>
           )}
 
           {/* Predictions List */}
@@ -344,9 +352,16 @@ export function ImportGoogleDialog({
             <div className="border rounded-lg p-4 bg-muted/30 space-y-3">
               <div className="flex items-start justify-between">
                 <div>
-                  <h3 className="font-semibold">{selectedPlace.businessName}</h3>
+                  <h3 className="font-semibold">
+                    {selectedPlace.businessName}
+                  </h3>
                   <p className="text-sm text-muted-foreground">
-                    {[selectedPlace.streetAddress, selectedPlace.city, selectedPlace.state, selectedPlace.zipCode]
+                    {[
+                      selectedPlace.streetAddress,
+                      selectedPlace.city,
+                      selectedPlace.state,
+                      selectedPlace.zipCode,
+                    ]
                       .filter(Boolean)
                       .join(", ")}
                   </p>
@@ -369,7 +384,7 @@ export function ImportGoogleDialog({
                 )}
               </div>
 
-              {Object.values(selectedPlace.hours).some(h => h) && (
+              {Object.values(selectedPlace.hours).some((h) => h) && (
                 <div className="text-sm">
                   <span className="text-muted-foreground">Hours found:</span>{" "}
                   <Check className="w-3 h-3 inline text-green-500" />

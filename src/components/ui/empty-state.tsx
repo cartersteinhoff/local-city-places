@@ -7,11 +7,13 @@ interface EmptyStateProps {
   icon: LucideIcon;
   title: string;
   description: string;
-  action?: ReactNode | {
-    label: string;
-    href?: string;
-    onClick?: () => void;
-  };
+  action?:
+    | ReactNode
+    | {
+        label: string;
+        href?: string;
+        onClick?: () => void;
+      };
   className?: string;
 }
 
@@ -37,11 +39,7 @@ export function EmptyState({
         onClick={action.onClick}
         className="bg-primary-gradient hover:opacity-90"
       >
-        {action.href ? (
-          <a href={action.href}>{action.label}</a>
-        ) : (
-          action.label
-        )}
+        {action.href ? <a href={action.href}>{action.label}</a> : action.label}
       </Button>
     );
   };
@@ -50,7 +48,7 @@ export function EmptyState({
     <div
       className={cn(
         "flex flex-col items-center justify-center text-center py-12 px-4",
-        className
+        className,
       )}
     >
       <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mb-4">

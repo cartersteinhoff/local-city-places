@@ -27,7 +27,7 @@ export default async function MerchantPagePhoneRedirect({ params }: PageProps) {
     .where(eq(merchants.phone, phoneNumber))
     .limit(1);
 
-  if (!merchant || !merchant.city || !merchant.state || !merchant.slug) {
+  if (!merchant?.city || !merchant.state || !merchant.slug) {
     redirect(`/merchantpage?phone=${phoneNumber}&status=not-found`);
   }
 

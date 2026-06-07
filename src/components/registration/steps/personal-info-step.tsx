@@ -1,13 +1,19 @@
 "use client";
 
-import { useState, useCallback } from "react";
-import { Loader2, AlertCircle } from "lucide-react";
+import { AlertCircle, Loader2 } from "lucide-react";
+import { useCallback, useState } from "react";
 import { Button } from "@/components/ui/button";
+import {
+  GooglePlacesAutocomplete,
+  type PlaceDetails,
+} from "@/components/ui/google-places-autocomplete";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { personalInfoSchema, type PersonalInfo } from "@/lib/validations/member";
 import { formatPhoneNumber } from "@/lib/utils";
-import { GooglePlacesAutocomplete, type PlaceDetails } from "@/components/ui/google-places-autocomplete";
+import {
+  type PersonalInfo,
+  personalInfoSchema,
+} from "@/lib/validations/member";
 
 interface PersonalInfoStepProps {
   data: Partial<PersonalInfo>;
@@ -16,14 +22,63 @@ interface PersonalInfoStepProps {
 }
 
 const US_STATES = [
-  "AL", "AK", "AZ", "AR", "CA", "CO", "CT", "DE", "FL", "GA",
-  "HI", "ID", "IL", "IN", "IA", "KS", "KY", "LA", "ME", "MD",
-  "MA", "MI", "MN", "MS", "MO", "MT", "NE", "NV", "NH", "NJ",
-  "NM", "NY", "NC", "ND", "OH", "OK", "OR", "PA", "RI", "SC",
-  "SD", "TN", "TX", "UT", "VT", "VA", "WA", "WV", "WI", "WY"
+  "AL",
+  "AK",
+  "AZ",
+  "AR",
+  "CA",
+  "CO",
+  "CT",
+  "DE",
+  "FL",
+  "GA",
+  "HI",
+  "ID",
+  "IL",
+  "IN",
+  "IA",
+  "KS",
+  "KY",
+  "LA",
+  "ME",
+  "MD",
+  "MA",
+  "MI",
+  "MN",
+  "MS",
+  "MO",
+  "MT",
+  "NE",
+  "NV",
+  "NH",
+  "NJ",
+  "NM",
+  "NY",
+  "NC",
+  "ND",
+  "OH",
+  "OK",
+  "OR",
+  "PA",
+  "RI",
+  "SC",
+  "SD",
+  "TN",
+  "TX",
+  "UT",
+  "VT",
+  "VA",
+  "WA",
+  "WV",
+  "WI",
+  "WY",
 ];
 
-export function PersonalInfoStep({ data, onNext, isLoading }: PersonalInfoStepProps) {
+export function PersonalInfoStep({
+  data,
+  onNext,
+  isLoading,
+}: PersonalInfoStepProps) {
   const [formData, setFormData] = useState<PersonalInfo>({
     firstName: data.firstName || "",
     lastName: data.lastName || "",
@@ -35,18 +90,27 @@ export function PersonalInfoStep({ data, onNext, isLoading }: PersonalInfoStepPr
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  const handleAddressSelect = useCallback((_name: string, _placeId: string, details?: PlaceDetails) => {
-    if (details) {
-      setFormData(prev => ({
-        ...prev,
-        address: details.streetAddress || prev.address,
-        city: details.city || prev.city,
-        state: details.state || prev.state,
-        zip: details.zipCode || prev.zip,
-      }));
-      setErrors(prev => ({ ...prev, address: "", city: "", state: "", zip: "" }));
-    }
-  }, []);
+  const handleAddressSelect = useCallback(
+    (_name: string, _placeId: string, details?: PlaceDetails) => {
+      if (details) {
+        setFormData((prev) => ({
+          ...prev,
+          address: details.streetAddress || prev.address,
+          city: details.city || prev.city,
+          state: details.state || prev.state,
+          zip: details.zipCode || prev.zip,
+        }));
+        setErrors((prev) => ({
+          ...prev,
+          address: "",
+          city: "",
+          state: "",
+          zip: "",
+        }));
+      }
+    },
+    [],
+  );
 
   const handleChange = (field: keyof PersonalInfo, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -117,7 +181,9 @@ export function PersonalInfoStep({ data, onNext, isLoading }: PersonalInfoStepPr
           id="phone"
           type="tel"
           value={formData.phone}
-          onChange={(e) => handleChange("phone", formatPhoneNumber(e.target.value))}
+          onChange={(e) =>
+            handleChange("phone", formatPhoneNumber(e.target.value))
+          }
           placeholder="(425) 451-8599"
           disabled={isLoading}
           className={errors.phone ? "border-destructive" : ""}

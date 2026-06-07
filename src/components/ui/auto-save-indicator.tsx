@@ -1,7 +1,7 @@
 "use client";
 
-import { Loader2, Check, AlertCircle, RefreshCw } from "lucide-react";
-import { AutoSaveStatus } from "@/hooks/use-auto-save";
+import { AlertCircle, Check, Loader2, RefreshCw } from "lucide-react";
+import type { AutoSaveStatus } from "@/hooks/use-auto-save";
 
 interface AutoSaveIndicatorProps {
   status: AutoSaveStatus;

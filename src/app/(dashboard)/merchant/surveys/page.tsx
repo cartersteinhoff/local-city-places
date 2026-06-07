@@ -1,15 +1,15 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { formatDistanceToNow } from "date-fns";
+import { BarChart3, ClipboardList } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 import { DashboardLayout } from "@/components/layout";
-import { PageHeader } from "@/components/ui/page-header";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
-import { ClipboardList, BarChart3 } from "lucide-react";
-import { merchantNavItems } from "../nav";
+import { PageHeader } from "@/components/ui/page-header";
 import { useUser } from "@/hooks/use-user";
-import { formatDistanceToNow } from "date-fns";
+import { merchantNavItems } from "../nav";
 
 interface Survey {
   id: string;
@@ -25,10 +25,14 @@ export default function SurveysPage() {
   const router = useRouter();
   const { user, isLoading: loading, isAuthenticated } = useUser();
   const [surveys, setSurveys] = useState<Survey[]>([]);
-  const [dataLoading, setDataLoading] = useState(true);
+  const [_dataLoading, setDataLoading] = useState(true);
 
   useEffect(() => {
-    if (!loading && (!isAuthenticated || (user?.role !== "merchant" && user?.role !== "admin"))) {
+    if (
+      !loading &&
+      (!isAuthenticated ||
+        (user?.role !== "merchant" && user?.role !== "admin"))
+    ) {
       router.push("/");
     }
   }, [loading, isAuthenticated, user?.role, router]);
@@ -51,7 +55,7 @@ export default function SurveysPage() {
     if (!loading && isAuthenticated) {
       loadSurveys();
     }
-  }, [loading, isAuthenticated]);
+  }, [loading, isAuthenticated, loadSurveys]);
 
   return (
     <DashboardLayout navItems={merchantNavItems}>
@@ -78,7 +82,9 @@ export default function SurveysPage() {
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
                       <div className="flex items-center gap-3 mb-2">
-                        <h3 className="font-semibold text-lg">{survey.title}</h3>
+                        <h3 className="font-semibold text-lg">
+                          {survey.title}
+                        </h3>
                         <span
                           className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${
                             survey.isActive
@@ -103,9 +109,12 @@ export default function SurveysPage() {
                             <span>•</span>
                             <span>
                               Last response{" "}
-                              {formatDistanceToNow(new Date(survey.lastResponseAt), {
-                                addSuffix: true,
-                              })}
+                              {formatDistanceToNow(
+                                new Date(survey.lastResponseAt),
+                                {
+                                  addSuffix: true,
+                                },
+                              )}
                             </span>
                           </>
                         )}

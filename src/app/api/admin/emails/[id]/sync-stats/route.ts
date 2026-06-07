@@ -1,16 +1,16 @@
-import { NextRequest, NextResponse } from "next/server";
-import { getSession } from "@/lib/auth";
+import { eq, sql } from "drizzle-orm";
+import { type NextRequest, NextResponse } from "next/server";
 import { db } from "@/db";
-import { emailCampaigns, campaignRecipients } from "@/db/schema";
-import { eq, isNotNull, sql } from "drizzle-orm";
+import { campaignRecipients, emailCampaigns } from "@/db/schema";
+import { getSession } from "@/lib/auth";
 
 export async function POST(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  _request: NextRequest,
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     const session = await getSession();
-    if (!session || session.user.role !== "admin") {
+    if (session?.user.role !== "admin") {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -48,6 +48,9 @@ export async function POST(
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("Sync stats error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 },
+    );
   }
 }

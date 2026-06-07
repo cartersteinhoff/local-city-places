@@ -1,14 +1,11 @@
 "use client";
 
-import { Sidebar } from "./sidebar";
-import { MobileNav } from "./mobile-nav";
 import { MobileHeader } from "./mobile-header";
+import { MobileNav } from "./mobile-nav";
+import { Sidebar } from "./sidebar";
 import type { DashboardLayoutProps } from "./types";
 
-export function DashboardLayout({
-  children,
-  navItems,
-}: DashboardLayoutProps) {
+export function DashboardLayout({ children, navItems }: DashboardLayoutProps) {
   return (
     <div className="min-h-screen bg-background">
       <div className="flex">
@@ -21,9 +18,7 @@ export function DashboardLayout({
           <MobileHeader />
 
           {/* Main content */}
-          <main className="flex-1 p-4 md:p-6 pb-20 md:pb-6">
-            {children}
-          </main>
+          <main className="flex-1 p-4 md:p-6 pb-20 md:pb-6">{children}</main>
         </div>
       </div>
 

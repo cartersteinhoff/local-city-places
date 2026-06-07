@@ -20,7 +20,10 @@ export async function GET() {
       .limit(1);
 
     if (!merchant) {
-      return NextResponse.json({ error: "Merchant not found" }, { status: 404 });
+      return NextResponse.json(
+        { error: "Merchant not found" },
+        { status: 404 },
+      );
     }
 
     const [reviewStats] = await db

@@ -1,29 +1,40 @@
 "use client";
 
-import { useEffect, useState, use } from "react";
-import { useRouter } from "next/navigation";
+import { Loader2 } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { use, useEffect, useState } from "react";
 import { DashboardLayout } from "@/components/layout";
 import { Button } from "@/components/ui/button";
-import { Loader2 } from "lucide-react";
 import { useUser } from "@/hooks/use-user";
-import { adminNavItems } from "../../../nav";
 import { formatPhoneNumber } from "@/lib/utils";
-import { MerchantForm, type FormData, INITIAL_FORM_DATA } from "../../_components/merchant-form";
+import { adminNavItems } from "../../../nav";
+import {
+  type FormData,
+  INITIAL_FORM_DATA,
+  MerchantForm,
+} from "../../_components/merchant-form";
 
 interface Category {
   id: string;
   name: string;
 }
 
-export default function EditMerchantPage({ params }: { params: Promise<{ id: string }> }) {
+export default function EditMerchantPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
   const { id } = use(params);
   const router = useRouter();
   const { user, isLoading: authLoading, isAuthenticated } = useUser();
 
   const [categories, setCategories] = useState<Category[]>([]);
   const [initialData, setInitialData] = useState<FormData>(INITIAL_FORM_DATA);
-  const [initialUrls, setInitialUrls] = useState<{ full: string | null; short: string | null }>({ full: null, short: null });
+  const [initialUrls, setInitialUrls] = useState<{
+    full: string | null;
+    short: string | null;
+  }>({ full: null, short: null });
   const [initialCategoryName, setInitialCategoryName] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
@@ -80,10 +91,15 @@ export default function EditMerchantPage({ params }: { params: Promise<{ id: str
             logoUrl: m.logoUrl || "",
             vimeoUrl: m.vimeoUrl || "",
             photos: m.photos || [],
-            services: (m.services || []).map((s: { name: string; description?: string; price?: string }, i: number) => ({
-              ...s,
-              id: `service-${i}-${Date.now()}`,
-            })),
+            services: (m.services || []).map(
+              (
+                s: { name: string; description?: string; price?: string },
+                i: number,
+              ) => ({
+                ...s,
+                id: `service-${i}-${Date.now()}`,
+              }),
+            ),
             slug: m.slug || "",
             featuredOnHomepage: m.featuredOnHomepage || false,
           };

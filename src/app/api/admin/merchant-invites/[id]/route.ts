@@ -1,15 +1,15 @@
-import { NextRequest, NextResponse } from "next/server";
-import { getSession } from "@/lib/auth";
+import { and, eq, isNull } from "drizzle-orm";
+import { type NextRequest, NextResponse } from "next/server";
 import { db, merchantInvites } from "@/db";
-import { eq, and, isNull } from "drizzle-orm";
+import { getSession } from "@/lib/auth";
 
 export async function DELETE(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  _request: NextRequest,
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     const session = await getSession();
-    if (!session || session.user.role !== "admin") {
+    if (session?.user.role !== "admin") {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -29,7 +29,7 @@ export async function DELETE(
     if (invite.usedAt) {
       return NextResponse.json(
         { error: "Cannot delete an invite that has already been used" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -41,6 +41,9 @@ export async function DELETE(
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("Error deleting merchant invite:", error);
-    return NextResponse.json({ error: "Failed to delete invite" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Failed to delete invite" },
+      { status: 500 },
+    );
   }
 }

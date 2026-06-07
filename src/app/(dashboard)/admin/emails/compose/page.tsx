@@ -1,18 +1,26 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback, Suspense } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import {
+  ArrowLeft,
+  CheckCircle,
+  Eye,
+  Info,
+  Loader2,
+  Mail,
+  Save,
+  Search,
+  Send,
+  Shield,
+  Store,
+  UserCheck,
+  Users,
+} from "lucide-react";
 import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Suspense, useCallback, useEffect, useRef, useState } from "react";
+import { toast } from "sonner";
 import { DashboardLayout } from "@/components/layout";
-import { PageHeader } from "@/components/ui/page-header";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Badge } from "@/components/ui/badge";
-import { Checkbox } from "@/components/ui/checkbox";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { TipTapEditor, type TipTapEditorRef } from "@/components/tiptap-editor";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -23,26 +31,23 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
-  Loader2,
-  Send,
-  Save,
-  Users,
-  UserCheck,
-  Store,
-  Shield,
-  Info,
-  Mail,
-  Search,
-  CheckCircle,
-  ArrowLeft,
-  Eye,
-} from "lucide-react";
-import { TipTapEditor, type TipTapEditorRef } from "@/components/tiptap-editor";
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { PageHeader } from "@/components/ui/page-header";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useUser } from "@/hooks/use-user";
-import { cn } from "@/lib/utils";
 import { adminNavItems } from "../../nav";
-import { toast } from "sonner";
 
 interface SearchResult {
   id: string;
@@ -84,7 +89,8 @@ function ComposeEmailContent() {
   const [contentHtml, setContentHtml] = useState("");
   const [selectedLists, setSelectedLists] = useState<string[]>([]);
   const [isIndividualMode, setIsIndividualMode] = useState(false);
-  const [individualRecipient, setIndividualRecipient] = useState<SearchResult | null>(null);
+  const [individualRecipient, setIndividualRecipient] =
+    useState<SearchResult | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [isSearching, setIsSearching] = useState(false);
@@ -113,16 +119,7 @@ function ComposeEmailContent() {
     }
   }, [loading, isAuthenticated, user?.role, router]);
 
-  // Load existing draft if ID provided
-  useEffect(() => {
-    const id = searchParams.get("id");
-    if (id) {
-      setDraftId(id);
-      loadCampaign(id);
-    }
-  }, [searchParams]);
-
-  const loadCampaign = async (id: string) => {
+  const loadCampaign = useCallback(async (id: string) => {
     try {
       const res = await fetch(`/api/admin/emails/${id}`);
       if (res.ok) {
@@ -140,7 +137,16 @@ function ComposeEmailContent() {
       console.error("Error loading campaign:", error);
       toast.error("Failed to load campaign");
     }
-  };
+  }, []);
+
+  // Load existing draft if ID provided
+  useEffect(() => {
+    const id = searchParams.get("id");
+    if (id) {
+      setDraftId(id);
+      loadCampaign(id);
+    }
+  }, [searchParams, loadCampaign]);
 
   // Count recipients when lists change
   const fetchRecipientCount = useCallback(async () => {
@@ -185,7 +191,9 @@ function ComposeEmailContent() {
     const searchUsers = async () => {
       setIsSearching(true);
       try {
-        const res = await fetch(`/api/admin/users/search?q=${encodeURIComponent(searchQuery)}`);
+        const res = await fetch(
+          `/api/admin/users/search?q=${encodeURIComponent(searchQuery)}`,
+        );
         if (res.ok) {
           const data = await res.json();
           setSearchResults(data.users);
@@ -201,14 +209,7 @@ function ComposeEmailContent() {
     return () => clearTimeout(timer);
   }, [searchQuery, isIndividualMode]);
 
-  // Load preview when switching to preview tab
-  useEffect(() => {
-    if (activeTab === "preview" && contentHtml) {
-      loadPreview();
-    }
-  }, [activeTab, contentHtml]);
-
-  const loadPreview = async () => {
+  const loadPreview = useCallback(async () => {
     setIsLoadingPreview(true);
     try {
       const res = await fetch("/api/admin/emails/preview", {
@@ -225,11 +226,20 @@ function ComposeEmailContent() {
     } finally {
       setIsLoadingPreview(false);
     }
-  };
+  }, [contentHtml, previewText, subject]);
+
+  // Load preview when switching to preview tab
+  useEffect(() => {
+    if (activeTab === "preview" && contentHtml) {
+      loadPreview();
+    }
+  }, [activeTab, contentHtml, loadPreview]);
 
   const handleListToggle = (listKey: string) => {
     setSelectedLists((prev) =>
-      prev.includes(listKey) ? prev.filter((k) => k !== listKey) : [...prev, listKey]
+      prev.includes(listKey)
+        ? prev.filter((k) => k !== listKey)
+        : [...prev, listKey],
     );
   };
 
@@ -248,7 +258,10 @@ function ComposeEmailContent() {
 
       for (const [base64Url, realUrl] of urlMapping.entries()) {
         const escapedBase64 = base64Url.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-        processedContent = processedContent.replace(new RegExp(escapedBase64, "g"), realUrl);
+        processedContent = processedContent.replace(
+          new RegExp(escapedBase64, "g"),
+          realUrl,
+        );
       }
     }
 
@@ -283,10 +296,14 @@ function ComposeEmailContent() {
         recipientType: isIndividualMode ? "individual" : "custom",
         recipientLists: isIndividualMode ? null : selectedLists,
         recipientCount,
-        individualRecipientId: isIndividualMode ? individualRecipient?.id : null,
+        individualRecipientId: isIndividualMode
+          ? individualRecipient?.id
+          : null,
       };
 
-      const url = draftId ? `/api/admin/emails/${draftId}` : "/api/admin/emails";
+      const url = draftId
+        ? `/api/admin/emails/${draftId}`
+        : "/api/admin/emails";
       const method = draftId ? "PUT" : "POST";
 
       const res = await fetch(url, {
@@ -329,7 +346,9 @@ function ComposeEmailContent() {
           recipientType: isIndividualMode ? "individual" : "custom",
           recipientLists: isIndividualMode ? null : selectedLists,
           recipientCount,
-          individualRecipientId: isIndividualMode ? individualRecipient?.id : null,
+          individualRecipientId: isIndividualMode
+            ? individualRecipient?.id
+            : null,
         };
 
         const createRes = await fetch("/api/admin/emails", {
@@ -346,14 +365,17 @@ function ComposeEmailContent() {
         setDraftId(createData.campaign.id);
 
         // Now send
-        const sendRes = await fetch(`/api/admin/emails/${createData.campaign.id}/send`, {
-          method: "POST",
-        });
+        const sendRes = await fetch(
+          `/api/admin/emails/${createData.campaign.id}/send`,
+          {
+            method: "POST",
+          },
+        );
 
         if (sendRes.ok) {
           const sendData = await sendRes.json();
           toast.success(
-            `Campaign sent! ${sendData.sent} emails sent${sendData.failed ? `, ${sendData.failed} failed` : ""}`
+            `Campaign sent! ${sendData.sent} emails sent${sendData.failed ? `, ${sendData.failed} failed` : ""}`,
           );
           router.push("/admin/emails");
         } else {
@@ -369,7 +391,7 @@ function ComposeEmailContent() {
         if (sendRes.ok) {
           const sendData = await sendRes.json();
           toast.success(
-            `Campaign sent! ${sendData.sent} emails sent${sendData.failed ? `, ${sendData.failed} failed` : ""}`
+            `Campaign sent! ${sendData.sent} emails sent${sendData.failed ? `, ${sendData.failed} failed` : ""}`,
           );
           router.push("/admin/emails");
         } else {
@@ -379,7 +401,9 @@ function ComposeEmailContent() {
       }
     } catch (error) {
       console.error("Error sending campaign:", error);
-      toast.error(error instanceof Error ? error.message : "Failed to send campaign");
+      toast.error(
+        error instanceof Error ? error.message : "Failed to send campaign",
+      );
     } finally {
       setIsSending(false);
     }
@@ -425,7 +449,8 @@ function ComposeEmailContent() {
   const isValid =
     subject.trim() &&
     contentHtml.trim() &&
-    ((isIndividualMode && individualRecipient) || (!isIndividualMode && selectedLists.length > 0));
+    ((isIndividualMode && individualRecipient) ||
+      (!isIndividualMode && selectedLists.length > 0));
 
   if (loading) {
     return (
@@ -460,7 +485,9 @@ function ComposeEmailContent() {
           <Card>
             <CardHeader>
               <CardTitle>Campaign Details</CardTitle>
-              <CardDescription>Configure your email campaign settings</CardDescription>
+              <CardDescription>
+                Configure your email campaign settings
+              </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
@@ -494,10 +521,16 @@ function ComposeEmailContent() {
           <Card>
             <CardHeader>
               <CardTitle>Email Content</CardTitle>
-              <CardDescription>Compose your email using the rich text editor</CardDescription>
+              <CardDescription>
+                Compose your email using the rich text editor
+              </CardDescription>
             </CardHeader>
             <CardContent>
-              <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+              <Tabs
+                value={activeTab}
+                onValueChange={setActiveTab}
+                className="w-full"
+              >
                 <TabsList className="grid w-full grid-cols-2">
                   <TabsTrigger value="editor">Editor</TabsTrigger>
                   <TabsTrigger value="preview">
@@ -520,16 +553,16 @@ function ComposeEmailContent() {
                         <p>Available merge tags:</p>
                         <ul className="list-disc list-inside ml-4 space-y-0.5">
                           <li>
-                            <code className="text-xs bg-background px-1 py-0.5 rounded">{`{{name}}`}</code> -
-                            Full name
+                            <code className="text-xs bg-background px-1 py-0.5 rounded">{`{{name}}`}</code>{" "}
+                            - Full name
                           </li>
                           <li>
                             <code className="text-xs bg-background px-1 py-0.5 rounded">{`{{firstName}}`}</code>{" "}
                             - First name
                           </li>
                           <li>
-                            <code className="text-xs bg-background px-1 py-0.5 rounded">{`{{email}}`}</code> -
-                            Email address
+                            <code className="text-xs bg-background px-1 py-0.5 rounded">{`{{email}}`}</code>{" "}
+                            - Email address
                           </li>
                         </ul>
                       </div>
@@ -599,7 +632,10 @@ function ComposeEmailContent() {
                     {emailLists.map((list) => {
                       const Icon = list.icon;
                       return (
-                        <div key={list.key} className="flex items-center space-x-3">
+                        <div
+                          key={list.key}
+                          className="flex items-center space-x-3"
+                        >
                           <Checkbox
                             id={list.key}
                             checked={selectedLists.includes(list.key)}
@@ -612,8 +648,12 @@ function ComposeEmailContent() {
                           >
                             <Icon className="h-4 w-4 text-muted-foreground" />
                             <div>
-                              <span className="text-sm font-medium">{list.name}</span>
-                              <p className="text-xs text-muted-foreground">{list.description}</p>
+                              <span className="text-sm font-medium">
+                                {list.name}
+                              </span>
+                              <p className="text-xs text-muted-foreground">
+                                {list.description}
+                              </p>
                             </div>
                           </label>
                         </div>
@@ -627,7 +667,9 @@ function ComposeEmailContent() {
                       <Users className="h-4 w-4 mr-2 text-muted-foreground" />
                       {selectedLists.length > 0 ? (
                         isLoadingCount ? (
-                          <span className="text-sm text-muted-foreground">Counting...</span>
+                          <span className="text-sm text-muted-foreground">
+                            Counting...
+                          </span>
                         ) : (
                           <span className="text-sm font-medium">
                             {recipientCount.toLocaleString()} recipient
@@ -635,7 +677,9 @@ function ComposeEmailContent() {
                           </span>
                         )
                       ) : (
-                        <span className="text-sm text-muted-foreground">No recipients selected</span>
+                        <span className="text-sm text-muted-foreground">
+                          No recipients selected
+                        </span>
                       )}
                     </div>
                   </div>
@@ -654,7 +698,9 @@ function ComposeEmailContent() {
                   </div>
 
                   {isSearching && (
-                    <div className="text-sm text-muted-foreground">Searching...</div>
+                    <div className="text-sm text-muted-foreground">
+                      Searching...
+                    </div>
                   )}
 
                   {searchResults.length > 0 && (
@@ -671,7 +717,9 @@ function ComposeEmailContent() {
                               <p className="text-sm font-medium truncate">
                                 {user.name || user.email}
                               </p>
-                              <p className="text-xs text-muted-foreground truncate">{user.email}</p>
+                              <p className="text-xs text-muted-foreground truncate">
+                                {user.email}
+                              </p>
                             </div>
                             <Badge variant="outline" className="text-xs">
                               {user.role}
@@ -722,7 +770,9 @@ function ComposeEmailContent() {
                 <p className="text-sm font-medium">From</p>
                 <div className="flex items-center gap-2">
                   <Mail className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-sm text-muted-foreground">team@localcityplaces.com</span>
+                  <span className="text-sm text-muted-foreground">
+                    team@localcityplaces.com
+                  </span>
                 </div>
               </div>
             </CardContent>
@@ -840,20 +890,28 @@ function ComposeEmailContent() {
             <AlertDialogTitle>Send Email Campaign?</AlertDialogTitle>
             <AlertDialogDescription>
               {isIndividualMode ? (
-                <>This will immediately send the email to {individualRecipient?.email}.</>
+                <>
+                  This will immediately send the email to{" "}
+                  {individualRecipient?.email}.
+                </>
               ) : (
                 <>
-                  This will immediately send the email to {recipientCount.toLocaleString()}{" "}
-                  recipient{recipientCount !== 1 ? "s" : ""} across {selectedLists.length} selected
-                  list{selectedLists.length !== 1 ? "s" : ""}.
+                  This will immediately send the email to{" "}
+                  {recipientCount.toLocaleString()} recipient
+                  {recipientCount !== 1 ? "s" : ""} across{" "}
+                  {selectedLists.length} selected list
+                  {selectedLists.length !== 1 ? "s" : ""}.
                 </>
               )}{" "}
-              Make sure you have reviewed the content carefully. This action cannot be undone.
+              Make sure you have reviewed the content carefully. This action
+              cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleSendCampaign}>Send Campaign</AlertDialogAction>
+            <AlertDialogAction onClick={handleSendCampaign}>
+              Send Campaign
+            </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
@@ -878,12 +936,18 @@ function ComposeEmailContent() {
               className="mt-2"
             />
             <p className="text-sm text-muted-foreground mt-2">
-              The email will be sent with &quot;[TEST]&quot; prefix in the subject line.
+              The email will be sent with &quot;[TEST]&quot; prefix in the
+              subject line.
             </p>
           </div>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={isSendingTest}>Cancel</AlertDialogCancel>
-            <Button onClick={handleSendTestEmail} disabled={isSendingTest || !testEmail}>
+            <AlertDialogCancel disabled={isSendingTest}>
+              Cancel
+            </AlertDialogCancel>
+            <Button
+              onClick={handleSendTestEmail}
+              disabled={isSendingTest || !testEmail}
+            >
               {isSendingTest ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />

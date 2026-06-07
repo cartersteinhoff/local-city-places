@@ -1,24 +1,24 @@
-import { NextRequest, NextResponse } from "next/server";
+import { and, eq, ne } from "drizzle-orm";
+import { type NextRequest, NextResponse } from "next/server";
 import { db } from "@/db";
-import { merchants, categories } from "@/db/schema";
-import { eq, and, ne } from "drizzle-orm";
+import { categories, merchants } from "@/db/schema";
 import { getSession } from "@/lib/auth";
-import { isValidVimeoUrl } from "@/lib/vimeo";
+import { revalidateMerchantPublicPaths } from "@/lib/merchant-public-revalidation";
 import {
-  stripPhoneNumber,
   generateMerchantSlug,
   getMerchantPageUrl,
   getMerchantShortUrl,
+  stripPhoneNumber,
 } from "@/lib/utils";
-import { revalidateMerchantPublicPaths } from "@/lib/merchant-public-revalidation";
+import { isValidVimeoUrl } from "@/lib/vimeo";
 
 export async function GET(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  _request: NextRequest,
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     const session = await getSession();
-    if (!session || session.user.role !== "admin") {
+    if (session?.user.role !== "admin") {
       return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
     }
 
@@ -59,7 +59,10 @@ export async function GET(
       .limit(1);
 
     if (!merchant) {
-      return NextResponse.json({ error: "Merchant not found" }, { status: 404 });
+      return NextResponse.json(
+        { error: "Merchant not found" },
+        { status: 404 },
+      );
     }
 
     return NextResponse.json({
@@ -67,9 +70,10 @@ export async function GET(
         ...merchant,
         createdAt: merchant.createdAt.toISOString(),
         urls: {
-          full: merchant.city && merchant.state && merchant.slug
-            ? getMerchantPageUrl(merchant.city, merchant.state, merchant.slug)
-            : null,
+          full:
+            merchant.city && merchant.state && merchant.slug
+              ? getMerchantPageUrl(merchant.city, merchant.state, merchant.slug)
+              : null,
           short: merchant.phone ? getMerchantShortUrl(merchant.phone) : null,
         },
       },
@@ -78,18 +82,18 @@ export async function GET(
     console.error("Error fetching merchant:", error);
     return NextResponse.json(
       { error: "Failed to fetch merchant" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     const session = await getSession();
-    if (!session || session.user.role !== "admin") {
+    if (session?.user.role !== "admin") {
       return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
     }
 
@@ -103,7 +107,10 @@ export async function PATCH(
       .limit(1);
 
     if (!existing) {
-      return NextResponse.json({ error: "Merchant not found" }, { status: 404 });
+      return NextResponse.json(
+        { error: "Merchant not found" },
+        { status: 404 },
+      );
     }
 
     const body = await request.json();
@@ -136,10 +143,14 @@ export async function PATCH(
     const updates: Partial<typeof merchants.$inferInsert> = {};
 
     if (businessName !== undefined) {
-      if (!businessName || typeof businessName !== "string" || !businessName.trim()) {
+      if (
+        !businessName ||
+        typeof businessName !== "string" ||
+        !businessName.trim()
+      ) {
         return NextResponse.json(
           { error: "Business name is required" },
-          { status: 400 }
+          { status: 400 },
         );
       }
       updates.businessName = businessName.trim();
@@ -153,7 +164,7 @@ export async function PATCH(
       if (!city || typeof city !== "string" || !city.trim()) {
         return NextResponse.json(
           { error: "City is required" },
-          { status: 400 }
+          { status: 400 },
         );
       }
       updates.city = city.trim();
@@ -163,7 +174,7 @@ export async function PATCH(
       if (!state || typeof state !== "string" || state.trim().length !== 2) {
         return NextResponse.json(
           { error: "State must be a 2-letter code" },
-          { status: 400 }
+          { status: 400 },
         );
       }
       updates.state = state.trim().toUpperCase();
@@ -177,14 +188,14 @@ export async function PATCH(
       if (!phone || typeof phone !== "string") {
         return NextResponse.json(
           { error: "Phone number is required" },
-          { status: 400 }
+          { status: 400 },
         );
       }
       const strippedPhone = stripPhoneNumber(phone);
       if (strippedPhone.length !== 10) {
         return NextResponse.json(
           { error: "Phone number must be 10 digits" },
-          { status: 400 }
+          { status: 400 },
         );
       }
       updates.phone = strippedPhone;
@@ -205,7 +216,7 @@ export async function PATCH(
         if (!category) {
           return NextResponse.json(
             { error: "Invalid category" },
-            { status: 400 }
+            { status: 400 },
           );
         }
       }
@@ -219,8 +230,10 @@ export async function PATCH(
     if (vimeoUrl !== undefined) {
       if (vimeoUrl && !isValidVimeoUrl(vimeoUrl)) {
         return NextResponse.json(
-          { error: "Invalid Vimeo URL. Use format: https://vimeo.com/123456789" },
-          { status: 400 }
+          {
+            error: "Invalid Vimeo URL. Use format: https://vimeo.com/123456789",
+          },
+          { status: 400 },
         );
       }
       updates.vimeoUrl = vimeoUrl?.trim() || null;
@@ -270,7 +283,12 @@ export async function PATCH(
     // Handle custom slug or regenerate if business name changed and no custom slug
     if (slug !== undefined) {
       // Custom slug provided - sanitize it
-      const sanitizedSlug = slug.trim().toLowerCase().replace(/[^a-z0-9-]/g, "-").replace(/-+/g, "-").replace(/^-|-$/g, "");
+      const sanitizedSlug = slug
+        .trim()
+        .toLowerCase()
+        .replace(/[^a-z0-9-]/g, "-")
+        .replace(/-+/g, "-")
+        .replace(/^-|-$/g, "");
       if (sanitizedSlug && sanitizedSlug !== existing.slug) {
         // Check if slug is already taken by another merchant
         const [existingSlug] = await db
@@ -281,8 +299,11 @@ export async function PATCH(
 
         if (existingSlug) {
           return NextResponse.json(
-            { error: "This URL slug is already taken. Please choose a different one." },
-            { status: 400 }
+            {
+              error:
+                "This URL slug is already taken. Please choose a different one.",
+            },
+            { status: 400 },
           );
         }
         updates.slug = sanitizedSlug;
@@ -294,7 +315,10 @@ export async function PATCH(
 
     // Perform update
     if (Object.keys(updates).length > 0) {
-      await db.update(merchants).set({ ...updates, updatedAt: new Date() }).where(eq(merchants.id, id));
+      await db
+        .update(merchants)
+        .set({ ...updates, updatedAt: new Date() })
+        .where(eq(merchants.id, id));
     }
 
     // Fetch updated merchant
@@ -304,9 +328,10 @@ export async function PATCH(
       .where(eq(merchants.id, id))
       .limit(1);
 
-    const fullUrl = updated.city && updated.state && updated.slug
-      ? getMerchantPageUrl(updated.city, updated.state, updated.slug)
-      : null;
+    const fullUrl =
+      updated.city && updated.state && updated.slug
+        ? getMerchantPageUrl(updated.city, updated.state, updated.slug)
+        : null;
     const shortUrl = updated.phone ? getMerchantShortUrl(updated.phone) : null;
 
     revalidateMerchantPublicPaths(existing, updated);
@@ -327,18 +352,18 @@ export async function PATCH(
     console.error("Error updating merchant:", error);
     return NextResponse.json(
       { error: "Failed to update merchant" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
 
 export async function DELETE(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  _request: NextRequest,
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     const session = await getSession();
-    if (!session || session.user.role !== "admin") {
+    if (session?.user.role !== "admin") {
       return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
     }
 
@@ -352,14 +377,20 @@ export async function DELETE(
       .limit(1);
 
     if (!existing) {
-      return NextResponse.json({ error: "Merchant not found" }, { status: 404 });
+      return NextResponse.json(
+        { error: "Merchant not found" },
+        { status: 404 },
+      );
     }
 
     // Only allow deletion of public page merchants (admin-created)
     if (!existing.isPublicPage) {
       return NextResponse.json(
-        { error: "Cannot delete merchant accounts. Only public pages can be deleted." },
-        { status: 400 }
+        {
+          error:
+            "Cannot delete merchant accounts. Only public pages can be deleted.",
+        },
+        { status: 400 },
       );
     }
 
@@ -373,7 +404,7 @@ export async function DELETE(
     console.error("Error deleting merchant:", error);
     return NextResponse.json(
       { error: "Failed to delete merchant" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

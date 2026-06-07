@@ -1,10 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { Check, Copy, Link as LinkIcon, Loader2, UserPlus } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import {
   Dialog,
   DialogContent,
@@ -14,6 +12,12 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import {
+  GooglePlacesAutocomplete,
+  type PlaceDetails,
+} from "@/components/ui/google-places-autocomplete";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -21,8 +25,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Link as LinkIcon, UserPlus, Copy, Check, Mail, Loader2 } from "lucide-react";
-import { GooglePlacesAutocomplete, PlaceDetails } from "@/components/ui/google-places-autocomplete";
+import { Textarea } from "@/components/ui/textarea";
 import { formatPhoneNumber, stripPhoneNumber } from "@/lib/utils";
 
 interface Category {
@@ -69,7 +72,7 @@ export function InviteMerchantDialog({
 
   // Categories for dropdown
   const [categories, setCategories] = useState<Category[]>([]);
-  const [isLoadingCategories, setIsLoadingCategories] = useState(false);
+  const [_isLoadingCategories, setIsLoadingCategories] = useState(false);
 
   // Reset state when dialog closes
   useEffect(() => {
@@ -96,14 +99,7 @@ export function InviteMerchantDialog({
     }
   }, [open]);
 
-  // Fetch categories when dialog opens
-  useEffect(() => {
-    if (open && categories.length === 0) {
-      fetchCategories();
-    }
-  }, [open]);
-
-  const fetchCategories = async () => {
+  const fetchCategories = useCallback(async () => {
     setIsLoadingCategories(true);
     try {
       const res = await fetch("/api/admin/categories");
@@ -116,7 +112,14 @@ export function InviteMerchantDialog({
     } finally {
       setIsLoadingCategories(false);
     }
-  };
+  }, []);
+
+  // Fetch categories when dialog opens
+  useEffect(() => {
+    if (open && categories.length === 0) {
+      fetchCategories();
+    }
+  }, [open, fetchCategories, categories.length]);
 
   const handleGenerateLink = async () => {
     setIsGenerating(true);
@@ -129,7 +132,7 @@ export function InviteMerchantDialog({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           email: linkEmail || null,
-          expiresInDays: parseInt(expiresInDays),
+          expiresInDays: parseInt(expiresInDays, 10),
           sendEmail: sendInviteEmail && !!linkEmail,
         }),
       });
@@ -158,7 +161,7 @@ export function InviteMerchantDialog({
 
   // Parse cityState into separate city and state values
   const parseCityState = (value: string): { city: string; state: string } => {
-    const parts = value.split(",").map(p => p.trim());
+    const parts = value.split(",").map((p) => p.trim());
     if (parts.length >= 2) {
       const state = parts[parts.length - 1].toUpperCase().slice(0, 2);
       const city = parts.slice(0, -1).join(", ");
@@ -167,7 +170,11 @@ export function InviteMerchantDialog({
     return { city: value.trim(), state: "" };
   };
 
-  const handleGooglePlaceSelect = (name: string, placeId: string, details?: PlaceDetails) => {
+  const handleGooglePlaceSelect = (
+    name: string,
+    placeId: string,
+    details?: PlaceDetails,
+  ) => {
     setGooglePlaceName(name);
     setGooglePlaceId(placeId);
 
@@ -240,7 +247,10 @@ export function InviteMerchantDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "link" | "direct")}>
+        <Tabs
+          value={activeTab}
+          onValueChange={(v) => setActiveTab(v as "link" | "direct")}
+        >
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="link">
               <LinkIcon className="w-4 h-4 mr-2" />
@@ -271,7 +281,10 @@ export function InviteMerchantDialog({
 
                 <div>
                   <Label htmlFor="expires">Link Expires In</Label>
-                  <Select value={expiresInDays} onValueChange={setExpiresInDays}>
+                  <Select
+                    value={expiresInDays}
+                    onValueChange={setExpiresInDays}
+                  >
                     <SelectTrigger id="expires">
                       <SelectValue />
                     </SelectTrigger>
@@ -294,7 +307,10 @@ export function InviteMerchantDialog({
                       onChange={(e) => setSendInviteEmail(e.target.checked)}
                       className="rounded border-gray-300"
                     />
-                    <Label htmlFor="send-invite-email" className="text-sm font-normal cursor-pointer">
+                    <Label
+                      htmlFor="send-invite-email"
+                      className="text-sm font-normal cursor-pointer"
+                    >
                       Send invite email to merchant
                     </Label>
                   </div>
@@ -447,7 +463,9 @@ export function InviteMerchantDialog({
                         type="tel"
                         placeholder="(425) 451-8599"
                         value={phone}
-                        onChange={(e) => setPhone(formatPhoneNumber(e.target.value))}
+                        onChange={(e) =>
+                          setPhone(formatPhoneNumber(e.target.value))
+                        }
                       />
                     </div>
 
@@ -483,7 +501,10 @@ export function InviteMerchantDialog({
                     onChange={(e) => setSendWelcomeEmail(e.target.checked)}
                     className="rounded border-gray-300"
                   />
-                  <Label htmlFor="send-welcome-email" className="text-sm font-normal cursor-pointer">
+                  <Label
+                    htmlFor="send-welcome-email"
+                    className="text-sm font-normal cursor-pointer"
+                  >
                     Send welcome email with login link
                   </Label>
                 </div>
@@ -495,7 +516,11 @@ export function InviteMerchantDialog({
                 )}
 
                 <DialogFooter>
-                  <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isCreating}>
+                  <Button
+                    variant="outline"
+                    onClick={() => onOpenChange(false)}
+                    disabled={isCreating}
+                  >
                     Cancel
                   </Button>
                   <Button

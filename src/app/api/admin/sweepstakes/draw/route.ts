@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { type NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import { drawSweepstakesWinners } from "@/lib/sweepstakes";
 
@@ -6,7 +6,7 @@ export async function POST(request: NextRequest) {
   try {
     const session = await getSession();
 
-    if (!session || session.user.role !== "admin") {
+    if (session?.user.role !== "admin") {
       return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
     }
 
@@ -16,7 +16,10 @@ export async function POST(request: NextRequest) {
     const notes = body.notes?.trim() || undefined;
 
     if (!cycleId) {
-      return NextResponse.json({ error: "cycleId is required" }, { status: 400 });
+      return NextResponse.json(
+        { error: "cycleId is required" },
+        { status: 400 },
+      );
     }
 
     const result = await drawSweepstakesWinners({
@@ -40,9 +43,11 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(
       {
         error:
-          error instanceof Error ? error.message : "Failed to draw sweepstakes winners",
+          error instanceof Error
+            ? error.message
+            : "Failed to draw sweepstakes winners",
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

@@ -1,11 +1,11 @@
-import { NextRequest, NextResponse } from "next/server";
-import { db, users, members, merchants } from "@/db";
-import { getSession } from "@/lib/auth";
 import { eq } from "drizzle-orm";
+import { type NextRequest, NextResponse } from "next/server";
+import { db, members, merchants, users } from "@/db";
+import { getSession } from "@/lib/auth";
 
 export async function GET(
-  request: NextRequest,
-  { params }: { params: Promise<{ userId: string }> }
+  _request: NextRequest,
+  { params }: { params: Promise<{ userId: string }> },
 ) {
   try {
     const session = await getSession();
@@ -57,13 +57,16 @@ export async function GET(
     });
   } catch (error) {
     console.error("Error fetching user:", error);
-    return NextResponse.json({ error: "Failed to fetch user" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Failed to fetch user" },
+      { status: 500 },
+    );
   }
 }
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: Promise<{ userId: string }> }
+  { params }: { params: Promise<{ userId: string }> },
 ) {
   try {
     const session = await getSession();
@@ -83,13 +86,23 @@ export async function PATCH(
     const merchantUpdate = body.merchant;
 
     // Validate role if provided
-    if (userUpdate?.role && !["member", "merchant", "admin"].includes(userUpdate.role)) {
+    if (
+      userUpdate?.role &&
+      !["member", "merchant", "admin"].includes(userUpdate.role)
+    ) {
       return NextResponse.json({ error: "Invalid role" }, { status: 400 });
     }
 
     // Prevent self-demotion
-    if (userId === session.user.id && userUpdate?.role && userUpdate.role !== "admin") {
-      return NextResponse.json({ error: "Cannot change your own role" }, { status: 400 });
+    if (
+      userId === session.user.id &&
+      userUpdate?.role &&
+      userUpdate.role !== "admin"
+    ) {
+      return NextResponse.json(
+        { error: "Cannot change your own role" },
+        { status: 400 },
+      );
     }
 
     // Update user (including name fields)
@@ -113,7 +126,14 @@ export async function PATCH(
     }
 
     // Update member address fields if provided
-    if (memberUpdate && (memberUpdate.address !== undefined || memberUpdate.city !== undefined || memberUpdate.state !== undefined || memberUpdate.zip !== undefined || memberUpdate.homeCity !== undefined)) {
+    if (
+      memberUpdate &&
+      (memberUpdate.address !== undefined ||
+        memberUpdate.city !== undefined ||
+        memberUpdate.state !== undefined ||
+        memberUpdate.zip !== undefined ||
+        memberUpdate.homeCity !== undefined)
+    ) {
       const [existingMember] = await db
         .select()
         .from(members)
@@ -124,11 +144,17 @@ export async function PATCH(
         await db
           .update(members)
           .set({
-            ...(memberUpdate.address !== undefined && { address: memberUpdate.address }),
+            ...(memberUpdate.address !== undefined && {
+              address: memberUpdate.address,
+            }),
             ...(memberUpdate.city !== undefined && { city: memberUpdate.city }),
-            ...(memberUpdate.state !== undefined && { state: memberUpdate.state }),
+            ...(memberUpdate.state !== undefined && {
+              state: memberUpdate.state,
+            }),
             ...(memberUpdate.zip !== undefined && { zip: memberUpdate.zip }),
-            ...(memberUpdate.homeCity !== undefined && { homeCity: memberUpdate.homeCity }),
+            ...(memberUpdate.homeCity !== undefined && {
+              homeCity: memberUpdate.homeCity,
+            }),
           })
           .where(eq(members.userId, userId));
       }
@@ -146,12 +172,24 @@ export async function PATCH(
         await db
           .update(merchants)
           .set({
-            ...(merchantUpdate.businessName && { businessName: merchantUpdate.businessName }),
-            ...(merchantUpdate.city !== undefined && { city: merchantUpdate.city }),
-            ...(merchantUpdate.phone !== undefined && { phone: merchantUpdate.phone }),
-            ...(merchantUpdate.website !== undefined && { website: merchantUpdate.website }),
-            ...(merchantUpdate.description !== undefined && { description: merchantUpdate.description }),
-            ...(merchantUpdate.verified !== undefined && { verified: merchantUpdate.verified }),
+            ...(merchantUpdate.businessName && {
+              businessName: merchantUpdate.businessName,
+            }),
+            ...(merchantUpdate.city !== undefined && {
+              city: merchantUpdate.city,
+            }),
+            ...(merchantUpdate.phone !== undefined && {
+              phone: merchantUpdate.phone,
+            }),
+            ...(merchantUpdate.website !== undefined && {
+              website: merchantUpdate.website,
+            }),
+            ...(merchantUpdate.description !== undefined && {
+              description: merchantUpdate.description,
+            }),
+            ...(merchantUpdate.verified !== undefined && {
+              verified: merchantUpdate.verified,
+            }),
           })
           .where(eq(merchants.userId, userId));
       }
@@ -167,13 +205,16 @@ export async function PATCH(
     return NextResponse.json({ user: updatedUser });
   } catch (error) {
     console.error("Error updating user:", error);
-    return NextResponse.json({ error: "Failed to update user" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Failed to update user" },
+      { status: 500 },
+    );
   }
 }
 
 export async function DELETE(
-  request: NextRequest,
-  { params }: { params: Promise<{ userId: string }> }
+  _request: NextRequest,
+  { params }: { params: Promise<{ userId: string }> },
 ) {
   try {
     const session = await getSession();
@@ -188,7 +229,10 @@ export async function DELETE(
 
     // Prevent self-deletion
     if (userId === session.user.id) {
-      return NextResponse.json({ error: "Cannot delete your own account" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Cannot delete your own account" },
+        { status: 400 },
+      );
     }
 
     // Delete user (cascades to members/merchants due to onDelete: "cascade")
@@ -204,6 +248,9 @@ export async function DELETE(
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("Error deleting user:", error);
-    return NextResponse.json({ error: "Failed to delete user" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Failed to delete user" },
+      { status: 500 },
+    );
   }
 }

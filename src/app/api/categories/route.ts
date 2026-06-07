@@ -1,7 +1,7 @@
+import { asc } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { db } from "@/db";
 import { categories } from "@/db/schema";
-import { asc } from "drizzle-orm";
 
 // Public endpoint to fetch categories (no auth required)
 export async function GET() {
@@ -21,7 +21,7 @@ export async function GET() {
     console.error("Error fetching categories:", error);
     return NextResponse.json(
       { error: "Failed to fetch categories" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

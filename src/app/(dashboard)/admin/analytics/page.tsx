@@ -141,7 +141,7 @@ export default function AnalyticsPage() {
     if (!authLoading && isAuthenticated) {
       fetchAnalytics();
     }
-  }, [authLoading, isAuthenticated, dateRange]);
+  }, [authLoading, isAuthenticated, fetchAnalytics]);
 
   const totalRoles = Object.values(analytics.usersByRole).reduce(
     (sum, value) => sum + value,
@@ -229,7 +229,11 @@ export default function AnalyticsPage() {
                     <div className="flex justify-between text-sm mb-1">
                       <span className="capitalize">{role}</span>
                       <span className="font-medium">
-                        {count} ({totalRoles > 0 ? Math.round((count / totalRoles) * 100) : 0}%)
+                        {count} (
+                        {totalRoles > 0
+                          ? Math.round((count / totalRoles) * 100)
+                          : 0}
+                        %)
                       </span>
                     </div>
                     <ProgressBar value={count} max={totalRoles} />
@@ -254,7 +258,9 @@ export default function AnalyticsPage() {
                         <span className="font-medium">
                           {count} (
                           {totalNominationStatuses > 0
-                            ? Math.round((count / totalNominationStatuses) * 100)
+                            ? Math.round(
+                                (count / totalNominationStatuses) * 100,
+                              )
                             : 0}
                           %)
                         </span>
@@ -289,12 +295,16 @@ export default function AnalyticsPage() {
                 <div className="space-y-3">
                   {analytics.merchantsByState.map((row) => (
                     <div key={row.state} className="flex items-center gap-3">
-                      <span className="w-10 text-sm font-medium">{row.state}</span>
+                      <span className="w-10 text-sm font-medium">
+                        {row.state}
+                      </span>
                       <ProgressBar
                         value={row.count}
                         max={analytics.merchantsByState[0].count}
                       />
-                      <span className="w-10 text-right text-sm">{row.count}</span>
+                      <span className="w-10 text-right text-sm">
+                        {row.count}
+                      </span>
                     </div>
                   ))}
                 </div>

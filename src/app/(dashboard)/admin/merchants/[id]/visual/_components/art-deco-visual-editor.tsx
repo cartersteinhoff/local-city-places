@@ -7,21 +7,39 @@
  * Click on any element to edit it directly.
  */
 
-import { useState } from "react";
+import {
+  Clock,
+  Gem,
+  Globe,
+  GripVertical,
+  Image as ImageIcon,
+  MapPin,
+  Navigation,
+  Pencil,
+  Phone,
+  Plus,
+  Sparkles,
+  Trash2,
+  Video,
+  X,
+} from "lucide-react";
 import { Poiret_One, Raleway } from "next/font/google";
+import { useState } from "react";
 import { Facebook, Instagram } from "@/components/icons/social-icons";
 import {
-  MapPin, Phone, Globe, Gem, Navigation, Clock,
-  Image as ImageIcon, Sparkles, Plus, Video, Pencil, X, Check,
-  GripVertical, Trash2
-} from "lucide-react";
-import { formatPhoneNumber, stripPhoneNumber } from "@/lib/utils";
-import { extractVimeoId, getVimeoEmbedUrl, isValidVimeoUrl } from "@/lib/vimeo";
-import { GoogleMapEmbed, getGoogleMapsDirectionsUrl, formatFullAddress } from "@/components/merchant-page/google-map-embed";
-import { EditableText } from "@/components/ui/editable-text";
+  formatFullAddress,
+  GoogleMapEmbed,
+  getGoogleMapsDirectionsUrl,
+} from "@/components/merchant-page/google-map-embed";
+import { Button } from "@/components/ui/button";
 import { EditableImage } from "@/components/ui/editable-image";
-import { SortableGrid } from "@/components/ui/sortable-grid";
-import { cn } from "@/lib/utils";
+import { EditableText } from "@/components/ui/editable-text";
+import { Input } from "@/components/ui/input";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import {
   Select,
   SelectContent,
@@ -29,13 +47,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+import { SortableGrid } from "@/components/ui/sortable-grid";
+import { cn, formatPhoneNumber } from "@/lib/utils";
+import { extractVimeoId, getVimeoEmbedUrl, isValidVimeoUrl } from "@/lib/vimeo";
 
 const poiretOne = Poiret_One({
   weight: "400",
@@ -107,15 +121,49 @@ interface ArtDecoVisualEditorProps {
 
 // Time options for hours picker
 const TIME_OPTIONS = [
-  "6:00 AM", "6:30 AM", "7:00 AM", "7:30 AM", "8:00 AM", "8:30 AM",
-  "9:00 AM", "9:30 AM", "10:00 AM", "10:30 AM", "11:00 AM", "11:30 AM",
-  "12:00 PM", "12:30 PM", "1:00 PM", "1:30 PM", "2:00 PM", "2:30 PM",
-  "3:00 PM", "3:30 PM", "4:00 PM", "4:30 PM", "5:00 PM", "5:30 PM",
-  "6:00 PM", "6:30 PM", "7:00 PM", "7:30 PM", "8:00 PM", "8:30 PM",
-  "9:00 PM", "9:30 PM", "10:00 PM", "10:30 PM", "11:00 PM", "11:30 PM",
+  "6:00 AM",
+  "6:30 AM",
+  "7:00 AM",
+  "7:30 AM",
+  "8:00 AM",
+  "8:30 AM",
+  "9:00 AM",
+  "9:30 AM",
+  "10:00 AM",
+  "10:30 AM",
+  "11:00 AM",
+  "11:30 AM",
+  "12:00 PM",
+  "12:30 PM",
+  "1:00 PM",
+  "1:30 PM",
+  "2:00 PM",
+  "2:30 PM",
+  "3:00 PM",
+  "3:30 PM",
+  "4:00 PM",
+  "4:30 PM",
+  "5:00 PM",
+  "5:30 PM",
+  "6:00 PM",
+  "6:30 PM",
+  "7:00 PM",
+  "7:30 PM",
+  "8:00 PM",
+  "8:30 PM",
+  "9:00 PM",
+  "9:30 PM",
+  "10:00 PM",
+  "10:30 PM",
+  "11:00 PM",
+  "11:30 PM",
 ];
 
-function parseHoursValue(value: string | undefined): { isOpen: boolean; open: string; close: string } {
+function parseHoursValue(value: string | undefined): {
+  isOpen: boolean;
+  open: string;
+  close: string;
+} {
   if (!value || value.toLowerCase() === "closed") {
     return { isOpen: false, open: "9:00 AM", close: "5:00 PM" };
   }
@@ -127,31 +175,43 @@ function parseHoursValue(value: string | undefined): { isOpen: boolean; open: st
   const match = value.match(/^(\d{1,2}):(\d{2})-(\d{1,2}):(\d{2})$/);
   if (match) {
     const formatTime = (h: string, m: string) => {
-      const hour = parseInt(h);
+      const hour = parseInt(h, 10);
       const period = hour >= 12 ? "PM" : "AM";
       const displayHour = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour;
       return `${displayHour}:${m} ${period}`;
     };
-    return { isOpen: true, open: formatTime(match[1], match[2]), close: formatTime(match[3], match[4]) };
+    return {
+      isOpen: true,
+      open: formatTime(match[1], match[2]),
+      close: formatTime(match[3], match[4]),
+    };
   }
 
   // Try display format
   const displayMatch = value.match(/^(.+?)\s*-\s*(.+)$/);
   if (displayMatch) {
-    return { isOpen: true, open: displayMatch[1].trim(), close: displayMatch[2].trim() };
+    return {
+      isOpen: true,
+      open: displayMatch[1].trim(),
+      close: displayMatch[2].trim(),
+    };
   }
 
   return { isOpen: true, open: "9:00 AM", close: "5:00 PM" };
 }
 
-function formatHoursForStorage(isOpen: boolean, open: string, close: string): string {
+function formatHoursForStorage(
+  isOpen: boolean,
+  open: string,
+  close: string,
+): string {
   if (!isOpen) return "Closed";
 
   const parseTime = (t: string): string => {
     const match = t.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
     if (!match) return "09:00";
-    let [, h, m, period] = match;
-    let hour = parseInt(h);
+    const [, h, m, period] = match;
+    let hour = parseInt(h, 10);
     if (period.toUpperCase() === "PM" && hour !== 12) hour += 12;
     if (period.toUpperCase() === "AM" && hour === 12) hour = 0;
     return `${hour.toString().padStart(2, "0")}:${m}`;
@@ -201,15 +261,21 @@ function InlineEditField({
   return (
     <Popover open={isOpen} onOpenChange={setIsOpen}>
       <PopoverTrigger asChild>
-        <button className={cn(
-          "flex items-center gap-3 hover:opacity-80 transition-opacity text-left group",
-          className
-        )}>
+        <button
+          className={cn(
+            "flex items-center gap-3 hover:opacity-80 transition-opacity text-left group",
+            className,
+          )}
+        >
           <Icon className="w-5 h-5 shrink-0" />
           <div className="min-w-0">
-            <p className="text-[10px] uppercase tracking-wider opacity-70">{label}</p>
+            <p className="text-[10px] uppercase tracking-wider opacity-70">
+              {label}
+            </p>
             <p className={`font-semibold truncate ${raleway.className}`}>
-              {displayValue || value || <span className="opacity-50 italic">Click to add</span>}
+              {displayValue || value || (
+                <span className="opacity-50 italic">Click to add</span>
+              )}
             </p>
           </div>
           <Pencil className="w-3 h-3 opacity-0 group-hover:opacity-50 shrink-0" />
@@ -267,12 +333,16 @@ function HoursEditorRow({
   return (
     <Popover open={isOpen} onOpenChange={setIsOpen}>
       <PopoverTrigger asChild>
-        <div className={cn(
-          "flex justify-between items-center py-2 border-b border-[#D4AF37]/10 last:border-0 cursor-pointer group",
-          editableClass
-        )}>
+        <div
+          className={cn(
+            "flex justify-between items-center py-2 border-b border-[#D4AF37]/10 last:border-0 cursor-pointer group",
+            editableClass,
+          )}
+        >
           <span className={`text-[#D4AF37] ${raleway.className}`}>{label}</span>
-          <span className={`text-[#F5F1E6]/70 ${raleway.className} flex items-center gap-2`}>
+          <span
+            className={`text-[#F5F1E6]/70 ${raleway.className} flex items-center gap-2`}
+          >
             {formatHoursDisplay(value)}
             <Pencil className="w-3 h-3 opacity-0 group-hover:opacity-50" />
           </span>
@@ -301,7 +371,9 @@ function HoursEditorRow({
                 </SelectTrigger>
                 <SelectContent>
                   {TIME_OPTIONS.map((t) => (
-                    <SelectItem key={t} value={t}>{t}</SelectItem>
+                    <SelectItem key={t} value={t}>
+                      {t}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -312,7 +384,9 @@ function HoursEditorRow({
                 </SelectTrigger>
                 <SelectContent>
                   {TIME_OPTIONS.map((t) => (
-                    <SelectItem key={t} value={t}>{t}</SelectItem>
+                    <SelectItem key={t} value={t}>
+                      {t}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -368,27 +442,44 @@ export function ArtDecoVisualEditor({
     aboutStory,
   } = data;
 
-  const location = [city, state].filter(Boolean).join(", ");
+  const _location = [city, state].filter(Boolean).join(", ");
   const fullAddress = formatFullAddress(streetAddress, city, state, zipCode);
   const videoId = vimeoUrl ? extractVimeoId(vimeoUrl) : null;
-  const directionsUrl = getGoogleMapsDirectionsUrl(businessName, streetAddress, city, state, zipCode, googlePlaceId);
+  const directionsUrl = getGoogleMapsDirectionsUrl(
+    businessName,
+    streetAddress,
+    city,
+    state,
+    zipCode,
+    googlePlaceId,
+  );
 
   const editableClass = showEditHints
     ? "outline-dashed outline-2 outline-transparent hover:outline-blue-400/50 transition-all rounded"
     : "";
 
-  const updateService = (index: number, field: keyof Service, value: string) => {
+  const updateService = (
+    index: number,
+    field: keyof Service,
+    value: string,
+  ) => {
     const newServices = [...services];
     newServices[index] = { ...newServices[index], [field]: value };
     onUpdate("services", newServices);
   };
 
   const addService = () => {
-    onUpdate("services", [...services, { name: "New Service", description: "", price: "" }]);
+    onUpdate("services", [
+      ...services,
+      { name: "New Service", description: "", price: "" },
+    ]);
   };
 
   const removeService = (index: number) => {
-    onUpdate("services", services.filter((_, i) => i !== index));
+    onUpdate(
+      "services",
+      services.filter((_, i) => i !== index),
+    );
   };
 
   const updateHour = (day: keyof Hours, value: string) => {
@@ -401,7 +492,10 @@ export function ArtDecoVisualEditor({
   };
 
   const removePhoto = (index: number) => {
-    onUpdate("photos", photos.filter((_, i) => i !== index));
+    onUpdate(
+      "photos",
+      photos.filter((_, i) => i !== index),
+    );
   };
 
   return (
@@ -421,7 +515,9 @@ export function ArtDecoVisualEditor({
             <div className="w-10 h-10 border-2 border-[#D4AF37] flex items-center justify-center rotate-45">
               <Gem className="w-5 h-5 text-[#D4AF37] -rotate-45" />
             </div>
-            <span className="text-xs tracking-[0.3em] uppercase text-[#D4AF37]/70">Local City Places</span>
+            <span className="text-xs tracking-[0.3em] uppercase text-[#D4AF37]/70">
+              Local City Places
+            </span>
           </div>
         </div>
       </header>
@@ -429,10 +525,12 @@ export function ArtDecoVisualEditor({
       {/* Editable Contact Strip */}
       <div className="bg-gradient-to-r from-[#D4AF37] via-[#E5C97B] to-[#D4AF37] text-[#0D1F22]">
         <div className="max-w-6xl mx-auto px-4 py-4">
-          <div className={cn(
-            "flex flex-wrap items-center justify-center",
-            isMobile ? "gap-4" : "gap-6 sm:gap-10"
-          )}>
+          <div
+            className={cn(
+              "flex flex-wrap items-center justify-center",
+              isMobile ? "gap-4" : "gap-6 sm:gap-10",
+            )}
+          >
             <InlineEditField
               value={phone}
               onChange={(val) => onUpdate("phone", formatPhoneNumber(val))}
@@ -452,13 +550,17 @@ export function ArtDecoVisualEditor({
               displayValue={website?.replace(/^https?:\/\//, "")}
             />
             <InlineEditField
-              value={[streetAddress, city, state, zipCode].filter(Boolean).join(", ")}
+              value={[streetAddress, city, state, zipCode]
+                .filter(Boolean)
+                .join(", ")}
               onChange={(val) => {
                 // Parse the address - simple approach
-                const parts = val.split(",").map(p => p.trim());
-                if (parts.length >= 1) onUpdate("streetAddress", parts[0] || "");
+                const parts = val.split(",").map((p) => p.trim());
+                if (parts.length >= 1)
+                  onUpdate("streetAddress", parts[0] || "");
                 if (parts.length >= 2) onUpdate("city", parts[1] || "");
-                if (parts.length >= 3) onUpdate("state", parts[2]?.slice(0, 2)?.toUpperCase() || "");
+                if (parts.length >= 3)
+                  onUpdate("state", parts[2]?.slice(0, 2)?.toUpperCase() || "");
                 if (parts.length >= 4) onUpdate("zipCode", parts[3] || "");
               }}
               label="Location"
@@ -471,12 +573,19 @@ export function ArtDecoVisualEditor({
 
       {/* Main Content */}
       <div className="relative">
-        <div className={cn("max-w-6xl mx-auto px-4 py-12", isDesktop && "lg:py-16")}>
-          <div className={cn(
-            "grid gap-12 items-start",
-            isDesktop && "lg:grid-cols-2",
-            (isMobile || isTablet) && "grid-cols-1"
-          )}>
+        <div
+          className={cn(
+            "max-w-6xl mx-auto px-4 py-12",
+            isDesktop && "lg:py-16",
+          )}
+        >
+          <div
+            className={cn(
+              "grid gap-12 items-start",
+              isDesktop && "lg:grid-cols-2",
+              (isMobile || isTablet) && "grid-cols-1",
+            )}
+          >
             {/* Left - Business Info */}
             <div className={cn("text-center", isDesktop && "lg:text-left")}>
               {/* Editable Logo */}
@@ -503,12 +612,16 @@ export function ArtDecoVisualEditor({
               <div className="mb-4">
                 <Popover>
                   <PopoverTrigger asChild>
-                    <button className={cn(
-                      "inline-flex items-center gap-3 text-[10px] tracking-[0.3em] uppercase text-[#D4AF37] group cursor-pointer",
-                      editableClass
-                    )}>
+                    <button
+                      className={cn(
+                        "inline-flex items-center gap-3 text-[10px] tracking-[0.3em] uppercase text-[#D4AF37] group cursor-pointer",
+                        editableClass,
+                      )}
+                    >
                       <span className="w-8 h-px bg-[#D4AF37]/50" />
-                      {categoryName || <span className="opacity-50">Select Category</span>}
+                      {categoryName || (
+                        <span className="opacity-50">Select Category</span>
+                      )}
                       <span className="w-8 h-px bg-[#D4AF37]/50" />
                       <Pencil className="w-3 h-3 opacity-0 group-hover:opacity-50" />
                     </button>
@@ -520,7 +633,7 @@ export function ArtDecoVisualEditor({
                         value={categoryId}
                         onValueChange={(val) => {
                           onUpdate("categoryId", val);
-                          const cat = categories.find(c => c.id === val);
+                          const cat = categories.find((c) => c.id === val);
                           if (cat) onUpdate("categoryName", cat.name);
                         }}
                       >
@@ -542,7 +655,12 @@ export function ArtDecoVisualEditor({
 
               {/* Editable Business Name */}
               <div className="relative mb-8">
-                <div className={cn("flex items-center justify-center gap-3 mb-4", isDesktop && "lg:justify-start")}>
+                <div
+                  className={cn(
+                    "flex items-center justify-center gap-3 mb-4",
+                    isDesktop && "lg:justify-start",
+                  )}
+                >
                   <div className="w-2 h-2 bg-[#D4AF37] rotate-45" />
                   <div className="w-16 h-px bg-gradient-to-r from-[#D4AF37] to-transparent" />
                 </div>
@@ -556,13 +674,22 @@ export function ArtDecoVisualEditor({
                     className={cn(
                       "font-light leading-tight bg-gradient-to-r from-[#F5F1E6] via-[#D4AF37] to-[#F5F1E6] bg-clip-text text-transparent",
                       poiretOne.className,
-                      isMobile ? "text-3xl" : isTablet ? "text-4xl" : "text-4xl sm:text-5xl lg:text-6xl"
+                      isMobile
+                        ? "text-3xl"
+                        : isTablet
+                          ? "text-4xl"
+                          : "text-4xl sm:text-5xl lg:text-6xl",
                     )}
                     inputClassName="!text-[#F5F1E6] !bg-[#0D1F22]/80"
                   />
                 </div>
 
-                <div className={cn("flex items-center justify-center gap-3 mt-4", isDesktop && "lg:justify-start")}>
+                <div
+                  className={cn(
+                    "flex items-center justify-center gap-3 mt-4",
+                    isDesktop && "lg:justify-start",
+                  )}
+                >
                   <div className="w-24 h-px bg-gradient-to-r from-[#D4AF37] to-transparent" />
                   <div className="w-2 h-2 bg-[#D4AF37] rotate-45" />
                   <div className="w-12 h-px bg-gradient-to-l from-[#D4AF37] to-transparent" />
@@ -570,7 +697,13 @@ export function ArtDecoVisualEditor({
               </div>
 
               {/* Editable Description */}
-              <div className={cn("mb-10 max-w-lg mx-auto", isDesktop && "lg:mx-0", editableClass)}>
+              <div
+                className={cn(
+                  "mb-10 max-w-lg mx-auto",
+                  isDesktop && "lg:mx-0",
+                  editableClass,
+                )}
+              >
                 <EditableText
                   value={description}
                   onChange={(val) => onUpdate("description", val)}
@@ -583,11 +716,13 @@ export function ArtDecoVisualEditor({
               </div>
 
               {/* CTA Buttons - display only */}
-              <div className={cn(
-                "flex gap-4 justify-center",
-                isMobile ? "flex-col" : "flex-row",
-                isDesktop && "lg:justify-start"
-              )}>
+              <div
+                className={cn(
+                  "flex gap-4 justify-center",
+                  isMobile ? "flex-col" : "flex-row",
+                  isDesktop && "lg:justify-start",
+                )}
+              >
                 {phone && (
                   <span className="flex items-center justify-center gap-3 px-8 py-4 bg-gradient-to-r from-[#D4AF37] via-[#E5C97B] to-[#D4AF37] text-[#0D1F22] font-medium">
                     <Phone className="w-5 h-5" />
@@ -617,9 +752,9 @@ export function ArtDecoVisualEditor({
                   <div
                     className={cn(
                       "relative border-2 border-[#D4AF37] bg-black overflow-hidden",
-                      isMobile ? "w-[200px]" : "w-[260px] sm:w-[300px]"
+                      isMobile ? "w-[200px]" : "w-[260px] sm:w-[300px]",
                     )}
-                    style={{ aspectRatio: '9/16' }}
+                    style={{ aspectRatio: "9/16" }}
                   >
                     <iframe
                       src={`${getVimeoEmbedUrl(videoId)}?background=0&autoplay=0&title=0&byline=0&portrait=0`}
@@ -632,7 +767,9 @@ export function ArtDecoVisualEditor({
                   </div>
 
                   <div className="absolute -bottom-12 left-1/2 -translate-x-1/2 text-center">
-                    <p className="text-[10px] tracking-[0.3em] uppercase text-[#D4AF37]/70">Merchant Tracks</p>
+                    <p className="text-[10px] tracking-[0.3em] uppercase text-[#D4AF37]/70">
+                      Merchant Tracks
+                    </p>
                   </div>
                 </div>
               ) : null}
@@ -640,17 +777,21 @@ export function ArtDecoVisualEditor({
               {/* Video URL Editor */}
               <Popover>
                 <PopoverTrigger asChild>
-                  <button className={cn(
-                    "flex items-center gap-2 px-4 py-2 border border-[#D4AF37]/30 text-[#D4AF37] text-sm hover:bg-[#D4AF37]/10 transition-colors mt-8",
-                    editableClass
-                  )}>
+                  <button
+                    className={cn(
+                      "flex items-center gap-2 px-4 py-2 border border-[#D4AF37]/30 text-[#D4AF37] text-sm hover:bg-[#D4AF37]/10 transition-colors mt-8",
+                      editableClass,
+                    )}
+                  >
                     <Video className="w-4 h-4" />
                     {videoId ? "Change Video" : "Add Video"}
                   </button>
                 </PopoverTrigger>
                 <PopoverContent className="w-80">
                   <div className="space-y-3">
-                    <label className="text-sm font-medium">Vimeo Video URL</label>
+                    <label className="text-sm font-medium">
+                      Vimeo Video URL
+                    </label>
                     <Input
                       value={vimeoUrl}
                       onChange={(e) => onUpdate("vimeoUrl", e.target.value)}
@@ -697,7 +838,11 @@ export function ArtDecoVisualEditor({
               </a>
             </div>
             {fullAddress && (
-              <p className={`text-center text-[#F5F1E6]/70 mb-6 ${raleway.className}`}>{fullAddress}</p>
+              <p
+                className={`text-center text-[#F5F1E6]/70 mb-6 ${raleway.className}`}
+              >
+                {fullAddress}
+              </p>
             )}
             <div className="relative">
               <div className="absolute -inset-2 border border-[#D4AF37]/30" />
@@ -752,14 +897,28 @@ export function ArtDecoVisualEditor({
         <div id="hours" className="max-w-6xl mx-auto px-4 py-12">
           <div className="flex items-center gap-4 mb-8">
             <Clock className="w-6 h-6 text-[#D4AF37]" />
-            <h2 className={`text-2xl ${poiretOne.className}`}>Hours of Operation</h2>
+            <h2 className={`text-2xl ${poiretOne.className}`}>
+              Hours of Operation
+            </h2>
             <div className="flex-1 h-px bg-gradient-to-r from-[#D4AF37]/30 to-transparent" />
           </div>
-          <div className={cn(
-            "grid gap-4 border border-[#D4AF37]/20 p-8",
-            isMobile ? "grid-cols-1" : "grid-cols-2"
-          )}>
-            {(["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"] as const).map((day) => (
+          <div
+            className={cn(
+              "grid gap-4 border border-[#D4AF37]/20 p-8",
+              isMobile ? "grid-cols-1" : "grid-cols-2",
+            )}
+          >
+            {(
+              [
+                "monday",
+                "tuesday",
+                "wednesday",
+                "thursday",
+                "friday",
+                "saturday",
+                "sunday",
+              ] as const
+            ).map((day) => (
               <HoursEditorRow
                 key={day}
                 day={day}
@@ -786,30 +945,43 @@ export function ArtDecoVisualEditor({
             <h2 className={`text-2xl ${poiretOne.className}`}>Our Services</h2>
             <div className="flex-1 h-px bg-gradient-to-r from-[#D4AF37]/30 to-transparent" />
           </div>
-          <div className={cn(
-            "grid gap-4",
-            isMobile ? "grid-cols-1" : isTablet ? "grid-cols-2" : "grid-cols-3"
-          )}>
+          <div
+            className={cn(
+              "grid gap-4",
+              isMobile
+                ? "grid-cols-1"
+                : isTablet
+                  ? "grid-cols-2"
+                  : "grid-cols-3",
+            )}
+          >
             <SortableGrid
               items={services}
               getItemId={(_, idx) => `service-${idx}`}
               onReorder={(newServices) => onUpdate("services", newServices)}
               className={cn(
                 "grid gap-4 col-span-full",
-                isMobile ? "grid-cols-1" : isTablet ? "grid-cols-2" : "grid-cols-3"
+                isMobile
+                  ? "grid-cols-1"
+                  : isTablet
+                    ? "grid-cols-2"
+                    : "grid-cols-3",
               )}
               renderItem={(service, idx) => (
                 <div
                   className={cn(
                     "border border-[#D4AF37]/20 p-6 hover:border-[#D4AF37]/40 transition-all relative group",
-                    editableClass
+                    editableClass,
                   )}
                 >
                   <div className="absolute top-2 left-2 opacity-30 group-hover:opacity-70 transition-opacity">
                     <GripVertical className="w-4 h-4 text-[#D4AF37]" />
                   </div>
                   <button
-                    onClick={(e) => { e.stopPropagation(); removeService(idx); }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      removeService(idx);
+                    }}
                     className="absolute top-2 right-2 w-6 h-6 bg-red-500/80 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity text-white text-xs hover:bg-red-600"
                   >
                     <X className="w-3 h-3" />
@@ -868,22 +1040,30 @@ export function ArtDecoVisualEditor({
             <h2 className={`text-2xl ${poiretOne.className}`}>Gallery</h2>
             <div className="flex-1 h-px bg-gradient-to-r from-[#D4AF37]/30 to-transparent" />
           </div>
-          <div className={cn(
-            "grid gap-4",
-            isMobile ? "grid-cols-2" : isTablet ? "grid-cols-3" : "grid-cols-4"
-          )}>
+          <div
+            className={cn(
+              "grid gap-4",
+              isMobile
+                ? "grid-cols-2"
+                : isTablet
+                  ? "grid-cols-3"
+                  : "grid-cols-4",
+            )}
+          >
             <SortableGrid
               items={photos}
               getItemId={(photo, idx) => `photo-${idx}-${photo.slice(-20)}`}
               onReorder={(newPhotos) => onUpdate("photos", newPhotos)}
               className={cn(
                 "grid gap-4 col-span-full",
-                isMobile ? "grid-cols-2" : isTablet ? "grid-cols-3" : "grid-cols-4"
+                isMobile
+                  ? "grid-cols-2"
+                  : isTablet
+                    ? "grid-cols-3"
+                    : "grid-cols-4",
               )}
               renderItem={(photo, idx) => (
-                <div
-                  className="relative aspect-square border-2 border-[#D4AF37]/30 overflow-hidden group"
-                >
+                <div className="relative aspect-square border-2 border-[#D4AF37]/30 overflow-hidden group">
                   <img
                     src={photo}
                     alt={`Photo ${idx + 1}`}
@@ -895,7 +1075,10 @@ export function ArtDecoVisualEditor({
                       <GripVertical className="w-5 h-5 text-white" />
                     </div>
                     <button
-                      onClick={(e) => { e.stopPropagation(); removePhoto(idx); }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        removePhoto(idx);
+                      }}
                       className="bg-red-500/80 rounded-full p-2 hover:bg-red-600 transition-colors"
                     >
                       <Trash2 className="w-5 h-5 text-white" />
@@ -937,23 +1120,40 @@ export function ArtDecoVisualEditor({
         <div className="border-t border-[#D4AF37]/20">
           <div className="max-w-6xl mx-auto px-4 py-8">
             <div className="flex flex-col items-center gap-4">
-              <span className={`text-sm text-[#F5F1E6]/50 ${raleway.className}`}>Social Media</span>
+              <span
+                className={`text-sm text-[#F5F1E6]/50 ${raleway.className}`}
+              >
+                Social Media
+              </span>
               <div className="flex items-center gap-4">
                 <Popover>
                   <PopoverTrigger asChild>
-                    <button className={cn(
-                      "w-12 h-12 border flex items-center justify-center transition-all",
-                      instagramUrl ? "border-[#D4AF37]/50 hover:border-[#D4AF37]" : "border-dashed border-[#D4AF37]/30 hover:border-[#D4AF37]/50"
-                    )}>
-                      <Instagram className={cn("w-5 h-5", instagramUrl ? "text-[#D4AF37]" : "text-[#D4AF37]/40")} />
+                    <button
+                      className={cn(
+                        "w-12 h-12 border flex items-center justify-center transition-all",
+                        instagramUrl
+                          ? "border-[#D4AF37]/50 hover:border-[#D4AF37]"
+                          : "border-dashed border-[#D4AF37]/30 hover:border-[#D4AF37]/50",
+                      )}
+                    >
+                      <Instagram
+                        className={cn(
+                          "w-5 h-5",
+                          instagramUrl ? "text-[#D4AF37]" : "text-[#D4AF37]/40",
+                        )}
+                      />
                     </button>
                   </PopoverTrigger>
                   <PopoverContent className="w-80">
                     <div className="space-y-3">
-                      <label className="text-sm font-medium">Instagram URL</label>
+                      <label className="text-sm font-medium">
+                        Instagram URL
+                      </label>
                       <Input
                         value={instagramUrl}
-                        onChange={(e) => onUpdate("instagramUrl", e.target.value)}
+                        onChange={(e) =>
+                          onUpdate("instagramUrl", e.target.value)
+                        }
                         placeholder="https://instagram.com/username"
                       />
                     </div>
@@ -962,19 +1162,32 @@ export function ArtDecoVisualEditor({
 
                 <Popover>
                   <PopoverTrigger asChild>
-                    <button className={cn(
-                      "w-12 h-12 border flex items-center justify-center transition-all",
-                      facebookUrl ? "border-[#D4AF37]/50 hover:border-[#D4AF37]" : "border-dashed border-[#D4AF37]/30 hover:border-[#D4AF37]/50"
-                    )}>
-                      <Facebook className={cn("w-5 h-5", facebookUrl ? "text-[#D4AF37]" : "text-[#D4AF37]/40")} />
+                    <button
+                      className={cn(
+                        "w-12 h-12 border flex items-center justify-center transition-all",
+                        facebookUrl
+                          ? "border-[#D4AF37]/50 hover:border-[#D4AF37]"
+                          : "border-dashed border-[#D4AF37]/30 hover:border-[#D4AF37]/50",
+                      )}
+                    >
+                      <Facebook
+                        className={cn(
+                          "w-5 h-5",
+                          facebookUrl ? "text-[#D4AF37]" : "text-[#D4AF37]/40",
+                        )}
+                      />
                     </button>
                   </PopoverTrigger>
                   <PopoverContent className="w-80">
                     <div className="space-y-3">
-                      <label className="text-sm font-medium">Facebook URL</label>
+                      <label className="text-sm font-medium">
+                        Facebook URL
+                      </label>
                       <Input
                         value={facebookUrl}
-                        onChange={(e) => onUpdate("facebookUrl", e.target.value)}
+                        onChange={(e) =>
+                          onUpdate("facebookUrl", e.target.value)
+                        }
                         placeholder="https://facebook.com/page"
                       />
                     </div>
@@ -983,12 +1196,23 @@ export function ArtDecoVisualEditor({
 
                 <Popover>
                   <PopoverTrigger asChild>
-                    <button className={cn(
-                      "w-12 h-12 border flex items-center justify-center transition-all",
-                      tiktokUrl ? "border-[#D4AF37]/50 hover:border-[#D4AF37]" : "border-dashed border-[#D4AF37]/30 hover:border-[#D4AF37]/50"
-                    )}>
-                      <svg className={cn("w-5 h-5", tiktokUrl ? "text-[#D4AF37]" : "text-[#D4AF37]/40")} viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-5.2 1.74 2.89 2.89 0 012.31-4.64 2.93 2.93 0 01.88.13V9.4a6.84 6.84 0 00-1-.05A6.33 6.33 0 005 20.1a6.34 6.34 0 0010.86-4.43v-7a8.16 8.16 0 004.77 1.52v-3.4a4.85 4.85 0 01-1-.1z"/>
+                    <button
+                      className={cn(
+                        "w-12 h-12 border flex items-center justify-center transition-all",
+                        tiktokUrl
+                          ? "border-[#D4AF37]/50 hover:border-[#D4AF37]"
+                          : "border-dashed border-[#D4AF37]/30 hover:border-[#D4AF37]/50",
+                      )}
+                    >
+                      <svg
+                        className={cn(
+                          "w-5 h-5",
+                          tiktokUrl ? "text-[#D4AF37]" : "text-[#D4AF37]/40",
+                        )}
+                        viewBox="0 0 24 24"
+                        fill="currentColor"
+                      >
+                        <path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-5.2 1.74 2.89 2.89 0 012.31-4.64 2.93 2.93 0 01.88.13V9.4a6.84 6.84 0 00-1-.05A6.33 6.33 0 005 20.1a6.34 6.34 0 0010.86-4.43v-7a8.16 8.16 0 004.77 1.52v-3.4a4.85 4.85 0 01-1-.1z" />
                       </svg>
                     </button>
                   </PopoverTrigger>

@@ -7,7 +7,12 @@ interface MerchantHeaderProps {
   logoUrl?: string | null;
 }
 
-export function MerchantHeader({ businessName, city, state, logoUrl }: MerchantHeaderProps) {
+export function MerchantHeader({
+  businessName,
+  city,
+  state,
+  logoUrl,
+}: MerchantHeaderProps) {
   // Get initials for fallback avatar
   const initials = businessName
     .split(" ")
@@ -43,7 +48,9 @@ export function MerchantHeader({ businessName, city, state, logoUrl }: MerchantH
 
           {/* Business info */}
           <div className="flex-1 min-w-0 pb-1">
-            <h1 className="text-2xl sm:text-3xl font-bold truncate">{businessName}</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold truncate">
+              {businessName}
+            </h1>
             {location && (
               <div className="flex items-center gap-1.5 text-muted-foreground mt-1">
                 <MapPin className="w-4 h-4 flex-shrink-0" />

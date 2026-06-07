@@ -1,4 +1,6 @@
-import { NextRequest, NextResponse } from "next/server";
+import { eq } from "drizzle-orm";
+import { type NextRequest, NextResponse } from "next/server";
+import { db, sweepstakesCycles } from "@/db";
 import { getSession } from "@/lib/auth";
 import {
   getActiveSweepstakesWinners,
@@ -6,14 +8,12 @@ import {
   getDefaultAdminSweepstakesCycle,
   getSweepstakesLeaderboard,
 } from "@/lib/sweepstakes";
-import { db, sweepstakesCycles } from "@/db";
-import { eq } from "drizzle-orm";
 
 export async function GET(request: NextRequest) {
   try {
     const session = await getSession();
 
-    if (!session || session.user.role !== "admin") {
+    if (session?.user.role !== "admin") {
       return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
     }
 
@@ -31,7 +31,10 @@ export async function GET(request: NextRequest) {
       : await getDefaultAdminSweepstakesCycle();
 
     if (!selectedCycle) {
-      return NextResponse.json({ error: "No sweepstakes cycle found" }, { status: 404 });
+      return NextResponse.json(
+        { error: "No sweepstakes cycle found" },
+        { status: 404 },
+      );
     }
 
     const [cycles, leaderboard, winners] = await Promise.all([
@@ -40,9 +43,18 @@ export async function GET(request: NextRequest) {
       getActiveSweepstakesWinners(selectedCycle.id),
     ]);
 
-    const regularEntries = leaderboard.reduce((sum, row) => sum + row.regularEntries, 0);
-    const referralEntries = leaderboard.reduce((sum, row) => sum + row.referralEntries, 0);
-    const totalEntries = leaderboard.reduce((sum, row) => sum + row.totalEntries, 0);
+    const regularEntries = leaderboard.reduce(
+      (sum, row) => sum + row.regularEntries,
+      0,
+    );
+    const referralEntries = leaderboard.reduce(
+      (sum, row) => sum + row.referralEntries,
+      0,
+    );
+    const totalEntries = leaderboard.reduce(
+      (sum, row) => sum + row.totalEntries,
+      0,
+    );
 
     return NextResponse.json({
       cycle: {
@@ -78,7 +90,7 @@ export async function GET(request: NextRequest) {
     console.error("Error fetching admin sweepstakes data:", error);
     return NextResponse.json(
       { error: "Failed to fetch sweepstakes admin data" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

@@ -1,20 +1,20 @@
-import { NextRequest, NextResponse } from "next/server";
+import { eq } from "drizzle-orm";
+import { type NextRequest, NextResponse } from "next/server";
 import { db } from "@/db";
 import { merchants } from "@/db/schema";
-import { eq } from "drizzle-orm";
 import { getSession } from "@/lib/auth";
-import { getMerchantPageUrl } from "@/lib/utils";
 import { revalidateMerchantPublicPaths } from "@/lib/merchant-public-revalidation";
+import { getMerchantPageUrl } from "@/lib/utils";
 
 // POST /api/admin/merchant-pages/[id]/revalidate
 // Manually trigger page rebuild for instant updates
 export async function POST(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  _request: NextRequest,
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     const session = await getSession();
-    if (!session || session.user.role !== "admin") {
+    if (session?.user.role !== "admin") {
       return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
     }
 
@@ -32,17 +32,27 @@ export async function POST(
       .limit(1);
 
     if (!merchant) {
-      return NextResponse.json({ error: "Merchant not found" }, { status: 404 });
+      return NextResponse.json(
+        { error: "Merchant not found" },
+        { status: 404 },
+      );
     }
 
     if (!merchant.city || !merchant.state || !merchant.slug) {
       return NextResponse.json(
-        { error: "Merchant page URL not complete (missing city, state, or slug)" },
-        { status: 400 }
+        {
+          error:
+            "Merchant page URL not complete (missing city, state, or slug)",
+        },
+        { status: 400 },
       );
     }
 
-    const pageUrl = getMerchantPageUrl(merchant.city, merchant.state, merchant.slug);
+    const pageUrl = getMerchantPageUrl(
+      merchant.city,
+      merchant.state,
+      merchant.slug,
+    );
 
     revalidateMerchantPublicPaths(merchant);
 
@@ -55,7 +65,7 @@ export async function POST(
     console.error("Error revalidating merchant page:", error);
     return NextResponse.json(
       { error: "Failed to trigger rebuild" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

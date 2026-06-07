@@ -1,17 +1,25 @@
-import { NextRequest, NextResponse } from "next/server";
 import { eq } from "drizzle-orm";
+import { type NextRequest, NextResponse } from "next/server";
+import { db, members } from "@/db";
 import { getSession } from "@/lib/auth";
 import { uploadFavoriteMerchantTestimonialPhoto } from "@/lib/storage";
-import { db, members } from "@/db";
 
-const VALID_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
+const VALID_IMAGE_TYPES = [
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+  "image/gif",
+];
 const MAX_FILE_SIZE_BYTES = 8 * 1024 * 1024;
 
 export async function POST(request: NextRequest) {
   try {
     const session = await getSession();
 
-    if (!session || (session.user.role !== "member" && session.user.role !== "admin")) {
+    if (
+      !session ||
+      (session.user.role !== "member" && session.user.role !== "admin")
+    ) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -35,14 +43,14 @@ export async function POST(request: NextRequest) {
     if (!VALID_IMAGE_TYPES.includes(file.type)) {
       return NextResponse.json(
         { error: "Invalid file type. Use JPEG, PNG, WebP, or GIF." },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     if (file.size > MAX_FILE_SIZE_BYTES) {
       return NextResponse.json(
         { error: "Photo too large. Max size is 8MB." },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -51,7 +59,7 @@ export async function POST(request: NextRequest) {
     if (!url) {
       return NextResponse.json(
         { error: "Upload failed. Storage is not configured." },
-        { status: 500 }
+        { status: 500 },
       );
     }
 
@@ -60,7 +68,7 @@ export async function POST(request: NextRequest) {
     console.error("Favorite merchant photo upload error:", error);
     return NextResponse.json(
       { error: "Failed to upload testimonial photo" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

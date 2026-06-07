@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 export type SaveStatus = "clean" | "dirty" | "saving" | "saved" | "error";
 
@@ -40,7 +40,8 @@ export function useManualSave<T>({
   }, [data]);
 
   // Check if data has changed from original (only if enabled)
-  const isDirty = enabled && JSON.stringify(data) !== JSON.stringify(originalData);
+  const isDirty =
+    enabled && JSON.stringify(data) !== JSON.stringify(originalData);
 
   // Update status based on dirty state
   useEffect(() => {

@@ -1,7 +1,14 @@
 "use client";
 
-import { useState, useCallback, useRef } from "react";
-import { Upload, X, Loader2, AlertCircle, RefreshCw, Image as ImageIcon } from "lucide-react";
+import {
+  AlertCircle,
+  Image as ImageIcon,
+  Loader2,
+  RefreshCw,
+  Upload,
+  X,
+} from "lucide-react";
+import { useCallback, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 
 interface ImageUploaderProps {
@@ -40,55 +47,61 @@ export function ImageUploader({
     auto: "",
   }[aspectRatio];
 
-  const validateFile = useCallback((file: File): string | null => {
-    const validTypes = ["image/jpeg", "image/png", "image/webp", "image/gif"];
-    if (!validTypes.includes(file.type)) {
-      return "Invalid file type. Use JPEG, PNG, WebP, or GIF.";
-    }
-    if (file.size > maxSize) {
-      return `File too large. Max size is ${Math.round(maxSize / 1024 / 1024)}MB.`;
-    }
-    return null;
-  }, [maxSize]);
+  const validateFile = useCallback(
+    (file: File): string | null => {
+      const validTypes = ["image/jpeg", "image/png", "image/webp", "image/gif"];
+      if (!validTypes.includes(file.type)) {
+        return "Invalid file type. Use JPEG, PNG, WebP, or GIF.";
+      }
+      if (file.size > maxSize) {
+        return `File too large. Max size is ${Math.round(maxSize / 1024 / 1024)}MB.`;
+      }
+      return null;
+    },
+    [maxSize],
+  );
 
-  const handleUpload = useCallback(async (file: File) => {
-    const validationError = validateFile(file);
-    if (validationError) {
-      setError(validationError);
-      setState("error");
-      return;
-    }
+  const handleUpload = useCallback(
+    async (file: File) => {
+      const validationError = validateFile(file);
+      if (validationError) {
+        setError(validationError);
+        setState("error");
+        return;
+      }
 
-    // Create preview immediately
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      setPreviewUrl(e.target?.result as string);
-    };
-    reader.readAsDataURL(file);
+      // Create preview immediately
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setPreviewUrl(e.target?.result as string);
+      };
+      reader.readAsDataURL(file);
 
-    setState("uploading");
-    setError("");
-    setProgress(0);
-    pendingFileRef.current = file;
+      setState("uploading");
+      setError("");
+      setProgress(0);
+      pendingFileRef.current = file;
 
-    // Simulate progress
-    const progressInterval = setInterval(() => {
-      setProgress((p) => Math.min(p + 10, 90));
-    }, 200);
+      // Simulate progress
+      const progressInterval = setInterval(() => {
+        setProgress((p) => Math.min(p + 10, 90));
+      }, 200);
 
-    try {
-      const url = await onUpload(file);
-      clearInterval(progressInterval);
-      setProgress(100);
-      onChange(url);
-      setPreviewUrl(null);
-      setState("idle");
-    } catch (err) {
-      clearInterval(progressInterval);
-      setError(err instanceof Error ? err.message : "Upload failed");
-      setState("error");
-    }
-  }, [validateFile, onUpload, onChange]);
+      try {
+        const url = await onUpload(file);
+        clearInterval(progressInterval);
+        setProgress(100);
+        onChange(url);
+        setPreviewUrl(null);
+        setState("idle");
+      } catch (err) {
+        clearInterval(progressInterval);
+        setError(err instanceof Error ? err.message : "Upload failed");
+        setState("error");
+      }
+    },
+    [validateFile, onUpload, onChange],
+  );
 
   const handleRetry = useCallback(() => {
     if (pendingFileRef.current) {
@@ -96,28 +109,34 @@ export function ImageUploader({
     }
   }, [handleUpload]);
 
-  const handleDragOver = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    if (!disabled) {
-      setState("dragging");
-    }
-  }, [disabled]);
+  const handleDragOver = useCallback(
+    (e: React.DragEvent) => {
+      e.preventDefault();
+      if (!disabled) {
+        setState("dragging");
+      }
+    },
+    [disabled],
+  );
 
   const handleDragLeave = useCallback((e: React.DragEvent) => {
     e.preventDefault();
     setState("idle");
   }, []);
 
-  const handleDrop = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    setState("idle");
-    if (disabled) return;
+  const handleDrop = useCallback(
+    (e: React.DragEvent) => {
+      e.preventDefault();
+      setState("idle");
+      if (disabled) return;
 
-    const file = e.dataTransfer.files[0];
-    if (file) {
-      handleUpload(file);
-    }
-  }, [disabled, handleUpload]);
+      const file = e.dataTransfer.files[0];
+      if (file) {
+        handleUpload(file);
+      }
+    },
+    [disabled, handleUpload],
+  );
 
   const handleClick = useCallback(() => {
     if (!disabled && state !== "uploading") {
@@ -125,22 +144,28 @@ export function ImageUploader({
     }
   }, [disabled, state]);
 
-  const handleFileChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      handleUpload(file);
-    }
-    // Reset input so same file can be selected again
-    e.target.value = "";
-  }, [handleUpload]);
+  const handleFileChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+      if (file) {
+        handleUpload(file);
+      }
+      // Reset input so same file can be selected again
+      e.target.value = "";
+    },
+    [handleUpload],
+  );
 
-  const handleRemove = useCallback((e: React.MouseEvent) => {
-    e.stopPropagation();
-    onChange(null);
-    setPreviewUrl(null);
-    setState("idle");
-    setError("");
-  }, [onChange]);
+  const handleRemove = useCallback(
+    (e: React.MouseEvent) => {
+      e.stopPropagation();
+      onChange(null);
+      setPreviewUrl(null);
+      setState("idle");
+      setError("");
+    },
+    [onChange],
+  );
 
   const displayUrl = previewUrl || value;
 
@@ -150,11 +175,13 @@ export function ImageUploader({
         "relative border-2 border-dashed rounded-lg transition-colors cursor-pointer",
         state === "dragging" && "border-primary bg-primary/5",
         state === "error" && "border-destructive",
-        state === "idle" && !displayUrl && "border-muted-foreground/25 hover:border-muted-foreground/50",
+        state === "idle" &&
+          !displayUrl &&
+          "border-muted-foreground/25 hover:border-muted-foreground/50",
         displayUrl && "border-transparent",
         disabled && "opacity-50 cursor-not-allowed",
         aspectRatioClass,
-        className
+        className,
       )}
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
@@ -178,7 +205,7 @@ export function ImageUploader({
             alt="Preview"
             className={cn(
               "w-full h-full object-cover rounded-lg",
-              state === "uploading" && "opacity-50 blur-sm"
+              state === "uploading" && "opacity-50 blur-sm",
             )}
           />
 
@@ -186,7 +213,9 @@ export function ImageUploader({
           {state === "uploading" && (
             <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/30 rounded-lg">
               <Loader2 className="w-8 h-8 text-white animate-spin mb-2" />
-              <span className="text-white text-sm font-medium">{progress}%</span>
+              <span className="text-white text-sm font-medium">
+                {progress}%
+              </span>
             </div>
           )}
 
@@ -204,7 +233,9 @@ export function ImageUploader({
           {/* Replace hint */}
           {state === "idle" && !disabled && (
             <div className="absolute bottom-0 left-0 right-0 p-2 bg-gradient-to-t from-black/60 to-transparent rounded-b-lg">
-              <p className="text-white text-xs text-center">Click or drag to replace</p>
+              <p className="text-white text-xs text-center">
+                Click or drag to replace
+              </p>
             </div>
           )}
         </div>
@@ -215,7 +246,10 @@ export function ImageUploader({
           <p className="text-sm text-destructive text-center mb-2">{error}</p>
           <button
             type="button"
-            onClick={(e) => { e.stopPropagation(); handleRetry(); }}
+            onClick={(e) => {
+              e.stopPropagation();
+              handleRetry();
+            }}
             className="flex items-center gap-1 text-sm text-primary hover:underline cursor-pointer"
           >
             <RefreshCw className="w-3 h-3" />
@@ -232,8 +266,12 @@ export function ImageUploader({
         // Default state
         <div className="flex flex-col items-center justify-center p-6 min-h-[120px]">
           <ImageIcon className="w-8 h-8 text-muted-foreground mb-2" />
-          <p className="text-sm text-muted-foreground text-center">{placeholder}</p>
-          <p className="text-xs text-muted-foreground mt-1">Max {Math.round(maxSize / 1024 / 1024)}MB</p>
+          <p className="text-sm text-muted-foreground text-center">
+            {placeholder}
+          </p>
+          <p className="text-xs text-muted-foreground mt-1">
+            Max {Math.round(maxSize / 1024 / 1024)}MB
+          </p>
         </div>
       )}
     </div>
@@ -258,71 +296,90 @@ export function GalleryUploader({
   className,
   disabled = false,
 }: GalleryUploaderProps) {
-  const [uploadingFiles, setUploadingFiles] = useState<Map<string, { progress: number; preview: string; error?: string }>>(new Map());
+  const [uploadingFiles, setUploadingFiles] = useState<
+    Map<string, { progress: number; preview: string; error?: string }>
+  >(new Map());
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleUpload = useCallback(async (file: File) => {
-    const id = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+  const handleUpload = useCallback(
+    async (file: File) => {
+      const id = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
 
-    // Create preview
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      setUploadingFiles((prev) => new Map(prev).set(id, {
-        progress: 0,
-        preview: e.target?.result as string
-      }));
-    };
-    reader.readAsDataURL(file);
+      // Create preview
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setUploadingFiles((prev) =>
+          new Map(prev).set(id, {
+            progress: 0,
+            preview: e.target?.result as string,
+          }),
+        );
+      };
+      reader.readAsDataURL(file);
 
-    // Simulate progress
-    const progressInterval = setInterval(() => {
-      setUploadingFiles((prev) => {
-        const current = prev.get(id);
-        if (current && current.progress < 90) {
-          return new Map(prev).set(id, { ...current, progress: current.progress + 10 });
-        }
-        return prev;
-      });
-    }, 200);
+      // Simulate progress
+      const progressInterval = setInterval(() => {
+        setUploadingFiles((prev) => {
+          const current = prev.get(id);
+          if (current && current.progress < 90) {
+            return new Map(prev).set(id, {
+              ...current,
+              progress: current.progress + 10,
+            });
+          }
+          return prev;
+        });
+      }, 200);
 
-    try {
-      const url = await onUpload(file);
-      clearInterval(progressInterval);
-      setUploadingFiles((prev) => {
-        const next = new Map(prev);
-        next.delete(id);
-        return next;
-      });
-      onChange([...value, url]);
-    } catch (err) {
-      clearInterval(progressInterval);
-      setUploadingFiles((prev) => {
-        const current = prev.get(id);
-        if (current) {
-          return new Map(prev).set(id, {
-            ...current,
-            error: err instanceof Error ? err.message : "Upload failed"
-          });
-        }
-        return prev;
-      });
-    }
-  }, [value, onChange, onUpload]);
+      try {
+        const url = await onUpload(file);
+        clearInterval(progressInterval);
+        setUploadingFiles((prev) => {
+          const next = new Map(prev);
+          next.delete(id);
+          return next;
+        });
+        onChange([...value, url]);
+      } catch (err) {
+        clearInterval(progressInterval);
+        setUploadingFiles((prev) => {
+          const current = prev.get(id);
+          if (current) {
+            return new Map(prev).set(id, {
+              ...current,
+              error: err instanceof Error ? err.message : "Upload failed",
+            });
+          }
+          return prev;
+        });
+      }
+    },
+    [value, onChange, onUpload],
+  );
 
-  const handleFiles = useCallback((files: FileList) => {
-    Array.from(files).forEach(handleUpload);
-  }, [handleUpload]);
+  const handleFiles = useCallback(
+    (files: FileList) => {
+      Array.from(files).forEach(handleUpload);
+    },
+    [handleUpload],
+  );
 
-  const handleDrop = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    if (!disabled && e.dataTransfer.files.length > 0) {
-      handleFiles(e.dataTransfer.files);
-    }
-  }, [disabled, handleFiles]);
+  const handleDrop = useCallback(
+    (e: React.DragEvent) => {
+      e.preventDefault();
+      if (!disabled && e.dataTransfer.files.length > 0) {
+        handleFiles(e.dataTransfer.files);
+      }
+    },
+    [disabled, handleFiles],
+  );
 
-  const handleRemove = useCallback((index: number) => {
-    onChange(value.filter((_, i) => i !== index));
-  }, [value, onChange]);
+  const handleRemove = useCallback(
+    (index: number) => {
+      onChange(value.filter((_, i) => i !== index));
+    },
+    [value, onChange],
+  );
 
   const handleRemoveUploading = useCallback((id: string) => {
     setUploadingFiles((prev) => {
@@ -357,36 +414,42 @@ export function GalleryUploader({
           ))}
 
           {/* Uploading items */}
-          {Array.from(uploadingFiles.entries()).map(([id, { progress, preview, error }]) => (
-            <div key={id} className="relative aspect-video">
-              <img
-                src={preview}
-                alt="Uploading"
-                className={cn(
-                  "w-full h-full object-cover rounded-lg border",
-                  !error && "opacity-50 blur-sm"
+          {Array.from(uploadingFiles.entries()).map(
+            ([id, { progress, preview, error }]) => (
+              <div key={id} className="relative aspect-video">
+                <img
+                  src={preview}
+                  alt="Uploading"
+                  className={cn(
+                    "w-full h-full object-cover rounded-lg border",
+                    !error && "opacity-50 blur-sm",
+                  )}
+                />
+                {error ? (
+                  <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/50 rounded-lg">
+                    <AlertCircle className="w-6 h-6 text-white mb-1" />
+                    <p className="text-white text-xs text-center px-2">
+                      {error}
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveUploading(id)}
+                      className="mt-2 text-xs text-white underline"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                ) : (
+                  <div className="absolute inset-0 flex flex-col items-center justify-center">
+                    <Loader2 className="w-6 h-6 text-white animate-spin mb-1" />
+                    <span className="text-white text-sm font-medium">
+                      {progress}%
+                    </span>
+                  </div>
                 )}
-              />
-              {error ? (
-                <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/50 rounded-lg">
-                  <AlertCircle className="w-6 h-6 text-white mb-1" />
-                  <p className="text-white text-xs text-center px-2">{error}</p>
-                  <button
-                    type="button"
-                    onClick={() => handleRemoveUploading(id)}
-                    className="mt-2 text-xs text-white underline"
-                  >
-                    Remove
-                  </button>
-                </div>
-              ) : (
-                <div className="absolute inset-0 flex flex-col items-center justify-center">
-                  <Loader2 className="w-6 h-6 text-white animate-spin mb-1" />
-                  <span className="text-white text-sm font-medium">{progress}%</span>
-                </div>
-              )}
-            </div>
-          ))}
+              </div>
+            ),
+          )}
         </div>
       )}
 
@@ -395,7 +458,7 @@ export function GalleryUploader({
         className={cn(
           "border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition-colors",
           "border-muted-foreground/25 hover:border-muted-foreground/50",
-          disabled && "opacity-50 cursor-not-allowed"
+          disabled && "opacity-50 cursor-not-allowed",
         )}
         onDragOver={(e) => e.preventDefault()}
         onDrop={handleDrop}
@@ -411,8 +474,12 @@ export function GalleryUploader({
           disabled={disabled}
         />
         <Upload className="w-6 h-6 text-muted-foreground mx-auto mb-2" />
-        <p className="text-sm text-muted-foreground">Drop images here or click to browse</p>
-        <p className="text-xs text-muted-foreground mt-1">Max {Math.round(maxSize / 1024 / 1024)}MB per image</p>
+        <p className="text-sm text-muted-foreground">
+          Drop images here or click to browse
+        </p>
+        <p className="text-xs text-muted-foreground mt-1">
+          Max {Math.round(maxSize / 1024 / 1024)}MB per image
+        </p>
       </div>
     </div>
   );

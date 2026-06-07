@@ -8,8 +8,8 @@
  * merchant page design - no drift possible.
  */
 
-import { EditorProvider } from "@/components/merchant-page/editor-context";
 import { PhotoStripDesign } from "@/components/merchant-page/designs/photo-strip";
+import { EditorProvider } from "@/components/merchant-page/editor-context";
 
 interface Hours {
   monday?: string;
@@ -91,7 +91,9 @@ export function UnifiedVisualEditor({
         description={data.description || null}
         vimeoUrl={data.vimeoUrl || null}
         googlePlaceId={data.googlePlaceId || null}
-        hours={data.hours && Object.keys(data.hours).length > 0 ? data.hours : null}
+        hours={
+          data.hours && Object.keys(data.hours).length > 0 ? data.hours : null
+        }
         instagramUrl={data.instagramUrl || null}
         facebookUrl={data.facebookUrl || null}
         tiktokUrl={data.tiktokUrl || null}

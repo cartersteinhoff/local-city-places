@@ -1,8 +1,8 @@
-import { NextRequest, NextResponse } from "next/server";
-import { getSession } from "@/lib/auth";
-import { db, surveys, surveyResponses, merchants } from "@/db";
-import { eq, desc, sql } from "drizzle-orm";
+import { desc, eq, sql } from "drizzle-orm";
+import { type NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
+import { db, merchants, surveyResponses, surveys } from "@/db";
+import { getSession } from "@/lib/auth";
 
 const questionSchema = z.object({
   id: z.string(),
@@ -14,13 +14,18 @@ const questionSchema = z.object({
 
 const createSurveySchema = z.object({
   title: z.string().min(1, "Title is required").max(255),
-  questions: z.array(questionSchema).min(1, "At least one question is required"),
+  questions: z
+    .array(questionSchema)
+    .min(1, "At least one question is required"),
 });
 
 export async function GET() {
   try {
     const session = await getSession();
-    if (!session || (session.user.role !== "merchant" && session.user.role !== "admin")) {
+    if (
+      !session ||
+      (session.user.role !== "merchant" && session.user.role !== "admin")
+    ) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -32,7 +37,10 @@ export async function GET() {
       .limit(1);
 
     if (!merchant) {
-      return NextResponse.json({ error: "Merchant not found" }, { status: 404 });
+      return NextResponse.json(
+        { error: "Merchant not found" },
+        { status: 404 },
+      );
     }
 
     // Get surveys with response counts
@@ -51,24 +59,34 @@ export async function GET() {
     // Get response counts for each survey
     const surveyIds = surveysRaw.map((s) => s.id);
 
-    const responseCounts = surveyIds.length > 0
-      ? await db
-          .select({
-            surveyId: surveyResponses.surveyId,
-            count: sql<number>`count(*)::int`,
-            lastResponseAt: sql<Date>`max(${surveyResponses.createdAt})`,
-          })
-          .from(surveyResponses)
-          .where(sql`${surveyResponses.surveyId} = ANY(${surveyIds})`)
-          .groupBy(surveyResponses.surveyId)
-      : [];
+    const responseCounts =
+      surveyIds.length > 0
+        ? await db
+            .select({
+              surveyId: surveyResponses.surveyId,
+              count: sql<number>`count(*)::int`,
+              lastResponseAt: sql<Date>`max(${surveyResponses.createdAt})`,
+            })
+            .from(surveyResponses)
+            .where(sql`${surveyResponses.surveyId} = ANY(${surveyIds})`)
+            .groupBy(surveyResponses.surveyId)
+        : [];
 
     const responseMap = new Map(
-      responseCounts.map((r) => [r.surveyId, { count: r.count, lastResponseAt: r.lastResponseAt }])
+      responseCounts.map((r) => [
+        r.surveyId,
+        { count: r.count, lastResponseAt: r.lastResponseAt },
+      ]),
     );
 
     const formattedSurveys = surveysRaw.map((s) => {
-      const questions = s.questions as { id: string; text: string; type: string; options?: string[]; required: boolean }[];
+      const questions = s.questions as {
+        id: string;
+        text: string;
+        type: string;
+        options?: string[];
+        required: boolean;
+      }[];
       const responseData = responseMap.get(s.id);
 
       return {
@@ -87,7 +105,7 @@ export async function GET() {
     console.error("Surveys API error:", error);
     return NextResponse.json(
       { error: "Internal server error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -95,7 +113,10 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     const session = await getSession();
-    if (!session || (session.user.role !== "merchant" && session.user.role !== "admin")) {
+    if (
+      !session ||
+      (session.user.role !== "merchant" && session.user.role !== "admin")
+    ) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -107,7 +128,10 @@ export async function POST(request: NextRequest) {
       .limit(1);
 
     if (!merchant) {
-      return NextResponse.json({ error: "Merchant not found" }, { status: 404 });
+      return NextResponse.json(
+        { error: "Merchant not found" },
+        { status: 404 },
+      );
     }
 
     const body = await request.json();
@@ -116,7 +140,7 @@ export async function POST(request: NextRequest) {
     if (!parsed.success) {
       return NextResponse.json(
         { error: "Invalid input", details: parsed.error.flatten() },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -147,7 +171,7 @@ export async function POST(request: NextRequest) {
     console.error("Create survey error:", error);
     return NextResponse.json(
       { error: "Internal server error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

@@ -1,12 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { Check, Copy, ExternalLink, Loader2 } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 import { DashboardLayout } from "@/components/layout";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { Loader2, Check, Copy, ExternalLink } from "lucide-react";
 import { useUser } from "@/hooks/use-user";
 import { adminNavItems } from "../../nav";
 import { MerchantForm } from "../_components/merchant-form";
@@ -59,7 +59,10 @@ export default function CreateMerchantPage() {
 
   const copyToClipboard = async (text: string, type: string) => {
     try {
-      const fullUrl = typeof window !== "undefined" ? `${window.location.origin}${text}` : text;
+      const fullUrl =
+        typeof window !== "undefined"
+          ? `${window.location.origin}${text}`
+          : text;
       await navigator.clipboard.writeText(fullUrl);
       setCopiedUrl(type);
       setTimeout(() => setCopiedUrl(null), 2000);
@@ -75,7 +78,10 @@ export default function CreateMerchantPage() {
     return path;
   };
 
-  const handleSuccess = (data: { id: string; urls: { full: string; short: string } }) => {
+  const handleSuccess = (data: {
+    id: string;
+    urls: { full: string; short: string };
+  }) => {
     setSuccess({ id: data.id, urls: data.urls });
   };
 
@@ -95,7 +101,9 @@ export default function CreateMerchantPage() {
 
           <div className="space-y-4 mb-8">
             <div className="bg-card border rounded-lg p-4">
-              <Label className="text-sm text-muted-foreground">Short URL (for sharing)</Label>
+              <Label className="text-sm text-muted-foreground">
+                Short URL (for sharing)
+              </Label>
               <div className="flex items-center gap-2 mt-1">
                 <code className="flex-1 text-sm bg-muted px-3 py-2 rounded truncate">
                   {getFullUrl(success.urls.short)}
@@ -115,7 +123,9 @@ export default function CreateMerchantPage() {
             </div>
 
             <div className="bg-card border rounded-lg p-4">
-              <Label className="text-sm text-muted-foreground">Full URL (SEO-friendly)</Label>
+              <Label className="text-sm text-muted-foreground">
+                Full URL (SEO-friendly)
+              </Label>
               <div className="flex items-center gap-2 mt-1">
                 <code className="flex-1 text-sm bg-muted px-3 py-2 rounded truncate">
                   {getFullUrl(success.urls.full)}
@@ -137,9 +147,7 @@ export default function CreateMerchantPage() {
 
           <div className="flex gap-3">
             <Button variant="outline" className="flex-1" asChild>
-              <Link href="/admin/merchants">
-                Back to List
-              </Link>
+              <Link href="/admin/merchants">Back to List</Link>
             </Button>
             <Button className="flex-1" asChild>
               <Link href={`/admin/merchants/${success.id}/edit`}>
@@ -150,7 +158,11 @@ export default function CreateMerchantPage() {
 
           <div className="flex gap-3 mt-3">
             <Button variant="outline" className="flex-1" asChild>
-              <a href={success.urls.full} target="_blank" rel="noopener noreferrer">
+              <a
+                href={success.urls.full}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
                 <ExternalLink className="w-4 h-4 mr-2" />
                 View Page
               </a>

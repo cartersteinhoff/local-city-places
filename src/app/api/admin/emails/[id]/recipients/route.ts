@@ -1,23 +1,26 @@
-import { NextRequest, NextResponse } from "next/server";
-import { getSession } from "@/lib/auth";
+import { and, eq, isNotNull, sql } from "drizzle-orm";
+import { type NextRequest, NextResponse } from "next/server";
 import { db } from "@/db";
 import { campaignRecipients } from "@/db/schema";
-import { eq, and, isNotNull, sql } from "drizzle-orm";
+import { getSession } from "@/lib/auth";
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     const session = await getSession();
-    if (!session || session.user.role !== "admin") {
+    if (session?.user.role !== "admin") {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const { id } = await params;
     const { searchParams } = new URL(request.url);
-    const page = Math.max(1, parseInt(searchParams.get("page") || "1"));
-    const limit = Math.min(100, Math.max(1, parseInt(searchParams.get("limit") || "20")));
+    const page = Math.max(1, parseInt(searchParams.get("page") || "1", 10));
+    const limit = Math.min(
+      100,
+      Math.max(1, parseInt(searchParams.get("limit") || "20", 10)),
+    );
     const filter = searchParams.get("filter"); // all, sent, opened, clicked, bounced
 
     const offset = (page - 1) * limit;
@@ -26,13 +29,25 @@ export async function GET(
     let whereCondition = eq(campaignRecipients.campaignId, id);
 
     if (filter === "sent") {
-      whereCondition = and(whereCondition, isNotNull(campaignRecipients.sentAt))!;
+      whereCondition = and(
+        whereCondition,
+        isNotNull(campaignRecipients.sentAt),
+      )!;
     } else if (filter === "opened") {
-      whereCondition = and(whereCondition, isNotNull(campaignRecipients.openedAt))!;
+      whereCondition = and(
+        whereCondition,
+        isNotNull(campaignRecipients.openedAt),
+      )!;
     } else if (filter === "clicked") {
-      whereCondition = and(whereCondition, isNotNull(campaignRecipients.clickedAt))!;
+      whereCondition = and(
+        whereCondition,
+        isNotNull(campaignRecipients.clickedAt),
+      )!;
     } else if (filter === "bounced") {
-      whereCondition = and(whereCondition, isNotNull(campaignRecipients.bouncedAt))!;
+      whereCondition = and(
+        whereCondition,
+        isNotNull(campaignRecipients.bouncedAt),
+      )!;
     }
 
     // Get total count
@@ -73,6 +88,9 @@ export async function GET(
     });
   } catch (error) {
     console.error("Get recipients error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 },
+    );
   }
 }

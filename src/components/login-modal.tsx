@@ -1,97 +1,104 @@
-"use client"
+"use client";
 
-import { useEffect, useState } from "react"
+import { AlertCircle, CheckCircle, Loader2 } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "@/components/ui/tooltip"
-import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
-import { Label } from "@/components/ui/label"
-import { Loader2, CheckCircle, AlertCircle } from "lucide-react"
+} from "@/components/ui/tooltip";
 
 interface LoginModalProps {
-  open: boolean
-  onOpenChange: (open: boolean) => void
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
   /** URL to redirect to after login. Defaults to current page. */
-  callbackUrl?: string
+  callbackUrl?: string;
   /** Optional email to prefill when opening the modal. */
-  defaultEmail?: string
+  defaultEmail?: string;
 }
 
-type Status = "idle" | "loading" | "success" | "error"
+type Status = "idle" | "loading" | "success" | "error";
 
-export function LoginModal({ open, onOpenChange, callbackUrl, defaultEmail }: LoginModalProps) {
-  const [email, setEmail] = useState(defaultEmail ?? "")
-  const [status, setStatus] = useState<Status>("idle")
-  const [errorMessage, setErrorMessage] = useState("")
-  const [devToken, setDevToken] = useState<string | null>(null)
+export function LoginModal({
+  open,
+  onOpenChange,
+  callbackUrl,
+  defaultEmail,
+}: LoginModalProps) {
+  const [email, setEmail] = useState(defaultEmail ?? "");
+  const [status, setStatus] = useState<Status>("idle");
+  const [errorMessage, setErrorMessage] = useState("");
+  const [devToken, setDevToken] = useState<string | null>(null);
 
   useEffect(() => {
     if (open) {
-      setEmail(defaultEmail ?? "")
+      setEmail(defaultEmail ?? "");
     }
-  }, [defaultEmail, open])
+  }, [defaultEmail, open]);
 
   // Use provided callbackUrl or default to current page
   const getCallbackUrl = () => {
-    if (callbackUrl) return callbackUrl
+    if (callbackUrl) return callbackUrl;
     if (typeof window !== "undefined") {
-      return window.location.pathname + window.location.search
+      return window.location.pathname + window.location.search;
     }
-    return undefined
-  }
+    return undefined;
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setStatus("loading")
-    setErrorMessage("")
-    setDevToken(null)
+    e.preventDefault();
+    setStatus("loading");
+    setErrorMessage("");
+    setDevToken(null);
 
     try {
       const response = await fetch("/api/auth/magic-link", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, callbackUrl: getCallbackUrl() }),
-      })
+      });
 
-      const data = await response.json()
+      const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || "Failed to send magic link")
+        throw new Error(data.error || "Failed to send magic link");
       }
 
       // In dev mode, the API returns the token directly
       if (data.token) {
-        setDevToken(data.token)
+        setDevToken(data.token);
       }
 
-      setStatus("success")
+      setStatus("success");
     } catch (error) {
-      setStatus("error")
-      setErrorMessage(error instanceof Error ? error.message : "Something went wrong")
+      setStatus("error");
+      setErrorMessage(
+        error instanceof Error ? error.message : "Something went wrong",
+      );
     }
-  }
+  };
 
   const handleOpenChange = (open: boolean) => {
     if (!open) {
       // Reset state when closing
-      setEmail("")
-      setStatus("idle")
-      setErrorMessage("")
-      setDevToken(null)
+      setEmail("");
+      setStatus("idle");
+      setErrorMessage("");
+      setDevToken(null);
     }
-    onOpenChange(open)
-  }
+    onOpenChange(open);
+  };
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
@@ -108,7 +115,8 @@ export function LoginModal({ open, onOpenChange, callbackUrl, defaultEmail }: Lo
                   </span>
                 </TooltipTrigger>
                 <TooltipContent side="top" sideOffset={4}>
-                  A secure, password-free login link sent to your email. Just click it to sign in!
+                  A secure, password-free login link sent to your email. Just
+                  click it to sign in!
                 </TooltipContent>
               </Tooltip>
               .
@@ -122,15 +130,19 @@ export function LoginModal({ open, onOpenChange, callbackUrl, defaultEmail }: Lo
                 {devToken ? "Click to sign in" : "Check your email!"}
               </h3>
               <p className="text-muted-foreground text-base mb-2">
-                {devToken
-                  ? "Dev mode - click the button below to complete sign in"
-                  : <>We sent a sign-in link to <strong>{email}</strong></>
-                }
+                {devToken ? (
+                  "Dev mode - click the button below to complete sign in"
+                ) : (
+                  <>
+                    We sent a sign-in link to <strong>{email}</strong>
+                  </>
+                )}
               </p>
               {!devToken && (
                 <>
                   <p className="text-muted-foreground text-base mb-6">
-                    A magic link is a secure, one-time login link - no password needed. Just click the link in your email to sign in.
+                    A magic link is a secure, one-time login link - no password
+                    needed. Just click the link in your email to sign in.
                   </p>
                   <div className="w-full bg-yellow-50 dark:bg-yellow-950/30 border border-yellow-300 dark:border-yellow-800 rounded-lg px-4 py-3 text-base font-medium text-yellow-800 dark:text-yellow-300">
                     You can close this tab.
@@ -142,9 +154,7 @@ export function LoginModal({ open, onOpenChange, callbackUrl, defaultEmail }: Lo
                   asChild
                   className="bg-primary-gradient hover:opacity-90 mt-4"
                 >
-                  <a href={`/api/auth/verify?token=${devToken}`}>
-                    Sign In Now
-                  </a>
+                  <a href={`/api/auth/verify?token=${devToken}`}>Sign In Now</a>
                 </Button>
               )}
             </div>
@@ -170,7 +180,11 @@ export function LoginModal({ open, onOpenChange, callbackUrl, defaultEmail }: Lo
                 </div>
               )}
 
-              <Button type="submit" className="w-full" disabled={status === "loading"}>
+              <Button
+                type="submit"
+                className="w-full"
+                disabled={status === "loading"}
+              >
                 {status === "loading" ? (
                   <>
                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
@@ -185,5 +199,5 @@ export function LoginModal({ open, onOpenChange, callbackUrl, defaultEmail }: Lo
         </DialogContent>
       </TooltipProvider>
     </Dialog>
-  )
+  );
 }

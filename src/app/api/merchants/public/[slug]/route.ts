@@ -1,11 +1,11 @@
-import { NextRequest, NextResponse } from "next/server";
-import { db } from "@/db";
-import { merchants, categories } from "@/db/schema";
 import { eq } from "drizzle-orm";
+import { type NextRequest, NextResponse } from "next/server";
+import { db } from "@/db";
+import { categories, merchants } from "@/db/schema";
 
 export async function GET(
-  request: NextRequest,
-  { params }: { params: Promise<{ slug: string }> }
+  _request: NextRequest,
+  { params }: { params: Promise<{ slug: string }> },
 ) {
   try {
     const { slug } = await params;
@@ -41,7 +41,10 @@ export async function GET(
       .limit(1);
 
     if (!merchant) {
-      return NextResponse.json({ error: "Merchant not found" }, { status: 404 });
+      return NextResponse.json(
+        { error: "Merchant not found" },
+        { status: 404 },
+      );
     }
 
     return NextResponse.json({ merchant });
@@ -49,7 +52,7 @@ export async function GET(
     console.error("Error fetching public merchant:", error);
     return NextResponse.json(
       { error: "Failed to fetch merchant" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

@@ -1,23 +1,23 @@
 "use client";
 
 import {
-  DndContext,
   closestCenter,
+  DndContext,
+  type DragEndEvent,
   KeyboardSensor,
+  MeasuringStrategy,
   PointerSensor,
   useSensor,
   useSensors,
-  DragEndEvent,
-  MeasuringStrategy,
 } from "@dnd-kit/core";
 import {
+  type AnimateLayoutChanges,
   arrayMove,
+  defaultAnimateLayoutChanges,
+  rectSortingStrategy,
   SortableContext,
   sortableKeyboardCoordinates,
   useSortable,
-  rectSortingStrategy,
-  defaultAnimateLayoutChanges,
-  AnimateLayoutChanges,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { cn } from "@/lib/utils";
@@ -71,8 +71,9 @@ function SortableItem({ id, children, className }: SortableItemProps) {
       style={style}
       className={cn(
         "touch-none select-none cursor-grab active:cursor-grabbing",
-        isDragging && "shadow-xl ring-2 ring-primary/50 rounded-lg scale-[1.02]",
-        className
+        isDragging &&
+          "shadow-xl ring-2 ring-primary/50 rounded-lg scale-[1.02]",
+        className,
       )}
       {...attributes}
       {...listeners}
@@ -107,7 +108,7 @@ export function SortableGrid<T>({
     }),
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,
-    })
+    }),
   );
 
   const itemIds = items.map((item, index) => getItemId(item, index));

@@ -1,9 +1,13 @@
-import { NextRequest, NextResponse } from "next/server";
-import { db } from "@/db";
-import { users, members } from "@/db/schema";
 import { eq } from "drizzle-orm";
+import { type NextRequest, NextResponse } from "next/server";
+import { db } from "@/db";
+import { members, users } from "@/db/schema";
 import { getSession } from "@/lib/auth";
-import { uploadProfilePhoto, validateImageFormat, validateImageSize } from "@/lib/storage";
+import {
+  uploadProfilePhoto,
+  validateImageFormat,
+  validateImageSize,
+} from "@/lib/storage";
 
 export async function GET() {
   try {
@@ -28,7 +32,7 @@ export async function GET() {
     if (!member) {
       return NextResponse.json(
         { error: "Member profile not found" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -54,7 +58,7 @@ export async function GET() {
     console.error("Error fetching profile:", error);
     return NextResponse.json(
       { error: "Failed to fetch profile" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -89,7 +93,7 @@ export async function PATCH(request: NextRequest) {
     if (!member) {
       return NextResponse.json(
         { error: "Member profile not found" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -100,18 +104,21 @@ export async function PATCH(request: NextRequest) {
       if (!formatValidation.valid) {
         return NextResponse.json(
           { error: formatValidation.error },
-          { status: 400 }
+          { status: 400 },
         );
       }
 
       const sizeValidation = validateImageSize(profilePhoto, 5 * 1024 * 1024); // 5MB limit
       if (!sizeValidation.valid) {
-        return NextResponse.json({ error: sizeValidation.error }, { status: 413 });
+        return NextResponse.json(
+          { error: sizeValidation.error },
+          { status: 413 },
+        );
       }
 
       profilePhotoUrl = await uploadProfilePhoto(
         profilePhoto,
-        `member-${member.id}.jpg`
+        `member-${member.id}.jpg`,
       );
     }
 
@@ -120,7 +127,8 @@ export async function PATCH(request: NextRequest) {
     if (firstName !== undefined) userUpdates.firstName = firstName;
     if (lastName !== undefined) userUpdates.lastName = lastName;
     if (phone !== undefined) userUpdates.phone = phone;
-    if (notificationPrefs !== undefined) userUpdates.notificationPrefs = notificationPrefs;
+    if (notificationPrefs !== undefined)
+      userUpdates.notificationPrefs = notificationPrefs;
     if (profilePhotoUrl) userUpdates.profilePhotoUrl = profilePhotoUrl;
 
     if (Object.keys(userUpdates).length > 0) {
@@ -147,10 +155,8 @@ export async function PATCH(request: NextRequest) {
     return NextResponse.json({ success: true, profilePhotoUrl });
   } catch (error) {
     console.error("Error updating profile:", error);
-    const message = error instanceof Error ? error.message : "Failed to update profile";
-    return NextResponse.json(
-      { error: message },
-      { status: 500 }
-    );
+    const message =
+      error instanceof Error ? error.message : "Failed to update profile";
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }

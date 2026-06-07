@@ -1,12 +1,18 @@
 "use client";
 
-import { Suspense, useState, useEffect } from "react";
+import { AlertCircle, CheckCircle2, Loader2, Mail } from "lucide-react";
 import { useSearchParams } from "next/navigation";
+import { Suspense, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { Loader2, Mail, CheckCircle2, AlertCircle } from "lucide-react";
 
 interface EmailPreferences {
   email: string;
@@ -55,7 +61,7 @@ function UnsubscribeContent() {
           const data = await res.json();
           setError(data.error || "Failed to load preferences");
         }
-      } catch (err) {
+      } catch (_err) {
         setError("Failed to load email preferences");
       } finally {
         setIsLoading(false);
@@ -88,7 +94,7 @@ function UnsubscribeContent() {
         const data = await res.json();
         setError(data.error || "Failed to update preferences");
       }
-    } catch (err) {
+    } catch (_err) {
       setError("Failed to save preferences");
     } finally {
       setIsSaving(false);
@@ -121,7 +127,7 @@ function UnsubscribeContent() {
         const data = await res.json();
         setError(data.error || "Failed to update preferences");
       }
-    } catch (err) {
+    } catch (_err) {
       setError("Failed to save preferences");
     } finally {
       setIsSaving(false);
@@ -175,7 +181,9 @@ function UnsubscribeContent() {
         <CardTitle>Email Preferences</CardTitle>
         <CardDescription>
           Manage your email subscription for{" "}
-          <span className="font-medium text-foreground">{preferences?.email}</span>
+          <span className="font-medium text-foreground">
+            {preferences?.email}
+          </span>
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
@@ -238,7 +246,9 @@ function UnsubscribeContent() {
               <span className="w-full border-t" />
             </div>
             <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-background px-2 text-muted-foreground">or</span>
+              <span className="bg-background px-2 text-muted-foreground">
+                or
+              </span>
             </div>
           </div>
 

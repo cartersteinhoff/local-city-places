@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useRef, useEffect, KeyboardEvent } from "react";
-import { cn } from "@/lib/utils";
 import { Pencil } from "lucide-react";
+import { type KeyboardEvent, useEffect, useRef, useState } from "react";
+import { cn } from "@/lib/utils";
 
 interface EditableTextProps {
   value: string;
@@ -68,15 +68,16 @@ export function EditableText({
     const sharedProps = {
       ref: inputRef as any,
       value: editValue,
-      onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
-        setEditValue(e.target.value),
+      onChange: (
+        e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+      ) => setEditValue(e.target.value),
       onBlur: handleBlur,
       onKeyDown: handleKeyDown,
       maxLength,
       className: cn(
         "w-full bg-transparent border-2 border-blue-500 rounded px-2 py-1 outline-none",
         "text-inherit font-inherit",
-        inputClassName
+        inputClassName,
       ),
       placeholder,
     };
@@ -102,14 +103,14 @@ export function EditableText({
         "hover:outline hover:outline-2 hover:outline-blue-500 hover:outline-offset-2 rounded",
         "transition-all duration-150",
         !value && "text-gray-400 italic",
-        className
+        className,
       )}
     >
       {value || placeholder}
       <Pencil
         className={cn(
           "absolute -right-6 top-1/2 -translate-y-1/2 w-4 h-4 opacity-0 group-hover:opacity-100 text-blue-500 transition-opacity",
-          editIconClassName
+          editIconClassName,
         )}
       />
     </Component>

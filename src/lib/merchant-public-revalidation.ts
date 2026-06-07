@@ -7,7 +7,9 @@ interface MerchantPublicIdentity {
   slug?: string | null;
 }
 
-export function revalidateMerchantPublicPaths(...merchants: MerchantPublicIdentity[]) {
+export function revalidateMerchantPublicPaths(
+  ...merchants: MerchantPublicIdentity[]
+) {
   const paths = new Set<string>(["/api/featured-merchants"]);
 
   for (const merchant of merchants) {
@@ -18,7 +20,9 @@ export function revalidateMerchantPublicPaths(...merchants: MerchantPublicIdenti
     paths.add(`/api/merchants/public/${merchant.slug}`);
 
     if (merchant.city && merchant.state) {
-      paths.add(getMerchantPageUrl(merchant.city, merchant.state, merchant.slug));
+      paths.add(
+        getMerchantPageUrl(merchant.city, merchant.state, merchant.slug),
+      );
     }
   }
 

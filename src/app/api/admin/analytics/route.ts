@@ -3,7 +3,6 @@ import { type NextRequest, NextResponse } from "next/server";
 import {
   db,
   favoriteMerchantTestimonials,
-  members,
   merchants,
   reviews,
   sweepstakesEntries,
@@ -30,7 +29,7 @@ function getStartDate(range: string) {
 export async function GET(request: NextRequest) {
   try {
     const session = await getSession();
-    if (!session || session.user.role !== "admin") {
+    if (session?.user.role !== "admin") {
       return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
     }
 

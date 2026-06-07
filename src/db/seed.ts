@@ -1,8 +1,9 @@
 import { config } from "dotenv";
+
 config({ path: ".env.local" });
 
-import { drizzle } from "drizzle-orm/postgres-js";
 import { eq } from "drizzle-orm";
+import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 import { categories, members, merchants, surveys, users } from "./schema";
 
@@ -72,7 +73,11 @@ async function seed() {
       if (existingUser.role !== "admin") {
         await db
           .update(users)
-          .set({ role: "admin", firstName: admin.firstName, lastName: admin.lastName })
+          .set({
+            role: "admin",
+            firstName: admin.firstName,
+            lastName: admin.lastName,
+          })
           .where(eq(users.id, existingUser.id));
         console.log(`Updated ${admin.email} to admin role`);
       } else {

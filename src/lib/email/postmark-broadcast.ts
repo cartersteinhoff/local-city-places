@@ -4,9 +4,11 @@
 import { wrapInBaseTemplate } from "./base-template";
 
 const POSTMARK_API_KEY = process.env.POSTMARK_API_KEY;
-const FROM_EMAIL = process.env.POSTMARK_FROM_EMAIL || "team@localcityplaces.com";
+const FROM_EMAIL =
+  process.env.POSTMARK_FROM_EMAIL || "team@localcityplaces.com";
 const FROM_NAME = process.env.POSTMARK_FROM_NAME || "Local City Places";
-const BROADCAST_STREAM = process.env.POSTMARK_BROADCAST_STREAM || "localcityplaces";
+const BROADCAST_STREAM =
+  process.env.POSTMARK_BROADCAST_STREAM || "localcityplaces";
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
 
 export interface BroadcastRecipient {
@@ -61,7 +63,10 @@ export async function sendBroadcastEmail({
     return {
       successCount: recipients.length,
       failures: [],
-      successes: recipients.map(r => ({ email: r.email, messageId: `mock-${Date.now()}` })),
+      successes: recipients.map((r) => ({
+        email: r.email,
+        messageId: `mock-${Date.now()}`,
+      })),
     };
   }
 
@@ -90,11 +95,16 @@ export async function sendBroadcastEmail({
 
         // Personalize subject and content
         const personalizedSubject = personalizeContent(subject, recipient);
-        const personalizedHtmlContent = personalizeContent(htmlContent, recipient);
+        const personalizedHtmlContent = personalizeContent(
+          htmlContent,
+          recipient,
+        );
 
         // Wrap in base template with unsubscribe link
         const wrappedHtml = wrapInBaseTemplate(personalizedHtmlContent, {
-          preheaderText: previewText ? personalizeContent(previewText, recipient) : undefined,
+          preheaderText: previewText
+            ? personalizeContent(previewText, recipient)
+            : undefined,
           showUnsubscribe: true,
           unsubscribeUrl,
         });
@@ -107,7 +117,7 @@ export async function sendBroadcastEmail({
           To: recipient.email,
           Subject: personalizedSubject,
           HtmlBody: wrappedHtml,
-          TextBody: textContent + `\n\n---\nTo unsubscribe: ${unsubscribeUrl}`,
+          TextBody: `${textContent}\n\n---\nTo unsubscribe: ${unsubscribeUrl}`,
           ReplyTo: replyTo,
           MessageStream: BROADCAST_STREAM,
           Tag: campaignId ? `campaign_${campaignId}` : undefined,
@@ -155,7 +165,10 @@ export async function sendBroadcastEmail({
 
         // Process individual results
         data.forEach(
-          (result: { ErrorCode: number; MessageID?: string; Message?: string }, index: number) => {
+          (
+            result: { ErrorCode: number; MessageID?: string; Message?: string },
+            index: number,
+          ) => {
             if (result.ErrorCode === 0 && result.MessageID) {
               results.successCount++;
 
@@ -174,7 +187,7 @@ export async function sendBroadcastEmail({
                 error: result.Message || "Unknown error",
               });
             }
-          }
+          },
         );
       }
     } catch (error) {
@@ -197,7 +210,10 @@ export async function sendBroadcastEmail({
  * Personalizes content with recipient variables
  * Supports: {{name}}, {{firstName}}, {{email}}, and custom variables
  */
-function personalizeContent(content: string, recipient: BroadcastRecipient): string {
+function personalizeContent(
+  content: string,
+  recipient: BroadcastRecipient,
+): string {
   let personalized = content;
 
   // Replace basic variables
@@ -205,7 +221,7 @@ function personalizeContent(content: string, recipient: BroadcastRecipient): str
     personalized = personalized.replace(/\{\{name\}\}/g, recipient.name);
     personalized = personalized.replace(
       /\{\{firstName\}\}/g,
-      recipient.name.split(" ")[0]
+      recipient.name.split(" ")[0],
     );
   } else {
     // Fallback for missing name
@@ -230,30 +246,32 @@ function personalizeContent(content: string, recipient: BroadcastRecipient): str
  * Converts HTML to plain text (basic version)
  */
 function htmlToText(html: string): string {
-  return html
-    // Remove style and script tags with content
-    .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, "")
-    .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, "")
-    // Convert links to text with URL
-    .replace(/<a[^>]*href="([^"]*)"[^>]*>([^<]*)<\/a>/gi, "$2 ($1)")
-    // Convert line breaks
-    .replace(/<br\s*\/?>/gi, "\n")
-    .replace(/<\/p>/gi, "\n\n")
-    .replace(/<\/div>/gi, "\n")
-    .replace(/<\/h[1-6]>/gi, "\n\n")
-    .replace(/<li>/gi, "- ")
-    .replace(/<\/li>/gi, "\n")
-    // Remove remaining HTML tags
-    .replace(/<[^>]+>/g, "")
-    // Decode HTML entities
-    .replace(/&nbsp;/g, " ")
-    .replace(/&amp;/g, "&")
-    .replace(/&lt;/g, "<")
-    .replace(/&gt;/g, ">")
-    .replace(/&quot;/g, '"')
-    // Clean up whitespace
-    .replace(/\n\s*\n\s*\n/g, "\n\n")
-    .trim();
+  return (
+    html
+      // Remove style and script tags with content
+      .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, "")
+      .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, "")
+      // Convert links to text with URL
+      .replace(/<a[^>]*href="([^"]*)"[^>]*>([^<]*)<\/a>/gi, "$2 ($1)")
+      // Convert line breaks
+      .replace(/<br\s*\/?>/gi, "\n")
+      .replace(/<\/p>/gi, "\n\n")
+      .replace(/<\/div>/gi, "\n")
+      .replace(/<\/h[1-6]>/gi, "\n\n")
+      .replace(/<li>/gi, "- ")
+      .replace(/<\/li>/gi, "\n")
+      // Remove remaining HTML tags
+      .replace(/<[^>]+>/g, "")
+      // Decode HTML entities
+      .replace(/&nbsp;/g, " ")
+      .replace(/&amp;/g, "&")
+      .replace(/&lt;/g, "<")
+      .replace(/&gt;/g, ">")
+      .replace(/&quot;/g, '"')
+      // Clean up whitespace
+      .replace(/\n\s*\n\s*\n/g, "\n\n")
+      .trim()
+  );
 }
 
 /**
@@ -280,6 +298,9 @@ export async function sendTestEmail({
   if (result.successCount > 0) {
     return { success: true };
   } else {
-    return { success: false, error: result.failures[0]?.error || "Unknown error" };
+    return {
+      success: false,
+      error: result.failures[0]?.error || "Unknown error",
+    };
   }
 }

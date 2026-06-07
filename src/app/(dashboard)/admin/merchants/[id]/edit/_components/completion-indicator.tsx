@@ -1,16 +1,26 @@
 "use client";
 
-import { calculateCompletion, MerchantData } from "@/lib/merchant-completion";
-import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
-import { cn } from "@/lib/utils";
 import { CheckCircle2, Sparkles } from "lucide-react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import {
+  calculateCompletion,
+  type MerchantData,
+} from "@/lib/merchant-completion";
+import { cn } from "@/lib/utils";
 
 interface CompletionIndicatorProps {
   data: MerchantData;
   className?: string;
 }
 
-export function CompletionIndicator({ data, className }: CompletionIndicatorProps) {
+export function CompletionIndicator({
+  data,
+  className,
+}: CompletionIndicatorProps) {
   const completion = calculateCompletion(data);
   const isComplete = completion.percentage === 100;
 
@@ -22,15 +32,17 @@ export function CompletionIndicator({ data, className }: CompletionIndicatorProp
           <div
             className={cn(
               "h-full transition-all duration-500 ease-out rounded-full",
-              isComplete ? "bg-green-500" : "bg-primary"
+              isComplete ? "bg-green-500" : "bg-primary",
             )}
             style={{ width: `${completion.percentage}%` }}
           />
         </div>
-        <span className={cn(
-          "text-sm font-medium tabular-nums min-w-[4rem] text-right",
-          isComplete ? "text-green-600" : "text-muted-foreground"
-        )}>
+        <span
+          className={cn(
+            "text-sm font-medium tabular-nums min-w-[4rem] text-right",
+            isComplete ? "text-green-600" : "text-muted-foreground",
+          )}
+        >
           {completion.percentage}%
           {isComplete && <Sparkles className="w-4 h-4 inline ml-1" />}
         </span>
@@ -51,16 +63,20 @@ export function CompletionIndicator({ data, className }: CompletionIndicatorProp
                     "flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium transition-colors",
                     isSectionComplete && "bg-green-100 text-green-700",
                     hasPartial && "bg-yellow-100 text-yellow-700",
-                    !isSectionComplete && !hasPartial && "bg-muted text-muted-foreground"
+                    !isSectionComplete &&
+                      !hasPartial &&
+                      "bg-muted text-muted-foreground",
                   )}
                 >
                   {isSectionComplete ? (
                     <CheckCircle2 className="w-3 h-3" />
                   ) : (
-                    <span className={cn(
-                      "w-2 h-2 rounded-full",
-                      hasPartial ? "bg-yellow-500" : "bg-muted-foreground/30"
-                    )} />
+                    <span
+                      className={cn(
+                        "w-2 h-2 rounded-full",
+                        hasPartial ? "bg-yellow-500" : "bg-muted-foreground/30",
+                      )}
+                    />
                   )}
                   {section.label}
                 </button>
@@ -78,7 +94,9 @@ export function CompletionIndicator({ data, className }: CompletionIndicatorProp
                     </ul>
                   </div>
                 ) : (
-                  <p>{section.completed}/{section.total} fields complete</p>
+                  <p>
+                    {section.completed}/{section.total} fields complete
+                  </p>
                 )}
               </TooltipContent>
             </Tooltip>
@@ -97,16 +115,22 @@ export function CompletionBadge({ data }: { data: MerchantData }) {
   return (
     <Tooltip>
       <TooltipTrigger asChild>
-        <span className={cn(
-          "inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium",
-          isComplete ? "bg-green-100 text-green-700" : "bg-muted text-muted-foreground"
-        )}>
+        <span
+          className={cn(
+            "inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium",
+            isComplete
+              ? "bg-green-100 text-green-700"
+              : "bg-muted text-muted-foreground",
+          )}
+        >
           {isComplete && <CheckCircle2 className="w-3 h-3" />}
           {completion.percentage}%
         </span>
       </TooltipTrigger>
       <TooltipContent>
-        <p>{completion.completed}/{completion.total} fields complete</p>
+        <p>
+          {completion.completed}/{completion.total} fields complete
+        </p>
       </TooltipContent>
     </Tooltip>
   );

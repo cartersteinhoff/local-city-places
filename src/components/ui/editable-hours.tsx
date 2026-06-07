@@ -1,10 +1,17 @@
 "use client";
 
+import { X } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
-import { Clock, X } from "lucide-react";
 
-type DayKey = "monday" | "tuesday" | "wednesday" | "thursday" | "friday" | "saturday" | "sunday";
+type DayKey =
+  | "monday"
+  | "tuesday"
+  | "wednesday"
+  | "thursday"
+  | "friday"
+  | "saturday"
+  | "sunday";
 
 interface Hours {
   monday?: string;
@@ -27,7 +34,7 @@ interface EditableHoursProps {
     hours: string | undefined,
     setHours: (value: string | undefined) => void,
     isEditing: boolean,
-    setIsEditing: (editing: boolean) => void
+    setIsEditing: (editing: boolean) => void,
   ) => React.ReactNode;
 }
 
@@ -44,15 +51,47 @@ const DAYS: { key: DayKey; label: string }[] = [
 const TIME_OPTIONS = [
   "Closed",
   "24 Hours",
-  "6:00 AM", "6:30 AM", "7:00 AM", "7:30 AM", "8:00 AM", "8:30 AM",
-  "9:00 AM", "9:30 AM", "10:00 AM", "10:30 AM", "11:00 AM", "11:30 AM",
-  "12:00 PM", "12:30 PM", "1:00 PM", "1:30 PM", "2:00 PM", "2:30 PM",
-  "3:00 PM", "3:30 PM", "4:00 PM", "4:30 PM", "5:00 PM", "5:30 PM",
-  "6:00 PM", "6:30 PM", "7:00 PM", "7:30 PM", "8:00 PM", "8:30 PM",
-  "9:00 PM", "9:30 PM", "10:00 PM", "10:30 PM", "11:00 PM", "11:30 PM",
+  "6:00 AM",
+  "6:30 AM",
+  "7:00 AM",
+  "7:30 AM",
+  "8:00 AM",
+  "8:30 AM",
+  "9:00 AM",
+  "9:30 AM",
+  "10:00 AM",
+  "10:30 AM",
+  "11:00 AM",
+  "11:30 AM",
+  "12:00 PM",
+  "12:30 PM",
+  "1:00 PM",
+  "1:30 PM",
+  "2:00 PM",
+  "2:30 PM",
+  "3:00 PM",
+  "3:30 PM",
+  "4:00 PM",
+  "4:30 PM",
+  "5:00 PM",
+  "5:30 PM",
+  "6:00 PM",
+  "6:30 PM",
+  "7:00 PM",
+  "7:30 PM",
+  "8:00 PM",
+  "8:30 PM",
+  "9:00 PM",
+  "9:30 PM",
+  "10:00 PM",
+  "10:30 PM",
+  "11:00 PM",
+  "11:30 PM",
 ];
 
-function parseHours(value: string | undefined): { open: string; close: string } | "Closed" | "24 Hours" | null {
+function parseHours(
+  value: string | undefined,
+): { open: string; close: string } | "Closed" | "24 Hours" | null {
   if (!value) return null;
   if (value.toLowerCase() === "closed") return "Closed";
   if (value === "24 Hours" || value === "00:00-23:59") return "24 Hours";
@@ -62,12 +101,15 @@ function parseHours(value: string | undefined): { open: string; close: string } 
   if (match) {
     const [, openH, openM, closeH, closeM] = match;
     const formatTime = (h: string, m: string) => {
-      const hour = parseInt(h);
+      const hour = parseInt(h, 10);
       const period = hour >= 12 ? "PM" : "AM";
       const displayHour = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour;
       return `${displayHour}:${m} ${period}`;
     };
-    return { open: formatTime(openH, openM), close: formatTime(closeH, closeM) };
+    return {
+      open: formatTime(openH, openM),
+      close: formatTime(closeH, closeM),
+    };
   }
 
   // Try existing display format
@@ -86,8 +128,8 @@ function formatForStorage(open: string, close: string): string {
   const parseTime = (t: string): string => {
     const match = t.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
     if (!match) return t;
-    let [, h, m, period] = match;
-    let hour = parseInt(h);
+    const [, h, m, period] = match;
+    let hour = parseInt(h, 10);
     if (period.toUpperCase() === "PM" && hour !== 12) hour += 12;
     if (period.toUpperCase() === "AM" && hour === 12) hour = 0;
     return `${hour.toString().padStart(2, "0")}:${m}`;
@@ -120,7 +162,14 @@ export function EditableHours({
         const isEditing = editingDay === key;
 
         if (renderDay) {
-          return renderDay(key, label, hours, (v) => updateDay(key, v), isEditing, (e) => setEditingDay(e ? key : null));
+          return renderDay(
+            key,
+            label,
+            hours,
+            (v) => updateDay(key, v),
+            isEditing,
+            (e) => setEditingDay(e ? key : null),
+          );
         }
 
         return (
@@ -131,15 +180,24 @@ export function EditableHours({
               "flex items-center justify-between p-2 rounded cursor-pointer",
               "hover:bg-white/10 transition-colors group",
               isEditing && "bg-white/10",
-              dayClassName
+              dayClassName,
             )}
           >
             <span className="font-medium min-w-[100px]">{label}</span>
 
             {isEditing ? (
-              <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+              <div
+                className="flex items-center gap-2"
+                onClick={(e) => e.stopPropagation()}
+              >
                 <select
-                  value={parsed === "Closed" ? "Closed" : parsed === "24 Hours" ? "24 Hours" : (parsed?.open || "9:00 AM")}
+                  value={
+                    parsed === "Closed"
+                      ? "Closed"
+                      : parsed === "24 Hours"
+                        ? "24 Hours"
+                        : parsed?.open || "9:00 AM"
+                  }
                   onChange={(e) => {
                     const val = e.target.value;
                     if (val === "Closed") {
@@ -147,14 +205,19 @@ export function EditableHours({
                     } else if (val === "24 Hours") {
                       updateDay(key, "24 Hours");
                     } else {
-                      const close = parsed && typeof parsed === "object" ? parsed.close : "5:00 PM";
+                      const close =
+                        parsed && typeof parsed === "object"
+                          ? parsed.close
+                          : "5:00 PM";
                       updateDay(key, formatForStorage(val, close));
                     }
                   }}
                   className="bg-black/50 border rounded px-2 py-1 text-sm"
                 >
                   {TIME_OPTIONS.map((t) => (
-                    <option key={t} value={t}>{t}</option>
+                    <option key={t} value={t}>
+                      {t}
+                    </option>
                   ))}
                 </select>
 
@@ -162,15 +225,26 @@ export function EditableHours({
                   <>
                     <span>-</span>
                     <select
-                      value={parsed && typeof parsed === "object" ? parsed.close : "5:00 PM"}
+                      value={
+                        parsed && typeof parsed === "object"
+                          ? parsed.close
+                          : "5:00 PM"
+                      }
                       onChange={(e) => {
-                        const open = parsed && typeof parsed === "object" ? parsed.open : "9:00 AM";
+                        const open =
+                          parsed && typeof parsed === "object"
+                            ? parsed.open
+                            : "9:00 AM";
                         updateDay(key, formatForStorage(open, e.target.value));
                       }}
                       className="bg-black/50 border rounded px-2 py-1 text-sm"
                     >
-                      {TIME_OPTIONS.filter(t => t !== "Closed" && t !== "24 Hours").map((t) => (
-                        <option key={t} value={t}>{t}</option>
+                      {TIME_OPTIONS.filter(
+                        (t) => t !== "Closed" && t !== "24 Hours",
+                      ).map((t) => (
+                        <option key={t} value={t}>
+                          {t}
+                        </option>
                       ))}
                     </select>
                   </>
@@ -185,14 +259,15 @@ export function EditableHours({
               </div>
             ) : (
               <span className={cn("text-sm", !hours && "opacity-50 italic")}>
-                {hours ? (
-                  parsed === "Closed" ? "Closed" :
-                  parsed === "24 Hours" ? "24 Hours" :
-                  parsed ? `${parsed.open} - ${parsed.close}` :
-                  hours
-                ) : (
-                  "Click to set"
-                )}
+                {hours
+                  ? parsed === "Closed"
+                    ? "Closed"
+                    : parsed === "24 Hours"
+                      ? "24 Hours"
+                      : parsed
+                        ? `${parsed.open} - ${parsed.close}`
+                        : hours
+                  : "Click to set"}
               </span>
             )}
           </div>

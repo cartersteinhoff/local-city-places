@@ -39,10 +39,17 @@ export function ProgressBar({
     return (
       <div className={cn("space-y-2", className)}>
         {label && <div className="h-4 w-24 bg-muted animate-pulse rounded" />}
-        <div className={cn("w-full bg-muted rounded-full overflow-hidden", sizeClasses[size])}>
+        <div
+          className={cn(
+            "w-full bg-muted rounded-full overflow-hidden",
+            sizeClasses[size],
+          )}
+        >
           <div className="h-full w-1/2 bg-muted-foreground/20 animate-pulse rounded-full" />
         </div>
-        {showValue && <div className="h-4 w-16 bg-muted animate-pulse rounded" />}
+        {showValue && (
+          <div className="h-4 w-16 bg-muted animate-pulse rounded" />
+        )}
       </div>
     );
   }
@@ -62,13 +69,13 @@ export function ProgressBar({
       <div
         className={cn(
           "w-full bg-muted rounded-full overflow-hidden",
-          sizeClasses[size]
+          sizeClasses[size],
         )}
       >
         <div
           className={cn(
             "h-full rounded-full transition-all duration-500 ease-out",
-            variantClasses[variant]
+            variantClasses[variant],
           )}
           style={{ width: `${percentage}%` }}
         />

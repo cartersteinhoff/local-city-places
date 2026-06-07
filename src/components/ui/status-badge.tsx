@@ -1,5 +1,5 @@
-import { cn } from "@/lib/utils";
 import type { ReactNode } from "react";
+import { cn } from "@/lib/utils";
 
 type StatusVariant =
   | "default"
@@ -20,11 +20,14 @@ interface StatusBadgeProps {
 
 const variantStyles: Record<StatusVariant, string> = {
   default: "bg-muted text-muted-foreground",
-  success: "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400",
-  warning: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400",
+  success:
+    "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400",
+  warning:
+    "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400",
   error: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400",
   info: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400",
-  pending: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400",
+  pending:
+    "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400",
 };
 
 const sizeStyles = {
@@ -32,7 +35,14 @@ const sizeStyles = {
   md: "px-2.5 py-0.5 text-xs",
 };
 
-export function StatusBadge({ variant, status, label, children, size = "md", className }: StatusBadgeProps) {
+export function StatusBadge({
+  variant,
+  status,
+  label,
+  children,
+  size = "md",
+  className,
+}: StatusBadgeProps) {
   const effectiveVariant = variant || status || "default";
   const content = children || label;
 
@@ -42,7 +52,7 @@ export function StatusBadge({ variant, status, label, children, size = "md", cla
         "inline-flex items-center rounded-full font-medium",
         variantStyles[effectiveVariant],
         sizeStyles[size],
-        className
+        className,
       )}
     >
       {content}

@@ -1,17 +1,17 @@
-import { NextRequest, NextResponse } from "next/server";
-import { getSession } from "@/lib/auth";
+import { eq } from "drizzle-orm";
+import { type NextRequest, NextResponse } from "next/server";
 import { db } from "@/db";
 import { merchants } from "@/db/schema";
-import { eq } from "drizzle-orm";
-import { uploadMerchantPhotoFromFile, uploadMerchantLogo } from "@/lib/storage";
+import { getSession } from "@/lib/auth";
+import { uploadMerchantLogo, uploadMerchantPhotoFromFile } from "@/lib/storage";
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     const session = await getSession();
-    if (!session || session.user.role !== "admin") {
+    if (session?.user.role !== "admin") {
       return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
     }
 
@@ -25,7 +25,10 @@ export async function POST(
       .limit(1);
 
     if (!merchant) {
-      return NextResponse.json({ error: "Merchant not found" }, { status: 404 });
+      return NextResponse.json(
+        { error: "Merchant not found" },
+        { status: 404 },
+      );
     }
 
     const formData = await request.formData();
@@ -41,7 +44,7 @@ export async function POST(
     if (!validTypes.includes(file.type)) {
       return NextResponse.json(
         { error: "Invalid file type. Use JPEG, PNG, WebP, or GIF." },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -50,7 +53,7 @@ export async function POST(
     if (file.size > maxSize) {
       return NextResponse.json(
         { error: "File too large. Max size is 10MB." },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -77,7 +80,7 @@ export async function POST(
     if (!url) {
       return NextResponse.json(
         { error: "Failed to upload image. Storage not configured." },
-        { status: 500 }
+        { status: 500 },
       );
     }
 
@@ -86,7 +89,7 @@ export async function POST(
     console.error("Error uploading photo:", error);
     return NextResponse.json(
       { error: "Failed to upload photo" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

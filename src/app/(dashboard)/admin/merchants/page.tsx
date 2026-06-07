@@ -1,22 +1,23 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
-import { useRouter } from "next/navigation";
-import Link from "next/link";
-import { DashboardLayout } from "@/components/layout";
-import { PageHeader } from "@/components/ui/page-header";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { EmptyState } from "@/components/ui/empty-state";
-import { Pagination } from "@/components/ui/pagination";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+  Check,
+  Copy,
+  ExternalLink,
+  Loader2,
+  Pencil,
+  Plus,
+  RadioTower,
+  RefreshCw,
+  Search,
+  Store,
+  Trash2,
+} from "lucide-react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useCallback, useEffect, useState } from "react";
+import { DashboardLayout } from "@/components/layout";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -25,19 +26,10 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import {
-  Plus,
-  Pencil,
-  Trash2,
-  Loader2,
-  RefreshCw,
-  Store,
-  Search,
-  ExternalLink,
-  Copy,
-  Check,
-  RadioTower,
-} from "lucide-react";
+import { EmptyState } from "@/components/ui/empty-state";
+import { Input } from "@/components/ui/input";
+import { PageHeader } from "@/components/ui/page-header";
+import { Pagination } from "@/components/ui/pagination";
 import {
   Select,
   SelectContent,
@@ -45,10 +37,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { useUser } from "@/hooks/use-user";
+import { cn, formatPhoneNumber } from "@/lib/utils";
 import { adminNavItems } from "../nav";
-import { formatPhoneNumber } from "@/lib/utils";
-import { cn } from "@/lib/utils";
 
 interface Category {
   id: string;
@@ -96,7 +95,8 @@ export default function MerchantPagesPage() {
 
   // Delete dialog
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [selectedMerchant, setSelectedMerchant] = useState<MerchantPageData | null>(null);
+  const [selectedMerchant, setSelectedMerchant] =
+    useState<MerchantPageData | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
@@ -161,7 +161,14 @@ export default function MerchantPagesPage() {
     } finally {
       setIsLoading(false);
     }
-  }, [page, debouncedSearch, categoryFilter, completionFilter, sortBy, sortOrder]);
+  }, [
+    page,
+    debouncedSearch,
+    categoryFilter,
+    completionFilter,
+    sortBy,
+    sortOrder,
+  ]);
 
   useEffect(() => {
     if (!authLoading && isAuthenticated) {
@@ -170,18 +177,22 @@ export default function MerchantPagesPage() {
   }, [authLoading, isAuthenticated, fetchMerchants]);
 
   // Reset page when filters change
-  const handleFilterChange = (setter: (value: string) => void) => (value: string) => {
-    setter(value === "all" ? "" : value);
-    setPage(1);
-  };
+  const handleFilterChange =
+    (setter: (value: string) => void) => (value: string) => {
+      setter(value === "all" ? "" : value);
+      setPage(1);
+    };
 
   const handleDelete = async () => {
     if (!selectedMerchant) return;
     setIsDeleting(true);
     try {
-      const res = await fetch(`/api/admin/merchant-pages/${selectedMerchant.id}`, {
-        method: "DELETE",
-      });
+      const res = await fetch(
+        `/api/admin/merchant-pages/${selectedMerchant.id}`,
+        {
+          method: "DELETE",
+        },
+      );
       if (res.ok) {
         setDeleteDialogOpen(false);
         setSelectedMerchant(null);
@@ -229,8 +240,15 @@ export default function MerchantPagesPage() {
               description="Create and manage public merchant pages"
             />
             <div className="flex gap-2">
-              <Button variant="outline" size="icon" onClick={fetchMerchants} disabled={isLoading}>
-                <RefreshCw className={cn("w-4 h-4", isLoading && "animate-spin")} />
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={fetchMerchants}
+                disabled={isLoading}
+              >
+                <RefreshCw
+                  className={cn("w-4 h-4", isLoading && "animate-spin")}
+                />
               </Button>
               <Button asChild>
                 <Link href="/admin/merchants/create">
@@ -253,18 +271,26 @@ export default function MerchantPagesPage() {
               />
             </div>
             <div className="flex gap-2 flex-wrap">
-              <Select value={categoryFilter || "all"} onValueChange={handleFilterChange(setCategoryFilter)}>
+              <Select
+                value={categoryFilter || "all"}
+                onValueChange={handleFilterChange(setCategoryFilter)}
+              >
                 <SelectTrigger className="w-[150px]">
                   <SelectValue placeholder="All categories" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All categories</SelectItem>
                   {categories.map((cat) => (
-                    <SelectItem key={cat.id} value={cat.id}>{cat.name}</SelectItem>
+                    <SelectItem key={cat.id} value={cat.id}>
+                      {cat.name}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
-              <Select value={completionFilter || "all"} onValueChange={handleFilterChange(setCompletionFilter)}>
+              <Select
+                value={completionFilter || "all"}
+                onValueChange={handleFilterChange(setCompletionFilter)}
+              >
                 <SelectTrigger className="w-[140px]">
                   <SelectValue placeholder="All status" />
                 </SelectTrigger>
@@ -287,14 +313,26 @@ export default function MerchantPagesPage() {
                   <SelectValue placeholder="Sort by" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="updatedAt-desc">Updated (newest)</SelectItem>
-                  <SelectItem value="updatedAt-asc">Updated (oldest)</SelectItem>
-                  <SelectItem value="createdAt-desc">Created (newest)</SelectItem>
-                  <SelectItem value="createdAt-asc">Created (oldest)</SelectItem>
+                  <SelectItem value="updatedAt-desc">
+                    Updated (newest)
+                  </SelectItem>
+                  <SelectItem value="updatedAt-asc">
+                    Updated (oldest)
+                  </SelectItem>
+                  <SelectItem value="createdAt-desc">
+                    Created (newest)
+                  </SelectItem>
+                  <SelectItem value="createdAt-asc">
+                    Created (oldest)
+                  </SelectItem>
                   <SelectItem value="name-asc">Name (A-Z)</SelectItem>
                   <SelectItem value="name-desc">Name (Z-A)</SelectItem>
-                  <SelectItem value="completion-desc">Completion (high)</SelectItem>
-                  <SelectItem value="completion-asc">Completion (low)</SelectItem>
+                  <SelectItem value="completion-desc">
+                    Completion (high)
+                  </SelectItem>
+                  <SelectItem value="completion-asc">
+                    Completion (low)
+                  </SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -336,27 +374,42 @@ export default function MerchantPagesPage() {
                   <div key={merchant.id} className="p-4">
                     <div className="flex items-start justify-between gap-3 mb-2">
                       <div className="min-w-0">
-                        <h3 className="font-semibold truncate">{merchant.businessName}</h3>
+                        <h3 className="font-semibold truncate">
+                          {merchant.businessName}
+                        </h3>
                         <p className="text-sm text-muted-foreground">
-                          {[merchant.city, merchant.state].filter(Boolean).join(", ")}
+                          {[merchant.city, merchant.state]
+                            .filter(Boolean)
+                            .join(", ")}
                         </p>
                       </div>
-                      <span className={cn(
-                        "inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium flex-shrink-0",
-                        merchant.completionPercentage === 100 && "bg-green-100 text-green-700",
-                        merchant.completionPercentage >= 50 && merchant.completionPercentage < 100 && "bg-yellow-100 text-yellow-700",
-                        merchant.completionPercentage < 50 && "bg-red-100 text-red-700"
-                      )}>
+                      <span
+                        className={cn(
+                          "inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium flex-shrink-0",
+                          merchant.completionPercentage === 100 &&
+                            "bg-green-100 text-green-700",
+                          merchant.completionPercentage >= 50 &&
+                            merchant.completionPercentage < 100 &&
+                            "bg-yellow-100 text-yellow-700",
+                          merchant.completionPercentage < 50 &&
+                            "bg-red-100 text-red-700",
+                        )}
+                      >
                         {merchant.completionPercentage}%
                       </span>
                     </div>
 
                     <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
-                      {merchant.phone && <span>{formatPhoneNumber(merchant.phone)}</span>}
+                      {merchant.phone && (
+                        <span>{formatPhoneNumber(merchant.phone)}</span>
+                      )}
                       {merchant.phone && <span>·</span>}
                       <span>{merchant.reviewCount} reviews</span>
                       <span>·</span>
-                      <span>Updated {new Date(merchant.updatedAt).toLocaleDateString()}</span>
+                      <span>
+                        Updated{" "}
+                        {new Date(merchant.updatedAt).toLocaleDateString()}
+                      </span>
                     </div>
 
                     {merchant.urls.short && (
@@ -368,7 +421,12 @@ export default function MerchantPagesPage() {
                           variant="ghost"
                           size="icon"
                           className="h-8 w-8 flex-shrink-0"
-                          onClick={() => copyToClipboard(getFullUrl(merchant.urls.short!), merchant.id)}
+                          onClick={() =>
+                            copyToClipboard(
+                              getFullUrl(merchant.urls.short!),
+                              merchant.id,
+                            )
+                          }
                         >
                           {copiedId === merchant.id ? (
                             <Check className="w-4 h-4 text-green-600" />
@@ -381,14 +439,28 @@ export default function MerchantPagesPage() {
 
                     <div className="flex gap-2">
                       {merchant.urls.full && (
-                        <Button variant="outline" size="sm" asChild className="flex-1">
-                          <a href={merchant.urls.full} target="_blank" rel="noopener noreferrer">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          asChild
+                          className="flex-1"
+                        >
+                          <a
+                            href={merchant.urls.full}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                          >
                             <ExternalLink className="w-4 h-4 mr-1" />
                             View
                           </a>
                         </Button>
                       )}
-                      <Button variant="outline" size="sm" asChild className="flex-1">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        asChild
+                        className="flex-1"
+                      >
                         <Link href={`/admin/merchants/${merchant.id}/edit`}>
                           <Pencil className="w-4 h-4 mr-1" />
                           Edit
@@ -416,18 +488,27 @@ export default function MerchantPagesPage() {
                   <TableHeader>
                     <TableRow>
                       <TableHead>Business</TableHead>
-                      <TableHead className="w-[80px] text-center">Complete</TableHead>
-                      <TableHead className="w-[70px] text-center">Reviews</TableHead>
+                      <TableHead className="w-[80px] text-center">
+                        Complete
+                      </TableHead>
+                      <TableHead className="w-[70px] text-center">
+                        Reviews
+                      </TableHead>
                       <TableHead className="w-[120px]">Location</TableHead>
                       <TableHead className="w-[180px]">Short URL</TableHead>
                       <TableHead className="w-[90px]">Updated</TableHead>
-                      <TableHead className="w-[110px] text-right">Actions</TableHead>
+                      <TableHead className="w-[110px] text-right">
+                        Actions
+                      </TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {!isLoading && merchants.length === 0 ? (
                       <TableRow>
-                        <TableCell colSpan={7} className="px-4 py-8 text-center text-muted-foreground">
+                        <TableCell
+                          colSpan={7}
+                          className="px-4 py-8 text-center text-muted-foreground"
+                        >
                           No merchant pages found
                         </TableCell>
                       </TableRow>
@@ -435,18 +516,33 @@ export default function MerchantPagesPage() {
                       merchants.map((merchant) => (
                         <TableRow key={merchant.id}>
                           <TableCell>
-                            <div className="font-medium">{merchant.businessName}</div>
+                            <div className="font-medium">
+                              {merchant.businessName}
+                            </div>
                             <div className="text-sm text-muted-foreground">
-                              {[merchant.categoryName, merchant.phone ? formatPhoneNumber(merchant.phone) : null].filter(Boolean).join(" · ")}
+                              {[
+                                merchant.categoryName,
+                                merchant.phone
+                                  ? formatPhoneNumber(merchant.phone)
+                                  : null,
+                              ]
+                                .filter(Boolean)
+                                .join(" · ")}
                             </div>
                           </TableCell>
                           <TableCell className="text-center">
-                            <span className={cn(
-                              "inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium",
-                              merchant.completionPercentage === 100 && "bg-green-100 text-green-700",
-                              merchant.completionPercentage >= 50 && merchant.completionPercentage < 100 && "bg-yellow-100 text-yellow-700",
-                              merchant.completionPercentage < 50 && "bg-red-100 text-red-700"
-                            )}>
+                            <span
+                              className={cn(
+                                "inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium",
+                                merchant.completionPercentage === 100 &&
+                                  "bg-green-100 text-green-700",
+                                merchant.completionPercentage >= 50 &&
+                                  merchant.completionPercentage < 100 &&
+                                  "bg-yellow-100 text-yellow-700",
+                                merchant.completionPercentage < 50 &&
+                                  "bg-red-100 text-red-700",
+                              )}
+                            >
                               {merchant.completionPercentage}%
                             </span>
                           </TableCell>
@@ -454,7 +550,9 @@ export default function MerchantPagesPage() {
                             {merchant.reviewCount}
                           </TableCell>
                           <TableCell className="text-muted-foreground">
-                            {[merchant.city, merchant.state].filter(Boolean).join(", ")}
+                            {[merchant.city, merchant.state]
+                              .filter(Boolean)
+                              .join(", ")}
                           </TableCell>
                           <TableCell>
                             {merchant.urls.short ? (
@@ -466,7 +564,12 @@ export default function MerchantPagesPage() {
                                   variant="ghost"
                                   size="icon"
                                   className="h-7 w-7 flex-shrink-0"
-                                  onClick={() => copyToClipboard(getFullUrl(merchant.urls.short!), merchant.id)}
+                                  onClick={() =>
+                                    copyToClipboard(
+                                      getFullUrl(merchant.urls.short!),
+                                      merchant.id,
+                                    )
+                                  }
                                 >
                                   {copiedId === merchant.id ? (
                                     <Check className="w-3 h-3 text-green-600" />
@@ -485,19 +588,45 @@ export default function MerchantPagesPage() {
                           <TableCell className="text-right">
                             <div className="flex items-center justify-end gap-1">
                               {merchant.urls.full && (
-                                <Button variant="ghost" size="icon" className="h-8 w-8" asChild>
-                                  <a href={merchant.urls.full} target="_blank" rel="noopener noreferrer" title="View page">
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-8 w-8"
+                                  asChild
+                                >
+                                  <a
+                                    href={merchant.urls.full}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    title="View page"
+                                  >
                                     <ExternalLink className="w-4 h-4" />
                                   </a>
                                 </Button>
                               )}
-                              <Button variant="ghost" size="icon" className="h-8 w-8" asChild>
-                                <Link href={`/admin/merchants/${merchant.id}/on-air-studio`} title="On-Air Studio">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8"
+                                asChild
+                              >
+                                <Link
+                                  href={`/admin/merchants/${merchant.id}/on-air-studio`}
+                                  title="On-Air Studio"
+                                >
                                   <RadioTower className="w-4 h-4" />
                                 </Link>
                               </Button>
-                              <Button variant="ghost" size="icon" className="h-8 w-8" asChild>
-                                <Link href={`/admin/merchants/${merchant.id}/edit`} title="Edit">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8"
+                                asChild
+                              >
+                                <Link
+                                  href={`/admin/merchants/${merchant.id}/edit`}
+                                  title="Edit"
+                                >
                                   <Pencil className="w-4 h-4" />
                                 </Link>
                               </Button>
@@ -544,15 +673,26 @@ export default function MerchantPagesPage() {
               <DialogHeader>
                 <DialogTitle>Delete Merchant Page</DialogTitle>
                 <DialogDescription>
-                  Are you sure you want to delete the page for &quot;{selectedMerchant?.businessName}&quot;? This action cannot be undone.
+                  Are you sure you want to delete the page for &quot;
+                  {selectedMerchant?.businessName}&quot;? This action cannot be
+                  undone.
                 </DialogDescription>
               </DialogHeader>
               <DialogFooter>
-                <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>
+                <Button
+                  variant="outline"
+                  onClick={() => setDeleteDialogOpen(false)}
+                >
                   Cancel
                 </Button>
-                <Button variant="destructive" onClick={handleDelete} disabled={isDeleting}>
-                  {isDeleting ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+                <Button
+                  variant="destructive"
+                  onClick={handleDelete}
+                  disabled={isDeleting}
+                >
+                  {isDeleting ? (
+                    <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                  ) : null}
                   Delete
                 </Button>
               </DialogFooter>

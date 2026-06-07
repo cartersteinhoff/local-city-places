@@ -1,6 +1,10 @@
-import { NextRequest, NextResponse } from "next/server";
+import { type NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
-import { uploadCheckImage, validateImageFormat, validateImageSize } from "@/lib/storage";
+import {
+  uploadCheckImage,
+  validateImageFormat,
+  validateImageSize,
+} from "@/lib/storage";
 
 export async function POST(request: NextRequest) {
   try {
@@ -25,7 +29,10 @@ export async function POST(request: NextRequest) {
     }
 
     if (!type || type !== "check") {
-      return NextResponse.json({ error: "Invalid upload type" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Invalid upload type" },
+        { status: 400 },
+      );
     }
 
     // Convert file to base64
@@ -36,13 +43,19 @@ export async function POST(request: NextRequest) {
     // Validate image format
     const formatValidation = validateImageFormat(base64);
     if (!formatValidation.valid) {
-      return NextResponse.json({ error: formatValidation.error }, { status: 400 });
+      return NextResponse.json(
+        { error: formatValidation.error },
+        { status: 400 },
+      );
     }
 
     // Validate image size (10MB for check images)
     const sizeValidation = validateImageSize(base64, 10 * 1024 * 1024);
     if (!sizeValidation.valid) {
-      return NextResponse.json({ error: sizeValidation.error }, { status: 413 });
+      return NextResponse.json(
+        { error: sizeValidation.error },
+        { status: 413 },
+      );
     }
 
     // Upload to blob storage
@@ -51,7 +64,7 @@ export async function POST(request: NextRequest) {
     if (!url) {
       return NextResponse.json(
         { error: "Upload failed - storage not configured" },
-        { status: 500 }
+        { status: 500 },
       );
     }
 
@@ -60,7 +73,7 @@ export async function POST(request: NextRequest) {
     console.error("Upload error:", error);
     return NextResponse.json(
       { error: "Failed to upload file" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

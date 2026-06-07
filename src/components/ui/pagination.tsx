@@ -1,8 +1,8 @@
 "use client";
 
 import { ChevronLeft, ChevronRight, MoreHorizontal } from "lucide-react";
-import { Button } from "./button";
 import { cn } from "@/lib/utils";
+import { Button } from "./button";
 
 interface PaginationProps {
   page: number;
@@ -104,12 +104,12 @@ export function Pagination({
               disabled={disabled}
               className={cn(
                 "h-8 w-8 p-0",
-                page === pageNum && "pointer-events-none"
+                page === pageNum && "pointer-events-none",
               )}
             >
               {pageNum}
             </Button>
-          )
+          ),
         )}
 
         <Button

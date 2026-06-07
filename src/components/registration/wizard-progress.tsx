@@ -9,7 +9,11 @@ interface WizardProgressProps {
   steps: string[];
 }
 
-export function WizardProgress({ currentStep, totalSteps, steps }: WizardProgressProps) {
+export function WizardProgress({
+  currentStep,
+  totalSteps,
+  steps,
+}: WizardProgressProps) {
   return (
     <div className="w-full">
       {/* Mobile: Simple progress bar */}
@@ -39,26 +43,30 @@ export function WizardProgress({ currentStep, totalSteps, steps }: WizardProgres
             const isCurrent = stepNumber === currentStep;
 
             return (
-              <div key={step} className="flex items-center flex-1 last:flex-none">
+              <div
+                key={step}
+                className="flex items-center flex-1 last:flex-none"
+              >
                 <div className="flex flex-col items-center">
                   <div
                     className={cn(
                       "w-10 h-10 rounded-full flex items-center justify-center text-sm font-medium transition-colors",
                       isCompleted && "bg-primary text-primary-foreground",
-                      isCurrent && "bg-primary text-primary-foreground ring-4 ring-primary/20",
-                      !isCompleted && !isCurrent && "bg-muted text-muted-foreground"
+                      isCurrent &&
+                        "bg-primary text-primary-foreground ring-4 ring-primary/20",
+                      !isCompleted &&
+                        !isCurrent &&
+                        "bg-muted text-muted-foreground",
                     )}
                   >
-                    {isCompleted ? (
-                      <Check className="w-5 h-5" />
-                    ) : (
-                      stepNumber
-                    )}
+                    {isCompleted ? <Check className="w-5 h-5" /> : stepNumber}
                   </div>
                   <span
                     className={cn(
                       "mt-2 text-xs text-center max-w-[80px]",
-                      isCurrent ? "text-foreground font-medium" : "text-muted-foreground"
+                      isCurrent
+                        ? "text-foreground font-medium"
+                        : "text-muted-foreground",
                     )}
                   >
                     {step}
@@ -68,7 +76,7 @@ export function WizardProgress({ currentStep, totalSteps, steps }: WizardProgres
                   <div
                     className={cn(
                       "flex-1 h-0.5 mx-2 mt-[-24px]",
-                      stepNumber < currentStep ? "bg-primary" : "bg-muted"
+                      stepNumber < currentStep ? "bg-primary" : "bg-muted",
                     )}
                   />
                 )}

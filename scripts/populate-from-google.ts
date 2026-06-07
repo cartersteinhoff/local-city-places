@@ -8,6 +8,7 @@
  * Processes in batches with delay to stay under API rate limits.
  */
 import { config } from "dotenv";
+
 config({ path: ".env.local" });
 
 import postgres from "postgres";
@@ -16,8 +17,13 @@ const DB_URL = process.env.DATABASE_URL;
 if (!DB_URL) throw new Error("DATABASE_URL not set");
 
 // Use a server-side key (no browser referrer restrictions)
-const API_KEY = process.env.GOOGLE_PLACES_SERVER_KEY || process.env.NEXT_PUBLIC_GOOGLE_PLACES_API_KEY;
-if (!API_KEY) throw new Error("GOOGLE_PLACES_SERVER_KEY or NEXT_PUBLIC_GOOGLE_PLACES_API_KEY not set");
+const API_KEY =
+  process.env.GOOGLE_PLACES_SERVER_KEY ||
+  process.env.NEXT_PUBLIC_GOOGLE_PLACES_API_KEY;
+if (!API_KEY)
+  throw new Error(
+    "GOOGLE_PLACES_SERVER_KEY or NEXT_PUBLIC_GOOGLE_PLACES_API_KEY not set",
+  );
 
 const db = postgres(DB_URL);
 
@@ -53,9 +59,7 @@ function formatTime(hour: number, minute: number): string {
   return `${h12}:${minute.toString().padStart(2, "0")} ${ampm}`;
 }
 
-function parseHours(
-  regularOpeningHours: any
-): Record<string, string> | null {
+function parseHours(regularOpeningHours: any): Record<string, string> | null {
   if (!regularOpeningHours?.periods) return null;
 
   const hours: Record<string, string> = {};
@@ -174,7 +178,9 @@ async function main() {
           // Hours — only if merchant doesn't have them
           if (
             !merchant.hours ||
-            !Object.values(merchant.hours as Record<string, string>).some(Boolean)
+            !Object.values(merchant.hours as Record<string, string>).some(
+              Boolean,
+            )
           ) {
             const hours = parseHours(place.regularOpeningHours);
             if (hours) updates.hours = JSON.stringify(hours);
@@ -238,7 +244,7 @@ async function main() {
           console.warn(`  ✗ ${merchant.business_name}: ${err}`);
           failed++;
         }
-      })
+      }),
     );
 
     // Progress

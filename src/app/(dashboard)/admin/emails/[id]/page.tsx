@@ -1,32 +1,38 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
-import { useRouter, useParams } from "next/navigation";
-import Link from "next/link";
-import { DashboardLayout } from "@/components/layout";
-import { PageHeader } from "@/components/ui/page-header";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Pagination } from "@/components/ui/pagination";
 import {
-  Send,
-  Users,
-  Eye,
-  MousePointerClick,
   AlertCircle,
-  RefreshCw,
   ArrowLeft,
   CheckCircle2,
-  XCircle,
-  Mail,
   Clock,
+  Eye,
+  Mail,
+  MousePointerClick,
+  RefreshCw,
+  Send,
+  Users,
+  XCircle,
 } from "lucide-react";
+import Link from "next/link";
+import { useParams, useRouter } from "next/navigation";
+import { useCallback, useEffect, useState } from "react";
+import { toast } from "sonner";
+import { DashboardLayout } from "@/components/layout";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { PageHeader } from "@/components/ui/page-header";
+import { Pagination } from "@/components/ui/pagination";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useUser } from "@/hooks/use-user";
 import { cn } from "@/lib/utils";
 import { adminNavItems } from "../../nav";
-import { toast } from "sonner";
 
 interface Campaign {
   id: string;
@@ -75,7 +81,9 @@ export default function CampaignDetailPage() {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [total, setTotal] = useState(0);
-  const [recipientFilter, setRecipientFilter] = useState<"all" | "sent" | "opened" | "clicked" | "bounced">("all");
+  const [recipientFilter, setRecipientFilter] = useState<
+    "all" | "sent" | "opened" | "clicked" | "bounced"
+  >("all");
 
   // Preview
   const [previewHtml, setPreviewHtml] = useState("");
@@ -117,7 +125,9 @@ export default function CampaignDetailPage() {
         params.set("filter", recipientFilter);
       }
 
-      const res = await fetch(`/api/admin/emails/${campaignId}/recipients?${params}`);
+      const res = await fetch(
+        `/api/admin/emails/${campaignId}/recipients?${params}`,
+      );
       if (res.ok) {
         const data = await res.json();
         setRecipients(data.recipients);
@@ -139,7 +149,10 @@ export default function CampaignDetailPage() {
       const res = await fetch("/api/admin/emails/preview", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ content: campaign.content, previewText: campaign.previewText }),
+        body: JSON.stringify({
+          content: campaign.content,
+          previewText: campaign.previewText,
+        }),
       });
       if (res.ok) {
         const data = await res.json();
@@ -227,9 +240,14 @@ export default function CampaignDetailPage() {
       return "Individual";
     }
     if (campaign.recipientLists && campaign.recipientLists.length > 0) {
-      return campaign.recipientLists.map((l) => l.charAt(0).toUpperCase() + l.slice(1)).join(", ");
+      return campaign.recipientLists
+        .map((l) => l.charAt(0).toUpperCase() + l.slice(1))
+        .join(", ");
     }
-    return campaign.recipientType.charAt(0).toUpperCase() + campaign.recipientType.slice(1);
+    return (
+      campaign.recipientType.charAt(0).toUpperCase() +
+      campaign.recipientType.slice(1)
+    );
   };
 
   if (loading || isLoadingCampaign) {
@@ -264,7 +282,10 @@ export default function CampaignDetailPage() {
         </Link>
         <div className="flex items-start justify-between">
           <div>
-            <PageHeader title={campaign.subject} description={`Sent to ${getRecipientLabel()}`} />
+            <PageHeader
+              title={campaign.subject}
+              description={`Sent to ${getRecipientLabel()}`}
+            />
             <div className="flex items-center gap-2 mt-2">
               <Badge
                 variant="secondary"
@@ -272,7 +293,8 @@ export default function CampaignDetailPage() {
                   campaign.status === "sent" && "bg-green-100 text-green-800",
                   campaign.status === "sending" && "bg-blue-100 text-blue-800",
                   campaign.status === "failed" && "bg-red-100 text-red-800",
-                  campaign.status === "draft" && "bg-yellow-100 text-yellow-800"
+                  campaign.status === "draft" &&
+                    "bg-yellow-100 text-yellow-800",
                 )}
               >
                 {campaign.status}
@@ -285,8 +307,14 @@ export default function CampaignDetailPage() {
             </div>
           </div>
           {campaign.status === "sent" && (
-            <Button variant="outline" onClick={handleSyncStats} disabled={isSyncingStats}>
-              <RefreshCw className={cn("w-4 h-4 mr-2", isSyncingStats && "animate-spin")} />
+            <Button
+              variant="outline"
+              onClick={handleSyncStats}
+              disabled={isSyncingStats}
+            >
+              <RefreshCw
+                className={cn("w-4 h-4 mr-2", isSyncingStats && "animate-spin")}
+              />
               Sync Stats
             </Button>
           )}
@@ -301,38 +329,54 @@ export default function CampaignDetailPage() {
               <Send className="w-4 h-4" />
               <span className="text-xs sm:text-sm">Sent</span>
             </div>
-            <div className="text-lg sm:text-2xl font-bold">{campaign.totalSent}</div>
+            <div className="text-lg sm:text-2xl font-bold">
+              {campaign.totalSent}
+            </div>
           </div>
           <div className="bg-card border rounded-lg p-3 sm:p-4">
             <div className="flex items-center gap-2 text-muted-foreground mb-1">
               <Eye className="w-4 h-4" />
               <span className="text-xs sm:text-sm">Opened</span>
             </div>
-            <div className="text-lg sm:text-2xl font-bold">{campaign.uniqueOpens}</div>
-            <div className="text-xs text-muted-foreground">{getOpenRate()}% rate</div>
+            <div className="text-lg sm:text-2xl font-bold">
+              {campaign.uniqueOpens}
+            </div>
+            <div className="text-xs text-muted-foreground">
+              {getOpenRate()}% rate
+            </div>
           </div>
           <div className="bg-card border rounded-lg p-3 sm:p-4">
             <div className="flex items-center gap-2 text-muted-foreground mb-1">
               <MousePointerClick className="w-4 h-4" />
               <span className="text-xs sm:text-sm">Clicked</span>
             </div>
-            <div className="text-lg sm:text-2xl font-bold">{campaign.uniqueClicks}</div>
-            <div className="text-xs text-muted-foreground">{getClickRate()}% rate</div>
+            <div className="text-lg sm:text-2xl font-bold">
+              {campaign.uniqueClicks}
+            </div>
+            <div className="text-xs text-muted-foreground">
+              {getClickRate()}% rate
+            </div>
           </div>
           <div className="bg-card border rounded-lg p-3 sm:p-4">
             <div className="flex items-center gap-2 text-muted-foreground mb-1">
               <AlertCircle className="w-4 h-4" />
               <span className="text-xs sm:text-sm">Bounced</span>
             </div>
-            <div className="text-lg sm:text-2xl font-bold">{campaign.totalBounced}</div>
-            <div className="text-xs text-muted-foreground">{getBounceRate()}% rate</div>
+            <div className="text-lg sm:text-2xl font-bold">
+              {campaign.totalBounced}
+            </div>
+            <div className="text-xs text-muted-foreground">
+              {getBounceRate()}% rate
+            </div>
           </div>
           <div className="bg-card border rounded-lg p-3 sm:p-4">
             <div className="flex items-center gap-2 text-muted-foreground mb-1">
               <Users className="w-4 h-4" />
               <span className="text-xs sm:text-sm">Recipients</span>
             </div>
-            <div className="text-lg sm:text-2xl font-bold">{campaign.recipientCount}</div>
+            <div className="text-lg sm:text-2xl font-bold">
+              {campaign.recipientCount}
+            </div>
           </div>
         </div>
       )}
@@ -340,7 +384,9 @@ export default function CampaignDetailPage() {
       <Tabs defaultValue="preview" className="space-y-4">
         <TabsList>
           <TabsTrigger value="preview">Email Preview</TabsTrigger>
-          {campaign.status === "sent" && <TabsTrigger value="recipients">Recipients</TabsTrigger>}
+          {campaign.status === "sent" && (
+            <TabsTrigger value="recipients">Recipients</TabsTrigger>
+          )}
         </TabsList>
 
         <TabsContent value="preview">
@@ -354,7 +400,9 @@ export default function CampaignDetailPage() {
             <CardContent>
               {isLoadingPreview ? (
                 <div className="flex items-center justify-center h-[400px] bg-muted/30 rounded-lg">
-                  <div className="animate-pulse text-muted-foreground">Loading preview...</div>
+                  <div className="animate-pulse text-muted-foreground">
+                    Loading preview...
+                  </div>
                 </div>
               ) : previewHtml ? (
                 <div className="border rounded-lg overflow-hidden">
@@ -408,7 +456,9 @@ export default function CampaignDetailPage() {
                   Opened
                 </Button>
                 <Button
-                  variant={recipientFilter === "clicked" ? "default" : "outline"}
+                  variant={
+                    recipientFilter === "clicked" ? "default" : "outline"
+                  }
                   size="sm"
                   onClick={() => handleRecipientFilterChange("clicked")}
                 >
@@ -416,7 +466,9 @@ export default function CampaignDetailPage() {
                   Clicked
                 </Button>
                 <Button
-                  variant={recipientFilter === "bounced" ? "default" : "outline"}
+                  variant={
+                    recipientFilter === "bounced" ? "default" : "outline"
+                  }
                   size="sm"
                   onClick={() => handleRecipientFilterChange("bounced")}
                 >
@@ -430,7 +482,12 @@ export default function CampaignDetailPage() {
                   disabled={isLoadingRecipients}
                   className="ml-auto"
                 >
-                  <RefreshCw className={cn("w-4 h-4", isLoadingRecipients && "animate-spin")} />
+                  <RefreshCw
+                    className={cn(
+                      "w-4 h-4",
+                      isLoadingRecipients && "animate-spin",
+                    )}
+                  />
                 </Button>
               </div>
 
@@ -466,14 +523,19 @@ export default function CampaignDetailPage() {
                   <tbody className="divide-y divide-border">
                     {!isLoadingRecipients && recipients.length === 0 ? (
                       <tr>
-                        <td colSpan={5} className="px-4 py-8 text-center text-muted-foreground">
+                        <td
+                          colSpan={5}
+                          className="px-4 py-8 text-center text-muted-foreground"
+                        >
                           No recipients found
                         </td>
                       </tr>
                     ) : (
                       recipients.map((recipient) => (
                         <tr key={recipient.id} className="hover:bg-muted/30">
-                          <td className="px-4 py-3 text-sm truncate">{recipient.email}</td>
+                          <td className="px-4 py-3 text-sm truncate">
+                            {recipient.email}
+                          </td>
                           <td className="px-4 py-3 text-sm truncate text-muted-foreground">
                             {recipient.name || "—"}
                           </td>

@@ -14,7 +14,7 @@ export async function GET() {
           Pragma: "no-cache",
           Expires: "0",
         },
-      }
+      },
     );
   }
 
@@ -46,6 +46,6 @@ export async function GET() {
         Pragma: "no-cache",
         Expires: "0",
       },
-    }
+    },
   );
 }

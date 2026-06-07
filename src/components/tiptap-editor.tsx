@@ -1,35 +1,52 @@
 "use client";
 
-import { useEditor, EditorContent } from "@tiptap/react";
-import StarterKit from "@tiptap/starter-kit";
-import Link from "@tiptap/extension-link";
-import Image from "@tiptap/extension-image";
-import TextAlign from "@tiptap/extension-text-align";
-import Underline from "@tiptap/extension-underline";
-import { TextStyle } from "@tiptap/extension-text-style";
 import { Color } from "@tiptap/extension-color";
+import Image from "@tiptap/extension-image";
+import Link from "@tiptap/extension-link";
+import TextAlign from "@tiptap/extension-text-align";
+import { TextStyle } from "@tiptap/extension-text-style";
+import Underline from "@tiptap/extension-underline";
+import { EditorContent, useEditor } from "@tiptap/react";
+import StarterKit from "@tiptap/starter-kit";
 import {
-  Bold,
-  Italic,
-  List,
-  ListOrdered,
-  Quote,
-  Redo,
-  Undo,
-  Link as LinkIcon,
-  Image as ImageIcon,
-  AlignLeft,
   AlignCenter,
+  AlignLeft,
   AlignRight,
+  Bold,
   Heading2,
   Heading3,
-  UnderlineIcon,
-  Upload,
+  Image as ImageIcon,
+  Italic,
+  Link as LinkIcon,
+  List,
+  ListOrdered,
   Loader2,
   Palette,
+  Quote,
+  Redo,
+  UnderlineIcon,
+  Undo,
   Unlink,
+  Upload,
 } from "lucide-react";
+import {
+  forwardRef,
+  useCallback,
+  useEffect,
+  useImperativeHandle,
+  useRef,
+  useState,
+} from "react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -39,17 +56,11 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { useState, useCallback, useRef, useImperativeHandle, forwardRef, useEffect } from "react";
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
-import { toast } from "sonner";
 
 interface QueuedImage {
   tempId: string;
@@ -80,7 +91,7 @@ export const TipTapEditor = forwardRef<TipTapEditorRef, TipTapEditorProps>(
       className,
       uploadEndpoint = "/api/admin/emails/upload-image",
     },
-    ref
+    ref,
   ) => {
     const [linkDialogOpen, setLinkDialogOpen] = useState(false);
     const [linkUrl, setLinkUrl] = useState("");
@@ -131,7 +142,7 @@ export const TipTapEditor = forwardRef<TipTapEditorRef, TipTapEditorProps>(
 
         return base64Url;
       },
-      [fileToBase64]
+      [fileToBase64],
     );
 
     // Process all queued images and upload them
@@ -215,12 +226,19 @@ export const TipTapEditor = forwardRef<TipTapEditorRef, TipTapEditorProps>(
       },
       editorProps: {
         attributes: {
-          class: "prose prose-sm sm:prose-base max-w-none focus:outline-none min-h-[350px] px-4 py-3",
+          class:
+            "prose prose-sm sm:prose-base max-w-none focus:outline-none min-h-[350px] px-4 py-3",
         },
-        handleDrop: (view, event, _slice, moved) => {
-          if (!moved && event.dataTransfer && event.dataTransfer.files.length > 0) {
+        handleDrop: (_view, event, _slice, moved) => {
+          if (
+            !moved &&
+            event.dataTransfer &&
+            event.dataTransfer.files.length > 0
+          ) {
             const files = Array.from(event.dataTransfer.files);
-            const imageFile = files.find((file) => file.type.startsWith("image/"));
+            const imageFile = files.find((file) =>
+              file.type.startsWith("image/"),
+            );
 
             if (imageFile) {
               event.preventDefault();
@@ -232,7 +250,9 @@ export const TipTapEditor = forwardRef<TipTapEditorRef, TipTapEditorProps>(
         },
         handlePaste: (_view, event) => {
           const items = Array.from(event.clipboardData?.items || []);
-          const imageItem = items.find((item) => item.type.startsWith("image/"));
+          const imageItem = items.find((item) =>
+            item.type.startsWith("image/"),
+          );
 
           if (imageItem) {
             const file = imageItem.getAsFile();
@@ -324,9 +344,13 @@ export const TipTapEditor = forwardRef<TipTapEditorRef, TipTapEditorProps>(
 
     return (
       <div
-        className={cn("border rounded-md relative flex flex-col bg-background", className, {
-          "ring-2 ring-primary": dragActive,
-        })}
+        className={cn(
+          "border rounded-md relative flex flex-col bg-background",
+          className,
+          {
+            "ring-2 ring-primary": dragActive,
+          },
+        )}
         onDragOver={handleContainerDragOver}
         onDragLeave={handleContainerDragLeave}
         onDrop={handleContainerDrop}
@@ -339,7 +363,10 @@ export const TipTapEditor = forwardRef<TipTapEditorRef, TipTapEditorProps>(
             size="sm"
             onClick={() => editor.chain().focus().toggleBold().run()}
             disabled={!editor.can().chain().focus().toggleBold().run()}
-            className={cn("h-8 w-8 p-0", editor.isActive("bold") && "bg-accent")}
+            className={cn(
+              "h-8 w-8 p-0",
+              editor.isActive("bold") && "bg-accent",
+            )}
           >
             <Bold className="h-4 w-4" />
           </Button>
@@ -349,7 +376,10 @@ export const TipTapEditor = forwardRef<TipTapEditorRef, TipTapEditorProps>(
             size="sm"
             onClick={() => editor.chain().focus().toggleItalic().run()}
             disabled={!editor.can().chain().focus().toggleItalic().run()}
-            className={cn("h-8 w-8 p-0", editor.isActive("italic") && "bg-accent")}
+            className={cn(
+              "h-8 w-8 p-0",
+              editor.isActive("italic") && "bg-accent",
+            )}
           >
             <Italic className="h-4 w-4" />
           </Button>
@@ -359,7 +389,10 @@ export const TipTapEditor = forwardRef<TipTapEditorRef, TipTapEditorProps>(
             size="sm"
             onClick={() => editor.chain().focus().toggleUnderline().run()}
             disabled={!editor.can().chain().focus().toggleUnderline().run()}
-            className={cn("h-8 w-8 p-0", editor.isActive("underline") && "bg-accent")}
+            className={cn(
+              "h-8 w-8 p-0",
+              editor.isActive("underline") && "bg-accent",
+            )}
           >
             <UnderlineIcon className="h-4 w-4" />
           </Button>
@@ -367,12 +400,19 @@ export const TipTapEditor = forwardRef<TipTapEditorRef, TipTapEditorProps>(
           {/* Color Picker */}
           <Popover>
             <PopoverTrigger asChild>
-              <Button type="button" variant="ghost" size="sm" className="h-8 px-2 gap-1">
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="h-8 px-2 gap-1"
+              >
                 <Palette className="h-4 w-4" />
                 {editor.getAttributes("textStyle").color && (
                   <div
                     className="w-3 h-3 rounded-full border border-border"
-                    style={{ backgroundColor: editor.getAttributes("textStyle").color }}
+                    style={{
+                      backgroundColor: editor.getAttributes("textStyle").color,
+                    }}
                   />
                 )}
               </Button>
@@ -387,7 +427,9 @@ export const TipTapEditor = forwardRef<TipTapEditorRef, TipTapEditorProps>(
                       type="button"
                       className="w-8 h-8 rounded-md border border-border hover:scale-110 transition-transform"
                       style={{ backgroundColor: color.value }}
-                      onClick={() => editor.chain().focus().setColor(color.value).run()}
+                      onClick={() =>
+                        editor.chain().focus().setColor(color.value).run()
+                      }
                       title={color.name}
                     />
                   ))}
@@ -409,7 +451,9 @@ export const TipTapEditor = forwardRef<TipTapEditorRef, TipTapEditorProps>(
                   <Button
                     type="button"
                     size="sm"
-                    onClick={() => editor.chain().focus().setColor(customColor).run()}
+                    onClick={() =>
+                      editor.chain().focus().setColor(customColor).run()
+                    }
                     className="h-8"
                   >
                     Apply
@@ -434,8 +478,13 @@ export const TipTapEditor = forwardRef<TipTapEditorRef, TipTapEditorProps>(
             type="button"
             variant="ghost"
             size="sm"
-            onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
-            className={cn("h-8 w-8 p-0", editor.isActive("heading", { level: 2 }) && "bg-accent")}
+            onClick={() =>
+              editor.chain().focus().toggleHeading({ level: 2 }).run()
+            }
+            className={cn(
+              "h-8 w-8 p-0",
+              editor.isActive("heading", { level: 2 }) && "bg-accent",
+            )}
           >
             <Heading2 className="h-4 w-4" />
           </Button>
@@ -443,8 +492,13 @@ export const TipTapEditor = forwardRef<TipTapEditorRef, TipTapEditorProps>(
             type="button"
             variant="ghost"
             size="sm"
-            onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
-            className={cn("h-8 w-8 p-0", editor.isActive("heading", { level: 3 }) && "bg-accent")}
+            onClick={() =>
+              editor.chain().focus().toggleHeading({ level: 3 }).run()
+            }
+            className={cn(
+              "h-8 w-8 p-0",
+              editor.isActive("heading", { level: 3 }) && "bg-accent",
+            )}
           >
             <Heading3 className="h-4 w-4" />
           </Button>
@@ -456,7 +510,10 @@ export const TipTapEditor = forwardRef<TipTapEditorRef, TipTapEditorProps>(
             variant="ghost"
             size="sm"
             onClick={() => editor.chain().focus().toggleBulletList().run()}
-            className={cn("h-8 w-8 p-0", editor.isActive("bulletList") && "bg-accent")}
+            className={cn(
+              "h-8 w-8 p-0",
+              editor.isActive("bulletList") && "bg-accent",
+            )}
           >
             <List className="h-4 w-4" />
           </Button>
@@ -465,7 +522,10 @@ export const TipTapEditor = forwardRef<TipTapEditorRef, TipTapEditorProps>(
             variant="ghost"
             size="sm"
             onClick={() => editor.chain().focus().toggleOrderedList().run()}
-            className={cn("h-8 w-8 p-0", editor.isActive("orderedList") && "bg-accent")}
+            className={cn(
+              "h-8 w-8 p-0",
+              editor.isActive("orderedList") && "bg-accent",
+            )}
           >
             <ListOrdered className="h-4 w-4" />
           </Button>
@@ -474,7 +534,10 @@ export const TipTapEditor = forwardRef<TipTapEditorRef, TipTapEditorProps>(
             variant="ghost"
             size="sm"
             onClick={() => editor.chain().focus().toggleBlockquote().run()}
-            className={cn("h-8 w-8 p-0", editor.isActive("blockquote") && "bg-accent")}
+            className={cn(
+              "h-8 w-8 p-0",
+              editor.isActive("blockquote") && "bg-accent",
+            )}
           >
             <Quote className="h-4 w-4" />
           </Button>
@@ -483,20 +546,37 @@ export const TipTapEditor = forwardRef<TipTapEditorRef, TipTapEditorProps>(
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button type="button" variant="ghost" size="sm" className="h-8 px-2">
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="h-8 px-2"
+              >
                 <AlignLeft className="h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent>
-              <DropdownMenuItem onClick={() => editor.chain().focus().setTextAlign("left").run()}>
+              <DropdownMenuItem
+                onClick={() =>
+                  editor.chain().focus().setTextAlign("left").run()
+                }
+              >
                 <AlignLeft className="mr-2 h-4 w-4" />
                 Left
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => editor.chain().focus().setTextAlign("center").run()}>
+              <DropdownMenuItem
+                onClick={() =>
+                  editor.chain().focus().setTextAlign("center").run()
+                }
+              >
                 <AlignCenter className="mr-2 h-4 w-4" />
                 Center
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => editor.chain().focus().setTextAlign("right").run()}>
+              <DropdownMenuItem
+                onClick={() =>
+                  editor.chain().focus().setTextAlign("right").run()
+                }
+              >
                 <AlignRight className="mr-2 h-4 w-4" />
                 Right
               </DropdownMenuItem>
@@ -510,7 +590,10 @@ export const TipTapEditor = forwardRef<TipTapEditorRef, TipTapEditorProps>(
             variant="ghost"
             size="sm"
             onClick={() => setLinkDialogOpen(true)}
-            className={cn("h-8 w-8 p-0", editor.isActive("link") && "bg-accent")}
+            className={cn(
+              "h-8 w-8 p-0",
+              editor.isActive("link") && "bg-accent",
+            )}
           >
             <LinkIcon className="h-4 w-4" />
           </Button>
@@ -591,7 +674,9 @@ export const TipTapEditor = forwardRef<TipTapEditorRef, TipTapEditorProps>(
           <DialogContent>
             <DialogHeader>
               <DialogTitle>Add Link</DialogTitle>
-              <DialogDescription>Enter the URL you want to link to</DialogDescription>
+              <DialogDescription>
+                Enter the URL you want to link to
+              </DialogDescription>
             </DialogHeader>
             <div className="space-y-4">
               <div className="space-y-2">
@@ -612,7 +697,11 @@ export const TipTapEditor = forwardRef<TipTapEditorRef, TipTapEditorProps>(
               </div>
             </div>
             <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => setLinkDialogOpen(false)}>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setLinkDialogOpen(false)}
+              >
                 Cancel
               </Button>
               <Button type="button" onClick={addLink}>
@@ -659,7 +748,9 @@ export const TipTapEditor = forwardRef<TipTapEditorRef, TipTapEditorProps>(
                   <span className="w-full border-t" />
                 </div>
                 <div className="relative flex justify-center text-xs uppercase">
-                  <span className="bg-background px-2 text-muted-foreground">Or</span>
+                  <span className="bg-background px-2 text-muted-foreground">
+                    Or
+                  </span>
                 </div>
               </div>
               <div className="space-y-2">
@@ -680,10 +771,18 @@ export const TipTapEditor = forwardRef<TipTapEditorRef, TipTapEditorProps>(
               </div>
             </div>
             <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => setImageDialogOpen(false)}>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setImageDialogOpen(false)}
+              >
                 Cancel
               </Button>
-              <Button type="button" onClick={addImageFromUrl} disabled={!imageUrl}>
+              <Button
+                type="button"
+                onClick={addImageFromUrl}
+                disabled={!imageUrl}
+              >
                 Add Image
               </Button>
             </DialogFooter>
@@ -691,7 +790,7 @@ export const TipTapEditor = forwardRef<TipTapEditorRef, TipTapEditorProps>(
         </Dialog>
       </div>
     );
-  }
+  },
 );
 
 TipTapEditor.displayName = "TipTapEditor";

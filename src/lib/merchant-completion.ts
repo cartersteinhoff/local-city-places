@@ -65,8 +65,12 @@ export function calculateCompletion(data: MerchantData): CompletionResult {
     { key: "description", label: "Description", value: data.description },
     { key: "aboutStory", label: "About/Story", value: data.aboutStory },
   ];
-  const businessCompleted = businessFields.filter((f) => hasValue(f.value)).length;
-  const businessMissing = businessFields.filter((f) => !hasValue(f.value)).map((f) => f.label);
+  const businessCompleted = businessFields.filter((f) =>
+    hasValue(f.value),
+  ).length;
+  const businessMissing = businessFields
+    .filter((f) => !hasValue(f.value))
+    .map((f) => f.label);
   sections.push({
     id: "business",
     label: "Business",
@@ -78,13 +82,21 @@ export function calculateCompletion(data: MerchantData): CompletionResult {
 
   // Location section (4 points)
   const locationFields = [
-    { key: "streetAddress", label: "Street Address", value: data.streetAddress },
+    {
+      key: "streetAddress",
+      label: "Street Address",
+      value: data.streetAddress,
+    },
     { key: "city", label: "City", value: data.city },
     { key: "state", label: "State", value: data.state },
     { key: "zipCode", label: "ZIP Code", value: data.zipCode },
   ];
-  const locationCompleted = locationFields.filter((f) => hasValue(f.value)).length;
-  const locationMissing = locationFields.filter((f) => !hasValue(f.value)).map((f) => f.label);
+  const locationCompleted = locationFields.filter((f) =>
+    hasValue(f.value),
+  ).length;
+  const locationMissing = locationFields
+    .filter((f) => !hasValue(f.value))
+    .map((f) => f.label);
   sections.push({
     id: "location",
     label: "Location",
@@ -102,8 +114,12 @@ export function calculateCompletion(data: MerchantData): CompletionResult {
     { key: "facebookUrl", label: "Facebook", value: data.facebookUrl },
     { key: "tiktokUrl", label: "TikTok", value: data.tiktokUrl },
   ];
-  const contactCompleted = contactFields.filter((f) => hasValue(f.value)).length;
-  const contactMissing = contactFields.filter((f) => !hasValue(f.value)).map((f) => f.label);
+  const contactCompleted = contactFields.filter((f) =>
+    hasValue(f.value),
+  ).length;
+  const contactMissing = contactFields
+    .filter((f) => !hasValue(f.value))
+    .map((f) => f.label);
   sections.push({
     id: "contact",
     label: "Contact",
@@ -114,7 +130,8 @@ export function calculateCompletion(data: MerchantData): CompletionResult {
   });
 
   // Hours section (1 point for any day filled)
-  const hasAnyHours = data.hours && Object.values(data.hours).some((v) => hasValue(v));
+  const hasAnyHours =
+    data.hours && Object.values(data.hours).some((v) => hasValue(v));
   sections.push({
     id: "hours",
     label: "Hours",
@@ -128,10 +145,16 @@ export function calculateCompletion(data: MerchantData): CompletionResult {
   const mediaFields = [
     { key: "logoUrl", label: "Logo", value: data.logoUrl },
     { key: "vimeoUrl", label: "Video", value: data.vimeoUrl },
-    { key: "photos", label: "Photos", value: data.photos && data.photos.length > 0 },
+    {
+      key: "photos",
+      label: "Photos",
+      value: data.photos && data.photos.length > 0,
+    },
   ];
   const mediaCompleted = mediaFields.filter((f) => hasValue(f.value)).length;
-  const mediaMissing = mediaFields.filter((f) => !hasValue(f.value)).map((f) => f.label);
+  const mediaMissing = mediaFields
+    .filter((f) => !hasValue(f.value))
+    .map((f) => f.label);
   sections.push({
     id: "media",
     label: "Media",
@@ -142,7 +165,10 @@ export function calculateCompletion(data: MerchantData): CompletionResult {
   });
 
   // Services section (1 point for any service)
-  const hasServices = data.services && data.services.length > 0 && data.services.some((s) => hasValue(s.name));
+  const hasServices =
+    data.services &&
+    data.services.length > 0 &&
+    data.services.some((s) => hasValue(s.name));
   sections.push({
     id: "services",
     label: "Services",

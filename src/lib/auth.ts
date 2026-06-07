@@ -1,9 +1,9 @@
+import { createHash, randomBytes } from "node:crypto";
+import { and, eq, gt } from "drizzle-orm";
+import { jwtVerify, SignJWT } from "jose";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { SignJWT, jwtVerify } from "jose";
-import { db, users, magicLinkTokens, members, merchants } from "@/db";
-import { eq, and, gt } from "drizzle-orm";
-import { randomBytes, createHash } from "crypto";
+import { db, magicLinkTokens, members, merchants, users } from "@/db";
 
 export const SESSION_COOKIE_NAME = "session_token";
 const MAGIC_LINK_EXPIRY_MINUTES = 4320; // 3 days
@@ -41,7 +41,9 @@ export async function createJWT(userId: string, role: string): Promise<string> {
 }
 
 // Verify a JWT token
-async function verifyJWT(token: string): Promise<{ userId: string; role: string } | null> {
+async function verifyJWT(
+  token: string,
+): Promise<{ userId: string; role: string } | null> {
   try {
     const { payload } = await jwtVerify(token, JWT_SECRET);
     return {
@@ -54,10 +56,15 @@ async function verifyJWT(token: string): Promise<{ userId: string; role: string 
 }
 
 // Create a magic link token
-export async function createMagicLinkToken(email: string, callbackUrl?: string): Promise<string> {
+export async function createMagicLinkToken(
+  email: string,
+  callbackUrl?: string,
+): Promise<string> {
   const token = generateToken();
   const hashedToken = hashToken(token);
-  const expiresAt = new Date(Date.now() + MAGIC_LINK_EXPIRY_MINUTES * 60 * 1000);
+  const expiresAt = new Date(
+    Date.now() + MAGIC_LINK_EXPIRY_MINUTES * 60 * 1000,
+  );
 
   await db.insert(magicLinkTokens).values({
     email: email.toLowerCase(),
@@ -87,8 +94,8 @@ export async function verifyMagicLinkToken(token: string): Promise<{
     .where(
       and(
         eq(magicLinkTokens.token, hashedToken),
-        gt(magicLinkTokens.expiresAt, new Date())
-      )
+        gt(magicLinkTokens.expiresAt, new Date()),
+      ),
     )
     .limit(1);
 
@@ -114,7 +121,10 @@ export async function verifyMagicLinkToken(token: string): Promise<{
     .limit(1);
 
   if (!user) {
-    return { success: false, error: "No account found. Please contact an admin." };
+    return {
+      success: false,
+      error: "No account found. Please contact an admin.",
+    };
   }
 
   // Create JWT token

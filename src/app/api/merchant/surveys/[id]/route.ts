@@ -1,8 +1,8 @@
-import { NextRequest, NextResponse } from "next/server";
-import { getSession } from "@/lib/auth";
-import { db, surveys, surveyResponses, merchants, members } from "@/db";
-import { eq, and, sql } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
+import { type NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
+import { db, merchants, surveys } from "@/db";
+import { getSession } from "@/lib/auth";
 
 const questionSchema = z.object({
   id: z.string(),
@@ -19,12 +19,15 @@ const updateSurveySchema = z.object({
 });
 
 export async function GET(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  _request: NextRequest,
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     const session = await getSession();
-    if (!session || (session.user.role !== "merchant" && session.user.role !== "admin")) {
+    if (
+      !session ||
+      (session.user.role !== "merchant" && session.user.role !== "admin")
+    ) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -38,7 +41,10 @@ export async function GET(
       .limit(1);
 
     if (!merchant) {
-      return NextResponse.json({ error: "Merchant not found" }, { status: 404 });
+      return NextResponse.json(
+        { error: "Merchant not found" },
+        { status: 404 },
+      );
     }
 
     // Get survey
@@ -65,18 +71,21 @@ export async function GET(
     console.error("Get survey error:", error);
     return NextResponse.json(
       { error: "Internal server error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     const session = await getSession();
-    if (!session || (session.user.role !== "merchant" && session.user.role !== "admin")) {
+    if (
+      !session ||
+      (session.user.role !== "merchant" && session.user.role !== "admin")
+    ) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -90,7 +99,10 @@ export async function PUT(
       .limit(1);
 
     if (!merchant) {
-      return NextResponse.json({ error: "Merchant not found" }, { status: 404 });
+      return NextResponse.json(
+        { error: "Merchant not found" },
+        { status: 404 },
+      );
     }
 
     // Check survey exists and belongs to merchant
@@ -110,14 +122,16 @@ export async function PUT(
     if (!parsed.success) {
       return NextResponse.json(
         { error: "Invalid input", details: parsed.error.flatten() },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     const updates: Partial<typeof surveys.$inferInsert> = {};
     if (parsed.data.title !== undefined) updates.title = parsed.data.title;
-    if (parsed.data.questions !== undefined) updates.questions = parsed.data.questions;
-    if (parsed.data.isActive !== undefined) updates.isActive = parsed.data.isActive;
+    if (parsed.data.questions !== undefined)
+      updates.questions = parsed.data.questions;
+    if (parsed.data.isActive !== undefined)
+      updates.isActive = parsed.data.isActive;
 
     const [updatedSurvey] = await db
       .update(surveys)
@@ -139,18 +153,21 @@ export async function PUT(
     console.error("Update survey error:", error);
     return NextResponse.json(
       { error: "Internal server error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
 
 export async function DELETE(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  _request: NextRequest,
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     const session = await getSession();
-    if (!session || (session.user.role !== "merchant" && session.user.role !== "admin")) {
+    if (
+      !session ||
+      (session.user.role !== "merchant" && session.user.role !== "admin")
+    ) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -164,7 +181,10 @@ export async function DELETE(
       .limit(1);
 
     if (!merchant) {
-      return NextResponse.json({ error: "Merchant not found" }, { status: 404 });
+      return NextResponse.json(
+        { error: "Merchant not found" },
+        { status: 404 },
+      );
     }
 
     // Check survey exists and belongs to merchant
@@ -186,7 +206,7 @@ export async function DELETE(
     console.error("Delete survey error:", error);
     return NextResponse.json(
       { error: "Internal server error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
