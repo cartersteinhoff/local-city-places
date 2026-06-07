@@ -141,7 +141,6 @@ function generateMerchantRequestConfirmationPreview(params: {
   city: string;
   state: string;
   createdAt: string;
-  reference: string;
 }) {
   const market = [params.city, params.state].filter(Boolean).join(", ");
   const receivedAt = formatRequestTimestamp(params.createdAt);
@@ -161,8 +160,6 @@ function generateMerchantRequestConfirmationPreview(params: {
       <p style="margin:0 0 16px;color:#0f172a;font-size:16px;font-weight:700;">${market}</p>
       <p style="margin:0 0 10px;color:#64748b;font-size:12px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;">Received</p>
       <p style="margin:0 0 16px;color:#0f172a;font-size:16px;font-weight:700;">${receivedAt}</p>
-      <p style="margin:0 0 10px;color:#64748b;font-size:12px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;">Reference</p>
-      <p style="margin:0;color:#0f172a;font-size:16px;font-weight:700;">${params.reference}</p>
     </div>
     <div style="background:#fff7ed;border-left:4px solid #f97316;border-radius:6px;padding:16px;margin:24px 0;">
       <p style="color:#7c2d12;margin:0;font-size:15px;"><strong>Timestamp rule:</strong> Categories are reviewed in the order requests are received for each city and category.</p>
@@ -187,7 +184,6 @@ function generateMerchantRequestAdminNotificationPreview(params: {
   shortDescription: string;
   photoCount?: number;
   createdAt: string;
-  reference: string;
 }) {
   const receivedAt = formatRequestTimestamp(params.createdAt);
   const adminUrl = `${APP_URL}/admin/merchant-requests`;
@@ -216,8 +212,6 @@ function generateMerchantRequestAdminNotificationPreview(params: {
       <p style="margin:0 0 16px;color:#0f172a;font-size:16px;font-weight:700;">Photos: ${params.photoCount || 0}</p>
       <p style="margin:0 0 10px;color:#64748b;font-size:12px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;">Received</p>
       <p style="margin:0 0 16px;color:#0f172a;font-size:16px;font-weight:700;">${receivedAt}</p>
-      <p style="margin:0 0 10px;color:#64748b;font-size:12px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;">Reference</p>
-      <p style="margin:0;color:#0f172a;font-size:16px;font-weight:700;">${params.reference}</p>
     </div>
     <div style="background:#fff7ed;border-left:4px solid #f97316;border-radius:6px;padding:16px;margin:24px 0;">
       <p style="color:#7c2d12;margin:0;font-size:15px;"><strong>Submitted description:</strong><br>${params.shortDescription}</p>

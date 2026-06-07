@@ -388,7 +388,6 @@ interface MerchantRequestConfirmationEmailOptions {
   city: string;
   state: string;
   createdAt: Date;
-  reference: string;
 }
 
 const MERCHANT_REQUEST_ADMIN_RECIPIENTS = [
@@ -404,7 +403,6 @@ export async function sendMerchantRequestConfirmationEmail({
   city,
   state,
   createdAt,
-  reference,
 }: MerchantRequestConfirmationEmailOptions): Promise<boolean> {
   const safeOwnerName = escapeHtml(ownerName || businessName);
   const safeBusinessName = escapeHtml(businessName);
@@ -412,7 +410,6 @@ export async function sendMerchantRequestConfirmationEmail({
   const market = [city, state].filter(Boolean).join(", ");
   const safeMarket = escapeHtml(market);
   const receivedAt = formatRequestTimestamp(createdAt);
-  const safeReference = escapeHtml(reference);
 
   const subject = "We received your Phoenix Metro 250 request";
   const html = `<!DOCTYPE html>
@@ -480,10 +477,6 @@ export async function sendMerchantRequestConfirmationEmail({
             <p class="detail-label">Received</p>
             <p class="detail-value">${receivedAt}</p>
           </div>
-          <div class="detail-row">
-            <p class="detail-label">Reference</p>
-            <p class="detail-value">${safeReference}</p>
-          </div>
         </div>
 
         <div class="notice-box">
@@ -514,7 +507,6 @@ Business: ${businessName}
 Requested category: ${requestedCategory}
 Market: ${market}
 Received: ${receivedAt}
-Reference: ${reference}
 
 Timestamp rule: Categories are reviewed in the order requests are received for each city and category.
 
@@ -549,7 +541,6 @@ interface MerchantRequestAdminNotificationEmailOptions {
   logoUrl: string | null;
   photoUrls: string[] | null;
   createdAt: Date;
-  reference: string;
 }
 
 export async function sendMerchantRequestAdminNotificationEmail({
@@ -569,7 +560,6 @@ export async function sendMerchantRequestAdminNotificationEmail({
   logoUrl,
   photoUrls,
   createdAt,
-  reference,
 }: MerchantRequestAdminNotificationEmailOptions): Promise<boolean> {
   const safeBusinessName = escapeHtml(businessName);
   const safeOwnerName = escapeHtml(ownerName);
@@ -581,7 +571,6 @@ export async function sendMerchantRequestAdminNotificationEmail({
   );
   const safeRequestedCategory = escapeHtml(requestedCategory);
   const safeShortDescription = escapeHtml(shortDescription);
-  const safeReference = escapeHtml(reference);
   const receivedAt = formatRequestTimestamp(createdAt);
   const adminUrl = `${APP_URL}/admin/merchant-requests`;
   const safeAdminUrl = escapeHtml(adminUrl);
@@ -672,10 +661,6 @@ export async function sendMerchantRequestAdminNotificationEmail({
             <p class="detail-label">Received</p>
             <p class="detail-value">${receivedAt}</p>
           </div>
-          <div class="detail-row">
-            <p class="detail-label">Reference</p>
-            <p class="detail-value">${safeReference}</p>
-          </div>
         </div>
 
         <div class="description-box">
@@ -706,7 +691,6 @@ Website: ${website || "Not provided"}
 Years in business: ${yearsInBusiness ?? "Not provided"}
 Uploads: Logo ${logoUrl ? "yes" : "no"} / Photos ${photoCount}
 Received: ${receivedAt}
-Reference: ${reference}
 
 Submitted description:
 ${shortDescription}

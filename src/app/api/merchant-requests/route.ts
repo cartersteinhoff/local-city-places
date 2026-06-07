@@ -215,7 +215,6 @@ export async function POST(request: NextRequest) {
         city,
         state,
         createdAt: merchantRequest.createdAt,
-        reference: merchantRequest.id.slice(0, 8).toUpperCase(),
       });
     } catch (emailError) {
       console.error("Error sending merchant request confirmation:", emailError);
@@ -240,7 +239,6 @@ export async function POST(request: NextRequest) {
           logoUrl,
           photoUrls: photoUrls.length > 0 ? photoUrls : null,
           createdAt: merchantRequest.createdAt,
-          reference: merchantRequest.id.slice(0, 8).toUpperCase(),
         });
     } catch (emailError) {
       console.error(

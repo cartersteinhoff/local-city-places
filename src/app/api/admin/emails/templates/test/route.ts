@@ -53,7 +53,6 @@ export async function POST(request: NextRequest) {
           createdAt: params.createdAt
             ? new Date(params.createdAt)
             : new Date("2026-06-07T17:00:00.000Z"),
-          reference: params.reference || "ABC12345",
         });
         break;
 
@@ -82,7 +81,6 @@ export async function POST(request: NextRequest) {
           createdAt: params.createdAt
             ? new Date(params.createdAt)
             : new Date("2026-06-07T17:00:00.000Z"),
-          reference: params.reference || "ABC12345",
         });
         break;
 

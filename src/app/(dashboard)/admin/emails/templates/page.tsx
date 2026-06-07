@@ -88,7 +88,6 @@ const EMAIL_TEMPLATES: EmailTemplate[] = [
       city: "Phoenix",
       state: "AZ",
       createdAt: "2026-06-07T17:00:00.000Z",
-      reference: "ABC12345",
     },
   },
   {
@@ -113,7 +112,6 @@ const EMAIL_TEMPLATES: EmailTemplate[] = [
         "Locally owned roofing team serving Phoenix metro homeowners with repair, replacement, and inspection services.",
       photoCount: 2,
       createdAt: "2026-06-07T17:00:00.000Z",
-      reference: "ABC12345",
     },
   },
   {
