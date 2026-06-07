@@ -324,10 +324,7 @@ export function FeaturedMarquee({
 
   const [row1, row2, row3] = useMemo(
     () => [
-      shuffleMerchants(
-        getRowMerchants(merchants, 0),
-        "homepage-featured-row-1",
-      ),
+      getRowMerchants(merchants, 0),
       shuffleMerchants(
         getRowMerchants(merchants, 1),
         "homepage-featured-row-2",
@@ -377,7 +374,7 @@ export function FeaturedMarquee({
     <section className="relative z-10 py-8" style={sectionStyle}>
       {showHeading && <MarqueeHeading />}
       <div className="flex flex-col gap-4" style={rowsContainerStyle}>
-        <MarqueeRow merchants={row1} direction="left" speed={40} />
+        <MarqueeRow merchants={row1} direction="right" speed={40} />
         <MarqueeRow merchants={row2} direction="right" speed={50} />
         <MarqueeRow merchants={row3} direction="left" speed={45} />
       </div>
