@@ -98,6 +98,45 @@ function formatRequestTimestamp(value: string) {
   }).format(date);
 }
 
+function getSamplePhotoUrls(count: number) {
+  const samplePaths = [
+    "/images/morning-buzz-media-card.png",
+    "/images/phoenix-skyline-section-mobile-v3.webp",
+    "/images/gas-grocery-gift-card.png",
+    "/images/new-year-250-background.jpg",
+    "/images/morning-buzz-homepage-wide.webp",
+    "/images/john-heidi-show.jpg",
+  ];
+
+  return samplePaths.slice(0, Math.max(0, Math.min(count, samplePaths.length)));
+}
+
+function buildPhotoPreviewGrid(photoCount?: number) {
+  const photoUrls = getSamplePhotoUrls(photoCount || 0);
+  if (photoUrls.length === 0) return "";
+
+  const rows: string[] = [];
+
+  for (let i = 0; i < photoUrls.length; i += 3) {
+    const cells = photoUrls
+      .slice(i, i + 3)
+      .map((url, index) => {
+        const photoNumber = i + index + 1;
+
+        return `<td width="33.33%" style="padding:4px;vertical-align:top;">
+          <a href="${APP_URL}${url}" style="display:block;text-decoration:none;">
+            <img src="${APP_URL}${url}" alt="Submitted merchant photo ${photoNumber}" width="180" height="96" style="display:block;width:100%;max-width:180px;height:96px;object-fit:cover;border:1px solid #e2e8f0;border-radius:6px;" />
+          </a>
+        </td>`;
+      })
+      .join("");
+
+    rows.push(`<tr>${cells}</tr>`);
+  }
+
+  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;margin-top:6px;table-layout:fixed;">${rows.join("")}</table>`;
+}
+
 function generateMagicLinkPreview(params: { token: string }) {
   const magicLink = `${APP_URL}/api/auth/verify?token=${params.token}`;
   return emailShell(
@@ -187,6 +226,7 @@ function generateMerchantRequestAdminNotificationPreview(params: {
 }) {
   const receivedAt = formatRequestTimestamp(params.createdAt);
   const adminUrl = `${APP_URL}/admin/merchant-requests`;
+  const photoGridHtml = buildPhotoPreviewGrid(params.photoCount);
 
   return emailShell(
     "New merchant request",
@@ -212,6 +252,12 @@ function generateMerchantRequestAdminNotificationPreview(params: {
       <p style="margin:0 0 16px;color:#0f172a;font-size:16px;font-weight:700;">${params.shortDescription}</p>
       <p style="margin:0 0 10px;color:#64748b;font-size:12px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;">Uploads</p>
       <p style="margin:0 0 16px;color:#0f172a;font-size:16px;font-weight:700;">Photos: ${params.photoCount || 0}</p>
+      ${
+        photoGridHtml
+          ? `<p style="margin:0 0 10px;color:#64748b;font-size:12px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;">Submitted photos</p>
+      ${photoGridHtml}`
+          : ""
+      }
       <p style="margin:0 0 10px;color:#64748b;font-size:12px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;">Received</p>
       <p style="margin:0 0 16px;color:#0f172a;font-size:16px;font-weight:700;">${receivedAt}</p>
     </div>

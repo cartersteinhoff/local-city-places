@@ -74,10 +74,14 @@ export async function POST(request: NextRequest) {
             params.shortDescription ||
             "Locally owned roofing team serving Phoenix metro homeowners with repair, replacement, and inspection services.",
           logoUrl: null,
-          photoUrls: Array.from(
-            { length: Number(params.photoCount || 0) },
-            (_, index) => `https://example.com/photo-${index + 1}.jpg`,
-          ),
+          photoUrls: [
+            "https://localcityplaces.com/images/morning-buzz-media-card.png",
+            "https://localcityplaces.com/images/phoenix-skyline-section-mobile-v3.webp",
+            "https://localcityplaces.com/images/gas-grocery-gift-card.png",
+            "https://localcityplaces.com/images/new-year-250-background.jpg",
+            "https://localcityplaces.com/images/morning-buzz-homepage-wide.webp",
+            "https://localcityplaces.com/images/john-heidi-show.jpg",
+          ].slice(0, Number(params.photoCount || 0)),
           createdAt: params.createdAt
             ? new Date(params.createdAt)
             : new Date("2026-06-07T17:00:00.000Z"),

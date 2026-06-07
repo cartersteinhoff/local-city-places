@@ -543,6 +543,32 @@ interface MerchantRequestAdminNotificationEmailOptions {
   createdAt: Date;
 }
 
+function buildMerchantRequestPhotoGrid(photoUrls: string[] | null) {
+  if (!photoUrls?.length) return "";
+
+  const rows: string[] = [];
+
+  for (let i = 0; i < photoUrls.length; i += 3) {
+    const cells = photoUrls
+      .slice(i, i + 3)
+      .map((url, index) => {
+        const safeUrl = escapeHtml(url);
+        const photoNumber = i + index + 1;
+
+        return `<td width="33.33%" style="padding:4px;vertical-align:top;">
+          <a href="${safeUrl}" style="display:block;text-decoration:none;">
+            <img src="${safeUrl}" alt="Submitted merchant photo ${photoNumber}" width="180" height="96" style="display:block;width:100%;max-width:180px;height:96px;object-fit:cover;border:1px solid #e2e8f0;border-radius:6px;" />
+          </a>
+        </td>`;
+      })
+      .join("");
+
+    rows.push(`<tr>${cells}</tr>`);
+  }
+
+  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;margin-top:6px;table-layout:fixed;">${rows.join("")}</table>`;
+}
+
 export async function sendMerchantRequestAdminNotificationEmail({
   recipients = MERCHANT_REQUEST_ADMIN_RECIPIENTS,
   ownerName,
@@ -575,6 +601,7 @@ export async function sendMerchantRequestAdminNotificationEmail({
   const adminUrl = `${APP_URL}/admin/merchant-requests`;
   const safeAdminUrl = escapeHtml(adminUrl);
   const photoCount = photoUrls?.length || 0;
+  const photoGridHtml = buildMerchantRequestPhotoGrid(photoUrls);
   const subject = `New merchant request: ${businessName}`;
 
   const html = `<!DOCTYPE html>
@@ -659,6 +686,14 @@ export async function sendMerchantRequestAdminNotificationEmail({
             <p class="detail-label">Uploads</p>
             <p class="detail-value">Logo: ${logoUrl ? "Yes" : "No"} / Photos: ${photoCount}</p>
           </div>
+          ${
+            photoGridHtml
+              ? `<div class="detail-row">
+            <p class="detail-label">Submitted photos</p>
+            ${photoGridHtml}
+          </div>`
+              : ""
+          }
           <div class="detail-row">
             <p class="detail-label">Received</p>
             <p class="detail-value">${receivedAt}</p>
