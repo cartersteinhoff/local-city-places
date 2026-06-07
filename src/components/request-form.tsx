@@ -46,6 +46,19 @@ interface RequestFormState {
 
 type StepId = "category" | "contact" | "assets" | "review";
 
+interface SelectedBusinessMatch {
+  name: string;
+  address: string;
+  cityState: string;
+  zipCode: string;
+}
+
+interface SubmittedRequestSummary {
+  businessName: string;
+  requestedCategory: string;
+  market: string;
+}
+
 interface Step {
   id: StepId;
   label: string;
@@ -209,17 +222,22 @@ export function RequestForm() {
   const [error, setError] = useState("");
   const [submittedAt, setSubmittedAt] = useState("");
   const [requestId, setRequestId] = useState("");
+  const [submittedSummary, setSubmittedSummary] =
+    useState<SubmittedRequestSummary | null>(null);
   const [showManualBusinessDetails, setShowManualBusinessDetails] =
     useState(false);
+  const [selectedBusinessMatch, setSelectedBusinessMatch] =
+    useState<SelectedBusinessMatch | null>(null);
+  const [attemptedSteps, setAttemptedSteps] = useState<
+    Partial<Record<StepId, boolean>>
+  >({});
 
   const currentStep = steps[currentStepIndex];
   const parsedCityState = useMemo(
     () => parseCityState(form.cityState),
     [form.cityState],
   );
-  const shouldShowBusinessDetails =
-    showManualBusinessDetails ||
-    Boolean(form.businessName || form.cityState || form.zipCode);
+  const shouldShowBusinessDetails = showManualBusinessDetails;
 
   const isFieldComplete = (field: keyof RequestFormState) => {
     const value = form[field];
@@ -270,20 +288,28 @@ export function RequestForm() {
       return;
     }
 
-    setShowManualBusinessDetails(true);
+    const nextCityState =
+      details?.city || details?.state
+        ? [details.city, details.state].filter(Boolean).join(", ")
+        : form.cityState;
+    const nextBusinessName = details?.name || form.businessName;
+    const nextAddress = formatStreetAddress(details, selectedAddress);
+    const nextZipCode = details?.zipCode || form.zipCode;
+
+    setSelectedBusinessMatch({
+      name: nextBusinessName || selectedAddress.split(",")[0] || "Business",
+      address: nextAddress,
+      cityState: nextCityState,
+      zipCode: nextZipCode,
+    });
 
     setForm((current) => {
-      const nextCityState =
-        details?.city || details?.state
-          ? [details.city, details.state].filter(Boolean).join(", ")
-          : current.cityState;
-
       return {
         ...current,
-        businessName: details?.name || current.businessName,
-        businessAddress1: formatStreetAddress(details, selectedAddress),
+        businessName: nextBusinessName,
+        businessAddress1: nextAddress,
         cityState: nextCityState,
-        zipCode: details?.zipCode || current.zipCode,
+        zipCode: nextZipCode,
       };
     });
   };
@@ -292,17 +318,15 @@ export function RequestForm() {
     setError("");
 
     if (!canGoNext) {
-      if (
-        currentStep.id === "category" &&
-        currentStepMissingFields.some((field) =>
-          ["businessName", "cityState", "zipCode"].includes(field),
-        )
-      ) {
-        setShowManualBusinessDetails(true);
-      }
+      setAttemptedSteps((current) => ({ ...current, [currentStep.id]: true }));
 
       setError(
-        `Add ${formatMissingFields(currentStepMissingFields)} before continuing.`,
+        currentStep.id === "category" &&
+          currentStepMissingFields.some((field) =>
+            ["businessName", "cityState", "zipCode"].includes(field),
+          )
+          ? "Select a Google match or click Manual entry to add the business details."
+          : `Add ${formatMissingFields(currentStepMissingFields)} before continuing.`,
       );
       return;
     }
@@ -385,8 +409,15 @@ export function RequestForm() {
 
       setSubmittedAt(data.request.createdAt);
       setRequestId(data.request.id);
+      setSubmittedSummary({
+        businessName: form.businessName,
+        requestedCategory: form.requestedCategory,
+        market: [city, state].filter(Boolean).join(", "),
+      });
       setForm(initialState);
       setShowManualBusinessDetails(false);
+      setSelectedBusinessMatch(null);
+      setAttemptedSteps({});
       setLogo(null);
       setPhotos([]);
       setCurrentStepIndex(0);
@@ -401,39 +432,86 @@ export function RequestForm() {
 
   if (submittedAt) {
     return (
-      <div className="overflow-hidden rounded-[8px] border border-emerald-200 bg-white shadow-[0_24px_80px_rgba(8,30,45,0.18)]">
-        <div className="bg-emerald-700 px-5 py-5 text-white sm:px-6">
-          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white text-emerald-700">
-            <CheckCircle2 className="h-6 w-6" />
+      <div className="overflow-hidden rounded-[8px] border border-white/70 bg-white text-slate-950 shadow-[0_24px_70px_rgba(8,30,45,0.24)]">
+        <div className="border-b border-slate-200 bg-white px-5 py-5 sm:px-6">
+          <div className="flex items-start gap-4">
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200">
+              <CheckCircle2 className="h-6 w-6" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-[11px] font-black uppercase tracking-[0.18em] text-[#bf4c00] sm:text-xs">
+                Request Submitted
+              </p>
+              <h2 className="mt-1.5 text-xl font-black tracking-normal text-slate-950 sm:text-[24px]">
+                Your Phoenix Metro 250 request is in review.
+              </h2>
+              <p className="mt-1.5 max-w-xl text-sm font-semibold leading-5 text-slate-600">
+                We received your category request. If selected, fulfillment
+                begins before the Merchant Dashboard invite is sent.
+              </p>
+            </div>
           </div>
-          <h2 className="mt-5 text-2xl font-black tracking-normal sm:text-3xl">
-            Request received.
-          </h2>
-          <p className="mt-2 text-sm font-medium leading-6 text-white/86">
-            Your request is now in the category review queue.
-          </p>
         </div>
+
         <div className="p-5 sm:p-6">
-          <p className="text-base leading-7 text-slate-700">
-            Timestamped at{" "}
-            <span className="font-bold text-slate-950">
-              {formatSubmittedAt(submittedAt)}
-            </span>
-            . Requests are reviewed in the order received.
-          </p>
-          <p className="mt-3 text-sm font-bold uppercase tracking-[0.14em] text-slate-500">
-            Reference {requestId.slice(0, 8).toUpperCase()}
-          </p>
-          <Button
-            type="button"
-            className="mt-6 h-11 rounded-[8px] bg-[#ff6a00] font-black text-white hover:bg-[#e85f00]"
-            onClick={() => {
-              setSubmittedAt("");
-              setRequestId("");
-            }}
-          >
-            Submit Another Request
-          </Button>
+          <dl className="grid gap-3 sm:grid-cols-2">
+            <div className="rounded-[8px] border border-slate-200 bg-slate-50 px-4 py-3">
+              <dt className="text-[11px] font-black uppercase tracking-[0.14em] text-slate-500">
+                Received
+              </dt>
+              <dd className="mt-1 text-sm font-black text-slate-950">
+                {formatSubmittedAt(submittedAt)}
+              </dd>
+            </div>
+            <div className="rounded-[8px] border border-slate-200 bg-slate-50 px-4 py-3">
+              <dt className="text-[11px] font-black uppercase tracking-[0.14em] text-slate-500">
+                Reference
+              </dt>
+              <dd className="mt-1 text-sm font-black text-slate-950">
+                {requestId.slice(0, 8).toUpperCase()}
+              </dd>
+            </div>
+            <div className="rounded-[8px] border border-slate-200 bg-slate-50 px-4 py-3">
+              <dt className="text-[11px] font-black uppercase tracking-[0.14em] text-slate-500">
+                Category
+              </dt>
+              <dd className="mt-1 truncate text-sm font-black text-slate-950">
+                {submittedSummary?.requestedCategory || "Submitted category"}
+              </dd>
+            </div>
+            <div className="rounded-[8px] border border-slate-200 bg-slate-50 px-4 py-3">
+              <dt className="text-[11px] font-black uppercase tracking-[0.14em] text-slate-500">
+                Market
+              </dt>
+              <dd className="mt-1 text-sm font-black text-slate-950">
+                {submittedSummary?.market || "Phoenix Metro"}
+              </dd>
+            </div>
+          </dl>
+
+          <div className="mt-5 border-l-4 border-[#ff6a00] bg-orange-50 px-4 py-3">
+            <p className="text-sm font-semibold leading-6 text-slate-700">
+              Your timestamp now holds this request in review order for the
+              submitted city and category.
+            </p>
+          </div>
+
+          <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <p className="text-sm font-semibold leading-6 text-slate-500">
+              Watch for follow-up if the business is selected.
+            </p>
+            <Button
+              type="button"
+              className="h-11 rounded-[8px] bg-[#ff6a00] font-black text-white hover:bg-[#e85f00]"
+              onClick={() => {
+                setSubmittedAt("");
+                setRequestId("");
+                setSubmittedSummary(null);
+              }}
+            >
+              Submit Another Request
+            </Button>
+          </div>
         </div>
       </div>
     );
@@ -442,28 +520,39 @@ export function RequestForm() {
   return (
     <form
       onSubmit={handleSubmit}
-      className="overflow-hidden rounded-[8px] border border-white/80 bg-white text-slate-950 shadow-[0_24px_70px_rgba(8,30,45,0.24)]"
+      className="overflow-hidden rounded-[8px] border border-white/70 bg-white text-slate-950 shadow-[0_24px_70px_rgba(8,30,45,0.24)]"
     >
-      <div className="bg-[#073253] px-5 py-4 text-white sm:px-6">
-        <div className="flex items-start justify-between gap-4">
+      <div className="border-b border-slate-200 bg-white px-5 py-4 sm:px-6">
+        <div className="flex items-start justify-between gap-5">
           <div className="min-w-0">
-            <p className="text-xs font-black uppercase tracking-[0.18em] text-[#ff6a00]">
+            <p className="text-[11px] font-black uppercase tracking-[0.18em] text-[#bf4c00] sm:text-xs">
               Founding Merchant Request
             </p>
-            <h2 className="mt-2 text-xl font-black tracking-normal sm:text-[26px]">
+            <h2 className="mt-1.5 text-xl font-black tracking-normal text-slate-950 sm:text-[24px]">
               {currentStep.title}
             </h2>
-            <p className="mt-2 max-w-xl text-sm font-medium leading-6 text-white/78">
+            <p className="mt-1.5 max-w-xl text-sm font-semibold leading-5 text-slate-600">
               {currentStep.description}
             </p>
           </div>
-          <p className="shrink-0 pt-1 text-sm font-black text-orange-100 sm:text-base">
+          <p className="shrink-0 rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-black text-slate-700 shadow-sm sm:text-sm">
             Step {currentStepIndex + 1} of {steps.length}
           </p>
         </div>
+        <div
+          className="mt-4 h-1.5 overflow-hidden rounded-full bg-slate-100"
+          aria-hidden="true"
+        >
+          <div
+            className="h-full rounded-full bg-[#ff6a00] transition-all duration-300"
+            style={{
+              width: `${((currentStepIndex + 1) / steps.length) * 100}%`,
+            }}
+          />
+        </div>
       </div>
 
-      <div className="border-b border-slate-200 bg-white px-3 py-2.5 sm:px-5">
+      <div className="border-b border-slate-200 bg-slate-50 px-3 py-2 sm:px-5">
         <div className="grid grid-cols-4 gap-1.5">
           {steps.map((step, index) => {
             const Icon = step.icon;
@@ -478,13 +567,13 @@ export function RequestForm() {
                 aria-current={isActive ? "step" : undefined}
                 disabled={isLocked || isSubmitting}
                 className={cn(
-                  "flex h-9 min-w-0 items-center justify-center gap-1 rounded-[8px] px-1.5 text-[9px] font-bold transition-colors sm:gap-1.5 sm:px-2 sm:text-xs",
+                  "flex h-8 min-w-0 items-center justify-center gap-1 rounded-[8px] px-1.5 text-[9px] font-bold transition-colors sm:gap-1.5 sm:px-2 sm:text-xs",
                   isActive &&
-                    "bg-orange-50 text-[#bf4c00] ring-1 ring-[#ff6a00]/60",
+                    "bg-white text-[#bf4c00] shadow-sm ring-1 ring-[#ff6a00]/45",
                   isComplete && "bg-emerald-50 text-emerald-800",
                   !isActive &&
                     !isComplete &&
-                    "bg-white text-slate-400 ring-1 ring-slate-200/80",
+                    "bg-slate-50 text-slate-400 ring-1 ring-slate-200/80",
                   isLocked && "cursor-not-allowed opacity-70",
                 )}
                 onClick={() => {
@@ -504,130 +593,189 @@ export function RequestForm() {
         <div className="min-h-[292px] sm:min-h-[300px]">
           {currentStep.id === "category" && (
             <div className="space-y-4">
-              <div>
-                <Label htmlFor="requestedCategory">Category Requested *</Label>
-                <Input
-                  id="requestedCategory"
-                  value={form.requestedCategory}
-                  onChange={(event) =>
-                    updateField("requestedCategory", event.target.value)
-                  }
-                  placeholder="Roofing, coffee shop, dental..."
-                  required
-                />
-                <p className="mt-1 text-xs text-slate-500">
-                  Type the category you believe best fits the business.
-                </p>
-              </div>
-
-              <div>
-                <Label htmlFor="businessAddress1">Business Address *</Label>
-                <GooglePlacesAutocomplete
-                  id="businessAddress1"
-                  value={form.businessAddress1}
-                  onInputChange={(value) =>
-                    updateField("businessAddress1", value)
-                  }
-                  onChange={handleAddressSelect}
-                  placeholder="Search business name or address..."
-                  types={[]}
-                  fetchDetails
-                  allowManualEntry
-                />
-                <p className="mt-1 text-xs text-slate-500">
-                  Select a Google match to fill business name, city, state, and
-                  zip.
-                </p>
-                {!shouldShowBusinessDetails && (
+              <div className="space-y-3">
+                <div>
+                  <Label htmlFor="requestedCategory">
+                    Category Requested *
+                  </Label>
+                  <Input
+                    id="requestedCategory"
+                    value={form.requestedCategory}
+                    onChange={(event) =>
+                      updateField("requestedCategory", event.target.value)
+                    }
+                    placeholder="Roofing, coffee shop, dental..."
+                    required
+                  />
                   <p className="mt-1 text-xs text-slate-500">
-                    Can&apos;t find your business?{" "}
-                    <button
-                      type="button"
-                      className="font-bold text-[#bf4c00] underline-offset-2 hover:underline"
-                      onClick={() => setShowManualBusinessDetails(true)}
-                    >
-                      Manual entry
-                    </button>
+                    Type the category you believe best fits the business.
                   </p>
-                )}
+                </div>
               </div>
 
-              {shouldShowBusinessDetails && (
-                <div className="space-y-4">
-                  <div className="grid gap-4 sm:grid-cols-[minmax(0,1fr)_140px]">
-                    <div>
-                      <Label htmlFor="cityState">City, State *</Label>
-                      <Input
-                        id="cityState"
-                        value={form.cityState}
-                        onChange={(event) =>
-                          updateField("cityState", event.target.value)
-                        }
-                        placeholder="Phoenix, AZ"
-                        required
-                      />
+              <div className="space-y-3">
+                <div className="space-y-3">
+                  <div>
+                    <Label htmlFor="businessAddress1">Business Address *</Label>
+                    <GooglePlacesAutocomplete
+                      id="businessAddress1"
+                      value={form.businessAddress1}
+                      onInputChange={(value) => {
+                        updateField("businessAddress1", value);
+                        setSelectedBusinessMatch(null);
+                      }}
+                      onChange={handleAddressSelect}
+                      placeholder="Search business name or address..."
+                      types={[]}
+                      fetchDetails
+                      allowManualEntry
+                    />
+                    <p className="mt-1 text-xs text-slate-500">
+                      Select a Google match to fill business name, city, state,
+                      and zip.
+                    </p>
+                    {!shouldShowBusinessDetails && !selectedBusinessMatch && (
                       <p className="mt-1 text-xs text-slate-500">
-                        Enter as city, state code.
+                        Can&apos;t find your business?{" "}
+                        <button
+                          type="button"
+                          className="font-bold text-[#bf4c00] underline-offset-2 hover:underline"
+                          onClick={() => {
+                            setShowManualBusinessDetails(true);
+                            setSelectedBusinessMatch(null);
+                          }}
+                        >
+                          Manual entry
+                        </button>
                       </p>
-                    </div>
+                    )}
+                  </div>
 
-                    <div>
-                      <Label htmlFor="zipCode">Zip *</Label>
-                      <Input
-                        id="zipCode"
-                        value={form.zipCode}
-                        onChange={(event) =>
-                          updateField("zipCode", event.target.value)
-                        }
-                        placeholder="85004"
-                        required
-                      />
+                  {selectedBusinessMatch && (
+                    <div className="rounded-[8px] border border-emerald-200 bg-emerald-50 px-4 py-3">
+                      <div className="flex items-start gap-3">
+                        <div className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-emerald-600 text-white">
+                          <CheckCircle2 className="h-4 w-4" />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="text-[11px] font-black uppercase tracking-[0.14em] text-emerald-700">
+                            Selected Business
+                          </p>
+                          <p className="mt-1 truncate text-sm font-black text-slate-950">
+                            {selectedBusinessMatch.name}
+                          </p>
+                          <p className="mt-0.5 text-sm leading-5 text-slate-600">
+                            {selectedBusinessMatch.address}
+                            <br />
+                            {[
+                              selectedBusinessMatch.cityState,
+                              selectedBusinessMatch.zipCode,
+                            ]
+                              .filter(Boolean)
+                              .join(" ")}
+                          </p>
+                        </div>
+                        <button
+                          type="button"
+                          className="shrink-0 text-xs font-black text-[#bf4c00] underline-offset-2 hover:underline"
+                          onClick={() => setShowManualBusinessDetails(true)}
+                        >
+                          Edit manually
+                        </button>
+                      </div>
                     </div>
+                  )}
+
+                  {shouldShowBusinessDetails && (
+                    <div className="space-y-4 rounded-[8px] border border-slate-200 bg-slate-50/70 p-4">
+                      <div className="grid gap-4 sm:grid-cols-[minmax(0,1fr)_140px]">
+                        <div>
+                          <Label htmlFor="cityState">City, State *</Label>
+                          <Input
+                            id="cityState"
+                            value={form.cityState}
+                            onChange={(event) =>
+                              updateField("cityState", event.target.value)
+                            }
+                            placeholder="Phoenix, AZ"
+                            required
+                          />
+                          <p className="mt-1 text-xs text-slate-500">
+                            Enter as city, state code.
+                          </p>
+                        </div>
+
+                        <div>
+                          <Label htmlFor="zipCode">Zip *</Label>
+                          <Input
+                            id="zipCode"
+                            value={form.zipCode}
+                            onChange={(event) =>
+                              updateField("zipCode", event.target.value)
+                            }
+                            placeholder="85004"
+                            required
+                          />
+                        </div>
+                      </div>
+
+                      <div>
+                        <Label htmlFor="businessName">Business Name *</Label>
+                        <Input
+                          id="businessName"
+                          value={form.businessName}
+                          onChange={(event) =>
+                            updateField("businessName", event.target.value)
+                          }
+                          placeholder="Business name"
+                          required
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                <div className="space-y-4">
+                  <div>
+                    <div className="flex items-center justify-between gap-3">
+                      <Label htmlFor="yearsInBusiness" className="mb-0">
+                        Years in Business
+                      </Label>
+                      <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-black uppercase tracking-[0.12em] text-slate-500">
+                        Optional
+                      </span>
+                    </div>
+                    <Input
+                      id="yearsInBusiness"
+                      type="number"
+                      min="0"
+                      value={form.yearsInBusiness}
+                      onChange={(event) =>
+                        updateField("yearsInBusiness", event.target.value)
+                      }
+                      placeholder="12"
+                      className="mt-2"
+                    />
                   </div>
 
                   <div>
-                    <Label htmlFor="businessName">Business Name *</Label>
-                    <Input
-                      id="businessName"
-                      value={form.businessName}
+                    <Label htmlFor="shortDescription">
+                      Short Business Description *
+                    </Label>
+                    <Textarea
+                      id="shortDescription"
+                      value={form.shortDescription}
                       onChange={(event) =>
-                        updateField("businessName", event.target.value)
+                        updateField("shortDescription", event.target.value)
                       }
-                      placeholder="Business name"
+                      placeholder="What do you do, who do you serve, and what should locals know first?"
+                      rows={3}
                       required
                     />
                   </div>
                 </div>
-              )}
-
-              <div>
-                <Label htmlFor="yearsInBusiness">Years in Business</Label>
-                <Input
-                  id="yearsInBusiness"
-                  type="number"
-                  min="0"
-                  value={form.yearsInBusiness}
-                  onChange={(event) =>
-                    updateField("yearsInBusiness", event.target.value)
-                  }
-                  placeholder="12"
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="shortDescription">
-                  Short Business Description *
-                </Label>
-                <Textarea
-                  id="shortDescription"
-                  value={form.shortDescription}
-                  onChange={(event) =>
-                    updateField("shortDescription", event.target.value)
-                  }
-                  placeholder="What do you do, who do you serve, and what should locals know first?"
-                  rows={4}
-                  required
-                />
               </div>
             </div>
           )}
@@ -880,6 +1028,11 @@ export function RequestForm() {
                     ? "Ready for final review."
                     : "This step is ready."}
                 </span>
+              </>
+            ) : !attemptedSteps[currentStep.id] ? (
+              <>
+                <FileCheck2 className="h-4 w-4 text-[#ff6a00]" />
+                <span>Complete the required fields to continue.</span>
               </>
             ) : (
               <>
