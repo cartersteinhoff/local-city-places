@@ -391,6 +391,11 @@ interface MerchantRequestConfirmationEmailOptions {
   reference: string;
 }
 
+const MERCHANT_REQUEST_ADMIN_RECIPIENTS = [
+  "troy@localcityplaces.com",
+  "cartersteinhoff@gmail.com",
+];
+
 export async function sendMerchantRequestConfirmationEmail({
   email,
   ownerName,
@@ -525,6 +530,194 @@ Need help? support@localcityplaces.com
 954 E. County Down Drive, Chandler, AZ 85249`;
 
   return sendEmail({ to: email, subject, html, text });
+}
+
+interface MerchantRequestAdminNotificationEmailOptions {
+  ownerName: string;
+  businessName: string;
+  email: string;
+  mobilePhone: string;
+  website: string | null;
+  businessAddress1: string;
+  city: string;
+  state: string;
+  zipCode: string;
+  requestedCategory: string;
+  yearsInBusiness: number | null;
+  shortDescription: string;
+  logoUrl: string | null;
+  photoUrls: string[] | null;
+  createdAt: Date;
+  reference: string;
+}
+
+export async function sendMerchantRequestAdminNotificationEmail({
+  ownerName,
+  businessName,
+  email,
+  mobilePhone,
+  website,
+  businessAddress1,
+  city,
+  state,
+  zipCode,
+  requestedCategory,
+  yearsInBusiness,
+  shortDescription,
+  logoUrl,
+  photoUrls,
+  createdAt,
+  reference,
+}: MerchantRequestAdminNotificationEmailOptions): Promise<boolean> {
+  const safeBusinessName = escapeHtml(businessName);
+  const safeOwnerName = escapeHtml(ownerName);
+  const safeEmail = escapeHtml(email);
+  const safeMobilePhone = escapeHtml(mobilePhone);
+  const safeWebsite = website ? escapeHtml(website) : "Not provided";
+  const safeAddress = escapeHtml(
+    `${businessAddress1}, ${city}, ${state} ${zipCode}`,
+  );
+  const safeRequestedCategory = escapeHtml(requestedCategory);
+  const safeShortDescription = escapeHtml(shortDescription);
+  const safeReference = escapeHtml(reference);
+  const receivedAt = formatRequestTimestamp(createdAt);
+  const adminUrl = `${APP_URL}/admin/merchant-requests`;
+  const safeAdminUrl = escapeHtml(adminUrl);
+  const photoCount = photoUrls?.length || 0;
+  const subject = `New merchant request: ${businessName}`;
+
+  const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title>New merchant request</title>
+  <style>
+    body { margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', sans-serif; background-color: #f9fafb; }
+    .email-wrapper { width: 100%; background: linear-gradient(180deg, #0f172a 0%, #020617 100%); padding: 48px 20px; }
+    .email-container { max-width: 700px; margin: 0 auto; border-radius: 8px; overflow: hidden; border: 1px solid #e2e8f0; box-shadow: 0 4px 12px rgba(15, 23, 42, 0.18); }
+    .email-header { background: #ffffff; padding: 24px 32px; text-align: center; border-bottom: 1px solid #e2e8f0; }
+    .email-content { background-color: #ffffff; padding: 40px 32px; }
+    .eyebrow { color: #f97316; font-size: 13px; font-weight: 800; letter-spacing: 0.14em; margin: 0 0 12px; text-transform: uppercase; }
+    .email-content h1 { color: #0f172a; margin: 0 0 16px; font-size: 28px; line-height: 1.2; font-weight: 800; }
+    .email-content p { color: #334155; line-height: 1.6; margin: 0 0 16px; font-size: 16px; }
+    .details-box { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 20px; margin: 24px 0; }
+    .detail-row { padding: 10px 0; border-bottom: 1px solid #e2e8f0; }
+    .detail-row:last-child { border-bottom: 0; }
+    .detail-label { color: #64748b; font-size: 12px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; margin: 0 0 3px; }
+    .detail-value { color: #0f172a; font-size: 16px; font-weight: 700; margin: 0; }
+    .description-box { background: #fff7ed; border-left: 4px solid #f97316; border-radius: 6px; padding: 16px; margin: 24px 0; }
+    .description-box p { color: #7c2d12; margin: 0; font-size: 15px; }
+    .cta-button { text-align: center; margin: 30px 0; }
+    .cta-button a { display: inline-block; background: #f97316; color: white; padding: 14px 32px; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 700; }
+    .email-footer { background: #ffffff; padding: 28px 24px; text-align: center; border-top: 1px solid #e2e8f0; }
+    .email-footer p { color: #666666; font-size: 14px; margin: 0 0 12px 0; line-height: 1.6; }
+    .footer-legal { font-size: 12px; color: #999999; margin-top: 20px; }
+    @media only screen and (max-width: 600px) {
+      .email-wrapper { padding: 24px 12px; }
+      .email-content { padding: 32px 24px; }
+      .email-header { padding: 24px 20px; }
+      .email-content h1 { font-size: 24px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="email-wrapper">
+    <div class="email-container">
+      <div class="email-header">
+        <img src="${EMAIL_ASSETS_URL}/images/email-logo.png" alt="Local City Places" width="300" height="134" style="width: 300px; max-width: 100%; height: auto;" />
+      </div>
+      <div class="email-content">
+        <p class="eyebrow">Merchant Request Submitted</p>
+        <h1>${safeBusinessName}</h1>
+        <p>A merchant request was just submitted and is ready for admin review.</p>
+
+        <div class="details-box">
+          <div class="detail-row">
+            <p class="detail-label">Owner</p>
+            <p class="detail-value">${safeOwnerName}</p>
+          </div>
+          <div class="detail-row">
+            <p class="detail-label">Email</p>
+            <p class="detail-value">${safeEmail}</p>
+          </div>
+          <div class="detail-row">
+            <p class="detail-label">Mobile phone</p>
+            <p class="detail-value">${safeMobilePhone}</p>
+          </div>
+          <div class="detail-row">
+            <p class="detail-label">Requested category</p>
+            <p class="detail-value">${safeRequestedCategory}</p>
+          </div>
+          <div class="detail-row">
+            <p class="detail-label">Address</p>
+            <p class="detail-value">${safeAddress}</p>
+          </div>
+          <div class="detail-row">
+            <p class="detail-label">Website</p>
+            <p class="detail-value">${safeWebsite}</p>
+          </div>
+          <div class="detail-row">
+            <p class="detail-label">Years in business</p>
+            <p class="detail-value">${yearsInBusiness ?? "Not provided"}</p>
+          </div>
+          <div class="detail-row">
+            <p class="detail-label">Uploads</p>
+            <p class="detail-value">Logo: ${logoUrl ? "Yes" : "No"} / Photos: ${photoCount}</p>
+          </div>
+          <div class="detail-row">
+            <p class="detail-label">Received</p>
+            <p class="detail-value">${receivedAt}</p>
+          </div>
+          <div class="detail-row">
+            <p class="detail-label">Reference</p>
+            <p class="detail-value">${safeReference}</p>
+          </div>
+        </div>
+
+        <div class="description-box">
+          <p><strong>Submitted description:</strong><br>${safeShortDescription}</p>
+        </div>
+
+        <div class="cta-button">
+          <a href="${safeAdminUrl}">Review Merchant Requests</a>
+        </div>
+      </div>
+      <div class="email-footer">
+        <p class="footer-legal">© 2026 Local City Places. All rights reserved.<br>954 E. County Down Drive, Chandler, AZ 85249</p>
+      </div>
+    </div>
+  </div>
+</body>
+</html>`;
+
+  const text = `New merchant request submitted
+
+Business: ${businessName}
+Owner: ${ownerName}
+Email: ${email}
+Mobile phone: ${mobilePhone}
+Requested category: ${requestedCategory}
+Address: ${businessAddress1}, ${city}, ${state} ${zipCode}
+Website: ${website || "Not provided"}
+Years in business: ${yearsInBusiness ?? "Not provided"}
+Uploads: Logo ${logoUrl ? "yes" : "no"} / Photos ${photoCount}
+Received: ${receivedAt}
+Reference: ${reference}
+
+Submitted description:
+${shortDescription}
+
+Review merchant requests: ${adminUrl}`;
+
+  const results = await Promise.all(
+    MERCHANT_REQUEST_ADMIN_RECIPIENTS.map((recipient) =>
+      sendEmail({ to: recipient, subject, html, text }),
+    ),
+  );
+
+  return results.every(Boolean);
 }
 
 interface MerchantInviteEmailOptions {

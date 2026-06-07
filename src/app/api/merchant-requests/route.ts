@@ -1,7 +1,10 @@
 import { randomUUID } from "node:crypto";
 import { type NextRequest, NextResponse } from "next/server";
 import { db, merchantRequests } from "@/db";
-import { sendMerchantRequestConfirmationEmail } from "@/lib/email";
+import {
+  sendMerchantRequestAdminNotificationEmail,
+  sendMerchantRequestConfirmationEmail,
+} from "@/lib/email";
 import { uploadMerchantRequestImage } from "@/lib/storage";
 import { stripPhoneNumber } from "@/lib/utils";
 
@@ -218,10 +221,39 @@ export async function POST(request: NextRequest) {
       console.error("Error sending merchant request confirmation:", emailError);
     }
 
+    let adminNotificationEmailSent = false;
+    try {
+      adminNotificationEmailSent =
+        await sendMerchantRequestAdminNotificationEmail({
+          ownerName,
+          businessName,
+          email,
+          mobilePhone,
+          website,
+          businessAddress1,
+          city,
+          state,
+          zipCode,
+          requestedCategory,
+          yearsInBusiness,
+          shortDescription,
+          logoUrl,
+          photoUrls: photoUrls.length > 0 ? photoUrls : null,
+          createdAt: merchantRequest.createdAt,
+          reference: merchantRequest.id.slice(0, 8).toUpperCase(),
+        });
+    } catch (emailError) {
+      console.error(
+        "Error sending merchant request admin notification:",
+        emailError,
+      );
+    }
+
     return NextResponse.json(
       {
         success: true,
         confirmationEmailSent,
+        adminNotificationEmailSent,
         request: {
           ...merchantRequest,
           createdAt: merchantRequest.createdAt.toISOString(),
