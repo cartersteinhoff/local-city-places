@@ -375,8 +375,8 @@ export function FeaturedMarquee({
     <section className="relative z-10 py-8" style={sectionStyle}>
       {showHeading && <MarqueeHeading />}
       <div className="flex flex-col gap-4" style={rowsContainerStyle}>
-        <MarqueeRow merchants={row1} direction="right" speed={140} />
-        <MarqueeRow merchants={row2} direction="left" speed={165} />
+        <MarqueeRow merchants={row1} direction="right" speed={150} />
+        <MarqueeRow merchants={row2} direction="left" speed={150} />
         <MarqueeRow merchants={row3} direction="right" speed={150} />
       </div>
     </section>
