@@ -68,7 +68,12 @@ export function MobileHeader() {
   return (
     <header className="md:hidden h-14 bg-card border-b border-border flex items-center justify-between px-4 sticky top-0 z-40">
       {/* Logo */}
-      <Link href="/" className="flex min-w-0 items-center">
+      <Link
+        href="/"
+        aria-label="Go to Local City Places homepage"
+        className="flex min-w-0 items-center"
+        title="Local City Places homepage"
+      >
         <Image
           src="/images/local-city-places-header-logo-v12.webp"
           alt="Local City Places"

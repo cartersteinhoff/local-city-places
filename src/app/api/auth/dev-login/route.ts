@@ -1,12 +1,14 @@
-import { NextRequest, NextResponse } from "next/server";
-import { cookies } from "next/headers";
-import { SignJWT } from "jose";
-import { db, users } from "@/db";
 import { eq } from "drizzle-orm";
+import { SignJWT } from "jose";
+import { cookies } from "next/headers";
+import { type NextRequest, NextResponse } from "next/server";
+import { db, users } from "@/db";
 import { SESSION_COOKIE_NAME } from "@/lib/auth";
 
 const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET);
 const JWT_EXPIRY_DAYS = 30;
+const DEV_ADMIN_EMAIL =
+  process.env.DEV_AUTO_LOGIN_EMAIL || "cartersteinhoff@gmail.com";
 
 // DEV ONLY: Quick login without magic link
 // Usage: GET /api/auth/dev-login?role=admin (or email=user@example.com)
@@ -15,19 +17,20 @@ export async function GET(request: NextRequest) {
   if (process.env.NODE_ENV !== "development") {
     return NextResponse.json(
       { error: "Dev login only available in development" },
-      { status: 403 }
+      { status: 403 },
     );
   }
 
   const searchParams = request.nextUrl.searchParams;
   const roleParam = searchParams.get("role") || "admin";
   const role = roleParam as "member" | "merchant" | "admin";
-  const email = searchParams.get("email");
+  const email =
+    searchParams.get("email") || (role === "admin" ? DEV_ADMIN_EMAIL : null);
   const redirect = searchParams.get("redirect") || "/admin";
 
   try {
     // Find user by email or role
-    let user;
+    let user: typeof users.$inferSelect | undefined;
     if (email) {
       [user] = await db
         .select()
@@ -44,8 +47,10 @@ export async function GET(request: NextRequest) {
 
     if (!user) {
       return NextResponse.json(
-        { error: `No user found with ${email ? `email: ${email}` : `role: ${role}`}` },
-        { status: 404 }
+        {
+          error: `No user found with ${email ? `email: ${email}` : `role: ${role}`}`,
+        },
+        { status: 404 },
       );
     }
 
@@ -77,9 +82,6 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(new URL(redirect, request.url));
   } catch (error) {
     console.error("Dev login error:", error);
-    return NextResponse.json(
-      { error: "Dev login failed" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Dev login failed" }, { status: 500 });
   }
 }

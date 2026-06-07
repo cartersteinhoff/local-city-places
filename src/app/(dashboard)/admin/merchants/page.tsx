@@ -36,6 +36,7 @@ import {
   ExternalLink,
   Copy,
   Check,
+  RadioTower,
 } from "lucide-react";
 import {
   Select,
@@ -490,6 +491,11 @@ export default function MerchantPagesPage() {
                                   </a>
                                 </Button>
                               )}
+                              <Button variant="ghost" size="icon" className="h-8 w-8" asChild>
+                                <Link href={`/admin/merchants/${merchant.id}/on-air-studio`} title="On-Air Studio">
+                                  <RadioTower className="w-4 h-4" />
+                                </Link>
+                              </Button>
                               <Button variant="ghost" size="icon" className="h-8 w-8" asChild>
                                 <Link href={`/admin/merchants/${merchant.id}/edit`} title="Edit">
                                   <Pencil className="w-4 h-4" />

@@ -1,15 +1,10 @@
-import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { NextResponse } from "next/server";
 
 // Routes that require authentication
 const protectedRoutes = ["/member", "/merchant", "/admin"];
-
-// Routes that require specific roles
-const roleRoutes: Record<string, string[]> = {
-  member: ["/member"],
-  merchant: ["/merchant"],
-  admin: ["/admin"],
-};
+const DEV_ADMIN_EMAIL =
+  process.env.DEV_AUTO_LOGIN_EMAIL || "cartersteinhoff@gmail.com";
 
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -17,10 +12,17 @@ export function proxy(request: NextRequest) {
 
   // Check if route is protected
   const isProtectedRoute = protectedRoutes.some((route) =>
-    pathname.startsWith(route)
+    pathname.startsWith(route),
   );
 
   if (isProtectedRoute && !sessionToken) {
+    if (process.env.NODE_ENV === "development") {
+      const url = new URL("/api/auth/dev-login", request.url);
+      url.searchParams.set("email", DEV_ADMIN_EMAIL);
+      url.searchParams.set("redirect", `${pathname}${request.nextUrl.search}`);
+      return NextResponse.redirect(url);
+    }
+
     // Redirect to home page with return URL
     const url = new URL("/", request.url);
     url.searchParams.set("redirect", pathname);
@@ -35,9 +37,5 @@ export function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: [
-    "/member/:path*",
-    "/merchant/:path*",
-    "/admin/:path*",
-  ],
+  matcher: ["/member/:path*", "/merchant/:path*", "/admin/:path*"],
 };

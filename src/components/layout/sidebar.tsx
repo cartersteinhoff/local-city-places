@@ -1,9 +1,20 @@
 "use client";
 
-import { Check, LogOut, Moon, Shield, Store, Sun, User } from "lucide-react";
+import {
+  Check,
+  ChevronLeft,
+  ChevronRight,
+  LogOut,
+  Moon,
+  Shield,
+  Store,
+  Sun,
+  User,
+} from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useState } from "react";
 import { useTheme } from "@/components/theme-provider";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -58,11 +69,35 @@ function getActiveHref(pathname: string, navItems: NavItem[]) {
     .sort((a, b) => b.href.length - a.href.length)[0]?.href;
 }
 
-export function Sidebar({ navItems, isCollapsed = false }: SidebarProps) {
+function groupNavItems(navItems: NavItem[]) {
+  return navItems.reduce<Array<{ label: string; items: NavItem[] }>>(
+    (groups, item) => {
+      const label = item.section || "Navigation";
+      const existingGroup = groups.find((group) => group.label === label);
+
+      if (existingGroup) {
+        existingGroup.items.push(item);
+      } else {
+        groups.push({ label, items: [item] });
+      }
+
+      return groups;
+    },
+    [],
+  );
+}
+
+export function Sidebar({
+  navItems,
+  isCollapsed: collapsedProp = false,
+  onToggleCollapse,
+}: SidebarProps) {
   const pathname = usePathname();
   const { theme, setTheme } = useTheme();
   const { user, userName } = useUser();
   const activeHref = getActiveHref(pathname, navItems);
+  const [localCollapsed, setLocalCollapsed] = useState(collapsedProp);
+  const isCollapsed = onToggleCollapse ? collapsedProp : localCollapsed;
 
   const fullName = userName || user?.email?.split("@")[0] || "User";
   const nameParts = fullName.split(" ");
@@ -87,19 +122,72 @@ export function Sidebar({ navItems, isCollapsed = false }: SidebarProps) {
 
   const isAdmin = user?.role === "admin";
   const CurrentIcon = roleConfig[currentView].icon;
+  const hasSections = navItems.some((item) => item.section);
+  const navGroups = groupNavItems(navItems);
+  const nextTheme = theme === "dark" ? "light" : "dark";
+
+  const handleToggleCollapse = () => {
+    if (onToggleCollapse) {
+      onToggleCollapse();
+      return;
+    }
+
+    setLocalCollapsed((current) => !current);
+  };
+
+  const renderNavItem = (item: NavItem) => {
+    const isActive = item.href === activeHref;
+    const Icon = item.icon;
+
+    return (
+      <Link
+        key={item.href}
+        href={item.href}
+        title={isCollapsed ? item.label : undefined}
+        className={cn(
+          "group flex items-center gap-3 rounded-md border-l-2 py-2.5 pr-3 text-sm font-medium transition-colors",
+          isCollapsed ? "justify-center border-l-0 px-0" : "pl-2.5",
+          isActive
+            ? "border-sidebar-primary bg-sidebar-primary/10 text-sidebar-primary"
+            : "border-transparent text-sidebar-foreground/80 hover:bg-sidebar-accent/60 hover:text-sidebar-foreground",
+        )}
+      >
+        <Icon
+          className={cn(
+            "h-5 w-5 shrink-0 transition-colors",
+            isActive
+              ? "text-sidebar-primary"
+              : "text-muted-foreground group-hover:text-sidebar-foreground",
+          )}
+          strokeWidth={1.75}
+        />
+        {!isCollapsed && <span className="truncate">{item.label}</span>}
+      </Link>
+    );
+  };
 
   return (
     <aside
       className={cn(
-        "hidden md:flex flex-col bg-sidebar border-r border-sidebar-border h-screen sticky top-0 transition-all duration-200",
+        "sticky top-0 hidden h-screen flex-col border-r border-sidebar-border bg-sidebar transition-all duration-200 md:flex",
         isCollapsed ? "w-16" : "w-64",
       )}
     >
       {/* Logo */}
-      <div className="h-16 flex items-center px-4 border-b border-sidebar-border">
-        <Link href="/" className="flex min-w-0 items-center">
+      <div
+        className={cn(
+          "relative flex h-14 items-center border-b border-sidebar-border",
+          isCollapsed ? "justify-center px-2" : "gap-3 px-3",
+        )}
+      >
+        <Link
+          href="/"
+          aria-label="Go to Local City Places homepage"
+          className="flex min-w-0 items-center"
+          title="Local City Places homepage"
+        >
           {isCollapsed ? (
-            <div className="w-8 h-8 rounded-lg bg-primary-gradient flex items-center justify-center">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary-gradient">
               <span className="text-white font-bold text-sm">LC</span>
             </div>
           ) : (
@@ -108,146 +196,176 @@ export function Sidebar({ navItems, isCollapsed = false }: SidebarProps) {
               alt="Local City Places"
               width={1592}
               height={713}
-              className="h-10 w-auto"
+              className="h-11 w-auto"
               priority
             />
           )}
         </Link>
+
+        <button
+          type="button"
+          onClick={handleToggleCollapse}
+          aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+          title={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+          className={cn(
+            "z-10 flex items-center justify-center border border-sidebar-border bg-sidebar text-sidebar-foreground shadow-sm transition-colors hover:bg-sidebar-accent",
+            isCollapsed
+              ? "absolute -right-3 top-1/2 h-6 w-6 -translate-y-1/2 rounded-full"
+              : "ml-auto h-8 w-8 rounded-md",
+          )}
+        >
+          {isCollapsed ? (
+            <ChevronRight className="h-3.5 w-3.5" strokeWidth={2} />
+          ) : (
+            <ChevronLeft className="h-4 w-4" strokeWidth={2} />
+          )}
+        </button>
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 py-4 px-2 space-y-1 overflow-y-auto">
-        {navItems.map((item) => {
-          const isActive = item.href === activeHref;
-          const Icon = item.icon;
-
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={cn(
-                "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors",
-                isActive
-                  ? "bg-sidebar-accent text-sidebar-primary"
-                  : "text-sidebar-foreground hover:bg-sidebar-accent/50",
-              )}
-            >
-              <Icon className="w-5 h-5 shrink-0" strokeWidth={1.75} />
-              {!isCollapsed && <span>{item.label}</span>}
-            </Link>
-          );
-        })}
+      <nav className="flex-1 overflow-y-auto px-2 py-3">
+        {hasSections ? (
+          <div className={cn("pb-4", isCollapsed ? "space-y-2" : "space-y-3")}>
+            {navGroups.map((group) => (
+              <div key={group.label}>
+                {!isCollapsed && (
+                  <p className="px-2.5 pb-1.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+                    {group.label}
+                  </p>
+                )}
+                <div className="space-y-1">
+                  {group.items.map(renderNavItem)}
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="space-y-1">{navItems.map(renderNavItem)}</div>
+        )}
       </nav>
 
-      {/* Bottom section: Theme toggle + User menu */}
-      <div className="border-t border-sidebar-border p-2 space-y-2">
-        {/* Theme toggle */}
-        <button
-          type="button"
-          onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+      <div
+        className={cn(
+          "border-t border-sidebar-border p-2",
+          isCollapsed ? "space-y-2" : "space-y-0",
+        )}
+      >
+        <div
           className={cn(
-            "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors w-full",
-            "text-sidebar-foreground hover:bg-sidebar-accent/50",
+            "flex items-center",
+            isCollapsed ? "flex-col gap-2" : "gap-2",
           )}
         >
-          <Sun
-            className="w-5 h-5 shrink-0 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0"
-            strokeWidth={1.75}
-          />
-          <Moon
-            className="w-5 h-5 shrink-0 absolute rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100"
-            strokeWidth={1.75}
-          />
-          {!isCollapsed && <span>Toggle theme</span>}
-        </button>
-
-        {/* User menu */}
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <button
-              type="button"
-              className={cn(
-                "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors w-full",
-                "text-sidebar-foreground hover:bg-sidebar-accent/50",
-              )}
-            >
-              <Avatar className="w-7 h-7 border border-sidebar-border shrink-0">
-                {user?.profilePhotoUrl && (
-                  <AvatarImage src={user.profilePhotoUrl} alt={displayName} />
+          {/* User menu */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button
+                type="button"
+                aria-label={`Open account menu for ${displayName}`}
+                title={isCollapsed ? displayName : undefined}
+                className={cn(
+                  "flex min-w-0 items-center gap-3 rounded-md text-sm font-medium text-sidebar-foreground transition-colors hover:bg-sidebar-accent/60",
+                  isCollapsed
+                    ? "h-10 w-10 justify-center p-0"
+                    : "flex-1 px-2.5 py-2",
                 )}
-                <AvatarFallback className="bg-primary/10 text-xs font-semibold text-primary">
-                  {initials}
-                </AvatarFallback>
-              </Avatar>
-              {!isCollapsed && (
-                <div className="flex-1 text-left min-w-0">
-                  <p className="text-sm font-medium text-sidebar-foreground leading-tight truncate">
-                    {displayName}
-                  </p>
-                  <div className="flex items-center gap-1">
-                    <CurrentIcon
-                      className={`w-3 h-3 ${roleConfig[currentView].color}`}
-                    />
-                    <span className="text-xs text-muted-foreground">
-                      {roleConfig[currentView].label}
-                    </span>
+              >
+                <Avatar className="h-8 w-8 shrink-0 border border-sidebar-border">
+                  {user?.profilePhotoUrl && (
+                    <AvatarImage src={user.profilePhotoUrl} alt="" />
+                  )}
+                  <AvatarFallback className="bg-primary/10 text-xs font-semibold text-primary">
+                    {initials}
+                  </AvatarFallback>
+                </Avatar>
+                {!isCollapsed && (
+                  <div className="min-w-0 flex-1 text-left">
+                    <p className="truncate text-sm font-medium leading-tight text-sidebar-foreground">
+                      {displayName}
+                    </p>
+                    <div className="mt-0.5 flex items-center gap-1">
+                      <CurrentIcon
+                        className={`h-3 w-3 ${roleConfig[currentView].color}`}
+                      />
+                      <span className="text-xs text-muted-foreground">
+                        {roleConfig[currentView].label}
+                      </span>
+                    </div>
                   </div>
-                </div>
+                )}
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent side="top" align="start" className="w-56">
+              {/* User Info Header */}
+              <div className="px-3 py-2">
+                <p className="text-sm font-medium">{displayName}</p>
+                <p className="text-xs text-muted-foreground truncate">
+                  {user?.email}
+                </p>
+              </div>
+              <DropdownMenuSeparator />
+
+              {/* Role Switcher (Admin only) */}
+              {isAdmin && (
+                <>
+                  <DropdownMenuLabel className="text-xs text-muted-foreground font-normal">
+                    Switch View
+                  </DropdownMenuLabel>
+                  {Object.entries(roleConfig).map(([key, config]) => {
+                    const Icon = config.icon;
+                    const isActiveView = currentView === key;
+                    return (
+                      <DropdownMenuItem key={key} asChild>
+                        <Link
+                          href={config.href}
+                          className="flex items-center gap-2"
+                        >
+                          <Icon className={`w-4 h-4 ${config.color}`} />
+                          {config.label}
+                          {isActiveView && (
+                            <Check className="ml-auto w-4 h-4 text-primary" />
+                          )}
+                        </Link>
+                      </DropdownMenuItem>
+                    );
+                  })}
+                  <DropdownMenuSeparator />
+                </>
               )}
-            </button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent side="top" align="start" className="w-56">
-            {/* User Info Header */}
-            <div className="px-3 py-2">
-              <p className="text-sm font-medium">{displayName}</p>
-              <p className="text-xs text-muted-foreground truncate">
-                {user?.email}
-              </p>
-            </div>
-            <DropdownMenuSeparator />
 
-            {/* Role Switcher (Admin only) */}
-            {isAdmin && (
-              <>
-                <DropdownMenuLabel className="text-xs text-muted-foreground font-normal">
-                  Switch View
-                </DropdownMenuLabel>
-                {Object.entries(roleConfig).map(([key, config]) => {
-                  const Icon = config.icon;
-                  const isActiveView = currentView === key;
-                  return (
-                    <DropdownMenuItem key={key} asChild>
-                      <Link
-                        href={config.href}
-                        className="flex items-center gap-2"
-                      >
-                        <Icon className={`w-4 h-4 ${config.color}`} />
-                        {config.label}
-                        {isActiveView && (
-                          <Check className="ml-auto w-4 h-4 text-primary" />
-                        )}
-                      </Link>
-                    </DropdownMenuItem>
-                  );
-                })}
-                <DropdownMenuSeparator />
-              </>
-            )}
+              {/* Logout */}
+              <DropdownMenuItem
+                className="text-destructive focus:text-destructive cursor-pointer"
+                onClick={() => {
+                  fetch("/api/auth/logout", { method: "POST" }).then(() => {
+                    window.location.href = "/";
+                  });
+                }}
+              >
+                <LogOut className="w-4 h-4 mr-2" />
+                Log out
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
 
-            {/* Logout */}
-            <DropdownMenuItem
-              className="text-destructive focus:text-destructive cursor-pointer"
-              onClick={() => {
-                fetch("/api/auth/logout", { method: "POST" }).then(() => {
-                  window.location.href = "/";
-                });
-              }}
-            >
-              <LogOut className="w-4 h-4 mr-2" />
-              Log out
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+          {/* Theme toggle */}
+          <button
+            type="button"
+            onClick={() => setTheme(nextTheme)}
+            aria-label={`Switch to ${nextTheme} mode`}
+            title={`Switch to ${nextTheme} mode`}
+            className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-md text-sidebar-foreground transition-colors hover:bg-sidebar-accent/60"
+          >
+            <Sun
+              className="h-4.5 w-4.5 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0"
+              strokeWidth={1.75}
+            />
+            <Moon
+              className="absolute h-4.5 w-4.5 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100"
+              strokeWidth={1.75}
+            />
+          </button>
+        </div>
       </div>
     </aside>
   );

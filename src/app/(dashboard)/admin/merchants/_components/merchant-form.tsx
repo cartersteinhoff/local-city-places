@@ -38,6 +38,7 @@ import {
   Save,
   RefreshCw,
   Paintbrush,
+  RadioTower,
 } from "lucide-react";
 import { Facebook, Instagram } from "@/components/icons/social-icons";
 import { formatPhoneNumber, stripPhoneNumber, cn } from "@/lib/utils";
@@ -512,12 +513,20 @@ export function MerchantForm({
                 </Link>
               </Button>
               {mode === "edit" && merchantId && (
-                <Button variant="outline" size="sm" asChild>
-                  <Link href={`/admin/merchants/${merchantId}/visual`}>
-                    <Paintbrush className="w-4 h-4 mr-2" />
-                    Visual Editor
-                  </Link>
-                </Button>
+                <>
+                  <Button variant="outline" size="sm" asChild>
+                    <Link href={`/admin/merchants/${merchantId}/visual`}>
+                      <Paintbrush className="w-4 h-4 mr-2" />
+                      Visual Editor
+                    </Link>
+                  </Button>
+                  <Button variant="outline" size="sm" asChild>
+                    <Link href={`/admin/merchants/${merchantId}/on-air-studio`}>
+                      <RadioTower className="w-4 h-4 mr-2" />
+                      On-Air Studio
+                    </Link>
+                  </Button>
+                </>
               )}
             </div>
             <div className="flex items-center gap-2">

@@ -1,6 +1,14 @@
 "use client";
 
-import { ClipboardList, ExternalLink, Loader2, Star, Store, UserCircle } from "lucide-react";
+import {
+  ClipboardList,
+  ExternalLink,
+  Loader2,
+  RadioTower,
+  Star,
+  Store,
+  UserCircle,
+} from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { DashboardLayout } from "@/components/layout";
@@ -36,13 +44,16 @@ interface DashboardData {
 export default function MerchantDashboard() {
   const router = useRouter();
   const { user, isLoading: authLoading, isAuthenticated } = useUser();
-  const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
+  const [dashboardData, setDashboardData] = useState<DashboardData | null>(
+    null,
+  );
   const [dataLoading, setDataLoading] = useState(true);
 
   useEffect(() => {
     if (
       !authLoading &&
-      (!isAuthenticated || (user?.role !== "merchant" && user?.role !== "admin"))
+      (!isAuthenticated ||
+        (user?.role !== "merchant" && user?.role !== "admin"))
     ) {
       router.push("/");
     }
@@ -110,7 +121,19 @@ export default function MerchantDashboard() {
           <div className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
             <div className="rounded-xl border bg-card p-6">
               <h2 className="text-lg font-semibold mb-4">Quick Actions</h2>
-              <div className="grid gap-4 sm:grid-cols-3">
+              <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                <a
+                  href="/merchant/on-air-studio"
+                  className="flex items-center gap-3 rounded-lg border p-4 transition-colors hover:bg-muted"
+                >
+                  <RadioTower className="w-5 h-5 text-primary" />
+                  <div>
+                    <p className="font-medium">On-Air Studio</p>
+                    <p className="text-xs text-muted-foreground">
+                      Hear campaign media
+                    </p>
+                  </div>
+                </a>
                 <a
                   href="/merchant/surveys"
                   className="flex items-center gap-3 rounded-lg border p-4 transition-colors hover:bg-muted"
@@ -118,7 +141,9 @@ export default function MerchantDashboard() {
                   <ClipboardList className="w-5 h-5 text-primary" />
                   <div>
                     <p className="font-medium">Surveys</p>
-                    <p className="text-xs text-muted-foreground">Manage questions</p>
+                    <p className="text-xs text-muted-foreground">
+                      Manage questions
+                    </p>
                   </div>
                 </a>
                 <a
@@ -128,7 +153,9 @@ export default function MerchantDashboard() {
                   <Star className="w-5 h-5 text-primary" />
                   <div>
                     <p className="font-medium">Reviews</p>
-                    <p className="text-xs text-muted-foreground">Read customer feedback</p>
+                    <p className="text-xs text-muted-foreground">
+                      Read customer feedback
+                    </p>
                   </div>
                 </a>
                 <a
@@ -138,7 +165,9 @@ export default function MerchantDashboard() {
                   <UserCircle className="w-5 h-5 text-primary" />
                   <div>
                     <p className="font-medium">Profile</p>
-                    <p className="text-xs text-muted-foreground">Update business details</p>
+                    <p className="text-xs text-muted-foreground">
+                      Update business details
+                    </p>
                   </div>
                 </a>
               </div>
@@ -154,7 +183,9 @@ export default function MerchantDashboard() {
                     {dashboardData?.merchant.businessName || "Business Profile"}
                   </h2>
                   <p className="text-sm text-muted-foreground">
-                    {dashboardData?.merchant.verified ? "Verified" : "Not verified"}
+                    {dashboardData?.merchant.verified
+                      ? "Verified"
+                      : "Not verified"}
                   </p>
                 </div>
               </div>
@@ -176,7 +207,9 @@ export default function MerchantDashboard() {
               <div className="space-y-4">
                 {dashboardData.recentReviews.map((review) => (
                   <div key={review.id} className="rounded-lg border p-4">
-                    <p className="line-clamp-3 text-sm leading-6">{review.content}</p>
+                    <p className="line-clamp-3 text-sm leading-6">
+                      {review.content}
+                    </p>
                     <p className="text-xs text-muted-foreground mt-2">
                       {review.wordCount} words ·{" "}
                       {new Date(review.createdAt).toLocaleDateString()}
