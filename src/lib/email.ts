@@ -533,6 +533,7 @@ Need help? support@localcityplaces.com
 }
 
 interface MerchantRequestAdminNotificationEmailOptions {
+  recipients?: string[];
   ownerName: string;
   businessName: string;
   email: string;
@@ -552,6 +553,7 @@ interface MerchantRequestAdminNotificationEmailOptions {
 }
 
 export async function sendMerchantRequestAdminNotificationEmail({
+  recipients = MERCHANT_REQUEST_ADMIN_RECIPIENTS,
   ownerName,
   businessName,
   email,
@@ -712,7 +714,7 @@ ${shortDescription}
 Review merchant requests: ${adminUrl}`;
 
   const results = await Promise.all(
-    MERCHANT_REQUEST_ADMIN_RECIPIENTS.map((recipient) =>
+    recipients.map((recipient) =>
       sendEmail({ to: recipient, subject, html, text }),
     ),
   );

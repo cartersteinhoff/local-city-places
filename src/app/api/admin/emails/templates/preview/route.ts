@@ -23,6 +23,9 @@ export async function POST(request: NextRequest) {
       case "merchant-request-confirmation":
         html = generateMerchantRequestConfirmationPreview(params);
         break;
+      case "merchant-request-admin-notification":
+        html = generateMerchantRequestAdminNotificationPreview(params);
+        break;
       case "merchant-invite":
         html = generateMerchantInvitePreview(params);
         break;
@@ -166,6 +169,60 @@ function generateMerchantRequestConfirmationPreview(params: {
     </div>
     <p style="color:#334155;line-height:1.6;">There is no cost to request and no obligation. Submitting this form does not guarantee selection or category assignment.</p>
     <p style="color:#334155;line-height:1.6;">If selected, fulfillment begins first. That can include category review, merchant page preparation, audio assets, and then a Merchant Dashboard invite when everything is ready to activate.</p>`,
+  );
+}
+
+function generateMerchantRequestAdminNotificationPreview(params: {
+  ownerName: string;
+  businessName: string;
+  email: string;
+  mobilePhone: string;
+  website?: string;
+  businessAddress1: string;
+  city: string;
+  state: string;
+  zipCode: string;
+  requestedCategory: string;
+  yearsInBusiness?: number;
+  shortDescription: string;
+  photoCount?: number;
+  createdAt: string;
+  reference: string;
+}) {
+  const receivedAt = formatRequestTimestamp(params.createdAt);
+  const adminUrl = `${APP_URL}/admin/merchant-requests`;
+
+  return emailShell(
+    "New merchant request",
+    `<p style="margin:0 0 12px;color:#f97316;font-size:13px;font-weight:800;letter-spacing:0.14em;text-transform:uppercase;">Merchant Request Submitted</p>
+    <h2 style="margin:0 0 16px;color:#1e293b;">${params.businessName}</h2>
+    <p style="color:#334155;line-height:1.6;">A merchant request was just submitted and is ready for admin review.</p>
+    <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:20px;margin:24px 0;">
+      <p style="margin:0 0 10px;color:#64748b;font-size:12px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;">Owner</p>
+      <p style="margin:0 0 16px;color:#0f172a;font-size:16px;font-weight:700;">${params.ownerName}</p>
+      <p style="margin:0 0 10px;color:#64748b;font-size:12px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;">Email</p>
+      <p style="margin:0 0 16px;color:#0f172a;font-size:16px;font-weight:700;">${params.email}</p>
+      <p style="margin:0 0 10px;color:#64748b;font-size:12px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;">Mobile phone</p>
+      <p style="margin:0 0 16px;color:#0f172a;font-size:16px;font-weight:700;">${params.mobilePhone}</p>
+      <p style="margin:0 0 10px;color:#64748b;font-size:12px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;">Requested category</p>
+      <p style="margin:0 0 16px;color:#0f172a;font-size:16px;font-weight:700;">${params.requestedCategory}</p>
+      <p style="margin:0 0 10px;color:#64748b;font-size:12px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;">Address</p>
+      <p style="margin:0 0 16px;color:#0f172a;font-size:16px;font-weight:700;">${params.businessAddress1}, ${params.city}, ${params.state} ${params.zipCode}</p>
+      <p style="margin:0 0 10px;color:#64748b;font-size:12px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;">Website</p>
+      <p style="margin:0 0 16px;color:#0f172a;font-size:16px;font-weight:700;">${params.website || "Not provided"}</p>
+      <p style="margin:0 0 10px;color:#64748b;font-size:12px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;">Years in business</p>
+      <p style="margin:0 0 16px;color:#0f172a;font-size:16px;font-weight:700;">${params.yearsInBusiness ?? "Not provided"}</p>
+      <p style="margin:0 0 10px;color:#64748b;font-size:12px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;">Uploads</p>
+      <p style="margin:0 0 16px;color:#0f172a;font-size:16px;font-weight:700;">Photos: ${params.photoCount || 0}</p>
+      <p style="margin:0 0 10px;color:#64748b;font-size:12px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;">Received</p>
+      <p style="margin:0 0 16px;color:#0f172a;font-size:16px;font-weight:700;">${receivedAt}</p>
+      <p style="margin:0 0 10px;color:#64748b;font-size:12px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;">Reference</p>
+      <p style="margin:0;color:#0f172a;font-size:16px;font-weight:700;">${params.reference}</p>
+    </div>
+    <div style="background:#fff7ed;border-left:4px solid #f97316;border-radius:6px;padding:16px;margin:24px 0;">
+      <p style="color:#7c2d12;margin:0;font-size:15px;"><strong>Submitted description:</strong><br>${params.shortDescription}</p>
+    </div>
+    ${cta(adminUrl, "Review Merchant Requests")}`,
   );
 }
 

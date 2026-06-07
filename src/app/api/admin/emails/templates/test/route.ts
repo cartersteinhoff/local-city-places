@@ -3,6 +3,7 @@ import { getSession } from "@/lib/auth";
 import {
   sendMagicLinkEmail,
   sendMerchantInviteEmail,
+  sendMerchantRequestAdminNotificationEmail,
   sendMerchantRequestConfirmationEmail,
   sendMerchantWelcomeEmail,
   sendWelcomeEmail,
@@ -49,6 +50,35 @@ export async function POST(request: NextRequest) {
           requestedCategory: params.requestedCategory || "Roofing",
           city: params.city || "Phoenix",
           state: params.state || "AZ",
+          createdAt: params.createdAt
+            ? new Date(params.createdAt)
+            : new Date("2026-06-07T17:00:00.000Z"),
+          reference: params.reference || "ABC12345",
+        });
+        break;
+
+      case "merchant-request-admin-notification":
+        success = await sendMerchantRequestAdminNotificationEmail({
+          recipients: [to],
+          ownerName: params.ownerName || "Jordan Owner",
+          businessName: params.businessName || "Phoenix Demo Roofing",
+          email: params.email || "owner@example.com",
+          mobilePhone: params.mobilePhone || "4805550142",
+          website: params.website || "https://example.com",
+          businessAddress1: params.businessAddress1 || "123 E Demo Street",
+          city: params.city || "Phoenix",
+          state: params.state || "AZ",
+          zipCode: params.zipCode || "85004",
+          requestedCategory: params.requestedCategory || "Roofing",
+          yearsInBusiness: params.yearsInBusiness || 8,
+          shortDescription:
+            params.shortDescription ||
+            "Locally owned roofing team serving Phoenix metro homeowners with repair, replacement, and inspection services.",
+          logoUrl: null,
+          photoUrls: Array.from(
+            { length: Number(params.photoCount || 0) },
+            (_, index) => `https://example.com/photo-${index + 1}.jpg`,
+          ),
           createdAt: params.createdAt
             ? new Date(params.createdAt)
             : new Date("2026-06-07T17:00:00.000Z"),
