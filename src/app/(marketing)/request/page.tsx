@@ -56,15 +56,15 @@ export default async function RequestPage() {
             alt="Phoenix skyline with fireworks for America 250"
             fill
             sizes="100vw"
-            className="object-cover object-center opacity-[0.86]"
+            className="object-cover object-[58%_center] opacity-[0.9] sm:object-center"
             priority
           />
           <div
-            className="absolute inset-0 bg-[#04131f]/68"
+            className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(4,19,31,0.86)_0%,rgba(4,19,31,0.78)_38%,rgba(4,19,31,0.48)_72%,rgba(4,19,31,0.34)_100%)]"
             aria-hidden="true"
           />
           <div
-            className="absolute inset-0 bg-[linear-gradient(90deg,rgba(4,19,31,0.95)_0%,rgba(4,19,31,0.78)_42%,rgba(4,19,31,0.42)_100%)]"
+            className="absolute inset-0 bg-[linear-gradient(180deg,rgba(4,19,31,0.62)_0%,rgba(4,19,31,0.18)_32%,rgba(4,19,31,0.2)_68%,rgba(4,19,31,0.72)_100%)]"
             aria-hidden="true"
           />
           <HomeHeader variant="transparent" />
