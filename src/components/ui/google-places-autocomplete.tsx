@@ -27,6 +27,7 @@ interface GooglePlacesAutocompleteProps {
   types?: string[];
   fetchDetails?: boolean;
   allowManualEntry?: boolean;
+  inputClassName?: string;
 }
 
 interface PlacePrediction {
@@ -56,6 +57,7 @@ export function GooglePlacesAutocomplete({
   types = ["grocery_or_supermarket", "supermarket"],
   fetchDetails = false,
   allowManualEntry = false,
+  inputClassName,
 }: GooglePlacesAutocompleteProps) {
   const [inputValue, setInputValue] = useState(value);
   const [predictions, setPredictions] = useState<PlacePrediction[]>([]);
@@ -290,7 +292,7 @@ export function GooglePlacesAutocomplete({
           onChange={handleInputChange}
           onFocus={() => predictions.length > 0 && setIsOpen(true)}
           placeholder={placeholder}
-          className={cn("pl-10", error && "border-destructive")}
+          className={cn("pl-10", inputClassName, error && "border-destructive")}
           disabled={!allowManualEntry && (!isScriptLoaded || scriptError)}
         />
         {isLoading && (

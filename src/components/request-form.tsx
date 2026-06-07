@@ -158,6 +158,9 @@ const requiredFields: Array<keyof RequestFormState> = [
   "permissionGranted",
 ];
 
+const requestFieldClassName =
+  "border-slate-300 bg-white text-slate-950 placeholder:text-slate-400 dark:border-slate-300 dark:bg-white dark:text-slate-950 dark:placeholder:text-slate-400 focus-visible:border-[#ff6a00] focus-visible:ring-[#ff6a00]/20";
+
 function parseCityState(value: string): { city: string; state: string } {
   const parts = value.split(",").map((part) => part.trim());
 
@@ -605,6 +608,7 @@ export function RequestForm() {
                       updateField("requestedCategory", event.target.value)
                     }
                     placeholder="Roofing, coffee shop, dental..."
+                    className={requestFieldClassName}
                     required
                   />
                   <p className="mt-1 text-xs text-slate-500">
@@ -629,6 +633,7 @@ export function RequestForm() {
                       types={[]}
                       fetchDetails
                       allowManualEntry
+                      inputClassName={requestFieldClassName}
                     />
                     <p className="mt-1 text-xs text-slate-500">
                       Select a Google match to fill business name, city, state,
@@ -698,6 +703,7 @@ export function RequestForm() {
                               updateField("cityState", event.target.value)
                             }
                             placeholder="Phoenix, AZ"
+                            className={requestFieldClassName}
                             required
                           />
                           <p className="mt-1 text-xs text-slate-500">
@@ -714,6 +720,7 @@ export function RequestForm() {
                               updateField("zipCode", event.target.value)
                             }
                             placeholder="85004"
+                            className={requestFieldClassName}
                             required
                           />
                         </div>
@@ -728,6 +735,7 @@ export function RequestForm() {
                             updateField("businessName", event.target.value)
                           }
                           placeholder="Business name"
+                          className={requestFieldClassName}
                           required
                         />
                       </div>
@@ -756,7 +764,7 @@ export function RequestForm() {
                         updateField("yearsInBusiness", event.target.value)
                       }
                       placeholder="12"
-                      className="mt-2"
+                      className={cn(requestFieldClassName, "mt-2")}
                     />
                   </div>
 
@@ -771,6 +779,7 @@ export function RequestForm() {
                         updateField("shortDescription", event.target.value)
                       }
                       placeholder="What do you do, who do you serve, and what should locals know first?"
+                      className={requestFieldClassName}
                       rows={3}
                       required
                     />
@@ -791,6 +800,7 @@ export function RequestForm() {
                     updateField("ownerName", event.target.value)
                   }
                   placeholder="Owner name"
+                  className={requestFieldClassName}
                   required
                 />
               </div>
@@ -803,6 +813,7 @@ export function RequestForm() {
                   value={form.email}
                   onChange={(event) => updateField("email", event.target.value)}
                   placeholder="owner@example.com"
+                  className={requestFieldClassName}
                   required
                 />
               </div>
@@ -820,6 +831,7 @@ export function RequestForm() {
                     )
                   }
                   placeholder="(425) 451-8599"
+                  className={requestFieldClassName}
                   required
                 />
                 <p className="mt-1 text-xs text-slate-500">
@@ -837,6 +849,7 @@ export function RequestForm() {
                     updateField("website", event.target.value)
                   }
                   placeholder="https://example.com"
+                  className={requestFieldClassName}
                 />
               </div>
             </div>
