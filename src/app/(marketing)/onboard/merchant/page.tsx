@@ -1,12 +1,28 @@
 "use client";
 
-import { Suspense, useEffect, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import {
+  ArrowRight,
+  CheckCircle2,
+  FileText,
+  Globe,
+  Loader2,
+  Mail,
+  MapPin,
+  Phone,
+  Store,
+  XCircle,
+} from "lucide-react";
 import Image from "next/image";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Suspense, useCallback, useEffect, useState } from "react";
+import { AnimatedFoodBackground } from "@/components/animated-food-background";
 import { Button } from "@/components/ui/button";
+import {
+  GooglePlacesAutocomplete,
+  type PlaceDetails,
+} from "@/components/ui/google-places-autocomplete";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
@@ -14,21 +30,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Store,
-  Mail,
-  MapPin,
-  Phone,
-  Globe,
-  FileText,
-  Loader2,
-  CheckCircle2,
-  XCircle,
-  ArrowRight,
-} from "lucide-react";
-import { GooglePlacesAutocomplete, PlaceDetails } from "@/components/ui/google-places-autocomplete";
+import { Textarea } from "@/components/ui/textarea";
 import { formatPhoneNumber, stripPhoneNumber } from "@/lib/utils";
-import { AnimatedFoodBackground } from "@/components/animated-food-background";
 
 interface Category {
   id: string;
@@ -59,6 +62,7 @@ function MerchantOnboardingContent() {
   const [description, setDescription] = useState("");
   const [googlePlaceId, setGooglePlaceId] = useState("");
   const [googlePlaceName, setGooglePlaceName] = useState("");
+  const [logoUrl, setLogoUrl] = useState("");
 
   // Categories
   const [categories, setCategories] = useState<Category[]>([]);
@@ -66,23 +70,7 @@ function MerchantOnboardingContent() {
   // Result
   const [magicToken, setMagicToken] = useState("");
 
-  // Validate token on mount
-  useEffect(() => {
-    if (!token) {
-      setStep("invalid");
-      setError("No invitation token provided");
-      return;
-    }
-
-    validateToken();
-  }, [token]);
-
-  // Fetch categories
-  useEffect(() => {
-    fetchCategories();
-  }, []);
-
-  const validateToken = async () => {
+  const validateToken = useCallback(async () => {
     try {
       const res = await fetch(`/api/onboard/validate-invite?token=${token}`);
       const data = await res.json();
@@ -93,29 +81,59 @@ function MerchantOnboardingContent() {
           setPrefilledEmail(data.email);
           setEmail(data.email);
         }
+        if (data.request) {
+          setBusinessName(data.request.businessName || "");
+          setCityState(
+            [data.request.city, data.request.state].filter(Boolean).join(", "),
+          );
+          setPhone(formatPhoneNumber(data.request.mobilePhone || ""));
+          setWebsite(data.request.website || "");
+          setDescription(data.request.shortDescription || "");
+          setLogoUrl(data.request.logoUrl || "");
+        }
       } else {
         setStep("invalid");
         setError(data.error || "Invalid invitation");
       }
-    } catch (err) {
+    } catch {
       setStep("invalid");
       setError("Failed to validate invitation");
     }
-  };
+  }, [token]);
 
-  const fetchCategories = async () => {
+  const fetchCategories = useCallback(async () => {
     try {
       const res = await fetch("/api/categories");
       if (res.ok) {
         const data = await res.json();
         setCategories(data.categories);
       }
-    } catch (err) {
-      console.error("Failed to fetch categories:", err);
+    } catch (error) {
+      console.error("Failed to fetch categories:", error);
     }
-  };
+  }, []);
 
-  const handleGooglePlaceSelect = (name: string, placeId: string, details?: PlaceDetails) => {
+  // Validate token on mount
+  useEffect(() => {
+    if (!token) {
+      setStep("invalid");
+      setError("No invitation token provided");
+      return;
+    }
+
+    validateToken();
+  }, [token, validateToken]);
+
+  // Fetch categories
+  useEffect(() => {
+    fetchCategories();
+  }, [fetchCategories]);
+
+  const handleGooglePlaceSelect = (
+    name: string,
+    placeId: string,
+    details?: PlaceDetails,
+  ) => {
     setGooglePlaceName(name);
     setGooglePlaceId(placeId);
 
@@ -144,7 +162,7 @@ function MerchantOnboardingContent() {
 
   // Parse cityState into separate city and state values
   const parseCityState = (value: string): { city: string; state: string } => {
-    const parts = value.split(",").map(p => p.trim());
+    const parts = value.split(",").map((p) => p.trim());
     if (parts.length >= 2) {
       // Last part is state, rest is city
       const state = parts[parts.length - 1].toUpperCase().slice(0, 2);
@@ -180,6 +198,7 @@ function MerchantOnboardingContent() {
           phone: stripPhoneNumber(phone) || undefined,
           website: website || undefined,
           description: description || undefined,
+          logoUrl: logoUrl || undefined,
           googlePlaceId: googlePlaceId || undefined,
         }),
       });
@@ -193,7 +212,7 @@ function MerchantOnboardingContent() {
         setError(data.error || "Failed to complete registration");
         setStep("form");
       }
-    } catch (err) {
+    } catch {
       setError("Failed to complete registration");
       setStep("form");
     }
@@ -211,7 +230,9 @@ function MerchantOnboardingContent() {
         <AnimatedFoodBackground />
         <div className="relative z-10 text-center bg-white/90 dark:bg-card/95 backdrop-blur-sm rounded-2xl shadow-xl dark:border p-8">
           <Loader2 className="w-12 h-12 text-primary animate-spin mx-auto mb-4" />
-          <h2 className="text-xl font-semibold">Validating your invitation...</h2>
+          <h2 className="text-xl font-semibold">
+            Validating your invitation...
+          </h2>
         </div>
       </div>
     );
@@ -245,9 +266,12 @@ function MerchantOnboardingContent() {
           <div className="w-16 h-16 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center mx-auto mb-4">
             <CheckCircle2 className="w-8 h-8 text-green-600 dark:text-green-400" />
           </div>
-          <h1 className="text-2xl font-bold mb-2">Welcome to Local City Places!</h1>
+          <h1 className="text-2xl font-bold mb-2">
+            Welcome to Local City Places!
+          </h1>
           <p className="text-muted-foreground mb-6">
-            Your merchant account has been created. You can now manage your business profile and dashboard.
+            Your merchant account has been created. You can now manage your
+            business profile and dashboard.
           </p>
 
           <Button onClick={handleGoToDashboard} className="w-full">
@@ -274,7 +298,9 @@ function MerchantOnboardingContent() {
             priority
             className="mx-auto mb-4 h-auto w-[220px] sm:w-[260px]"
           />
-          <h2 className="text-xl font-semibold text-white dark:text-foreground">Become a Merchant Partner</h2>
+          <h2 className="text-xl font-semibold text-white dark:text-foreground">
+            Become a Merchant Partner
+          </h2>
         </div>
 
         {/* Partner setup banner */}
@@ -284,9 +310,12 @@ function MerchantOnboardingContent() {
               <Store className="w-5 h-5 text-blue-600 dark:text-blue-400" />
             </div>
             <div>
-              <p className="font-medium text-blue-800 dark:text-blue-200">Merchant Profile Setup</p>
+              <p className="font-medium text-blue-800 dark:text-blue-200">
+                Merchant Profile Setup
+              </p>
               <p className="text-sm text-blue-700 dark:text-blue-300">
-                Complete this form so your business can appear correctly across Local City Places.
+                Complete this form so your business can appear correctly across
+                Local City Places.
               </p>
             </div>
           </div>
@@ -297,7 +326,9 @@ function MerchantOnboardingContent() {
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Google Places Search */}
             <div>
-              <Label htmlFor="google-search">Search for Your Business (optional)</Label>
+              <Label htmlFor="google-search">
+                Search for Your Business (optional)
+              </Label>
               <GooglePlacesAutocomplete
                 value={googlePlaceName}
                 onChange={handleGooglePlaceSelect}
@@ -395,7 +426,9 @@ function MerchantOnboardingContent() {
                       type="tel"
                       placeholder="(425) 451-8599"
                       value={phone}
-                      onChange={(e) => setPhone(formatPhoneNumber(e.target.value))}
+                      onChange={(e) =>
+                        setPhone(formatPhoneNumber(e.target.value))
+                      }
                     />
                   </div>
 
@@ -459,7 +492,8 @@ function MerchantOnboardingContent() {
             </Button>
 
             <p className="text-xs text-center text-muted-foreground">
-              By registering, you agree to our Terms of Service and Privacy Policy
+              By registering, you agree to our Terms of Service and Privacy
+              Policy
             </p>
           </form>
         </div>

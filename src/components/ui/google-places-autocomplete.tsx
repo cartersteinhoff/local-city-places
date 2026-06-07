@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
-import { Search, MapPin, Loader2 } from "lucide-react";
+import { Loader2, MapPin, Search } from "lucide-react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 
@@ -18,12 +18,15 @@ export interface PlaceDetails {
 }
 
 interface GooglePlacesAutocompleteProps {
+  id?: string;
   value: string;
   onChange: (name: string, placeId: string, details?: PlaceDetails) => void;
+  onInputChange?: (value: string) => void;
   placeholder?: string;
   error?: string;
   types?: string[];
   fetchDetails?: boolean;
+  allowManualEntry?: boolean;
 }
 
 interface PlacePrediction {
@@ -44,12 +47,15 @@ declare global {
 }
 
 export function GooglePlacesAutocomplete({
+  id,
   value,
   onChange,
+  onInputChange,
   placeholder = "Search for a store...",
   error,
   types = ["grocery_or_supermarket", "supermarket"],
   fetchDetails = false,
+  allowManualEntry = false,
 }: GooglePlacesAutocompleteProps) {
   const [inputValue, setInputValue] = useState(value);
   const [predictions, setPredictions] = useState<PlacePrediction[]>([]);
@@ -79,9 +85,12 @@ export function GooglePlacesAutocomplete({
 
     const initServices = () => {
       setIsScriptLoaded(true);
-      autocompleteService.current = new window.google.maps.places.AutocompleteService();
+      autocompleteService.current =
+        new window.google.maps.places.AutocompleteService();
       if (dummyDiv.current) {
-        placesService.current = new window.google.maps.places.PlacesService(dummyDiv.current);
+        placesService.current = new window.google.maps.places.PlacesService(
+          dummyDiv.current,
+        );
       }
     };
 
@@ -131,7 +140,10 @@ export function GooglePlacesAutocomplete({
   // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+      if (
+        containerRef.current &&
+        !containerRef.current.contains(event.target as Node)
+      ) {
         setIsOpen(false);
       }
     };
@@ -149,12 +161,17 @@ export function GooglePlacesAutocomplete({
 
       setIsLoading(true);
 
+      const request: Record<string, unknown> = {
+        input: query,
+        componentRestrictions: { country: "us" },
+      };
+
+      if (types.length > 0) {
+        request.types = types;
+      }
+
       autocompleteService.current.getPlacePredictions(
-        {
-          input: query,
-          types: types,
-          componentRestrictions: { country: "us" },
-        },
+        request,
         (results: PlacePrediction[] | null, status: string) => {
           setIsLoading(false);
           if (status === "OK" && results) {
@@ -163,15 +180,16 @@ export function GooglePlacesAutocomplete({
           } else {
             setPredictions([]);
           }
-        }
+        },
       );
     },
-    [types]
+    [types],
   );
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = e.target.value;
     setInputValue(newValue);
+    onInputChange?.(newValue);
 
     // Clear previous selection
     if (value && newValue !== value) {
@@ -198,7 +216,13 @@ export function GooglePlacesAutocomplete({
       placesService.current.getDetails(
         {
           placeId: prediction.place_id,
-          fields: ["name", "formatted_address", "address_components", "formatted_phone_number", "website"],
+          fields: [
+            "name",
+            "formatted_address",
+            "address_components",
+            "formatted_phone_number",
+            "website",
+          ],
         },
         (place: any, status: string) => {
           setIsLoading(false);
@@ -230,7 +254,9 @@ export function GooglePlacesAutocomplete({
             }
 
             // Build street address from components
-            const streetAddress = [streetNumber, route].filter(Boolean).join(" ");
+            const streetAddress = [streetNumber, route]
+              .filter(Boolean)
+              .join(" ");
 
             const details: PlaceDetails = {
               name: place.name || prediction.structured_formatting.main_text,
@@ -247,7 +273,7 @@ export function GooglePlacesAutocomplete({
           } else {
             onChange(prediction.description, prediction.place_id);
           }
-        }
+        },
       );
     } else {
       onChange(prediction.description, prediction.place_id);
@@ -259,12 +285,13 @@ export function GooglePlacesAutocomplete({
       <div className="relative">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
         <Input
+          id={id}
           value={inputValue}
           onChange={handleInputChange}
           onFocus={() => predictions.length > 0 && setIsOpen(true)}
           placeholder={placeholder}
           className={cn("pl-10", error && "border-destructive")}
-          disabled={!isScriptLoaded || scriptError}
+          disabled={!allowManualEntry && (!isScriptLoaded || scriptError)}
         />
         {isLoading && (
           <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 animate-spin text-muted-foreground" />
@@ -272,10 +299,14 @@ export function GooglePlacesAutocomplete({
       </div>
 
       {!isScriptLoaded && !scriptError && (
-        <p className="text-xs text-muted-foreground mt-1">Loading Google Places...</p>
+        <p className="text-xs text-muted-foreground mt-1">
+          Loading Google Places...
+        </p>
       )}
       {scriptError && (
-        <p className="text-xs text-muted-foreground mt-1">Google Places unavailable - enter details manually below</p>
+        <p className="text-xs text-muted-foreground mt-1">
+          Google Places unavailable - enter details manually below
+        </p>
       )}
 
       {isOpen && predictions.length > 0 && (
@@ -293,8 +324,14 @@ export function GooglePlacesAutocomplete({
                   {prediction.structured_formatting.main_text}
                 </p>
                 <p className="text-sm text-muted-foreground truncate">
-                  {prediction.description.startsWith(prediction.structured_formatting.main_text)
-                    ? prediction.description.slice(prediction.structured_formatting.main_text.length).replace(/^,\s*/, "")
+                  {prediction.description.startsWith(
+                    prediction.structured_formatting.main_text,
+                  )
+                    ? prediction.description
+                        .slice(
+                          prediction.structured_formatting.main_text.length,
+                        )
+                        .replace(/^,\s*/, "")
                     : prediction.description}
                 </p>
               </div>

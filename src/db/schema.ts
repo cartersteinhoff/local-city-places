@@ -55,6 +55,18 @@ export const favoriteMerchantTestimonialPhotoStatusEnum = pgEnum(
   "favorite_merchant_testimonial_photo_status",
   ["pending", "approved", "rejected"],
 );
+export const merchantRequestStatusEnum = pgEnum("merchant_request_status", [
+  "new",
+  "in_review",
+  "waitlisted",
+  "fulfilled",
+  "invited",
+  "rejected",
+]);
+export const merchantRequestCategoryStatusEnum = pgEnum(
+  "merchant_request_category_status",
+  ["requested", "assigned", "waitlisted"],
+);
 
 // Users table
 export const users = pgTable("users", {
@@ -519,6 +531,62 @@ export const merchantInvites = pgTable("merchant_invites", {
     .references(() => users.id),
 });
 
+// Public merchant request intake table
+export const merchantRequests = pgTable(
+  "merchant_requests",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    businessName: varchar("business_name", { length: 255 }).notNull(),
+    ownerName: varchar("owner_name", { length: 255 }).notNull(),
+    email: varchar("email", { length: 255 }).notNull(),
+    mobilePhone: varchar("mobile_phone", { length: 20 }).notNull(),
+    website: varchar("website", { length: 255 }),
+    businessAddress1: varchar("business_address_1", {
+      length: 255,
+    }).notNull(),
+    city: varchar("city", { length: 100 }).notNull(),
+    state: varchar("state", { length: 2 }).notNull(),
+    zipCode: varchar("zip_code", { length: 10 }).notNull(),
+    requestedCategory: varchar("requested_category", {
+      length: 120,
+    }).notNull(),
+    yearsInBusiness: integer("years_in_business"),
+    shortDescription: text("short_description").notNull(),
+    logoUrl: text("logo_url"),
+    logoFileName: varchar("logo_file_name", { length: 255 }),
+    photoUrls: jsonb("photo_urls").$type<string[]>(),
+    photoFileNames: jsonb("photo_file_names").$type<string[]>(),
+    permissionGranted: boolean("permission_granted").default(false).notNull(),
+    status: merchantRequestStatusEnum("status").notNull().default("new"),
+    categoryStatus: merchantRequestCategoryStatusEnum("category_status")
+      .notNull()
+      .default("requested"),
+    adminNotes: text("admin_notes"),
+    merchantId: uuid("merchant_id").references(() => merchants.id, {
+      onDelete: "set null",
+    }),
+    merchantInviteId: uuid("merchant_invite_id").references(
+      () => merchantInvites.id,
+      { onDelete: "set null" },
+    ),
+    inviteSentAt: timestamp("invite_sent_at"),
+    fulfilledAt: timestamp("fulfilled_at"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  },
+  (table) => [
+    index("merchant_requests_status_idx").on(table.status),
+    index("merchant_requests_created_at_idx").on(table.createdAt),
+    index("merchant_requests_email_idx").on(table.email),
+    index("merchant_requests_category_priority_idx").on(
+      table.city,
+      table.state,
+      table.requestedCategory,
+      table.createdAt,
+    ),
+  ],
+);
+
 // ============================================================================
 // EMAIL MARKETING TABLES
 // ============================================================================
@@ -710,6 +778,20 @@ export const merchantInvitesRelations = relations(
     usedByUser: one(users, {
       fields: [merchantInvites.usedByUserId],
       references: [users.id],
+    }),
+  }),
+);
+
+export const merchantRequestsRelations = relations(
+  merchantRequests,
+  ({ one }) => ({
+    merchant: one(merchants, {
+      fields: [merchantRequests.merchantId],
+      references: [merchants.id],
+    }),
+    merchantInvite: one(merchantInvites, {
+      fields: [merchantRequests.merchantInviteId],
+      references: [merchantInvites.id],
     }),
   }),
 );

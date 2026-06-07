@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 
+import { Footer } from "@/components/footer";
 import { HomeHeader } from "@/components/home-header";
-import { TopMarketsFooter } from "@/components/top-markets";
 
 interface LegalPageLayoutProps {
   children: ReactNode;
@@ -18,7 +18,7 @@ export function LegalPageLayout({ children }: LegalPageLayoutProps) {
         </div>
       </div>
 
-      <TopMarketsFooter />
+      <Footer variant="dark" />
     </div>
   );
 }

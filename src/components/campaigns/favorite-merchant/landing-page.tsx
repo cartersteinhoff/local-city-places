@@ -13,9 +13,9 @@ import {
 import { Playfair_Display, Space_Grotesk } from "next/font/google";
 import { useState } from "react";
 import { FeaturedMarquee } from "@/components/featured-marquee";
+import { Footer } from "@/components/footer";
 import { HomeHeader } from "@/components/home-header";
 import { LoginModal } from "@/components/login-modal";
-import { TopMarketsFooter } from "@/components/top-markets";
 import { Button } from "@/components/ui/button";
 import { MerchantSpotlightGrid } from "./merchant-spotlight-grid";
 import { SweepstakesEntryForm } from "./sweepstakes-entry-form";
@@ -647,7 +647,7 @@ export function FavoriteMerchantLandingPage() {
         </div>
       </section>
 
-      <TopMarketsFooter showSweepstakesPromo={false} />
+      <Footer variant="dark" />
     </div>
   );
 }

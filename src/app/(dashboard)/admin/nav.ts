@@ -1,5 +1,6 @@
 import {
   BarChart3,
+  ClipboardList,
   FolderOpen,
   ImageIcon,
   LayoutDashboard,
@@ -18,6 +19,11 @@ export const adminNavItems = [
     label: "Merchant Nominations",
     href: "/admin/merchant-nominations",
     icon: ImageIcon,
+  },
+  {
+    label: "Merchant Requests",
+    href: "/admin/merchant-requests",
+    icon: ClipboardList,
   },
   { label: "Users", href: "/admin/users", icon: Users },
   { label: "Merchant Pages", href: "/admin/merchants", icon: Store },

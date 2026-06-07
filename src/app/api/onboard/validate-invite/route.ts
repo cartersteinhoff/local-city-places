@@ -1,7 +1,7 @@
-import { NextRequest, NextResponse } from "next/server";
+import { and, eq, gt, isNull } from "drizzle-orm";
+import { type NextRequest, NextResponse } from "next/server";
+import { db, merchantInvites, merchantRequests } from "@/db";
 import { hashToken } from "@/lib/auth";
-import { db, merchantInvites } from "@/db";
-import { eq, and, gt, isNull } from "drizzle-orm";
 
 export async function GET(request: NextRequest) {
   try {
@@ -11,7 +11,7 @@ export async function GET(request: NextRequest) {
     if (!token) {
       return NextResponse.json(
         { valid: false, error: "Token is required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -25,8 +25,8 @@ export async function GET(request: NextRequest) {
         and(
           eq(merchantInvites.token, hashedToken),
           isNull(merchantInvites.usedAt),
-          gt(merchantInvites.expiresAt, new Date())
-        )
+          gt(merchantInvites.expiresAt, new Date()),
+        ),
       )
       .limit(1);
 
@@ -59,16 +59,32 @@ export async function GET(request: NextRequest) {
       });
     }
 
+    const [merchantRequest] = await db
+      .select({
+        businessName: merchantRequests.businessName,
+        city: merchantRequests.city,
+        state: merchantRequests.state,
+        mobilePhone: merchantRequests.mobilePhone,
+        website: merchantRequests.website,
+        shortDescription: merchantRequests.shortDescription,
+        logoUrl: merchantRequests.logoUrl,
+        requestedCategory: merchantRequests.requestedCategory,
+      })
+      .from(merchantRequests)
+      .where(eq(merchantRequests.merchantInviteId, invite.id))
+      .limit(1);
+
     return NextResponse.json({
       valid: true,
       email: invite.email || null,
       expiresAt: invite.expiresAt,
+      request: merchantRequest || null,
     });
   } catch (error) {
     console.error("Error validating invite:", error);
     return NextResponse.json(
       { valid: false, error: "Failed to validate invitation" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

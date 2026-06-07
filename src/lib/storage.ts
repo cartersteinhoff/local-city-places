@@ -54,7 +54,7 @@ export function validateImageFormat(base64Data: string): {
  */
 export function validateImageSize(
   base64Data: string,
-  maxSize: number = 20 * 1024 * 1024
+  maxSize: number = 20 * 1024 * 1024,
 ): {
   valid: boolean;
   sizeBytes: number;
@@ -81,7 +81,7 @@ export function validateImageSize(
  */
 export async function uploadProfilePhoto(
   base64Data: string,
-  fileName: string = "profile.jpg"
+  fileName: string = "profile.jpg",
 ): Promise<string | null> {
   // Skip upload if token not configured (local dev)
   if (!process.env.BLOB_READ_WRITE_TOKEN) {
@@ -115,7 +115,7 @@ export async function uploadProfilePhoto(
  */
 export async function uploadMerchantLogo(
   base64Data: string,
-  fileName: string = "logo.jpg"
+  fileName: string = "logo.jpg",
 ): Promise<string | null> {
   // Skip upload if token not configured (local dev)
   if (!process.env.BLOB_READ_WRITE_TOKEN) {
@@ -149,7 +149,7 @@ export async function uploadMerchantLogo(
  */
 export async function uploadCheckImage(
   base64Data: string,
-  fileName: string = "check.jpg"
+  fileName: string = "check.jpg",
 ): Promise<string | null> {
   // Skip upload if token not configured (local dev)
   if (!process.env.BLOB_READ_WRITE_TOKEN) {
@@ -184,7 +184,7 @@ export async function uploadCheckImage(
 export async function uploadMerchantPhoto(
   base64Data: string,
   merchantId: string,
-  fileName: string = "photo.jpg"
+  fileName: string = "photo.jpg",
 ): Promise<string | null> {
   // Skip upload if token not configured (local dev)
   if (!process.env.BLOB_READ_WRITE_TOKEN) {
@@ -218,7 +218,7 @@ export async function uploadMerchantPhoto(
  */
 export async function uploadMerchantPhotoFromFile(
   file: File,
-  merchantId: string
+  merchantId: string,
 ): Promise<string | null> {
   // Skip upload if token not configured (local dev)
   if (!process.env.BLOB_READ_WRITE_TOKEN) {
@@ -240,15 +240,45 @@ export async function uploadMerchantPhotoFromFile(
 }
 
 /**
+ * Upload a public merchant request image before a merchant page exists
+ */
+export async function uploadMerchantRequestImage(
+  file: File,
+  requestId: string,
+  kind: "logo" | "photo",
+): Promise<string | null> {
+  if (!process.env.BLOB_READ_WRITE_TOKEN) {
+    console.warn(
+      "BLOB_READ_WRITE_TOKEN not configured, skipping request image upload",
+    );
+    return null;
+  }
+
+  const buffer = Buffer.from(await file.arrayBuffer());
+  const timestamp = Date.now();
+  const ext = file.name.split(".").pop() || "jpg";
+  const uniqueFileName = `merchant-requests/${requestId}/${kind}s/${timestamp}-${Math.random()
+    .toString(36)
+    .slice(2)}.${ext}`;
+
+  const blob = await put(uniqueFileName, buffer, {
+    access: "public",
+    contentType: file.type || "image/jpeg",
+  });
+
+  return blob.url;
+}
+
+/**
  * Upload an email image to Vercel Blob storage
  * For use in email campaigns
  */
-export async function uploadEmailImage(
-  file: File
-): Promise<string | null> {
+export async function uploadEmailImage(file: File): Promise<string | null> {
   // Skip upload if token not configured (local dev)
   if (!process.env.BLOB_READ_WRITE_TOKEN) {
-    console.warn("BLOB_READ_WRITE_TOKEN not configured, skipping email image upload");
+    console.warn(
+      "BLOB_READ_WRITE_TOKEN not configured, skipping email image upload",
+    );
     return null;
   }
 
@@ -270,10 +300,12 @@ export async function uploadEmailImage(
  */
 export async function uploadFavoriteMerchantTestimonialPhoto(
   file: File,
-  memberId: string
+  memberId: string,
 ): Promise<string | null> {
   if (!process.env.BLOB_READ_WRITE_TOKEN) {
-    console.warn("BLOB_READ_WRITE_TOKEN not configured, skipping testimonial photo upload");
+    console.warn(
+      "BLOB_READ_WRITE_TOKEN not configured, skipping testimonial photo upload",
+    );
     return null;
   }
 

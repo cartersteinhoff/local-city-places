@@ -26,22 +26,22 @@ const headerVariants = {
     radio:
       "border border-sky-200/25 bg-white/10 px-3 font-semibold text-white shadow-sm hover:bg-white/15 sm:px-4",
     login:
-      "bg-orange-500 px-3 font-semibold text-white shadow-sm hover:bg-orange-600 sm:px-6",
+      "bg-[#ff6a00] font-bold text-white shadow-[0_8px_18px_rgba(255,106,0,0.22)] ring-1 ring-orange-300/25 hover:bg-[#f46200] hover:shadow-[0_10px_22px_rgba(255,106,0,0.28)]",
   },
   transparent: {
-    bar: "border-b border-sky-300/10 bg-[linear-gradient(135deg,#063860_0%,#01233f_54%,#04131f_100%)] shadow-sm",
+    bar: "border-b border-white/10 bg-transparent shadow-none",
     radio:
       "border border-sky-200/25 bg-white/10 px-3 font-semibold text-white shadow-sm hover:bg-white/15 sm:px-4",
     login:
-      "bg-orange-500 px-3 font-semibold text-white shadow-sm hover:bg-orange-600 sm:px-6",
+      "bg-[#ff6a00] font-bold text-white shadow-[0_8px_18px_rgba(255,106,0,0.22)] ring-1 ring-orange-300/25 hover:bg-[#f46200] hover:shadow-[0_10px_22px_rgba(255,106,0,0.28)]",
   },
 } as const;
 
 const loginMenuItemClass =
-  "group h-10 cursor-pointer rounded-[12px] px-2.5 py-0 text-[14px] font-semibold text-white/95 transition-colors focus:bg-white/10 focus:text-white data-[highlighted]:bg-white/10 data-[highlighted]:text-white";
+  "group h-9 cursor-pointer rounded-[11px] px-2 py-0 text-[13px] font-bold text-white/92 transition-colors focus:bg-white/9 focus:text-white data-[highlighted]:bg-white/9 data-[highlighted]:text-white";
 
 const loginMenuIconClass =
-  "flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-orange-400/15 text-orange-300 transition-colors group-focus:bg-orange-500 group-focus:text-white group-data-[highlighted]:bg-orange-500 group-data-[highlighted]:text-white";
+  "flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-orange-400/12 text-orange-300 transition-colors group-focus:bg-orange-500 group-focus:text-white group-data-[highlighted]:bg-orange-500 group-data-[highlighted]:text-white";
 
 const headerProgramTextLimit = 30;
 const headerProgramTextSeparator = " - ";
@@ -251,25 +251,31 @@ export function HomeHeader({ variant = "white" }: HomeHeaderProps) {
                   size="sm"
                   className={cn(
                     styles.login,
-                    "group h-12 rounded-[18px] px-3 text-base transition-[background-color,box-shadow] data-[state=open]:bg-orange-600 data-[state=open]:shadow-[0_14px_28px_rgba(249,115,22,0.3)] sm:px-6",
+                    "group h-11 gap-1.5 rounded-[16px] px-4 text-[15px] leading-none transition-[background-color,box-shadow] data-[state=open]:bg-[#f46200] data-[state=open]:shadow-[0_12px_26px_rgba(249,115,22,0.28)] sm:px-5",
                   )}
                   style={{
                     display: "inline-flex",
-                    height: "3rem",
+                    height: "2.75rem",
                     alignItems: "center",
                     justifyContent: "center",
+                    gap: "0.375rem",
                     whiteSpace: "nowrap",
                   }}
                 >
                   Login
-                  <ChevronDown className="ml-1 h-4 w-4 transition-transform group-data-[state=open]:rotate-180" />
+                  <span
+                    className="flex h-4 w-4 items-center justify-center"
+                    aria-hidden="true"
+                  >
+                    <ChevronDown className="h-4 w-4 transition-transform group-data-[state=open]:rotate-180" />
+                  </span>
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent
                 side="bottom"
                 align="end"
-                sideOffset={8}
-                className="w-[168px] rounded-[16px] border border-white/15 bg-[#06243d]/95 p-1.5 text-white shadow-[0_18px_45px_rgba(1,19,31,0.38)] backdrop-blur-xl"
+                sideOffset={6}
+                className="w-[154px] rounded-[14px] border border-sky-100/18 bg-[#082a45]/92 p-1 text-white shadow-[0_14px_30px_rgba(1,19,31,0.32)] ring-1 ring-white/8 backdrop-blur-xl"
               >
                 <DropdownMenuItem asChild className={loginMenuItemClass}>
                   <Link href="/member-login">

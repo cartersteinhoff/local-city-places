@@ -1,12 +1,12 @@
-import { NextRequest, NextResponse } from "next/server";
-import { hashToken, createMagicLinkToken } from "@/lib/auth";
-import { db, merchantInvites } from "@/db";
-import { eq, and, gt, isNull } from "drizzle-orm";
+import { and, eq, gt, isNull } from "drizzle-orm";
+import { type NextRequest, NextResponse } from "next/server";
+import { db, merchantInvites, merchantRequests } from "@/db";
+import { createMagicLinkToken, hashToken } from "@/lib/auth";
+import { sendMerchantWelcomeEmail } from "@/lib/email";
 import {
   createMerchantAccount,
   validateEmailForMerchant,
 } from "@/lib/merchant-onboarding";
-import { sendMerchantWelcomeEmail } from "@/lib/email";
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
 
@@ -35,7 +35,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Email is required" }, { status: 400 });
     }
     if (!businessName) {
-      return NextResponse.json({ error: "Business name is required" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Business name is required" },
+        { status: 400 },
+      );
     }
 
     const hashedToken = hashToken(token);
@@ -48,15 +51,15 @@ export async function POST(request: NextRequest) {
         and(
           eq(merchantInvites.token, hashedToken),
           isNull(merchantInvites.usedAt),
-          gt(merchantInvites.expiresAt, new Date())
-        )
+          gt(merchantInvites.expiresAt, new Date()),
+        ),
       )
       .limit(1);
 
     if (!invite) {
       return NextResponse.json(
         { error: "Invalid or expired invitation" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -65,7 +68,7 @@ export async function POST(request: NextRequest) {
     if (validationError) {
       return NextResponse.json(
         { error: validationError.message, errorType: validationError.type },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -90,6 +93,14 @@ export async function POST(request: NextRequest) {
         usedByUserId: result.user.id,
       })
       .where(eq(merchantInvites.id, invite.id));
+
+    await db
+      .update(merchantRequests)
+      .set({
+        merchantId: result.merchant.id,
+        updatedAt: new Date(),
+      })
+      .where(eq(merchantRequests.merchantInviteId, invite.id));
 
     // Create magic link token for auto-login
     const magicToken = await createMagicLinkToken(email);
@@ -116,7 +127,8 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error("Error completing onboarding:", error);
-    const errorMessage = error instanceof Error ? error.message : "Failed to complete onboarding";
+    const errorMessage =
+      error instanceof Error ? error.message : "Failed to complete onboarding";
     return NextResponse.json({ error: errorMessage }, { status: 500 });
   }
 }
