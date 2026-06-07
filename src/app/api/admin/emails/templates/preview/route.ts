@@ -6,7 +6,7 @@ const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
 export async function POST(request: NextRequest) {
   try {
     const session = await getSession();
-    if (!session || session.user.role !== "admin") {
+    if (session?.user.role !== "admin") {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -20,6 +20,9 @@ export async function POST(request: NextRequest) {
       case "welcome":
         html = generateWelcomePreview(params);
         break;
+      case "merchant-request-confirmation":
+        html = generateMerchantRequestConfirmationPreview(params);
+        break;
       case "merchant-invite":
         html = generateMerchantInvitePreview(params);
         break;
@@ -27,13 +30,19 @@ export async function POST(request: NextRequest) {
         html = generateMerchantWelcomePreview(params);
         break;
       default:
-        return NextResponse.json({ error: "Unknown template" }, { status: 400 });
+        return NextResponse.json(
+          { error: "Unknown template" },
+          { status: 400 },
+        );
     }
 
     return NextResponse.json({ html });
   } catch (error) {
     console.error("Template preview error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 },
+    );
   }
 }
 
@@ -49,7 +58,7 @@ function emailShell(title: string, body: string) {
   <div style="max-width:640px;margin:0 auto;padding:40px 20px;">
     <div style="background:#fff;border-radius:12px;overflow:hidden;border:1px solid #e5e7eb;">
       <div style="padding:24px 32px;text-align:center;border-bottom:1px solid #e5e7eb;">
-        <img src="${APP_URL}/images/logo-horizontal.png" alt="Local City Places" style="max-width:280px;height:auto;" />
+        <img src="${APP_URL}/images/email-logo.png" alt="Local City Places" width="280" height="125" style="width:280px;max-width:100%;height:auto;" />
       </div>
       <div style="padding:32px;">${body}</div>
       <div style="padding:24px 32px;text-align:center;border-top:1px solid #e5e7eb;color:#666;font-size:14px;">
@@ -66,6 +75,24 @@ function cta(href: string, label: string) {
   return `<div style="text-align:center;margin:28px 0;">
     <a href="${href}" style="display:inline-block;background:#007bff;color:#fff;padding:14px 28px;text-decoration:none;border-radius:8px;font-weight:600;">${label}</a>
   </div>`;
+}
+
+function formatRequestTimestamp(value: string) {
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return "Jun 7, 2026, 10:00 AM MST";
+  }
+
+  return new Intl.DateTimeFormat("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+    timeZone: "America/Phoenix",
+    timeZoneName: "short",
+  }).format(date);
 }
 
 function generateMagicLinkPreview(params: { token: string }) {
@@ -101,6 +128,44 @@ function generateMerchantInvitePreview(params: {
     <p style="color:#334155;line-height:1.6;">Complete your registration, set up your business profile, and start getting discovered by local customers.</p>
     ${cta(params.inviteUrl, "Complete Your Registration")}
     <p style="color:#666;font-size:14px;">This invitation expires in ${params.expiresInDays} day${params.expiresInDays !== 1 ? "s" : ""}.</p>`,
+  );
+}
+
+function generateMerchantRequestConfirmationPreview(params: {
+  ownerName: string;
+  businessName: string;
+  requestedCategory: string;
+  city: string;
+  state: string;
+  createdAt: string;
+  reference: string;
+}) {
+  const market = [params.city, params.state].filter(Boolean).join(", ");
+  const receivedAt = formatRequestTimestamp(params.createdAt);
+
+  return emailShell(
+    "We received your Phoenix Metro 250 request",
+    `<p style="margin:0 0 12px;color:#f97316;font-size:13px;font-weight:800;letter-spacing:0.14em;text-transform:uppercase;">Phoenix Metro 250 Selection</p>
+    <h2 style="margin:0 0 16px;color:#1e293b;">We received your request.</h2>
+    <p style="color:#334155;line-height:1.6;">Hi ${params.ownerName},</p>
+    <p style="color:#334155;line-height:1.6;">Thanks for submitting <strong>${params.businessName}</strong> for review. Your request has been received and the timestamp below now marks when it entered the category review queue.</p>
+    <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:20px;margin:24px 0;">
+      <p style="margin:0 0 10px;color:#64748b;font-size:12px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;">Business</p>
+      <p style="margin:0 0 16px;color:#0f172a;font-size:16px;font-weight:700;">${params.businessName}</p>
+      <p style="margin:0 0 10px;color:#64748b;font-size:12px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;">Requested category</p>
+      <p style="margin:0 0 16px;color:#0f172a;font-size:16px;font-weight:700;">${params.requestedCategory}</p>
+      <p style="margin:0 0 10px;color:#64748b;font-size:12px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;">Market</p>
+      <p style="margin:0 0 16px;color:#0f172a;font-size:16px;font-weight:700;">${market}</p>
+      <p style="margin:0 0 10px;color:#64748b;font-size:12px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;">Received</p>
+      <p style="margin:0 0 16px;color:#0f172a;font-size:16px;font-weight:700;">${receivedAt}</p>
+      <p style="margin:0 0 10px;color:#64748b;font-size:12px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;">Reference</p>
+      <p style="margin:0;color:#0f172a;font-size:16px;font-weight:700;">${params.reference}</p>
+    </div>
+    <div style="background:#fff7ed;border-left:4px solid #f97316;border-radius:6px;padding:16px;margin:24px 0;">
+      <p style="color:#7c2d12;margin:0;font-size:15px;"><strong>Timestamp rule:</strong> Categories are reviewed in the order requests are received for each city and category.</p>
+    </div>
+    <p style="color:#334155;line-height:1.6;">There is no cost to request and no obligation. Submitting this form does not guarantee selection or category assignment.</p>
+    <p style="color:#334155;line-height:1.6;">If selected, fulfillment begins first. That can include category review, merchant page preparation, audio assets, and then a Merchant Dashboard invite when everything is ready to activate.</p>`,
   );
 }
 

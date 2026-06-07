@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { type NextRequest, NextResponse } from "next/server";
 import { db, merchantRequests } from "@/db";
+import { sendMerchantRequestConfirmationEmail } from "@/lib/email";
 import { uploadMerchantRequestImage } from "@/lib/storage";
 import { stripPhoneNumber } from "@/lib/utils";
 
@@ -201,9 +202,26 @@ export async function POST(request: NextRequest) {
         categoryStatus: merchantRequests.categoryStatus,
       });
 
+    let confirmationEmailSent = false;
+    try {
+      confirmationEmailSent = await sendMerchantRequestConfirmationEmail({
+        email,
+        ownerName,
+        businessName,
+        requestedCategory,
+        city,
+        state,
+        createdAt: merchantRequest.createdAt,
+        reference: merchantRequest.id.slice(0, 8).toUpperCase(),
+      });
+    } catch (emailError) {
+      console.error("Error sending merchant request confirmation:", emailError);
+    }
+
     return NextResponse.json(
       {
         success: true,
+        confirmationEmailSent,
         request: {
           ...merchantRequest,
           createdAt: merchantRequest.createdAt.toISOString(),

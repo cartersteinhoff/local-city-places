@@ -1,12 +1,21 @@
 "use client";
 
-import { useState } from "react";
+import {
+  ArrowLeft,
+  ChevronRight,
+  Info,
+  Loader2,
+  LogIn,
+  Mail,
+  Send,
+  Store,
+  UserPlus,
+} from "lucide-react";
 import Link from "next/link";
+import { useState } from "react";
+import { toast } from "sonner";
 import { DashboardLayout } from "@/components/layout";
-import { adminNavItems } from "../../nav";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
   Dialog,
   DialogContent,
@@ -15,20 +24,11 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  ArrowLeft,
-  Mail,
-  Send,
-  UserPlus,
-  Store,
-  LogIn,
-  Loader2,
-  ChevronRight,
-  Info,
-} from "lucide-react";
 import { cn } from "@/lib/utils";
-import { toast } from "sonner";
+import { adminNavItems } from "../../nav";
 
 interface EmailTemplate {
   id: string;
@@ -75,6 +75,23 @@ const EMAIL_TEMPLATES: EmailTemplate[] = [
     },
   },
   {
+    id: "merchant-request-confirmation",
+    name: "Merchant Request Confirmation",
+    description: "Sent when a merchant submits the Phoenix Metro 250 request",
+    icon: <Mail className="w-5 h-5" />,
+    category: "merchant",
+    previewParams: {
+      email: "merchant@example.com",
+      ownerName: "Jordan Owner",
+      businessName: "Phoenix Demo Roofing",
+      requestedCategory: "Roofing",
+      city: "Phoenix",
+      state: "AZ",
+      createdAt: "2026-06-07T17:00:00.000Z",
+      reference: "ABC12345",
+    },
+  },
+  {
     id: "merchant-welcome",
     name: "Merchant Welcome",
     description: "Sent when a merchant account is created",
@@ -95,7 +112,8 @@ const CATEGORY_LABELS: Record<string, { label: string; color: string }> = {
 };
 
 export default function EmailTemplatesPage() {
-  const [selectedTemplate, setSelectedTemplate] = useState<EmailTemplate | null>(null);
+  const [selectedTemplate, setSelectedTemplate] =
+    useState<EmailTemplate | null>(null);
   const [previewHtml, setPreviewHtml] = useState<string>("");
   const [isLoadingPreview, setIsLoadingPreview] = useState(false);
   const [testDialogOpen, setTestDialogOpen] = useState(false);
@@ -155,206 +173,248 @@ export default function EmailTemplatesPage() {
       setTestDialogOpen(false);
       setTestEmail("");
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Failed to send test email");
+      toast.error(
+        error instanceof Error ? error.message : "Failed to send test email",
+      );
     } finally {
       setIsSendingTest(false);
     }
   };
 
-  const filteredTemplates = activeCategory === "all"
-    ? EMAIL_TEMPLATES
-    : EMAIL_TEMPLATES.filter((t) => t.category === activeCategory);
+  const filteredTemplates =
+    activeCategory === "all"
+      ? EMAIL_TEMPLATES
+      : EMAIL_TEMPLATES.filter((t) => t.category === activeCategory);
 
   return (
     <DashboardLayout navItems={adminNavItems}>
-    <div className="h-[calc(100vh-120px)] flex flex-col">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-4">
-          <Link href="/admin/emails">
-            <Button variant="ghost" size="sm">
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Back to Emails
-            </Button>
-          </Link>
-          <div>
-            <h1 className="text-xl font-bold">Email Templates</h1>
-            <p className="text-sm text-muted-foreground">
-              Preview and test transactional emails
-            </p>
-          </div>
-        </div>
-        {selectedTemplate && (
-          <Button size="sm" onClick={() => setTestDialogOpen(true)}>
-            <Send className="w-4 h-4 mr-2" />
-            Send Test
-          </Button>
-        )}
-      </div>
-
-      {/* Main Content */}
-      <div className="flex-1 flex gap-4 min-h-0">
-        {/* Sidebar - Template List */}
-        <div className="w-[280px] shrink-0 flex flex-col border rounded-lg bg-card">
-          {/* Category Filter */}
-          <div className="p-3 border-b">
-            <div className="flex flex-wrap gap-1">
-              <Button
-                variant={activeCategory === "all" ? "default" : "ghost"}
-                size="sm"
-                className="h-7 text-xs"
-                onClick={() => setActiveCategory("all")}
-              >
-                All
+      <div className="h-[calc(100vh-120px)] flex flex-col">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-4">
+            <Link href="/admin/emails">
+              <Button variant="ghost" size="sm">
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                Back to Emails
               </Button>
-              {Object.entries(CATEGORY_LABELS).map(([key, { label }]) => (
-                <Button
-                  key={key}
-                  variant={activeCategory === key ? "default" : "ghost"}
-                  size="sm"
-                  className="h-7 text-xs"
-                  onClick={() => setActiveCategory(key)}
-                >
-                  {label}
-                </Button>
-              ))}
+            </Link>
+            <div>
+              <h1 className="text-xl font-bold">Email Templates</h1>
+              <p className="text-sm text-muted-foreground">
+                Preview and test transactional emails
+              </p>
             </div>
           </div>
-
-          {/* Template List */}
-          <div className="flex-1 overflow-auto">
-            {filteredTemplates.map((template) => {
-              const category = CATEGORY_LABELS[template.category];
-              const isSelected = selectedTemplate?.id === template.id;
-
-              return (
-                <button
-                  key={template.id}
-                  className={cn(
-                    "w-full flex items-center gap-3 px-3 py-2.5 text-left transition-colors border-b last:border-b-0 cursor-pointer",
-                    isSelected
-                      ? "bg-primary/10 border-l-2 border-l-primary"
-                      : "hover:bg-muted/50"
-                  )}
-                  onClick={() => loadPreview(template)}
-                >
-                  <div className={cn(
-                    "p-1.5 rounded shrink-0",
-                    isSelected ? "bg-primary/20" : "bg-muted"
-                  )}>
-                    {template.icon}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="font-medium text-sm truncate">{template.name}</div>
-                    <span className={cn("text-[10px] px-1.5 py-0.5 rounded-full", category.color)}>
-                      {category.label}
-                    </span>
-                  </div>
-                  <ChevronRight className={cn(
-                    "w-4 h-4 shrink-0 text-muted-foreground transition-transform",
-                    isSelected && "text-primary"
-                  )} />
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Preview Panel */}
-        <div className="flex-1 flex flex-col border rounded-lg bg-card min-w-0">
-          {!selectedTemplate ? (
-            <div className="flex-1 flex flex-col items-center justify-center text-muted-foreground">
-              <Mail className="w-12 h-12 mb-4 opacity-50" />
-              <p>Select a template to preview</p>
-            </div>
-          ) : isLoadingPreview ? (
-            <div className="flex-1 flex flex-col items-center justify-center">
-              <Loader2 className="w-8 h-8 animate-spin text-muted-foreground mb-4" />
-              <p className="text-muted-foreground">Loading preview...</p>
-            </div>
-          ) : (
-            <Tabs defaultValue="preview" className="flex-1 flex flex-col min-h-0">
-              <div className="px-4 pt-3 pb-2 border-b flex items-center justify-between">
-                <TabsList>
-                  <TabsTrigger value="preview">Preview</TabsTrigger>
-                  <TabsTrigger value="html">HTML Source</TabsTrigger>
-                </TabsList>
-                {/* Inline Parameters */}
-                <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                  <Info className="w-3.5 h-3.5" />
-                  <span>
-                    {Object.entries(selectedTemplate.previewParams).slice(0, 2).map(([key, value], i) => (
-                      <span key={key}>
-                        {i > 0 && " · "}
-                        <span className="font-mono">{key}:</span> {String(value).slice(0, 20)}{String(value).length > 20 && "..."}
-                      </span>
-                    ))}
-                    {Object.keys(selectedTemplate.previewParams).length > 2 && (
-                      <span> · +{Object.keys(selectedTemplate.previewParams).length - 2} more</span>
-                    )}
-                  </span>
-                </div>
-              </div>
-              <TabsContent value="preview" className="flex-1 m-0 overflow-hidden">
-                <iframe
-                  srcDoc={previewHtml}
-                  className="w-full h-full border-0"
-                  title="Email Preview"
-                  sandbox="allow-same-origin"
-                />
-              </TabsContent>
-              <TabsContent value="html" className="flex-1 m-0 overflow-auto p-4">
-                <pre className="text-xs whitespace-pre-wrap font-mono bg-muted p-4 rounded-lg">
-                  {previewHtml}
-                </pre>
-              </TabsContent>
-            </Tabs>
+          {selectedTemplate && (
+            <Button size="sm" onClick={() => setTestDialogOpen(true)}>
+              <Send className="w-4 h-4 mr-2" />
+              Send Test
+            </Button>
           )}
         </div>
-      </div>
 
-      {/* Send Test Dialog */}
-      <Dialog open={testDialogOpen} onOpenChange={setTestDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Send Test Email</DialogTitle>
-            <DialogDescription>
-              Send a test "{selectedTemplate?.name}" email to verify it looks correct.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div>
-              <Label htmlFor="testEmail">Recipient Email</Label>
-              <Input
-                id="testEmail"
-                type="email"
-                placeholder="your@email.com"
-                value={testEmail}
-                onChange={(e) => setTestEmail(e.target.value)}
-              />
+        {/* Main Content */}
+        <div className="flex-1 flex gap-4 min-h-0">
+          {/* Sidebar - Template List */}
+          <div className="w-[280px] shrink-0 flex flex-col border rounded-lg bg-card">
+            {/* Category Filter */}
+            <div className="p-3 border-b">
+              <div className="flex flex-wrap gap-1">
+                <Button
+                  variant={activeCategory === "all" ? "default" : "ghost"}
+                  size="sm"
+                  className="h-7 text-xs"
+                  onClick={() => setActiveCategory("all")}
+                >
+                  All
+                </Button>
+                {Object.entries(CATEGORY_LABELS).map(([key, { label }]) => (
+                  <Button
+                    key={key}
+                    variant={activeCategory === key ? "default" : "ghost"}
+                    size="sm"
+                    className="h-7 text-xs"
+                    onClick={() => setActiveCategory(key)}
+                  >
+                    {label}
+                  </Button>
+                ))}
+              </div>
+            </div>
+
+            {/* Template List */}
+            <div className="flex-1 overflow-auto">
+              {filteredTemplates.map((template) => {
+                const category = CATEGORY_LABELS[template.category];
+                const isSelected = selectedTemplate?.id === template.id;
+
+                return (
+                  <button
+                    type="button"
+                    key={template.id}
+                    className={cn(
+                      "w-full flex items-center gap-3 px-3 py-2.5 text-left transition-colors border-b last:border-b-0 cursor-pointer",
+                      isSelected
+                        ? "bg-primary/10 border-l-2 border-l-primary"
+                        : "hover:bg-muted/50",
+                    )}
+                    onClick={() => loadPreview(template)}
+                  >
+                    <div
+                      className={cn(
+                        "p-1.5 rounded shrink-0",
+                        isSelected ? "bg-primary/20" : "bg-muted",
+                      )}
+                    >
+                      {template.icon}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="font-medium text-sm truncate">
+                        {template.name}
+                      </div>
+                      <span
+                        className={cn(
+                          "text-[10px] px-1.5 py-0.5 rounded-full",
+                          category.color,
+                        )}
+                      >
+                        {category.label}
+                      </span>
+                    </div>
+                    <ChevronRight
+                      className={cn(
+                        "w-4 h-4 shrink-0 text-muted-foreground transition-transform",
+                        isSelected && "text-primary",
+                      )}
+                    />
+                  </button>
+                );
+              })}
             </div>
           </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setTestDialogOpen(false)}>
-              Cancel
-            </Button>
-            <Button onClick={sendTestEmail} disabled={!testEmail || isSendingTest}>
-              {isSendingTest ? (
-                <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Sending...
-                </>
-              ) : (
-                <>
-                  <Send className="w-4 h-4 mr-2" />
-                  Send Test
-                </>
-              )}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </div>
+
+          {/* Preview Panel */}
+          <div className="flex-1 flex flex-col border rounded-lg bg-card min-w-0">
+            {!selectedTemplate ? (
+              <div className="flex-1 flex flex-col items-center justify-center text-muted-foreground">
+                <Mail className="w-12 h-12 mb-4 opacity-50" />
+                <p>Select a template to preview</p>
+              </div>
+            ) : isLoadingPreview ? (
+              <div className="flex-1 flex flex-col items-center justify-center">
+                <Loader2 className="w-8 h-8 animate-spin text-muted-foreground mb-4" />
+                <p className="text-muted-foreground">Loading preview...</p>
+              </div>
+            ) : (
+              <Tabs
+                defaultValue="preview"
+                className="flex-1 flex flex-col min-h-0"
+              >
+                <div className="px-4 pt-3 pb-2 border-b flex items-center justify-between">
+                  <TabsList>
+                    <TabsTrigger value="preview">Preview</TabsTrigger>
+                    <TabsTrigger value="html">HTML Source</TabsTrigger>
+                  </TabsList>
+                  {/* Inline Parameters */}
+                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                    <Info className="w-3.5 h-3.5" />
+                    <span>
+                      {Object.entries(selectedTemplate.previewParams)
+                        .slice(0, 2)
+                        .map(([key, value], i) => (
+                          <span key={key}>
+                            {i > 0 && " · "}
+                            <span className="font-mono">{key}:</span>{" "}
+                            {String(value).slice(0, 20)}
+                            {String(value).length > 20 && "..."}
+                          </span>
+                        ))}
+                      {Object.keys(selectedTemplate.previewParams).length >
+                        2 && (
+                        <span>
+                          {" "}
+                          · +
+                          {Object.keys(selectedTemplate.previewParams).length -
+                            2}{" "}
+                          more
+                        </span>
+                      )}
+                    </span>
+                  </div>
+                </div>
+                <TabsContent
+                  value="preview"
+                  className="flex-1 m-0 overflow-hidden"
+                >
+                  <iframe
+                    srcDoc={previewHtml}
+                    className="w-full h-full border-0"
+                    title="Email Preview"
+                    sandbox="allow-same-origin"
+                  />
+                </TabsContent>
+                <TabsContent
+                  value="html"
+                  className="flex-1 m-0 overflow-auto p-4"
+                >
+                  <pre className="text-xs whitespace-pre-wrap font-mono bg-muted p-4 rounded-lg">
+                    {previewHtml}
+                  </pre>
+                </TabsContent>
+              </Tabs>
+            )}
+          </div>
+        </div>
+
+        {/* Send Test Dialog */}
+        <Dialog open={testDialogOpen} onOpenChange={setTestDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Send Test Email</DialogTitle>
+              <DialogDescription>
+                Send a test "{selectedTemplate?.name}" email to verify it looks
+                correct.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div>
+                <Label htmlFor="testEmail">Recipient Email</Label>
+                <Input
+                  id="testEmail"
+                  type="email"
+                  placeholder="your@email.com"
+                  value={testEmail}
+                  onChange={(e) => setTestEmail(e.target.value)}
+                />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={() => setTestDialogOpen(false)}
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={sendTestEmail}
+                disabled={!testEmail || isSendingTest}
+              >
+                {isSendingTest ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Sending...
+                  </>
+                ) : (
+                  <>
+                    <Send className="w-4 h-4 mr-2" />
+                    Send Test
+                  </>
+                )}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      </div>
     </DashboardLayout>
   );
 }

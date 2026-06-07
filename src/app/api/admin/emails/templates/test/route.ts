@@ -1,16 +1,17 @@
-import { NextRequest, NextResponse } from "next/server";
+import { type NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import {
   sendMagicLinkEmail,
-  sendWelcomeEmail,
   sendMerchantInviteEmail,
+  sendMerchantRequestConfirmationEmail,
   sendMerchantWelcomeEmail,
+  sendWelcomeEmail,
 } from "@/lib/email";
 
 export async function POST(request: NextRequest) {
   try {
     const session = await getSession();
-    if (!session || session.user.role !== "admin") {
+    if (session?.user.role !== "admin") {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -19,7 +20,7 @@ export async function POST(request: NextRequest) {
     if (!to || !templateId) {
       return NextResponse.json(
         { error: "Missing required fields" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -27,17 +28,39 @@ export async function POST(request: NextRequest) {
 
     switch (templateId) {
       case "magic-link":
-        success = await sendMagicLinkEmail(to, params.token || "test-token-12345");
+        success = await sendMagicLinkEmail(
+          to,
+          params.token || "test-token-12345",
+        );
         break;
 
       case "welcome":
-        success = await sendWelcomeEmail(to, params.token || "test-token-12345");
+        success = await sendWelcomeEmail(
+          to,
+          params.token || "test-token-12345",
+        );
+        break;
+
+      case "merchant-request-confirmation":
+        success = await sendMerchantRequestConfirmationEmail({
+          email: to,
+          ownerName: params.ownerName || "Jordan Owner",
+          businessName: params.businessName || "Phoenix Demo Roofing",
+          requestedCategory: params.requestedCategory || "Roofing",
+          city: params.city || "Phoenix",
+          state: params.state || "AZ",
+          createdAt: params.createdAt
+            ? new Date(params.createdAt)
+            : new Date("2026-06-07T17:00:00.000Z"),
+          reference: params.reference || "ABC12345",
+        });
         break;
 
       case "merchant-invite":
         success = await sendMerchantInviteEmail({
           email: to,
-          inviteUrl: params.inviteUrl || "https://localcityplaces.com/onboard/test",
+          inviteUrl:
+            params.inviteUrl || "https://localcityplaces.com/onboard/test",
           expiresInDays: params.expiresInDays || 7,
         });
         break;
@@ -51,13 +74,16 @@ export async function POST(request: NextRequest) {
         break;
 
       default:
-        return NextResponse.json({ error: "Unknown template" }, { status: 400 });
+        return NextResponse.json(
+          { error: "Unknown template" },
+          { status: 400 },
+        );
     }
 
     if (!success) {
       return NextResponse.json(
         { error: "Failed to send email" },
-        { status: 500 }
+        { status: 500 },
       );
     }
 
@@ -66,7 +92,7 @@ export async function POST(request: NextRequest) {
     console.error("Send test template error:", error);
     return NextResponse.json(
       { error: "Internal server error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

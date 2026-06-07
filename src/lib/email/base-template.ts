@@ -219,7 +219,10 @@ const baseStyles = `
 /**
  * Wraps HTML content in the standard email template
  */
-export function wrapInBaseTemplate(content: string, config: BaseTemplateConfig = {}): string {
+export function wrapInBaseTemplate(
+  content: string,
+  config: BaseTemplateConfig = {},
+): string {
   const {
     preheaderText = "",
     showUnsubscribe = false,
@@ -240,17 +243,21 @@ export function wrapInBaseTemplate(content: string, config: BaseTemplateConfig =
   </style>
 </head>
 <body>
-  ${preheaderText ? `
+  ${
+    preheaderText
+      ? `
   <div style="display: none; max-height: 0; overflow: hidden; mso-hide: all;">
     ${preheaderText}
     ${"&nbsp;".repeat(100)}
   </div>
-  ` : ""}
+  `
+      : ""
+  }
 
   <div class="email-wrapper">
     <div class="email-container">
       <div class="email-header">
-        <img src="${EMAIL_ASSETS_URL}/images/logo-horizontal.png" alt="Local City Places" style="max-width: 300px; height: auto;" />
+        <img src="${EMAIL_ASSETS_URL}/images/email-logo.png" alt="Local City Places" width="300" height="134" style="width: 300px; max-width: 100%; height: auto;" />
       </div>
       <div class="email-content">
         ${content}
@@ -259,11 +266,15 @@ export function wrapInBaseTemplate(content: string, config: BaseTemplateConfig =
         <p><strong>Need help?</strong><br><a href="mailto:support@localcityplaces.com">support@localcityplaces.com</a></p>
         <div class="footer-divider"></div>
         <p class="footer-legal">&copy; ${currentYear} Local City Places. All rights reserved.<br>954 E. County Down Drive, Chandler, AZ 85249</p>
-        ${showUnsubscribe ? `
+        ${
+          showUnsubscribe
+            ? `
         <p class="unsubscribe-link">
           <a href="${unsubscribeUrl}">Unsubscribe</a> from marketing emails
         </p>
-        ` : ""}
+        `
+            : ""
+        }
       </div>
     </div>
   </div>
@@ -274,7 +285,11 @@ export function wrapInBaseTemplate(content: string, config: BaseTemplateConfig =
 /**
  * Creates a styled CTA button
  */
-export function createButton(text: string, url: string, style: "primary" | "secondary" = "primary"): string {
+export function createButton(
+  text: string,
+  url: string,
+  style: "primary" | "secondary" = "primary",
+): string {
   const bgColor = style === "primary" ? "#007bff" : "#6c757d";
   return `
 <div class="cta-button">
@@ -288,7 +303,7 @@ export function createButton(text: string, url: string, style: "primary" | "seco
 export function createAlertBox(
   message: string,
   type: "info" | "warning" | "success" | "danger" = "info",
-  title?: string
+  title?: string,
 ): string {
   return `
 <div class="${type}-box">
@@ -300,10 +315,12 @@ export function createAlertBox(
 /**
  * Creates a details/info box with label-value pairs
  */
-export function createDetailList(details: Array<{ label: string; value: string }>): string {
+export function createDetailList(
+  details: Array<{ label: string; value: string }>,
+): string {
   return `
 <div class="details-box">
-  ${details.map(item => `<p><span class="label">${item.label}:</span> <span class="value">${item.value}</span></p>`).join("")}
+  ${details.map((item) => `<p><span class="label">${item.label}:</span> <span class="value">${item.value}</span></p>`).join("")}
 </div>`;
 }
 
@@ -313,6 +330,6 @@ export function createDetailList(details: Array<{ label: string; value: string }
 export function textToHtml(text: string): string {
   return text
     .split("\n\n")
-    .map(paragraph => `<p>${paragraph.replace(/\n/g, "<br>")}</p>`)
+    .map((paragraph) => `<p>${paragraph.replace(/\n/g, "<br>")}</p>`)
     .join("");
 }

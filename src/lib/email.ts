@@ -1,6 +1,7 @@
 import * as postmark from "postmark";
 
-const FROM_EMAIL = process.env.POSTMARK_FROM_EMAIL || "team@localcityplaces.com";
+const FROM_EMAIL =
+  process.env.POSTMARK_FROM_EMAIL || "team@localcityplaces.com";
 const FROM_NAME = process.env.POSTMARK_FROM_NAME || "Local City Places";
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
 // Always use production URL for email images (localhost not accessible from email clients)
@@ -10,6 +11,29 @@ const client = process.env.POSTMARK_API_KEY
   ? new postmark.ServerClient(process.env.POSTMARK_API_KEY)
   : null;
 
+function escapeHtml(value: string) {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
+function formatRequestTimestamp(date: Date) {
+  const requestDate = Number.isNaN(date.getTime()) ? new Date() : date;
+
+  return new Intl.DateTimeFormat("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+    timeZone: "America/Phoenix",
+    timeZoneName: "short",
+  }).format(requestDate);
+}
+
 interface SendEmailOptions {
   to: string;
   subject: string;
@@ -18,7 +42,13 @@ interface SendEmailOptions {
   messageStream?: string;
 }
 
-export async function sendEmail({ to, subject, html, text, messageStream }: SendEmailOptions): Promise<boolean> {
+export async function sendEmail({
+  to,
+  subject,
+  html,
+  text,
+  messageStream,
+}: SendEmailOptions): Promise<boolean> {
   // In development without API key, log to console
   if (!client) {
     console.log("=".repeat(50));
@@ -40,7 +70,8 @@ export async function sendEmail({ to, subject, html, text, messageStream }: Send
       Subject: subject,
       HtmlBody: html,
       TextBody: text || html.replace(/<[^>]*>/g, ""),
-      MessageStream: messageStream || process.env.POSTMARK_MESSAGE_STREAM || "outbound",
+      MessageStream:
+        messageStream || process.env.POSTMARK_MESSAGE_STREAM || "outbound",
     });
     console.log(`Email sent successfully to ${to}`);
     return true;
@@ -51,7 +82,10 @@ export async function sendEmail({ to, subject, html, text, messageStream }: Send
 }
 
 // Simple sign-in email for existing users
-export async function sendMagicLinkEmail(email: string, token: string): Promise<boolean> {
+export async function sendMagicLinkEmail(
+  email: string,
+  token: string,
+): Promise<boolean> {
   const magicLink = `${APP_URL}/api/auth/verify?token=${token}`;
 
   const subject = "Sign in to Local City Places";
@@ -83,7 +117,7 @@ export async function sendMagicLinkEmail(email: string, token: string): Promise<
   <div class="email-wrapper">
     <div class="email-container">
       <div class="email-header">
-        <img src="${EMAIL_ASSETS_URL}/images/logo-horizontal.png" alt="Local City Places" style="max-width: 300px; height: auto;" />
+        <img src="${EMAIL_ASSETS_URL}/images/email-logo.png" alt="Local City Places" width="300" height="134" style="width: 300px; max-width: 100%; height: auto;" />
       </div>
       <div class="email-content">
         <h2>Sign in to your account</h2>
@@ -119,7 +153,10 @@ Need help? support@localcityplaces.com
 }
 
 // Welcome email for admin-created accounts
-export async function sendWelcomeEmail(email: string, token: string): Promise<boolean> {
+export async function sendWelcomeEmail(
+  email: string,
+  token: string,
+): Promise<boolean> {
   const magicLink = `${APP_URL}/api/auth/verify?token=${token}`;
 
   const subject = "Welcome to Local City Places";
@@ -271,7 +308,7 @@ export async function sendWelcomeEmail(email: string, token: string): Promise<bo
     <div class="email-container">
       <!-- Header -->
       <div class="email-header">
-        <img src="${EMAIL_ASSETS_URL}/images/logo-horizontal.png" alt="Local City Places" style="max-width: 300px; height: auto;" />
+        <img src="${EMAIL_ASSETS_URL}/images/email-logo.png" alt="Local City Places" width="300" height="134" style="width: 300px; max-width: 100%; height: auto;" />
       </div>
 
       <!-- Content -->
@@ -343,6 +380,153 @@ Need help? support@localcityplaces.com
   return sendEmail({ to: email, subject, html, text });
 }
 
+interface MerchantRequestConfirmationEmailOptions {
+  email: string;
+  ownerName: string;
+  businessName: string;
+  requestedCategory: string;
+  city: string;
+  state: string;
+  createdAt: Date;
+  reference: string;
+}
+
+export async function sendMerchantRequestConfirmationEmail({
+  email,
+  ownerName,
+  businessName,
+  requestedCategory,
+  city,
+  state,
+  createdAt,
+  reference,
+}: MerchantRequestConfirmationEmailOptions): Promise<boolean> {
+  const safeOwnerName = escapeHtml(ownerName || businessName);
+  const safeBusinessName = escapeHtml(businessName);
+  const safeRequestedCategory = escapeHtml(requestedCategory);
+  const market = [city, state].filter(Boolean).join(", ");
+  const safeMarket = escapeHtml(market);
+  const receivedAt = formatRequestTimestamp(createdAt);
+  const safeReference = escapeHtml(reference);
+
+  const subject = "We received your Phoenix Metro 250 request";
+  const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title>We received your Phoenix Metro 250 request</title>
+  <style>
+    body { margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', sans-serif; background-color: #f9fafb; }
+    .email-wrapper { width: 100%; background: linear-gradient(180deg, #0f172a 0%, #020617 100%); padding: 48px 20px; }
+    .email-container { max-width: 680px; margin: 0 auto; border-radius: 8px; overflow: hidden; border: 1px solid #e2e8f0; box-shadow: 0 4px 12px rgba(15, 23, 42, 0.18); }
+    .email-header { background: #ffffff; padding: 24px 32px; text-align: center; border-bottom: 1px solid #e2e8f0; }
+    .email-content { background-color: #ffffff; padding: 40px 32px; }
+    .eyebrow { color: #f97316; font-size: 13px; font-weight: 800; letter-spacing: 0.14em; margin: 0 0 12px; text-transform: uppercase; }
+    .email-content h1 { color: #0f172a; margin: 0 0 16px; font-size: 28px; line-height: 1.2; font-weight: 800; }
+    .email-content p { color: #334155; line-height: 1.6; margin: 0 0 16px; font-size: 16px; }
+    .details-box { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 20px; margin: 24px 0; }
+    .detail-row { padding: 10px 0; border-bottom: 1px solid #e2e8f0; }
+    .detail-row:last-child { border-bottom: 0; }
+    .detail-label { color: #64748b; font-size: 12px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; margin: 0 0 3px; }
+    .detail-value { color: #0f172a; font-size: 16px; font-weight: 700; margin: 0; }
+    .notice-box { background: #fff7ed; border-left: 4px solid #f97316; border-radius: 6px; padding: 16px; margin: 24px 0; }
+    .notice-box p { color: #7c2d12; margin: 0; font-size: 15px; }
+    .email-footer { background: #ffffff; padding: 28px 24px; text-align: center; border-top: 1px solid #e2e8f0; }
+    .email-footer p { color: #666666; font-size: 14px; margin: 0 0 12px 0; line-height: 1.6; }
+    .email-footer a { color: #2563eb; text-decoration: underline; }
+    .footer-divider { width: 40px; height: 1px; background: #e2e8f0; margin: 20px auto; }
+    .footer-legal { font-size: 12px; color: #999999; margin-top: 20px; }
+    @media only screen and (max-width: 600px) {
+      .email-wrapper { padding: 24px 12px; }
+      .email-content { padding: 32px 24px; }
+      .email-header { padding: 24px 20px; }
+      .email-content h1 { font-size: 24px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="email-wrapper">
+    <div class="email-container">
+      <div class="email-header">
+        <img src="${EMAIL_ASSETS_URL}/images/email-logo.png" alt="Local City Places" width="300" height="134" style="width: 300px; max-width: 100%; height: auto;" />
+      </div>
+      <div class="email-content">
+        <p class="eyebrow">Phoenix Metro 250 Selection</p>
+        <h1>We received your request.</h1>
+        <p>Hi ${safeOwnerName},</p>
+        <p>Thanks for submitting <strong>${safeBusinessName}</strong> for review. Your request has been received and the timestamp below now marks when it entered the category review queue.</p>
+
+        <div class="details-box">
+          <div class="detail-row">
+            <p class="detail-label">Business</p>
+            <p class="detail-value">${safeBusinessName}</p>
+          </div>
+          <div class="detail-row">
+            <p class="detail-label">Requested category</p>
+            <p class="detail-value">${safeRequestedCategory}</p>
+          </div>
+          <div class="detail-row">
+            <p class="detail-label">Market</p>
+            <p class="detail-value">${safeMarket}</p>
+          </div>
+          <div class="detail-row">
+            <p class="detail-label">Received</p>
+            <p class="detail-value">${receivedAt}</p>
+          </div>
+          <div class="detail-row">
+            <p class="detail-label">Reference</p>
+            <p class="detail-value">${safeReference}</p>
+          </div>
+        </div>
+
+        <div class="notice-box">
+          <p><strong>Timestamp rule:</strong> Categories are reviewed in the order requests are received for each city and category.</p>
+        </div>
+
+        <p>There is no cost to request and no obligation. Submitting this form does not guarantee selection or category assignment.</p>
+        <p>If selected, fulfillment begins first. That can include category review, merchant page preparation, audio assets, and then a Merchant Dashboard invite when everything is ready to activate.</p>
+        <p>If we need anything else, we will follow up using the contact information from your request.</p>
+      </div>
+      <div class="email-footer">
+        <p><strong>Need help?</strong><br><a href="mailto:support@localcityplaces.com">support@localcityplaces.com</a></p>
+        <div class="footer-divider"></div>
+        <p class="footer-legal">© 2026 Local City Places. All rights reserved.<br>954 E. County Down Drive, Chandler, AZ 85249</p>
+      </div>
+    </div>
+  </div>
+</body>
+</html>`;
+
+  const text = `We received your Phoenix Metro 250 request
+
+Hi ${ownerName || businessName},
+
+Thanks for submitting ${businessName} for review. Your request has been received and the timestamp below now marks when it entered the category review queue.
+
+Business: ${businessName}
+Requested category: ${requestedCategory}
+Market: ${market}
+Received: ${receivedAt}
+Reference: ${reference}
+
+Timestamp rule: Categories are reviewed in the order requests are received for each city and category.
+
+There is no cost to request and no obligation. Submitting this form does not guarantee selection or category assignment.
+
+If selected, fulfillment begins first. That can include category review, merchant page preparation, audio assets, and then a Merchant Dashboard invite when everything is ready to activate.
+
+If we need anything else, we will follow up using the contact information from your request.
+
+Need help? support@localcityplaces.com
+
+© 2026 Local City Places. All rights reserved.
+954 E. County Down Drive, Chandler, AZ 85249`;
+
+  return sendEmail({ to: email, subject, html, text });
+}
+
 interface MerchantInviteEmailOptions {
   email: string;
   inviteUrl: string;
@@ -357,7 +541,9 @@ export async function sendMerchantInviteEmail({
   const subject = "You're invited to join Local City Places as a merchant";
   const html = `
     <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
-      <h1 style="color: #ff7a3c;">Local City Places</h1>
+      <div style="text-align: center; margin-bottom: 24px;">
+        <img src="${EMAIL_ASSETS_URL}/images/email-logo.png" alt="Local City Places" width="300" height="134" style="width: 300px; max-width: 100%; height: auto;" />
+      </div>
       <h2>Welcome, Partner!</h2>
       <p>You've been invited to join Local City Places as a merchant partner.</p>
 
@@ -378,7 +564,7 @@ export async function sendMerchantInviteEmail({
       </p>
 
       <p style="color: #999; font-size: 12px; margin-top: 24px;">
-        This invitation expires in ${expiresInDays} day${expiresInDays !== 1 ? 's' : ''}.
+        This invitation expires in ${expiresInDays} day${expiresInDays !== 1 ? "s" : ""}.
       </p>
     </div>
   `;
@@ -391,7 +577,7 @@ Complete your registration, set up your business profile, and start getting disc
 
 Complete your registration: ${inviteUrl}
 
-This invitation expires in ${expiresInDays} day${expiresInDays !== 1 ? 's' : ''}.`;
+This invitation expires in ${expiresInDays} day${expiresInDays !== 1 ? "s" : ""}.`;
 
   return sendEmail({ to: email, subject, html, text });
 }
@@ -410,6 +596,9 @@ export async function sendMerchantWelcomeEmail({
   const subject = `Welcome to Local City Places, ${businessName}!`;
   const html = `
     <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
+      <div style="text-align: center; margin-bottom: 24px;">
+        <img src="${EMAIL_ASSETS_URL}/images/email-logo.png" alt="Local City Places" width="300" height="134" style="width: 300px; max-width: 100%; height: auto;" />
+      </div>
       <h1 style="color: #ff7a3c;">Welcome to Local City Places!</h1>
       <p>Hi there,</p>
       <p>Your merchant account for <strong>${businessName}</strong> has been created and is ready to go!</p>
