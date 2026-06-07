@@ -45,10 +45,24 @@ interface SidebarProps {
   onToggleCollapse?: () => void;
 }
 
+function getActiveHref(pathname: string, navItems: NavItem[]) {
+  return navItems
+    .filter((item) => {
+      const hrefSegments = item.href.split("/").filter(Boolean).length;
+
+      return (
+        pathname === item.href ||
+        (hrefSegments > 1 && pathname.startsWith(`${item.href}/`))
+      );
+    })
+    .sort((a, b) => b.href.length - a.href.length)[0]?.href;
+}
+
 export function Sidebar({ navItems, isCollapsed = false }: SidebarProps) {
   const pathname = usePathname();
   const { theme, setTheme } = useTheme();
   const { user, userName } = useUser();
+  const activeHref = getActiveHref(pathname, navItems);
 
   const fullName = userName || user?.email?.split("@")[0] || "User";
   const nameParts = fullName.split(" ");
@@ -104,10 +118,7 @@ export function Sidebar({ navItems, isCollapsed = false }: SidebarProps) {
       {/* Navigation */}
       <nav className="flex-1 py-4 px-2 space-y-1 overflow-y-auto">
         {navItems.map((item) => {
-          const hrefSegments = item.href.split("/").filter(Boolean).length;
-          const isActive =
-            pathname === item.href ||
-            (hrefSegments > 1 && pathname.startsWith(`${item.href}/`));
+          const isActive = item.href === activeHref;
           const Icon = item.icon;
 
           return (

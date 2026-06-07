@@ -11,7 +11,7 @@ import {
   Users,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { DashboardLayout } from "@/components/layout";
 import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/ui/page-header";
@@ -48,7 +48,7 @@ export default function AdminDashboard() {
     }
   }, [authLoading, isAuthenticated, user?.role, router]);
 
-  const fetchDashboardData = async () => {
+  const fetchDashboardData = useCallback(async () => {
     setIsLoadingStats(true);
     try {
       const res = await fetch("/api/admin/dashboard");
@@ -62,13 +62,13 @@ export default function AdminDashboard() {
     } finally {
       setIsLoadingStats(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     if (!authLoading && isAuthenticated && user?.role === "admin") {
       fetchDashboardData();
     }
-  }, [authLoading, isAuthenticated, user?.role]);
+  }, [authLoading, fetchDashboardData, isAuthenticated, user?.role]);
 
   const formatTimeAgo = (timestamp: string) => {
     const seconds = Math.floor(
@@ -132,7 +132,9 @@ export default function AdminDashboard() {
                 <ImageIcon className="w-5 h-5 text-primary" />
                 <div>
                   <p className="font-medium">Merchant Nominations</p>
-                  <p className="text-sm text-muted-foreground">Review stories and photos</p>
+                  <p className="text-sm text-muted-foreground">
+                    Review stories and photos
+                  </p>
                 </div>
               </a>
               <a
@@ -142,7 +144,9 @@ export default function AdminDashboard() {
                 <Store className="w-5 h-5 text-primary" />
                 <div>
                   <p className="font-medium">Merchant Pages</p>
-                  <p className="text-sm text-muted-foreground">Edit public business pages</p>
+                  <p className="text-sm text-muted-foreground">
+                    Edit public business pages
+                  </p>
                 </div>
               </a>
               <a
@@ -152,7 +156,9 @@ export default function AdminDashboard() {
                 <Users className="w-5 h-5 text-primary" />
                 <div>
                   <p className="font-medium">Users</p>
-                  <p className="text-sm text-muted-foreground">View and edit accounts</p>
+                  <p className="text-sm text-muted-foreground">
+                    View and edit accounts
+                  </p>
                 </div>
               </a>
               <a
@@ -162,7 +168,9 @@ export default function AdminDashboard() {
                 <MessageSquare className="w-5 h-5 text-primary" />
                 <div>
                   <p className="font-medium">Reviews</p>
-                  <p className="text-sm text-muted-foreground">Moderate public feedback</p>
+                  <p className="text-sm text-muted-foreground">
+                    Moderate public feedback
+                  </p>
                 </div>
               </a>
               <a
@@ -171,8 +179,10 @@ export default function AdminDashboard() {
               >
                 <Send className="w-5 h-5 text-primary" />
                 <div>
-                  <p className="font-medium">Emails</p>
-                  <p className="text-sm text-muted-foreground">Manage campaigns</p>
+                  <p className="font-medium">Email Campaigns</p>
+                  <p className="text-sm text-muted-foreground">
+                    Manage campaigns
+                  </p>
                 </div>
               </a>
               <a
@@ -182,7 +192,9 @@ export default function AdminDashboard() {
                 <FolderOpen className="w-5 h-5 text-primary" />
                 <div>
                   <p className="font-medium">Categories</p>
-                  <p className="text-sm text-muted-foreground">Organize merchants</p>
+                  <p className="text-sm text-muted-foreground">
+                    Organize merchants
+                  </p>
                 </div>
               </a>
             </div>
@@ -205,7 +217,10 @@ export default function AdminDashboard() {
             {isLoadingStats ? (
               <div className="space-y-3">
                 {[1, 2, 3].map((item) => (
-                  <div key={item} className="flex items-center gap-3 animate-pulse">
+                  <div
+                    key={item}
+                    className="flex items-center gap-3 animate-pulse"
+                  >
                     <div className="w-8 h-8 rounded-full bg-muted" />
                     <div className="flex-1">
                       <div className="h-4 w-3/4 bg-muted rounded" />
@@ -215,7 +230,9 @@ export default function AdminDashboard() {
                 ))}
               </div>
             ) : recentActivity.length === 0 ? (
-              <p className="text-sm text-muted-foreground">No recent nominations</p>
+              <p className="text-sm text-muted-foreground">
+                No recent nominations
+              </p>
             ) : (
               <div className="space-y-3">
                 {recentActivity.map((item) => (

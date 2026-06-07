@@ -195,7 +195,7 @@ export default function EmailTemplatesPage() {
             <Link href="/admin/emails">
               <Button variant="ghost" size="sm">
                 <ArrowLeft className="w-4 h-4 mr-2" />
-                Back to Emails
+                Back to Email Campaigns
               </Button>
             </Link>
             <div>

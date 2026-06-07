@@ -1,27 +1,26 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
-import { useRouter } from "next/navigation";
-import Link from "next/link";
-import { DashboardLayout } from "@/components/layout";
-import { PageHeader } from "@/components/ui/page-header";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Pagination } from "@/components/ui/pagination";
 import {
-  Send,
-  Clock,
   CheckCircle2,
-  XCircle,
+  Clock,
+  Eye,
+  Mail,
+  MousePointerClick,
+  Plus,
   RefreshCw,
   Search,
-  Plus,
-  Mail,
+  Send,
   Users,
-  Eye,
-  MousePointerClick,
-  FileText,
+  XCircle,
 } from "lucide-react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useCallback, useEffect, useState } from "react";
+import { DashboardLayout } from "@/components/layout";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { PageHeader } from "@/components/ui/page-header";
+import { Pagination } from "@/components/ui/pagination";
 import { useUser } from "@/hooks/use-user";
 import { cn } from "@/lib/utils";
 import { adminNavItems } from "../nav";
@@ -59,7 +58,9 @@ export default function AdminEmailsPage() {
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [stats, setStats] = useState<Stats | null>(null);
   const [isLoadingCampaigns, setIsLoadingCampaigns] = useState(true);
-  const [filter, setFilter] = useState<"all" | "draft" | "sent" | "failed">("all");
+  const [filter, setFilter] = useState<"all" | "draft" | "sent" | "failed">(
+    "all",
+  );
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
 
@@ -138,9 +139,14 @@ export default function AdminEmailsPage() {
       return "Individual";
     }
     if (campaign.recipientLists && campaign.recipientLists.length > 0) {
-      return campaign.recipientLists.map(l => l.charAt(0).toUpperCase() + l.slice(1)).join(", ");
+      return campaign.recipientLists
+        .map((l) => l.charAt(0).toUpperCase() + l.slice(1))
+        .join(", ");
     }
-    return campaign.recipientType.charAt(0).toUpperCase() + campaign.recipientType.slice(1);
+    return (
+      campaign.recipientType.charAt(0).toUpperCase() +
+      campaign.recipientType.slice(1)
+    );
   };
 
   const getOpenRate = (campaign: Campaign) => {
@@ -167,12 +173,6 @@ export default function AdminEmailsPage() {
               description="Create and manage email marketing campaigns"
             />
             <div className="flex gap-2">
-              <Link href="/admin/emails/templates">
-                <Button variant="outline">
-                  <FileText className="w-4 h-4 mr-2" />
-                  Templates
-                </Button>
-              </Link>
               <Link href="/admin/emails/compose">
                 <Button>
                   <Plus className="w-4 h-4 mr-2" />
@@ -189,28 +189,36 @@ export default function AdminEmailsPage() {
                 <Mail className="w-4 h-4" />
                 <span className="text-xs sm:text-sm">Total Campaigns</span>
               </div>
-              <div className="text-lg sm:text-2xl font-bold">{stats?.totalCampaigns ?? 0}</div>
+              <div className="text-lg sm:text-2xl font-bold">
+                {stats?.totalCampaigns ?? 0}
+              </div>
             </div>
             <div className="bg-card border rounded-lg p-3 sm:p-4">
               <div className="flex items-center gap-2 text-muted-foreground mb-1">
                 <Clock className="w-4 h-4" />
                 <span className="text-xs sm:text-sm">Drafts</span>
               </div>
-              <div className="text-lg sm:text-2xl font-bold">{stats?.draftCount ?? 0}</div>
+              <div className="text-lg sm:text-2xl font-bold">
+                {stats?.draftCount ?? 0}
+              </div>
             </div>
             <div className="bg-card border rounded-lg p-3 sm:p-4">
               <div className="flex items-center gap-2 text-muted-foreground mb-1">
                 <Send className="w-4 h-4" />
                 <span className="text-xs sm:text-sm">Sent</span>
               </div>
-              <div className="text-lg sm:text-2xl font-bold">{stats?.sentCount ?? 0}</div>
+              <div className="text-lg sm:text-2xl font-bold">
+                {stats?.sentCount ?? 0}
+              </div>
             </div>
             <div className="bg-card border rounded-lg p-3 sm:p-4">
               <div className="flex items-center gap-2 text-muted-foreground mb-1">
                 <Users className="w-4 h-4" />
                 <span className="text-xs sm:text-sm">Total Recipients</span>
               </div>
-              <div className="text-lg sm:text-2xl font-bold">{stats?.totalRecipients ?? 0}</div>
+              <div className="text-lg sm:text-2xl font-bold">
+                {stats?.totalRecipients ?? 0}
+              </div>
             </div>
           </div>
 
@@ -265,7 +273,9 @@ export default function AdminEmailsPage() {
               disabled={isLoadingCampaigns}
               className="ml-auto"
             >
-              <RefreshCw className={cn("w-4 h-4", isLoadingCampaigns && "animate-spin")} />
+              <RefreshCw
+                className={cn("w-4 h-4", isLoadingCampaigns && "animate-spin")}
+              />
             </Button>
           </div>
 
@@ -278,22 +288,35 @@ export default function AdminEmailsPage() {
                   {debouncedSearch
                     ? `No campaigns found matching "${debouncedSearch}"`
                     : filter === "all"
-                    ? "No campaigns yet. Create your first campaign!"
-                    : `No ${filter} campaigns found`}
+                      ? "No campaigns yet. Create your first campaign!"
+                      : `No ${filter} campaigns found`}
                 </div>
               ) : (
                 campaigns.map((campaign) => (
-                  <Link key={campaign.id} href={campaign.status === "draft" ? `/admin/emails/compose?id=${campaign.id}` : `/admin/emails/${campaign.id}`}>
+                  <Link
+                    key={campaign.id}
+                    href={
+                      campaign.status === "draft"
+                        ? `/admin/emails/compose?id=${campaign.id}`
+                        : `/admin/emails/${campaign.id}`
+                    }
+                  >
                     <div className="p-4 hover:bg-muted/30 cursor-pointer">
                       <div className="flex items-start justify-between gap-3 mb-2">
-                        <h3 className="font-semibold line-clamp-2">{campaign.subject}</h3>
+                        <h3 className="font-semibold line-clamp-2">
+                          {campaign.subject}
+                        </h3>
                         <span
                           className={cn(
                             "text-xs px-2.5 py-1 rounded-full font-medium shrink-0",
-                            campaign.status === "draft" && "bg-yellow-100 text-yellow-800",
-                            campaign.status === "sending" && "bg-blue-100 text-blue-800",
-                            campaign.status === "sent" && "bg-green-100 text-green-800",
-                            campaign.status === "failed" && "bg-red-100 text-red-800"
+                            campaign.status === "draft" &&
+                              "bg-yellow-100 text-yellow-800",
+                            campaign.status === "sending" &&
+                              "bg-blue-100 text-blue-800",
+                            campaign.status === "sent" &&
+                              "bg-green-100 text-green-800",
+                            campaign.status === "failed" &&
+                              "bg-red-100 text-red-800",
                           )}
                         >
                           {campaign.status}
@@ -318,7 +341,9 @@ export default function AdminEmailsPage() {
                         </div>
                       )}
                       <p className="text-xs text-muted-foreground">
-                        {campaign.sentAt ? `Sent ${formatDate(campaign.sentAt)}` : `Created ${formatDate(campaign.createdAt)}`}
+                        {campaign.sentAt
+                          ? `Sent ${formatDate(campaign.sentAt)}`
+                          : `Created ${formatDate(campaign.createdAt)}`}
                       </p>
                     </div>
                   </Link>
@@ -338,48 +363,85 @@ export default function AdminEmailsPage() {
               </colgroup>
               <thead className="bg-muted/50 border-b">
                 <tr>
-                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-4 py-3">Subject</th>
-                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-4 py-3">Recipients</th>
-                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-4 py-3">Status</th>
-                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-4 py-3">Opens</th>
-                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-4 py-3">Clicks</th>
-                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-4 py-3">Date</th>
+                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-4 py-3">
+                    Subject
+                  </th>
+                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-4 py-3">
+                    Recipients
+                  </th>
+                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-4 py-3">
+                    Status
+                  </th>
+                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-4 py-3">
+                    Opens
+                  </th>
+                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-4 py-3">
+                    Clicks
+                  </th>
+                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-4 py-3">
+                    Date
+                  </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
                 {!isLoadingCampaigns && campaigns.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="px-4 py-8 text-center text-muted-foreground">
+                    <td
+                      colSpan={6}
+                      className="px-4 py-8 text-center text-muted-foreground"
+                    >
                       {debouncedSearch
                         ? `No campaigns found matching "${debouncedSearch}"`
                         : filter === "all"
-                        ? "No campaigns yet. Create your first campaign!"
-                        : `No ${filter} campaigns found`}
+                          ? "No campaigns yet. Create your first campaign!"
+                          : `No ${filter} campaigns found`}
                     </td>
                   </tr>
                 ) : (
                   campaigns.map((campaign) => (
-                    <tr key={campaign.id} className="hover:bg-muted/30 cursor-pointer">
+                    <tr
+                      key={campaign.id}
+                      className="hover:bg-muted/30 cursor-pointer"
+                    >
                       <td className="px-4 py-3">
-                        <Link href={campaign.status === "draft" ? `/admin/emails/compose?id=${campaign.id}` : `/admin/emails/${campaign.id}`} className="block cursor-pointer">
-                          <div className="font-medium hover:underline">{campaign.subject}</div>
+                        <Link
+                          href={
+                            campaign.status === "draft"
+                              ? `/admin/emails/compose?id=${campaign.id}`
+                              : `/admin/emails/${campaign.id}`
+                          }
+                          className="block cursor-pointer"
+                        >
+                          <div className="font-medium hover:underline">
+                            {campaign.subject}
+                          </div>
                           {campaign.previewText && (
-                            <div className="text-sm text-muted-foreground truncate">{campaign.previewText}</div>
+                            <div className="text-sm text-muted-foreground truncate">
+                              {campaign.previewText}
+                            </div>
                           )}
                         </Link>
                       </td>
                       <td className="px-4 py-3">
-                        <div className="text-sm">{getRecipientLabel(campaign)}</div>
-                        <div className="text-xs text-muted-foreground">{campaign.recipientCount} recipients</div>
+                        <div className="text-sm">
+                          {getRecipientLabel(campaign)}
+                        </div>
+                        <div className="text-xs text-muted-foreground">
+                          {campaign.recipientCount} recipients
+                        </div>
                       </td>
                       <td className="px-4 py-3">
                         <span
                           className={cn(
                             "text-xs px-2 py-1 rounded-full font-medium",
-                            campaign.status === "draft" && "bg-yellow-100 text-yellow-800",
-                            campaign.status === "sending" && "bg-blue-100 text-blue-800",
-                            campaign.status === "sent" && "bg-green-100 text-green-800",
-                            campaign.status === "failed" && "bg-red-100 text-red-800"
+                            campaign.status === "draft" &&
+                              "bg-yellow-100 text-yellow-800",
+                            campaign.status === "sending" &&
+                              "bg-blue-100 text-blue-800",
+                            campaign.status === "sent" &&
+                              "bg-green-100 text-green-800",
+                            campaign.status === "failed" &&
+                              "bg-red-100 text-red-800",
                           )}
                         >
                           {campaign.status}
@@ -388,8 +450,12 @@ export default function AdminEmailsPage() {
                       <td className="px-4 py-3">
                         {campaign.status === "sent" ? (
                           <div className="text-sm">
-                            <span className="font-medium">{getOpenRate(campaign)}%</span>
-                            <span className="text-muted-foreground ml-1">({campaign.uniqueOpens})</span>
+                            <span className="font-medium">
+                              {getOpenRate(campaign)}%
+                            </span>
+                            <span className="text-muted-foreground ml-1">
+                              ({campaign.uniqueOpens})
+                            </span>
                           </div>
                         ) : (
                           <span className="text-muted-foreground">—</span>
@@ -398,15 +464,21 @@ export default function AdminEmailsPage() {
                       <td className="px-4 py-3">
                         {campaign.status === "sent" ? (
                           <div className="text-sm">
-                            <span className="font-medium">{getClickRate(campaign)}%</span>
-                            <span className="text-muted-foreground ml-1">({campaign.uniqueClicks})</span>
+                            <span className="font-medium">
+                              {getClickRate(campaign)}%
+                            </span>
+                            <span className="text-muted-foreground ml-1">
+                              ({campaign.uniqueClicks})
+                            </span>
                           </div>
                         ) : (
                           <span className="text-muted-foreground">—</span>
                         )}
                       </td>
                       <td className="px-4 py-3 text-sm text-muted-foreground">
-                        {campaign.sentAt ? formatDate(campaign.sentAt) : formatDate(campaign.createdAt)}
+                        {campaign.sentAt
+                          ? formatDate(campaign.sentAt)
+                          : formatDate(campaign.createdAt)}
                       </td>
                     </tr>
                   ))

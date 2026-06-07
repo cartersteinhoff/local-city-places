@@ -1,6 +1,7 @@
 import {
   BarChart3,
   ClipboardList,
+  FileText,
   FolderOpen,
   ImageIcon,
   LayoutDashboard,
@@ -21,7 +22,12 @@ export const adminNavItems = [
     href: "/admin/merchant-requests",
     icon: ClipboardList,
   },
-  { label: "Emails", href: "/admin/emails", icon: Send },
+  { label: "Email Campaigns", href: "/admin/emails", icon: Send },
+  {
+    label: "Email Templates",
+    href: "/admin/emails/templates",
+    icon: FileText,
+  },
   { label: "Sweepstakes", href: "/admin/sweepstakes", icon: Sparkles },
   {
     label: "Merchant Nominations",

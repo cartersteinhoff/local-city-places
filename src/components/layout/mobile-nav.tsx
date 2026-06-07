@@ -1,33 +1,65 @@
 "use client";
 
-import { useState } from "react";
+import {
+  ChevronRight,
+  LogOut,
+  MoreHorizontal,
+  Shield,
+  Store,
+  User,
+} from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { MoreHorizontal, LogOut, Shield, Store, User, ChevronRight } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { useState } from "react";
 import { ThemeToggle } from "@/components/theme-toggle";
-import {
-  Sheet,
-  SheetContent,
-  SheetTrigger,
-} from "@/components/ui/sheet";
-import type { NavItem } from "./types";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { useUser } from "@/hooks/use-user";
+import { cn } from "@/lib/utils";
+import type { NavItem } from "./types";
 
 interface MobileNavProps {
   navItems: NavItem[];
 }
 
+function getActiveHref(pathname: string, navItems: NavItem[]) {
+  return navItems
+    .filter((item) => {
+      const hrefSegments = item.href.split("/").filter(Boolean).length;
+
+      return (
+        pathname === item.href ||
+        (hrefSegments > 1 && pathname.startsWith(`${item.href}/`))
+      );
+    })
+    .sort((a, b) => b.href.length - a.href.length)[0]?.href;
+}
+
 const roleConfig = {
-  admin: { label: "Admin", icon: Shield, href: "/admin", color: "text-primary" },
-  merchant: { label: "Merchant", icon: Store, href: "/merchant", color: "text-blue-500" },
-  member: { label: "Member", icon: User, href: "/member", color: "text-green-500" },
+  admin: {
+    label: "Admin",
+    icon: Shield,
+    href: "/admin",
+    color: "text-primary",
+  },
+  merchant: {
+    label: "Merchant",
+    icon: Store,
+    href: "/merchant",
+    color: "text-blue-500",
+  },
+  member: {
+    label: "Member",
+    icon: User,
+    href: "/member",
+    color: "text-green-500",
+  },
 };
 
 export function MobileNav({ navItems }: MobileNavProps) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const { user, userName } = useUser();
+  const activeHref = getActiveHref(pathname, navItems);
 
   // Show first 4 items in bottom nav, rest go in "More" menu
   const visibleItems = navItems.slice(0, 4);
@@ -45,8 +77,8 @@ export function MobileNav({ navItems }: MobileNavProps) {
   const currentView = pathname.startsWith("/admin")
     ? "admin"
     : pathname.startsWith("/merchant")
-    ? "merchant"
-    : "member";
+      ? "merchant"
+      : "member";
 
   const isAdmin = user?.role === "admin";
 
@@ -54,7 +86,7 @@ export function MobileNav({ navItems }: MobileNavProps) {
     <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-card border-t border-border z-50">
       <div className="flex items-center justify-around h-16 px-2">
         {visibleItems.map((item) => {
-          const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`);
+          const isActive = item.href === activeHref;
           const Icon = item.icon;
 
           return (
@@ -65,7 +97,7 @@ export function MobileNav({ navItems }: MobileNavProps) {
                 "flex flex-col items-center justify-center gap-1 min-w-[64px] py-2 px-3 rounded-lg transition-colors",
                 isActive
                   ? "text-primary"
-                  : "text-muted-foreground hover:text-foreground"
+                  : "text-muted-foreground hover:text-foreground",
               )}
             >
               <Icon className="w-5 h-5" strokeWidth={1.75} />
@@ -85,7 +117,7 @@ export function MobileNav({ navItems }: MobileNavProps) {
                 "flex flex-col items-center justify-center gap-1 min-w-[64px] py-2 px-3 rounded-lg transition-colors",
                 open
                   ? "text-primary"
-                  : "text-muted-foreground hover:text-foreground"
+                  : "text-muted-foreground hover:text-foreground",
               )}
             >
               <MoreHorizontal className="w-5 h-5" strokeWidth={1.75} />
@@ -102,9 +134,13 @@ export function MobileNav({ navItems }: MobileNavProps) {
                 </span>
               </div>
               <div className="flex-1 min-w-0">
-                <p className="font-medium text-foreground truncate">{displayName}</p>
+                <p className="font-medium text-foreground truncate">
+                  {displayName}
+                </p>
                 {user?.email && (
-                  <p className="text-sm text-muted-foreground truncate">{user.email}</p>
+                  <p className="text-sm text-muted-foreground truncate">
+                    {user.email}
+                  </p>
                 )}
               </div>
             </div>
@@ -113,7 +149,7 @@ export function MobileNav({ navItems }: MobileNavProps) {
             {moreItems.length > 0 && (
               <div className="py-2 border-b border-border">
                 {moreItems.map((item) => {
-                  const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`);
+                  const isActive = item.href === activeHref;
                   const Icon = item.icon;
 
                   return (
@@ -125,7 +161,7 @@ export function MobileNav({ navItems }: MobileNavProps) {
                         "flex items-center gap-3 px-4 py-3 transition-colors",
                         isActive
                           ? "text-primary bg-primary/5"
-                          : "text-foreground hover:bg-muted"
+                          : "text-foreground hover:bg-muted",
                       )}
                     >
                       <Icon className="w-5 h-5" strokeWidth={1.75} />
@@ -164,11 +200,15 @@ export function MobileNav({ navItems }: MobileNavProps) {
                             "flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg text-sm font-medium transition-colors",
                             isActive
                               ? "bg-primary/10 text-primary"
-                              : "bg-muted text-muted-foreground hover:text-foreground"
+                              : "bg-muted text-muted-foreground hover:text-foreground",
                           )}
                         >
-                          <Icon className={cn("w-4 h-4", isActive && config.color)} />
-                          <span className="hidden xs:inline">{config.label}</span>
+                          <Icon
+                            className={cn("w-4 h-4", isActive && config.color)}
+                          />
+                          <span className="hidden xs:inline">
+                            {config.label}
+                          </span>
                         </Link>
                       );
                     })}
