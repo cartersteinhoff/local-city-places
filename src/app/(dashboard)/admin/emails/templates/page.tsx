@@ -26,6 +26,13 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
 import { adminNavItems } from "../../nav";
@@ -35,7 +42,7 @@ interface EmailTemplate {
   name: string;
   description: string;
   icon: React.ReactNode;
-  category: "auth" | "member" | "merchant";
+  category: "auth" | "member" | "merchant" | "admin";
   previewParams: Record<string, string | number>;
 }
 
@@ -95,7 +102,7 @@ const EMAIL_TEMPLATES: EmailTemplate[] = [
     name: "Merchant Request Admin Notification",
     description: "Sent to admins when a merchant submits a request",
     icon: <Mail className="w-5 h-5" />,
-    category: "merchant",
+    category: "admin",
     previewParams: {
       ownerName: "Jordan Owner",
       businessName: "Phoenix Demo Roofing",
@@ -132,6 +139,7 @@ const CATEGORY_LABELS: Record<string, { label: string; color: string }> = {
   auth: { label: "Authentication", color: "bg-blue-100 text-blue-700" },
   member: { label: "Member", color: "bg-green-100 text-green-700" },
   merchant: { label: "Merchant", color: "bg-purple-100 text-purple-700" },
+  admin: { label: "Admin", color: "bg-slate-100 text-slate-700" },
 };
 
 export default function EmailTemplatesPage() {
@@ -242,27 +250,23 @@ export default function EmailTemplatesPage() {
           <div className="w-[280px] shrink-0 flex flex-col border rounded-lg bg-card">
             {/* Category Filter */}
             <div className="p-3 border-b">
-              <div className="flex flex-wrap gap-1">
-                <Button
-                  variant={activeCategory === "all" ? "default" : "ghost"}
-                  size="sm"
-                  className="h-7 text-xs"
-                  onClick={() => setActiveCategory("all")}
+              <Label htmlFor="template-category-filter">Category</Label>
+              <Select value={activeCategory} onValueChange={setActiveCategory}>
+                <SelectTrigger
+                  id="template-category-filter"
+                  className="h-9 w-full"
                 >
-                  All
-                </Button>
-                {Object.entries(CATEGORY_LABELS).map(([key, { label }]) => (
-                  <Button
-                    key={key}
-                    variant={activeCategory === key ? "default" : "ghost"}
-                    size="sm"
-                    className="h-7 text-xs"
-                    onClick={() => setActiveCategory(key)}
-                  >
-                    {label}
-                  </Button>
-                ))}
-              </div>
+                  <SelectValue placeholder="Filter templates" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All templates</SelectItem>
+                  {Object.entries(CATEGORY_LABELS).map(([key, { label }]) => (
+                    <SelectItem key={key} value={key}>
+                      {label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
             {/* Template List */}

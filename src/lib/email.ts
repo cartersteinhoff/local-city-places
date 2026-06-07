@@ -598,8 +598,6 @@ export async function sendMerchantRequestAdminNotificationEmail({
     .detail-row:last-child { border-bottom: 0; }
     .detail-label { color: #64748b; font-size: 12px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; margin: 0 0 3px; }
     .detail-value { color: #0f172a; font-size: 16px; font-weight: 700; margin: 0; }
-    .description-box { background: #fff7ed; border-left: 4px solid #f97316; border-radius: 6px; padding: 16px; margin: 24px 0; }
-    .description-box p { color: #7c2d12; margin: 0; font-size: 15px; }
     .cta-button { text-align: center; margin: 30px 0; }
     .cta-button a { display: inline-block; background: #f97316; color: white; padding: 14px 32px; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 700; }
     .email-footer { background: #ffffff; padding: 28px 24px; text-align: center; border-top: 1px solid #e2e8f0; }
@@ -654,6 +652,10 @@ export async function sendMerchantRequestAdminNotificationEmail({
             <p class="detail-value">${yearsInBusiness ?? "Not provided"}</p>
           </div>
           <div class="detail-row">
+            <p class="detail-label">Submitted description</p>
+            <p class="detail-value">${safeShortDescription}</p>
+          </div>
+          <div class="detail-row">
             <p class="detail-label">Uploads</p>
             <p class="detail-value">Logo: ${logoUrl ? "Yes" : "No"} / Photos: ${photoCount}</p>
           </div>
@@ -661,10 +663,6 @@ export async function sendMerchantRequestAdminNotificationEmail({
             <p class="detail-label">Received</p>
             <p class="detail-value">${receivedAt}</p>
           </div>
-        </div>
-
-        <div class="description-box">
-          <p><strong>Submitted description:</strong><br>${safeShortDescription}</p>
         </div>
 
         <div class="cta-button">
@@ -689,11 +687,9 @@ Requested category: ${requestedCategory}
 Address: ${businessAddress1}, ${city}, ${state} ${zipCode}
 Website: ${website || "Not provided"}
 Years in business: ${yearsInBusiness ?? "Not provided"}
+Submitted description: ${shortDescription}
 Uploads: Logo ${logoUrl ? "yes" : "no"} / Photos ${photoCount}
 Received: ${receivedAt}
-
-Submitted description:
-${shortDescription}
 
 Review merchant requests: ${adminUrl}`;
 

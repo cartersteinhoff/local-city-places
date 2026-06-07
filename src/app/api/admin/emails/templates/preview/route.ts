@@ -208,13 +208,12 @@ function generateMerchantRequestAdminNotificationPreview(params: {
       <p style="margin:0 0 16px;color:#0f172a;font-size:16px;font-weight:700;">${params.website || "Not provided"}</p>
       <p style="margin:0 0 10px;color:#64748b;font-size:12px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;">Years in business</p>
       <p style="margin:0 0 16px;color:#0f172a;font-size:16px;font-weight:700;">${params.yearsInBusiness ?? "Not provided"}</p>
+      <p style="margin:0 0 10px;color:#64748b;font-size:12px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;">Submitted description</p>
+      <p style="margin:0 0 16px;color:#0f172a;font-size:16px;font-weight:700;">${params.shortDescription}</p>
       <p style="margin:0 0 10px;color:#64748b;font-size:12px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;">Uploads</p>
       <p style="margin:0 0 16px;color:#0f172a;font-size:16px;font-weight:700;">Photos: ${params.photoCount || 0}</p>
       <p style="margin:0 0 10px;color:#64748b;font-size:12px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;">Received</p>
       <p style="margin:0 0 16px;color:#0f172a;font-size:16px;font-weight:700;">${receivedAt}</p>
-    </div>
-    <div style="background:#fff7ed;border-left:4px solid #f97316;border-radius:6px;padding:16px;margin:24px 0;">
-      <p style="color:#7c2d12;margin:0;font-size:15px;"><strong>Submitted description:</strong><br>${params.shortDescription}</p>
     </div>
     ${cta(adminUrl, "Review Merchant Requests")}`,
   );
