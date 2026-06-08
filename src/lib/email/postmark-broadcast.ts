@@ -11,7 +11,7 @@ const BROADCAST_STREAM =
   process.env.POSTMARK_BROADCAST_STREAM || "localcityplaces";
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
 
-export interface BroadcastRecipient {
+interface BroadcastRecipient {
   email: string;
   name?: string;
   userId?: string;

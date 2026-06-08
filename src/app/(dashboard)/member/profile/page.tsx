@@ -2,7 +2,7 @@
 
 import { Camera, Loader2, Save, User } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { DashboardLayout } from "@/components/layout";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -40,13 +40,7 @@ interface ProfileData {
 
 export default function MemberProfilePage() {
   const router = useRouter();
-  const {
-    user,
-    userName,
-    isLoading: authLoading,
-    isAuthenticated,
-    mutate,
-  } = useUser();
+  const { user, isLoading: authLoading, isAuthenticated, mutate } = useUser();
   const [profile, setProfile] = useState<ProfileData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -67,13 +61,7 @@ export default function MemberProfilePage() {
     }
   }, [authLoading, isAuthenticated, user?.role, router]);
 
-  useEffect(() => {
-    if (!authLoading && isAuthenticated) {
-      fetchProfile();
-    }
-  }, [authLoading, isAuthenticated, fetchProfile]);
-
-  async function fetchProfile() {
+  const fetchProfile = useCallback(async () => {
     try {
       const response = await fetch("/api/member/profile");
       if (!response.ok) throw new Error("Failed to fetch profile");
@@ -89,7 +77,13 @@ export default function MemberProfilePage() {
     } finally {
       setIsLoading(false);
     }
-  }
+  }, []);
+
+  useEffect(() => {
+    if (!authLoading && isAuthenticated) {
+      fetchProfile();
+    }
+  }, [authLoading, isAuthenticated, fetchProfile]);
 
   async function handleSave() {
     if (!profile) return;

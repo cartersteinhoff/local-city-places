@@ -42,7 +42,7 @@ interface SendEmailOptions {
   messageStream?: string;
 }
 
-export async function sendEmail({
+async function sendEmail({
   to,
   subject,
   html,

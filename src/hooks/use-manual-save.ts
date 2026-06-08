@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 
-export type SaveStatus = "clean" | "dirty" | "saving" | "saved" | "error";
+type SaveStatus = "clean" | "dirty" | "saving" | "saved" | "error";
 
 interface UseManualSaveOptions<T> {
   data: T;

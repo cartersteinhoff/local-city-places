@@ -106,32 +106,3 @@ export function CompletionIndicator({
     </div>
   );
 }
-
-// Compact version for tight spaces
-export function CompletionBadge({ data }: { data: MerchantData }) {
-  const completion = calculateCompletion(data);
-  const isComplete = completion.percentage === 100;
-
-  return (
-    <Tooltip>
-      <TooltipTrigger asChild>
-        <span
-          className={cn(
-            "inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium",
-            isComplete
-              ? "bg-green-100 text-green-700"
-              : "bg-muted text-muted-foreground",
-          )}
-        >
-          {isComplete && <CheckCircle2 className="w-3 h-3" />}
-          {completion.percentage}%
-        </span>
-      </TooltipTrigger>
-      <TooltipContent>
-        <p>
-          {completion.completed}/{completion.total} fields complete
-        </p>
-      </TooltipContent>
-    </Tooltip>
-  );
-}

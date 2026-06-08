@@ -10,7 +10,7 @@ import {
   Users,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { DashboardLayout } from "@/components/layout";
 import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/ui/page-header";
@@ -122,7 +122,7 @@ export default function AnalyticsPage() {
     }
   }, [authLoading, isAuthenticated, user?.role, router]);
 
-  const fetchAnalytics = async () => {
+  const fetchAnalytics = useCallback(async () => {
     setIsLoading(true);
     try {
       const res = await fetch(`/api/admin/analytics?range=${dateRange}`);
@@ -135,7 +135,7 @@ export default function AnalyticsPage() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [dateRange]);
 
   useEffect(() => {
     if (!authLoading && isAuthenticated) {

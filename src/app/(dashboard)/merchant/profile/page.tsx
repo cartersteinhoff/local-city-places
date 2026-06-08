@@ -12,7 +12,7 @@ import {
   X,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { DashboardLayout } from "@/components/layout";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -119,13 +119,7 @@ export default function MerchantProfilePage() {
     }
   }, [authLoading, isAuthenticated, user?.role, router]);
 
-  useEffect(() => {
-    if (!authLoading && isAuthenticated) {
-      fetchProfile();
-    }
-  }, [authLoading, isAuthenticated, fetchProfile]);
-
-  async function fetchProfile() {
+  const fetchProfile = useCallback(async () => {
     try {
       const response = await fetch("/api/merchant/profile");
       if (!response.ok) throw new Error("Failed to fetch profile");
@@ -150,7 +144,13 @@ export default function MerchantProfilePage() {
     } finally {
       setIsLoading(false);
     }
-  }
+  }, []);
+
+  useEffect(() => {
+    if (!authLoading && isAuthenticated) {
+      fetchProfile();
+    }
+  }, [authLoading, isAuthenticated, fetchProfile]);
 
   // Parse cityState into separate city and state values
   function parseCityState(value: string): { city: string; state: string } {
@@ -387,8 +387,6 @@ export default function MerchantProfilePage() {
         : null,
     );
   }
-
-  const _userName = profile?.businessName;
 
   const initials = profile
     ? profile.businessName

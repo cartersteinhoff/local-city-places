@@ -255,52 +255,6 @@ export default function VisualEditorPage({
     }
   }, [id]);
 
-  // Photo upload handler
-  const _handlePhotoUpload = useCallback(
-    async (file: File): Promise<string> => {
-      const formDataUpload = new FormData();
-      formDataUpload.append("file", file);
-      formDataUpload.append("type", "photo");
-
-      const res = await fetch(`/api/admin/merchant-pages/${id}/upload-photo`, {
-        method: "POST",
-        body: formDataUpload,
-      });
-
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error || "Upload failed");
-      }
-
-      const { url } = await res.json();
-      return url;
-    },
-    [id],
-  );
-
-  // Logo upload handler
-  const _handleLogoUpload = useCallback(
-    async (file: File): Promise<string> => {
-      const formDataUpload = new FormData();
-      formDataUpload.append("file", file);
-      formDataUpload.append("type", "logo");
-
-      const res = await fetch(`/api/admin/merchant-pages/${id}/upload-photo`, {
-        method: "POST",
-        body: formDataUpload,
-      });
-
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error || "Upload failed");
-      }
-
-      const { url } = await res.json();
-      return url;
-    },
-    [id],
-  );
-
   // Auth check
   useEffect(() => {
     if (!authLoading && (!isAuthenticated || user?.role !== "admin")) {

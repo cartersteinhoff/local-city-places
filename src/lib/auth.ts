@@ -2,7 +2,6 @@ import { createHash, randomBytes } from "node:crypto";
 import { and, eq, gt } from "drizzle-orm";
 import { jwtVerify, SignJWT } from "jose";
 import { cookies } from "next/headers";
-import { redirect } from "next/navigation";
 import { db, magicLinkTokens, members, merchants, users } from "@/db";
 
 export const SESSION_COOKIE_NAME = "session_token";
@@ -32,7 +31,7 @@ export function isValidCallbackUrl(url: string | null | undefined): boolean {
 }
 
 // Create a JWT token
-export async function createJWT(userId: string, role: string): Promise<string> {
+async function createJWT(userId: string, role: string): Promise<string> {
   return new SignJWT({ userId, role })
     .setProtectedHeader({ alg: "HS256" })
     .setIssuedAt()
@@ -183,24 +182,6 @@ export async function getSession(): Promise<{
     .limit(1);
 
   return { user, member, merchant };
-}
-
-// Require authentication - redirect if not logged in
-export async function requireAuth() {
-  const session = await getSession();
-  if (!session) {
-    redirect("/");
-  }
-  return session;
-}
-
-// Require specific role
-export async function requireRole(role: "member" | "merchant" | "admin") {
-  const session = await requireAuth();
-  if (session.user.role !== role) {
-    redirect("/");
-  }
-  return session;
 }
 
 // Logout - just clear the cookie (no DB operation needed with JWT)

@@ -1,22 +1,6 @@
 import { put } from "@vercel/blob";
 
 /**
- * Get the file extension from a content type
- */
-export function getExtensionFromContentType(contentType: string): string {
-  const map: Record<string, string> = {
-    "image/jpeg": "jpg",
-    "image/jpg": "jpg",
-    "image/png": "png",
-    "image/gif": "gif",
-    "image/webp": "webp",
-    "image/heic": "heic",
-    "image/heif": "heif",
-  };
-  return map[contentType] || "jpg";
-}
-
-/**
  * Validate that the base64 data is a supported image format
  */
 export function validateImageFormat(base64Data: string): {
@@ -181,37 +165,6 @@ export async function uploadCheckImage(
  * Upload a merchant photo to Vercel Blob storage
  * Returns null if BLOB_READ_WRITE_TOKEN is not configured
  */
-export async function uploadMerchantPhoto(
-  base64Data: string,
-  merchantId: string,
-  fileName: string = "photo.jpg",
-): Promise<string | null> {
-  // Skip upload if token not configured (local dev)
-  if (!process.env.BLOB_READ_WRITE_TOKEN) {
-    console.warn("BLOB_READ_WRITE_TOKEN not configured, skipping photo upload");
-    return null;
-  }
-
-  const rawBase64 = base64Data.replace(/^data:image\/\w+;base64,/, "");
-  const buffer = Buffer.from(rawBase64, "base64");
-
-  let contentType = "image/jpeg";
-  const dataUriMatch = base64Data.match(/^data:(image\/\w+);base64,/);
-  if (dataUriMatch) {
-    contentType = dataUriMatch[1];
-  }
-
-  const timestamp = Date.now();
-  const uniqueFileName = `photos/${merchantId}/${timestamp}-${fileName}`;
-
-  const blob = await put(uniqueFileName, buffer, {
-    access: "public",
-    contentType,
-  });
-
-  return blob.url;
-}
-
 /**
  * Upload a merchant photo from a File object
  * For use with form uploads

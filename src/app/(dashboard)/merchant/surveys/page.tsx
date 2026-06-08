@@ -3,7 +3,7 @@
 import { formatDistanceToNow } from "date-fns";
 import { BarChart3, ClipboardList } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { DashboardLayout } from "@/components/layout";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -37,7 +37,7 @@ export default function SurveysPage() {
     }
   }, [loading, isAuthenticated, user?.role, router]);
 
-  const loadSurveys = async () => {
+  const loadSurveys = useCallback(async () => {
     try {
       const res = await fetch("/api/merchant/surveys");
       const data = await res.json();
@@ -49,7 +49,7 @@ export default function SurveysPage() {
     } finally {
       setDataLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     if (!loading && isAuthenticated) {

@@ -169,25 +169,6 @@ function formatHours(
   return `${open}-${close}`;
 }
 
-// Format for display "9:00 AM - 5:00 PM"
-function formatDisplay(value: string | undefined): string {
-  if (!value || value.toLowerCase() === "closed") return "Closed";
-  if (value.toLowerCase() === "24 hours") return "24 Hours";
-
-  const parsed = parseHours(value);
-  if (!parsed.isOpen) return "Closed";
-
-  const formatTime = (time: string) => {
-    const [h, m] = time.split(":").map(Number);
-    const h12 = h === 0 ? 12 : h > 12 ? h - 12 : h;
-    const ampm = h < 12 ? "AM" : "PM";
-    return `${h12}:${m.toString().padStart(2, "0")} ${ampm}`;
-  };
-
-  if (parsed.open === "00:00" && parsed.close === "23:59") return "24 Hours";
-  return `${formatTime(parsed.open)} - ${formatTime(parsed.close)}`;
-}
-
 interface HoursSectionProps {
   value: Hours;
   onChange: (hours: Hours) => void;
@@ -390,6 +371,3 @@ export function HoursSection({ value, onChange }: HoursSectionProps) {
     </div>
   );
 }
-
-// Export display formatter for use in other components
-export { formatDisplay as formatHoursDisplay };

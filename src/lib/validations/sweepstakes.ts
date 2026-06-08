@@ -30,9 +30,7 @@ export const sweepstakesEntrySchema = z.object({
     .or(z.literal("")),
 });
 
-export type SweepstakesEntryInput = z.infer<typeof sweepstakesEntrySchema>;
-
-export const favoriteMerchantTestimonialPhotoSchema = z.object({
+const favoriteMerchantTestimonialPhotoSchema = z.object({
   id: z.string().uuid().optional(),
   url: z.string().url("Photo URL must be valid"),
 });
@@ -64,13 +62,3 @@ export const favoriteMerchantModerationSchema = z.object({
 export const favoriteMerchantPhotoModerationSchema = z.object({
   action: z.enum(["approve", "reject"]),
 });
-
-export type FavoriteMerchantTestimonialInput = z.infer<
-  typeof favoriteMerchantTestimonialSchema
->;
-export type FavoriteMerchantModerationInput = z.infer<
-  typeof favoriteMerchantModerationSchema
->;
-export type FavoriteMerchantPhotoModerationInput = z.infer<
-  typeof favoriteMerchantPhotoModerationSchema
->;

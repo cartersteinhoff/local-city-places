@@ -30,7 +30,7 @@ export function stripPhoneNumber(value: string): string {
  * @param text - Text to slugify
  * @returns URL-safe lowercase slug
  */
-export function slugify(text: string): string {
+function slugify(text: string): string {
   return text
     .toLowerCase()
     .trim()

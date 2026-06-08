@@ -33,7 +33,7 @@ export const personalInfoSchema = z.object({
     ),
 });
 
-export const memberRegistrationSchema = personalInfoSchema;
+export const memberRegistrationSchema = personalInfoSchema.extend({});
 
 export const reviewCreateSchema = z.object({
   merchantId: z.string().uuid("Invalid merchant ID"),
@@ -41,8 +41,6 @@ export const reviewCreateSchema = z.object({
 });
 
 export type PersonalInfo = z.infer<typeof personalInfoSchema>;
-export type MemberRegistration = z.infer<typeof memberRegistrationSchema>;
-export type ReviewCreate = z.infer<typeof reviewCreateSchema>;
 
 export function countWords(text: string): number {
   return text.trim().split(/\s+/).filter(Boolean).length;

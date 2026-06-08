@@ -31,7 +31,7 @@ export interface MerchantData {
   services?: { name: string; description?: string; price?: string }[];
 }
 
-export interface SectionCompletion {
+interface SectionCompletion {
   id: string;
   label: string;
   completed: number;
@@ -194,14 +194,3 @@ export function calculateCompletion(data: MerchantData): CompletionResult {
 /**
  * Get all missing fields across all sections
  */
-export function getMissingFields(data: MerchantData): string[] {
-  const result = calculateCompletion(data);
-  return result.sections.flatMap((s) => s.missingFields);
-}
-
-/**
- * Check if profile is complete (100%)
- */
-export function isProfileComplete(data: MerchantData): boolean {
-  return calculateCompletion(data).percentage === 100;
-}

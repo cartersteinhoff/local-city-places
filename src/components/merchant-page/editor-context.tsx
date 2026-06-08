@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, type ReactNode, useContext } from "react";
+import { createContext, type ReactNode } from "react";
 
 interface EditorContextValue {
   editable: boolean;
@@ -45,14 +45,4 @@ export function EditorProvider({
       {children}
     </EditorContext.Provider>
   );
-}
-
-export function useEditor() {
-  return useContext(EditorContext);
-}
-
-// Helper hook to check if we're in edit mode
-export function useEditable() {
-  const { editable } = useContext(EditorContext);
-  return editable;
 }

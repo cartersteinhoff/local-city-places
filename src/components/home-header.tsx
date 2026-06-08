@@ -11,6 +11,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useUser } from "@/hooks/use-user";
 import type { NowPlayingTrack } from "@/lib/radio";
 import { cn } from "@/lib/utils";
 
@@ -45,6 +46,19 @@ const loginMenuIconClass =
 
 const headerProgramTextLimit = 30;
 const headerProgramTextSeparator = " - ";
+const dashboardHrefByRole = {
+  admin: "/admin",
+  merchant: "/merchant",
+  member: "/member",
+} as const;
+
+function getDashboardHref(
+  role: keyof typeof dashboardHrefByRole | undefined,
+  hasMemberProfile: boolean,
+) {
+  if (role === "member" && !hasMemberProfile) return "/member/register";
+  return role ? dashboardHrefByRole[role] : "/";
+}
 
 function normalizeHeaderProgramText(value: string) {
   return value.replace(/\s+/g, " ").trim();
@@ -114,7 +128,7 @@ function HeaderRadioPlayer({ className }: { className: string }) {
       className={cn(
         className,
         "h-12 overflow-hidden rounded-[18px] border-sky-100/20 bg-[#12334b]/72 px-2.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.12),0_10px_24px_rgba(0,0,0,0.18)] backdrop-blur transition-[width,background-color,border-color] duration-200 hover:bg-[#163b56]/78 sm:px-3",
-        "w-fit min-w-[128px] max-w-[128px] justify-start gap-2 min-[380px]:min-w-[144px] min-[380px]:max-w-[144px] sm:min-w-[206px] sm:max-w-[206px] md:max-w-[352px]",
+        "w-fit min-w-[112px] max-w-[112px] justify-start gap-2 min-[360px]:min-w-[128px] min-[360px]:max-w-[128px] min-[420px]:min-w-[144px] min-[420px]:max-w-[144px] sm:min-w-[206px] sm:max-w-[206px] md:max-w-[352px]",
       )}
       style={{
         display: "inline-flex",
@@ -201,6 +215,9 @@ function HeaderRadioPlayer({ className }: { className: string }) {
 
 export function HomeHeader({ variant = "white" }: HomeHeaderProps) {
   const styles = headerVariants[variant];
+  const { user, member } = useUser();
+  const isAuthenticated = Boolean(user);
+  const dashboardHref = getDashboardHref(user?.role, Boolean(member));
 
   return (
     <header
@@ -232,69 +249,101 @@ export function HomeHeader({ variant = "white" }: HomeHeaderProps) {
               alt="Local City Places"
               width={161}
               height={72}
-              style={{ width: "clamp(106px, 30vw, 161px)", height: "auto" }}
+              style={{ width: "clamp(88px, 27vw, 161px)", height: "auto" }}
               priority
             />
           </Link>
 
           <div
             className="flex items-center gap-2"
-            style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "clamp(0.25rem, 1.2vw, 0.5rem)",
+            }}
           >
             <div>
               <HeaderRadioPlayer className={styles.radio} />
             </div>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  type="button"
-                  size="sm"
-                  className={cn(
-                    styles.login,
-                    "group h-11 gap-1.5 rounded-[16px] px-3 text-sm leading-none transition-[background-color,box-shadow] data-[state=open]:bg-[#f46200] data-[state=open]:shadow-[0_12px_26px_rgba(249,115,22,0.28)] sm:px-5 sm:text-[15px]",
-                  )}
-                  style={{
-                    display: "inline-flex",
-                    height: "2.75rem",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    gap: "0.375rem",
-                    whiteSpace: "nowrap",
-                  }}
-                >
-                  Login
-                  <span
-                    className="flex h-4 w-4 items-center justify-center"
-                    aria-hidden="true"
-                  >
-                    <ChevronDown className="h-4 w-4 transition-transform group-data-[state=open]:rotate-180" />
-                  </span>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent
-                side="bottom"
-                align="end"
-                sideOffset={6}
-                className="w-[154px] rounded-[14px] border border-sky-100/18 bg-[#082a45]/92 p-1 text-white shadow-[0_14px_30px_rgba(1,19,31,0.32)] ring-1 ring-white/8 backdrop-blur-xl"
+            {isAuthenticated ? (
+              <Button
+                asChild
+                size="sm"
+                aria-label="Open dashboard"
+                className={cn(
+                  styles.login,
+                  "h-11 rounded-[16px] px-3 text-sm leading-none transition-[background-color,box-shadow] min-[480px]:px-4 sm:text-[15px]",
+                )}
+                style={{
+                  display: "inline-flex",
+                  height: "2.75rem",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: "0.375rem",
+                  whiteSpace: "nowrap",
+                }}
               >
-                <DropdownMenuItem asChild className={loginMenuItemClass}>
-                  <Link href="/member-login">
-                    <span className={loginMenuIconClass}>
-                      <User className="h-4 w-4 text-current" />
+                <Link href={dashboardHref}>
+                  <User className="size-5" aria-hidden="true" />
+                  <span className="hidden min-[480px]:inline">Dashboard</span>
+                </Link>
+              </Button>
+            ) : (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    type="button"
+                    size="sm"
+                    aria-label="Open login menu"
+                    className={cn(
+                      styles.login,
+                      "group h-11 gap-1.5 rounded-[16px] px-3 text-sm leading-none transition-[background-color,box-shadow] data-[state=open]:bg-[#f46200] data-[state=open]:shadow-[0_12px_26px_rgba(249,115,22,0.28)] sm:px-5 sm:text-[15px]",
+                    )}
+                    style={{
+                      display: "inline-flex",
+                      height: "2.75rem",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      gap: "0.375rem",
+                      whiteSpace: "nowrap",
+                    }}
+                  >
+                    Login
+                    <span
+                      className="flex h-4 w-4 items-center justify-center"
+                      aria-hidden="true"
+                    >
+                      <ChevronDown className="h-4 w-4 transition-transform group-data-[state=open]:rotate-180" />
                     </span>
-                    Member
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild className={loginMenuItemClass}>
-                  <Link href="/merchant-login">
-                    <span className={loginMenuIconClass}>
-                      <Store className="h-4 w-4 text-current" />
-                    </span>
-                    Merchant
-                  </Link>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent
+                  side="bottom"
+                  align="center"
+                  sideOffset={6}
+                  className={cn(
+                    "w-[154px] rounded-[14px] border border-sky-100/18 bg-[#082a45]/92 p-1 text-white shadow-[0_14px_30px_rgba(1,19,31,0.32)] ring-1 ring-white/8 backdrop-blur-xl",
+                  )}
+                >
+                  <DropdownMenuItem asChild className={loginMenuItemClass}>
+                    <Link href="/member-login">
+                      <span className={loginMenuIconClass}>
+                        <User className="h-4 w-4 text-current" />
+                      </span>
+                      Member
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild className={loginMenuItemClass}>
+                    <Link href="/merchant-login">
+                      <span className={loginMenuIconClass}>
+                        <Store className="h-4 w-4 text-current" />
+                      </span>
+                      Merchant
+                    </Link>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
           </div>
         </div>
       </div>

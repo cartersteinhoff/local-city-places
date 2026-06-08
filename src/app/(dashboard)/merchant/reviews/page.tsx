@@ -44,7 +44,7 @@ interface ReviewsData {
 
 export default function ReviewsPage() {
   const router = useRouter();
-  const { user, userName, isLoading: loading, isAuthenticated } = useUser();
+  const { user, isLoading: loading, isAuthenticated } = useUser();
   const [data, setData] = useState<ReviewsData | null>(null);
   const [_dataLoading, setDataLoading] = useState(true);
   const [page, setPage] = useState(1);

@@ -87,7 +87,6 @@ export const TipTapEditor = forwardRef<TipTapEditorRef, TipTapEditorProps>(
     {
       content,
       onChange,
-      placeholder = "Write your content here...",
       className,
       uploadEndpoint = "/api/admin/emails/upload-image",
     },

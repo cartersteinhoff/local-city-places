@@ -51,7 +51,7 @@ export default function SurveyResponsesPage({
 }) {
   const { id } = use(params);
   const router = useRouter();
-  const { user, userName, isLoading: loading, isAuthenticated } = useUser();
+  const { user, isLoading: loading, isAuthenticated } = useUser();
   const [data, setData] = useState<ResponsesData | null>(null);
   const [dataLoading, setDataLoading] = useState(true);
   const [showAllText, setShowAllText] = useState<Record<string, boolean>>({});

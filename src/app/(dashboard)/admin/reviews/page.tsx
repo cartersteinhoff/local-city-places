@@ -223,9 +223,6 @@ export default function AdminReviewsPage() {
     return name || "Anonymous";
   };
 
-  const _truncate = (text: string, maxLen: number) =>
-    text.length > maxLen ? `${text.slice(0, maxLen)}...` : text;
-
   return (
     <DashboardLayout navItems={adminNavItems}>
       {authLoading ? (

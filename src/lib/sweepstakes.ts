@@ -13,7 +13,7 @@ import {
 } from "@/db";
 import { sendSweepstakesPrizeEmail } from "@/lib/email";
 
-export const SWEEPSTAKES_TIME_ZONE = "America/Phoenix";
+const SWEEPSTAKES_TIME_ZONE = "America/Phoenix";
 const PHOENIX_UTC_OFFSET_HOURS = 7;
 
 export interface SweepstakesLeaderboardRow {
@@ -24,20 +24,6 @@ export interface SweepstakesLeaderboardRow {
   referralEntries: number;
   totalEntries: number;
   rank: number;
-}
-
-export interface SweepstakesWinnerRow {
-  id: string;
-  prizeTier: "grand_prize" | "tier1_match" | "tier2_match";
-  memberId: string;
-  displayName: string;
-  email: string;
-  selectionMethod: "draw" | "manual_override";
-  regularEntries: number;
-  referralEntries: number;
-  totalEntries: number;
-  emailSentAt: string | null;
-  createdAt: string;
 }
 
 function getDatePartsInTimeZone(date: Date, timeZone: string) {
@@ -62,11 +48,11 @@ function getDatePartsInTimeZone(date: Date, timeZone: string) {
   };
 }
 
-export function getArizonaDateParts(date: Date = new Date()) {
+function getArizonaDateParts(date: Date = new Date()) {
   return getDatePartsInTimeZone(date, SWEEPSTAKES_TIME_ZONE);
 }
 
-export function getSweepstakesCycleName(year: number, month: number) {
+function getSweepstakesCycleName(year: number, month: number) {
   return new Intl.DateTimeFormat("en-US", {
     month: "long",
     year: "numeric",
@@ -74,7 +60,7 @@ export function getSweepstakesCycleName(year: number, month: number) {
   }).format(new Date(Date.UTC(year, month - 1, 1, 12, 0, 0)));
 }
 
-export function getSweepstakesCycleBounds(year: number, month: number) {
+function getSweepstakesCycleBounds(year: number, month: number) {
   const startsAt = new Date(
     Date.UTC(year, month - 1, 1, PHOENIX_UTC_OFFSET_HOURS, 0, 0, 0),
   );
@@ -85,24 +71,12 @@ export function getSweepstakesCycleBounds(year: number, month: number) {
   return { startsAt, endsAt };
 }
 
-export function getArizonaCycleYearMonthOffset(
-  offset: number,
-  date: Date = new Date(),
-) {
-  const { year, month } = getArizonaDateParts(date);
-  const offsetDate = new Date(Date.UTC(year, month - 1 + offset, 1, 12, 0, 0));
-  return {
-    year: offsetDate.getUTCFullYear(),
-    month: offsetDate.getUTCMonth() + 1,
-  };
-}
-
 export async function ensureCurrentSweepstakesCycle() {
   const { year, month } = getArizonaDateParts();
   return ensureSweepstakesCycle(year, month);
 }
 
-export async function ensureSweepstakesCycle(year: number, month: number) {
+async function ensureSweepstakesCycle(year: number, month: number) {
   const [existingCycle] = await db
     .select()
     .from(sweepstakesCycles)
@@ -367,74 +341,6 @@ interface ConfirmDashboardEntryParams {
   memberId: string;
   entryName: string;
   entryEmail: string;
-}
-
-export async function createOrConfirmDashboardSweepstakesEntry({
-  userId,
-  memberId,
-  entryName,
-  entryEmail,
-}: ConfirmDashboardEntryParams) {
-  const cycle = await ensureCurrentSweepstakesCycle();
-  const { dateKey } = getArizonaDateParts();
-
-  let [entry] = await db
-    .select()
-    .from(sweepstakesEntries)
-    .where(
-      and(
-        eq(sweepstakesEntries.userId, userId),
-        eq(sweepstakesEntries.entryLocalDate, dateKey),
-      ),
-    )
-    .limit(1);
-
-  if (!entry) {
-    const [createdEntry] = await db
-      .insert(sweepstakesEntries)
-      .values({
-        cycleId: cycle.id,
-        userId,
-        memberId,
-        entryName,
-        entryEmail,
-        entryLocalDate: dateKey,
-        source: "dashboard",
-      })
-      .onConflictDoNothing()
-      .returning();
-
-    if (createdEntry) {
-      entry = createdEntry;
-    } else {
-      [entry] = await db
-        .select()
-        .from(sweepstakesEntries)
-        .where(
-          and(
-            eq(sweepstakesEntries.userId, userId),
-            eq(sweepstakesEntries.entryLocalDate, dateKey),
-          ),
-        )
-        .limit(1);
-    }
-  }
-
-  if (!entry) {
-    throw new Error("Failed to create or load the dashboard sweepstakes entry");
-  }
-
-  if (entry.status === "confirmed") {
-    return { entry, alreadyEnteredToday: true, cycle };
-  }
-
-  const confirmedEntry = await confirmSweepstakesEntry(entry.id, userId);
-
-  if (!confirmedEntry) {
-    throw new Error("Failed to confirm the dashboard sweepstakes entry");
-  }
-
-  return { entry: confirmedEntry, alreadyEnteredToday: false, cycle };
 }
 
 export async function createOrConfirmSweepstakesEntryFromTestimonial({

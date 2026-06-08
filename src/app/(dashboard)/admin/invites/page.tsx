@@ -69,7 +69,6 @@ export default function AdminInvitesPage() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [selectedInvite, setSelectedInvite] = useState<Invite | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [_copiedId, setCopiedId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!loading && (!isAuthenticated || user?.role !== "admin")) {
@@ -137,21 +136,6 @@ export default function AdminInvitesPage() {
     } finally {
       setIsDeleting(false);
     }
-  };
-
-  const _copyInviteLink = async (invite: Invite) => {
-    const _appUrl = process.env.NEXT_PUBLIC_APP_URL || window.location.origin;
-    // Note: We can't regenerate the raw token from the hash, so we need to create a new invite
-    // For now, we'll show a message that they need to create a new invite to get a copyable link
-    // This is a limitation of the hash-based storage
-    setCopiedId(invite.id);
-    setTimeout(() => setCopiedId(null), 2000);
-
-    // Since we hash tokens, we can't recover them. The link was provided when created.
-    // Show a toast or message to user
-    alert(
-      "Note: Invite links are only shown once when created. Please create a new invite if you need a shareable link.",
-    );
   };
 
   const formatDate = (dateStr: string) => {
