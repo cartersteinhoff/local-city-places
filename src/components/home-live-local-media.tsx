@@ -344,9 +344,21 @@ export function HomeLiveLocalMedia() {
   return (
     <section
       id="live-radio"
-      className="relative z-10 overflow-hidden bg-[#090909] text-white"
+      className="relative z-10 overflow-hidden bg-[#05090f] text-white"
     >
-      <div className="relative border-t border-white/10 bg-[#05090f] px-4 py-10 sm:px-6 sm:py-12">
+      <div className="pointer-events-none absolute inset-0">
+        <Image
+          src="/images/new-year-250-background.jpg"
+          alt=""
+          fill
+          className="object-cover object-center"
+          sizes="100vw"
+          quality={82}
+        />
+      </div>
+      <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(3,8,15,0.72)_0%,rgba(3,8,15,0.5)_36%,rgba(0,0,0,0.8)_100%)]" />
+
+      <div className="relative border-t border-white/10 px-4 py-10 sm:px-6 sm:py-12">
         <div className="mx-auto max-w-[1400px] 2xl:max-w-[1760px]">
           <div className="mb-6 flex items-center justify-center gap-2 text-orange-500 sm:gap-3">
             <RadioTower className="h-4 w-4 sm:h-5 sm:w-5" />
@@ -393,20 +405,7 @@ export function HomeLiveLocalMedia() {
       </div>
 
       <div className="relative overflow-hidden px-4 py-12 sm:px-6 sm:py-14">
-        <div className="pointer-events-none absolute inset-0">
-          <picture className="block h-full w-full">
-            <source
-              media="(max-width: 767px)"
-              srcSet="/images/phoenix-skyline-section-mobile-v3.webp"
-            />
-            <img
-              src="/images/phoenix-skyline-section-desktop-v3.webp"
-              alt=""
-              className="h-full w-full object-cover object-center"
-            />
-          </picture>
-        </div>
-        <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(5,9,15,0.72)_0%,rgba(5,9,15,0.5)_46%,rgba(0,0,0,0.78)_100%)]" />
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-white/10" />
 
         <div className="relative mx-auto max-w-6xl">
           <div className="mb-8 flex items-center justify-center gap-3 drop-shadow-[0_3px_10px_rgba(0,0,0,0.85)]">
