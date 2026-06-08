@@ -1,6 +1,6 @@
 import { desc, eq, sql } from "drizzle-orm";
 import { NextResponse } from "next/server";
-import { db, merchants, reviews, surveys } from "@/db";
+import { db, merchants, reviews } from "@/db";
 import { getSession } from "@/lib/auth";
 
 export async function GET() {
@@ -34,14 +34,6 @@ export async function GET() {
       .from(reviews)
       .where(eq(reviews.merchantId, merchant.id));
 
-    const [surveyStats] = await db
-      .select({
-        totalSurveys: sql<number>`count(*)::int`,
-        activeSurveys: sql<number>`count(*) filter (where ${surveys.isActive} = true)::int`,
-      })
-      .from(surveys)
-      .where(eq(surveys.merchantId, merchant.id));
-
     const recentReviews = await db
       .select({
         id: reviews.id,
@@ -67,8 +59,6 @@ export async function GET() {
       stats: {
         totalReviews: Number(reviewStats?.totalReviews) || 0,
         avgWordCount: Number(reviewStats?.avgWordCount) || 0,
-        totalSurveys: Number(surveyStats?.totalSurveys) || 0,
-        activeSurveys: Number(surveyStats?.activeSurveys) || 0,
       },
       recentReviews: recentReviews.map((review) => ({
         id: review.id,

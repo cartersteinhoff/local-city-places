@@ -5,7 +5,7 @@ config({ path: ".env.local" });
 import { eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
-import { categories, members, merchants, surveys, users } from "./schema";
+import { categories, members, merchants, users } from "./schema";
 
 const ADMIN_USERS = [
   {
@@ -139,59 +139,7 @@ async function seed() {
       merchantId = existingMerchant.id;
     }
 
-    const [existingSurvey] = await db
-      .select()
-      .from(surveys)
-      .where(eq(surveys.merchantId, merchantId))
-      .limit(1);
-
-    if (!existingSurvey) {
-      await db.insert(surveys).values({
-        merchantId,
-        title: "Quick Questions",
-        questions: [
-          {
-            id: "q1",
-            type: "single_choice",
-            question: "Have you visited our business before?",
-            options: ["Yes", "No"],
-            required: true,
-          },
-          {
-            id: "q2",
-            type: "single_choice",
-            question: "Would you recommend us to a friend?",
-            options: ["Yes", "No"],
-            required: true,
-          },
-          {
-            id: "q3",
-            type: "single_choice",
-            question: "Are you a local resident?",
-            options: ["Yes", "No"],
-            required: true,
-          },
-          {
-            id: "q4",
-            type: "single_choice",
-            question: "Do you shop at local businesses weekly?",
-            options: ["Yes", "No"],
-            required: true,
-          },
-          {
-            id: "q5",
-            type: "single_choice",
-            question: "Would you be interested in exclusive member deals?",
-            options: ["Yes", "No"],
-            required: true,
-          },
-        ],
-        isActive: true,
-      });
-      console.log(`Created test survey for ${admin.businessName}`);
-    } else {
-      console.log(`Test survey already exists for ${admin.businessName}`);
-    }
+    console.log(`Merchant profile ready for ${admin.email}: ${merchantId}`);
   }
 
   console.log("Seed completed!");

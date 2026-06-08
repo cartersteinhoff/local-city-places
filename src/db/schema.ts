@@ -424,33 +424,6 @@ export const merchantBankAccounts = pgTable("merchant_bank_accounts", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
-// Surveys table
-export const surveys = pgTable("surveys", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  merchantId: uuid("merchant_id")
-    .notNull()
-    .references(() => merchants.id, { onDelete: "cascade" }),
-  title: varchar("title", { length: 255 }).notNull(),
-  questions: jsonb("questions").notNull(), // Array of question objects
-  isActive: boolean("is_active").default(true).notNull(),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-});
-
-// Survey responses table
-export const surveyResponses = pgTable("survey_responses", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  surveyId: uuid("survey_id")
-    .notNull()
-    .references(() => surveys.id, { onDelete: "cascade" }),
-  memberId: uuid("member_id")
-    .notNull()
-    .references(() => members.id, { onDelete: "cascade" }),
-  month: integer("month"), // null for registration survey
-  year: integer("year"), // null for registration survey
-  answers: jsonb("answers").notNull(),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-});
-
 // Reviews table
 export const reviews = pgTable("reviews", {
   id: uuid("id").primaryKey().defaultRandom(),
@@ -707,7 +680,6 @@ export const membersRelations = relations(members, ({ one, many }) => ({
     fields: [members.userId],
     references: [users.id],
   }),
-  surveyResponses: many(surveyResponses),
   reviews: many(reviews),
   favoriteMerchantTestimonials: many(favoriteMerchantTestimonials),
   offerClaims: many(offerClaims),
@@ -740,33 +712,10 @@ export const merchantsRelations = relations(merchants, ({ one, many }) => ({
     fields: [merchants.id],
     references: [merchantBankAccounts.merchantId],
   }),
-  surveys: many(surveys),
   reviews: many(reviews),
   favoriteMerchantTestimonials: many(favoriteMerchantTestimonials),
   marketplaceOffers: many(marketplaceOffers),
 }));
-
-export const surveysRelations = relations(surveys, ({ one, many }) => ({
-  merchant: one(merchants, {
-    fields: [surveys.merchantId],
-    references: [merchants.id],
-  }),
-  responses: many(surveyResponses),
-}));
-
-export const surveyResponsesRelations = relations(
-  surveyResponses,
-  ({ one }) => ({
-    survey: one(surveys, {
-      fields: [surveyResponses.surveyId],
-      references: [surveys.id],
-    }),
-    member: one(members, {
-      fields: [surveyResponses.memberId],
-      references: [members.id],
-    }),
-  }),
-);
 
 export const merchantInvitesRelations = relations(
   merchantInvites,

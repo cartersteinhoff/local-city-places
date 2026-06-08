@@ -1,7 +1,6 @@
 "use client";
 
 import {
-  ClipboardList,
   ExternalLink,
   Loader2,
   RadioTower,
@@ -30,8 +29,6 @@ interface DashboardData {
   stats: {
     totalReviews: number;
     avgWordCount: number;
-    totalSurveys: number;
-    activeSurveys: number;
   };
   recentReviews: Array<{
     id: string;
@@ -92,10 +89,10 @@ export default function MerchantDashboard() {
         <>
           <PageHeader
             title="Merchant Dashboard"
-            description="Manage your business profile, surveys, and customer reviews"
+            description="Manage your business profile, campaign media, and customer reviews"
           />
 
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
             <StatCard
               label="Reviews"
               value={dashboardData?.stats.totalReviews ?? 0}
@@ -106,22 +103,12 @@ export default function MerchantDashboard() {
               value={dashboardData?.stats.avgWordCount ?? 0}
               icon={Star}
             />
-            <StatCard
-              label="Surveys"
-              value={dashboardData?.stats.totalSurveys ?? 0}
-              icon={ClipboardList}
-            />
-            <StatCard
-              label="Active Surveys"
-              value={dashboardData?.stats.activeSurveys ?? 0}
-              icon={ClipboardList}
-            />
           </div>
 
           <div className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
             <div className="rounded-xl border bg-card p-6">
               <h2 className="text-lg font-semibold mb-4">Quick Actions</h2>
-              <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+              <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
                 <a
                   href="/merchant/on-air-studio"
                   className="flex items-center gap-3 rounded-lg border p-4 transition-colors hover:bg-muted"
@@ -131,18 +118,6 @@ export default function MerchantDashboard() {
                     <p className="font-medium">On-Air Studio</p>
                     <p className="text-xs text-muted-foreground">
                       Hear campaign media
-                    </p>
-                  </div>
-                </a>
-                <a
-                  href="/merchant/surveys"
-                  className="flex items-center gap-3 rounded-lg border p-4 transition-colors hover:bg-muted"
-                >
-                  <ClipboardList className="w-5 h-5 text-primary" />
-                  <div>
-                    <p className="font-medium">Surveys</p>
-                    <p className="text-xs text-muted-foreground">
-                      Manage questions
                     </p>
                   </div>
                 </a>
