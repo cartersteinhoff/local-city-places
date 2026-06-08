@@ -5,6 +5,7 @@ import {
   ChevronLeft,
   ChevronRight,
   LogOut,
+  Mic,
   Moon,
   Shield,
   Store,
@@ -50,6 +51,10 @@ const roleConfig = {
   },
 };
 
+const ON_AIR_STUDIO_HREF = "/merchant/on-air-studio";
+const ON_AIR_GRADIENT =
+  "linear-gradient(90deg, #f43a20 0%, #ff1b14 42%, #10b9b4 100%)";
+
 interface SidebarProps {
   navItems: NavItem[];
   isCollapsed?: boolean;
@@ -84,6 +89,148 @@ function groupNavItems(navItems: NavItem[]) {
       return groups;
     },
     [],
+  );
+}
+
+function BroadcastMicMark({ compact = false }: { compact?: boolean }) {
+  return (
+    <span
+      aria-hidden="true"
+      className={cn(
+        "relative flex shrink-0 items-center justify-center text-[#f2381f]",
+        compact ? "h-6 w-6" : "h-6 w-7",
+      )}
+    >
+      <span
+        className={cn(
+          "absolute rounded-l-full border-[#f2381f] border-r-0",
+          compact
+            ? "left-0 h-4.5 w-1.5 border-y-2 border-l-2"
+            : "left-0 h-5 w-2 border-y-2 border-l-2",
+        )}
+      />
+      <span
+        className={cn(
+          "absolute rounded-l-full border-[#f2381f] border-r-0",
+          compact
+            ? "left-1.5 h-3.5 w-1 border-y-2 border-l-2"
+            : "left-2 h-3.5 w-1.5 border-y-2 border-l-2",
+        )}
+      />
+      <Mic
+        className={cn(
+          "relative z-10 stroke-[#f2381f]",
+          compact ? "h-4 w-4" : "h-4.5 w-4.5",
+        )}
+        strokeWidth={2.8}
+      />
+      <span
+        className={cn(
+          "absolute rounded-r-full border-[#f2381f] border-l-0",
+          compact
+            ? "right-1.5 h-3.5 w-1 border-y-2 border-r-2"
+            : "right-2 h-3.5 w-1.5 border-y-2 border-r-2",
+        )}
+      />
+      <span
+        className={cn(
+          "absolute rounded-r-full border-[#f2381f] border-l-0",
+          compact
+            ? "right-0 h-4.5 w-1.5 border-y-2 border-r-2"
+            : "right-0 h-5 w-2 border-y-2 border-r-2",
+        )}
+      />
+    </span>
+  );
+}
+
+function StudioSignalBars({ compact = false }: { compact?: boolean }) {
+  return (
+    <span
+      aria-hidden="true"
+      className={cn(
+        "flex shrink-0 items-end justify-end gap-0.5",
+        compact ? "h-4 w-4" : "h-5 w-5",
+      )}
+    >
+      <span
+        className={cn(
+          "w-1 rounded-t-sm bg-[#10b9b4]",
+          compact ? "h-1.5" : "h-2",
+        )}
+      />
+      <span
+        className={cn(
+          "w-1 rounded-t-sm bg-[#10b9b4]",
+          compact ? "h-2.5" : "h-3.5",
+        )}
+      />
+      <span
+        className={cn(
+          "w-1 rounded-t-sm bg-[#10b9b4]",
+          compact ? "h-3.5" : "h-5",
+        )}
+      />
+      {!compact && <span className="h-3 w-1 rounded-t-sm bg-[#10b9b4]" />}
+    </span>
+  );
+}
+
+function OnAirStudioMark({ isActive }: { isActive: boolean }) {
+  return (
+    <span
+      className={cn(
+        "flex h-10 w-full rounded-full p-[1.5px] transition-[box-shadow,opacity,transform] duration-200",
+        isActive
+          ? "opacity-100 shadow-[0_6px_16px_rgba(16,185,180,0.14)]"
+          : "opacity-[0.78] group-hover:opacity-100 group-hover:shadow-[0_6px_14px_rgba(15,23,42,0.08)]",
+      )}
+      style={{ background: ON_AIR_GRADIENT }}
+    >
+      <span
+        className={cn(
+          "flex min-w-0 flex-1 items-center gap-1.5 rounded-full px-2 transition-colors",
+          isActive
+            ? "bg-white dark:bg-sidebar"
+            : "bg-sidebar group-hover:bg-background dark:group-hover:bg-sidebar-accent",
+        )}
+      >
+        <BroadcastMicMark />
+        <span className="min-w-0 flex-1 whitespace-nowrap text-sm font-extrabold leading-none tracking-normal">
+          <span className="text-[#f01813]">On-Air</span>{" "}
+          <span className="text-[#061c34] dark:text-sidebar-foreground">
+            Studio
+          </span>
+        </span>
+        <StudioSignalBars />
+      </span>
+    </span>
+  );
+}
+
+function CollapsedOnAirStudioMark({ isActive }: { isActive: boolean }) {
+  return (
+    <span
+      className={cn(
+        "flex h-8 w-8 items-center justify-center rounded-full p-[1.5px] transition-[box-shadow,opacity] duration-200",
+        isActive
+          ? "opacity-100 shadow-[0_6px_14px_rgba(16,185,180,0.16)]"
+          : "opacity-[0.82] group-hover:opacity-100 group-hover:shadow-[0_6px_14px_rgba(15,23,42,0.1)]",
+      )}
+      style={{ background: ON_AIR_GRADIENT }}
+    >
+      <span
+        className={cn(
+          "flex h-full w-full items-center justify-center gap-0.5 rounded-full transition-colors",
+          isActive
+            ? "bg-white dark:bg-sidebar"
+            : "bg-sidebar group-hover:bg-background dark:group-hover:bg-sidebar-accent",
+        )}
+      >
+        <BroadcastMicMark compact />
+        <StudioSignalBars compact />
+      </span>
+    </span>
   );
 }
 
@@ -138,6 +285,26 @@ export function Sidebar({
   const renderNavItem = (item: NavItem) => {
     const isActive = item.href === activeHref;
     const Icon = item.icon;
+
+    if (item.href === ON_AIR_STUDIO_HREF) {
+      return (
+        <Link
+          key={item.href}
+          href={item.href}
+          title={isCollapsed ? item.label : undefined}
+          className={cn(
+            "group rounded-md transition-colors",
+            isCollapsed ? "flex justify-center py-1" : "block px-0.5 py-0",
+          )}
+        >
+          {isCollapsed ? (
+            <CollapsedOnAirStudioMark isActive={isActive} />
+          ) : (
+            <OnAirStudioMark isActive={isActive} />
+          )}
+        </Link>
+      );
+    }
 
     return (
       <Link
