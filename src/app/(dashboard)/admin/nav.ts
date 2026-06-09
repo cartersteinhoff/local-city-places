@@ -4,7 +4,6 @@ import {
   FileText,
   FolderOpen,
   Globe,
-  ImageIcon,
   LayoutDashboard,
   Mail,
   MessageSquare,
@@ -43,12 +42,6 @@ export const adminNavItems = [
     label: "Merchant Requests",
     href: "/admin/merchant-requests",
     icon: ClipboardList,
-    section: "Merchants",
-  },
-  {
-    label: "Merchant Nominations",
-    href: "/admin/merchant-nominations",
-    icon: ImageIcon,
     section: "Merchants",
   },
   {

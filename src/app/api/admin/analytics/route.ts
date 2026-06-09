@@ -1,13 +1,6 @@
 import { desc, eq, gte, isNotNull, sql } from "drizzle-orm";
 import { type NextRequest, NextResponse } from "next/server";
-import {
-  db,
-  favoriteMerchantTestimonials,
-  merchants,
-  reviews,
-  sweepstakesEntries,
-  users,
-} from "@/db";
+import { db, merchants, reviews, sweepstakesEntries, users } from "@/db";
 import { getSession } from "@/lib/auth";
 
 function getStartDate(range: string) {
@@ -42,10 +35,8 @@ export async function GET(request: NextRequest) {
       totalMerchantsResult,
       verifiedMerchantsResult,
       totalReviewsResult,
-      nominationsResult,
       sweepstakesEntriesResult,
       usersByRoleResult,
-      nominationsByStatusResult,
       merchantsByStateResult,
       topMerchantsByReviewsResult,
       weeklySignupsResult,
@@ -63,22 +54,12 @@ export async function GET(request: NextRequest) {
       db.select({ count: sql<number>`count(*)::int` }).from(reviews),
       db
         .select({ count: sql<number>`count(*)::int` })
-        .from(favoriteMerchantTestimonials),
-      db
-        .select({ count: sql<number>`count(*)::int` })
         .from(sweepstakesEntries)
         .where(eq(sweepstakesEntries.status, "confirmed")),
       db
         .select({ role: users.role, count: sql<number>`count(*)::int` })
         .from(users)
         .groupBy(users.role),
-      db
-        .select({
-          status: favoriteMerchantTestimonials.status,
-          count: sql<number>`count(*)::int`,
-        })
-        .from(favoriteMerchantTestimonials)
-        .groupBy(favoriteMerchantTestimonials.status),
       db
         .select({
           state: merchants.state,
@@ -120,16 +101,6 @@ export async function GET(request: NextRequest) {
       if (row.role === "admin") usersByRole.admins = Number(row.count);
     }
 
-    const nominationsByStatus = {
-      submitted: 0,
-      changes_requested: 0,
-      approved: 0,
-      rejected: 0,
-    };
-    for (const row of nominationsByStatusResult) {
-      nominationsByStatus[row.status] = Number(row.count);
-    }
-
     return NextResponse.json({
       summary: {
         totalUsers: Number(totalUsersResult[0]?.count) || 0,
@@ -137,12 +108,10 @@ export async function GET(request: NextRequest) {
         totalMerchants: Number(totalMerchantsResult[0]?.count) || 0,
         verifiedMerchants: Number(verifiedMerchantsResult[0]?.count) || 0,
         totalReviews: Number(totalReviewsResult[0]?.count) || 0,
-        nominations: Number(nominationsResult[0]?.count) || 0,
         confirmedSweepstakesEntries:
           Number(sweepstakesEntriesResult[0]?.count) || 0,
       },
       usersByRole,
-      nominationsByStatus,
       merchantsByState: merchantsByStateResult.map((row) => ({
         state: row.state || "Unknown",
         count: Number(row.count),

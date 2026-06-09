@@ -32,19 +32,12 @@ interface AnalyticsData {
     totalMerchants: number;
     verifiedMerchants: number;
     totalReviews: number;
-    nominations: number;
     confirmedSweepstakesEntries: number;
   };
   usersByRole: {
     members: number;
     merchants: number;
     admins: number;
-  };
-  nominationsByStatus: {
-    submitted: number;
-    changes_requested: number;
-    approved: number;
-    rejected: number;
   };
   merchantsByState: Array<{ state: string; count: number }>;
   topMerchantsByReviews: Array<{
@@ -67,16 +60,9 @@ const emptyAnalytics: AnalyticsData = {
     totalMerchants: 0,
     verifiedMerchants: 0,
     totalReviews: 0,
-    nominations: 0,
     confirmedSweepstakesEntries: 0,
   },
   usersByRole: { members: 0, merchants: 0, admins: 0 },
-  nominationsByStatus: {
-    submitted: 0,
-    changes_requested: 0,
-    approved: 0,
-    rejected: 0,
-  },
   merchantsByState: [],
   topMerchantsByReviews: [],
   weeklySignups: [],
@@ -147,9 +133,6 @@ export default function AnalyticsPage() {
     (sum, value) => sum + value,
     0,
   );
-  const totalNominationStatuses = Object.values(
-    analytics.nominationsByStatus,
-  ).reduce((sum, value) => sum + value, 0);
 
   return (
     <DashboardLayout navItems={adminNavItems}>
@@ -217,7 +200,7 @@ export default function AnalyticsPage() {
             />
           </div>
 
-          <div className="grid gap-6 lg:grid-cols-2">
+          <div className="grid gap-6">
             <div className="rounded-xl border bg-card p-6">
               <h2 className="font-semibold mb-4 flex items-center gap-2">
                 <Users className="w-5 h-5" />
@@ -239,48 +222,6 @@ export default function AnalyticsPage() {
                     <ProgressBar value={count} max={totalRoles} />
                   </div>
                 ))}
-              </div>
-            </div>
-
-            <div className="rounded-xl border bg-card p-6">
-              <h2 className="font-semibold mb-4 flex items-center gap-2">
-                <Sparkles className="w-5 h-5" />
-                Nominations by Status
-              </h2>
-              <div className="space-y-4">
-                {Object.entries(analytics.nominationsByStatus).map(
-                  ([status, count]) => (
-                    <div key={status}>
-                      <div className="flex justify-between text-sm mb-1">
-                        <span className="capitalize">
-                          {status.replace("_", " ")}
-                        </span>
-                        <span className="font-medium">
-                          {count} (
-                          {totalNominationStatuses > 0
-                            ? Math.round(
-                                (count / totalNominationStatuses) * 100,
-                              )
-                            : 0}
-                          %)
-                        </span>
-                      </div>
-                      <ProgressBar
-                        value={count}
-                        max={totalNominationStatuses}
-                        color={
-                          status === "approved"
-                            ? "bg-green-500"
-                            : status === "rejected"
-                              ? "bg-red-500"
-                              : status === "changes_requested"
-                                ? "bg-amber-500"
-                                : "bg-blue-500"
-                        }
-                      />
-                    </div>
-                  ),
-                )}
               </div>
             </div>
           </div>

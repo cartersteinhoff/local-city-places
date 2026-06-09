@@ -3,6 +3,7 @@ import { type NextRequest, NextResponse } from "next/server";
 import { db } from "@/db";
 import { categories, merchants } from "@/db/schema";
 import { getSession } from "@/lib/auth";
+import { calculateCompletion } from "@/lib/merchant-completion";
 import { revalidateMerchantPublicPaths } from "@/lib/merchant-public-revalidation";
 import {
   generateMerchantSlug,
@@ -43,6 +44,7 @@ export async function GET(
         googlePlaceId: merchants.googlePlaceId,
         isPublicPage: merchants.isPublicPage,
         featuredOnHomepage: merchants.featuredOnHomepage,
+        verified: merchants.verified,
         // Extended fields
         hours: merchants.hours,
         instagramUrl: merchants.instagramUrl,
@@ -52,6 +54,7 @@ export async function GET(
         services: merchants.services,
         aboutStory: merchants.aboutStory,
         createdAt: merchants.createdAt,
+        updatedAt: merchants.updatedAt,
       })
       .from(merchants)
       .leftJoin(categories, eq(merchants.categoryId, categories.id))
@@ -65,10 +68,32 @@ export async function GET(
       );
     }
 
+    const completion = calculateCompletion({
+      businessName: merchant.businessName,
+      categoryId: merchant.categoryId || undefined,
+      description: merchant.description || undefined,
+      aboutStory: merchant.aboutStory || undefined,
+      streetAddress: merchant.streetAddress || undefined,
+      city: merchant.city || undefined,
+      state: merchant.state || undefined,
+      zipCode: merchant.zipCode || undefined,
+      phone: merchant.phone || undefined,
+      website: merchant.website || undefined,
+      instagramUrl: merchant.instagramUrl || undefined,
+      facebookUrl: merchant.facebookUrl || undefined,
+      tiktokUrl: merchant.tiktokUrl || undefined,
+      hours: merchant.hours || undefined,
+      logoUrl: merchant.logoUrl || undefined,
+      vimeoUrl: merchant.vimeoUrl || undefined,
+      photos: merchant.photos || undefined,
+      services: merchant.services || undefined,
+    });
+
     return NextResponse.json({
       merchant: {
         ...merchant,
         createdAt: merchant.createdAt.toISOString(),
+        updatedAt: merchant.updatedAt.toISOString(),
         urls: {
           full:
             merchant.city && merchant.state && merchant.slug
@@ -76,6 +101,18 @@ export async function GET(
               : null,
           short: merchant.phone ? getMerchantShortUrl(merchant.phone) : null,
         },
+      },
+      pageManagement: {
+        completionPercentage: completion.percentage,
+        completedFields: completion.completed,
+        totalFields: completion.total,
+        missingSections: completion.sections
+          .filter((section) => section.missingFields.length > 0)
+          .map((section) => ({
+            label: section.label,
+            missingFields: section.missingFields,
+          }))
+          .slice(0, 3),
       },
     });
   } catch (error) {

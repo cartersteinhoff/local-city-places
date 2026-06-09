@@ -4,6 +4,7 @@ import {
   Check,
   Copy,
   ExternalLink,
+  FileText,
   Loader2,
   Pencil,
   Plus,
@@ -226,6 +227,12 @@ export default function MerchantPagesPage() {
     return path;
   };
 
+  const copyShortUrl = (merchant: MerchantPageData) => {
+    const shortUrl = merchant.urls.short;
+    if (!shortUrl) return;
+    copyToClipboard(getFullUrl(shortUrl), merchant.id);
+  };
+
   return (
     <DashboardLayout navItems={adminNavItems}>
       {authLoading ? (
@@ -421,12 +428,7 @@ export default function MerchantPagesPage() {
                           variant="ghost"
                           size="icon"
                           className="h-8 w-8 flex-shrink-0"
-                          onClick={() =>
-                            copyToClipboard(
-                              getFullUrl(merchant.urls.short!),
-                              merchant.id,
-                            )
-                          }
+                          onClick={() => copyShortUrl(merchant)}
                         >
                           {copiedId === merchant.id ? (
                             <Check className="w-4 h-4 text-green-600" />
@@ -437,14 +439,9 @@ export default function MerchantPagesPage() {
                       </div>
                     )}
 
-                    <div className="flex gap-2">
+                    <div className="grid grid-cols-2 gap-2">
                       {merchant.urls.full && (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          asChild
-                          className="flex-1"
-                        >
+                        <Button variant="outline" size="sm" asChild>
                           <a
                             href={merchant.urls.full}
                             target="_blank"
@@ -455,12 +452,15 @@ export default function MerchantPagesPage() {
                           </a>
                         </Button>
                       )}
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        asChild
-                        className="flex-1"
-                      >
+                      <Button variant="outline" size="sm" asChild>
+                        <Link
+                          href={`/admin/merchants/${merchant.id}/merchant-page`}
+                        >
+                          <FileText className="w-4 h-4 mr-1" />
+                          Merchant Page
+                        </Link>
+                      </Button>
+                      <Button variant="outline" size="sm" asChild>
                         <Link href={`/admin/merchants/${merchant.id}/edit`}>
                           <Pencil className="w-4 h-4 mr-1" />
                           Edit
@@ -476,6 +476,7 @@ export default function MerchantPagesPage() {
                         }}
                       >
                         <Trash2 className="w-4 h-4" />
+                        Delete
                       </Button>
                     </div>
                   </div>
@@ -497,7 +498,7 @@ export default function MerchantPagesPage() {
                       <TableHead className="w-[120px]">Location</TableHead>
                       <TableHead className="w-[180px]">Short URL</TableHead>
                       <TableHead className="w-[90px]">Updated</TableHead>
-                      <TableHead className="w-[110px] text-right">
+                      <TableHead className="w-[145px] text-right">
                         Actions
                       </TableHead>
                     </TableRow>
@@ -564,12 +565,7 @@ export default function MerchantPagesPage() {
                                   variant="ghost"
                                   size="icon"
                                   className="h-7 w-7 flex-shrink-0"
-                                  onClick={() =>
-                                    copyToClipboard(
-                                      getFullUrl(merchant.urls.short!),
-                                      merchant.id,
-                                    )
-                                  }
+                                  onClick={() => copyShortUrl(merchant)}
                                 >
                                   {copiedId === merchant.id ? (
                                     <Check className="w-3 h-3 text-green-600" />
@@ -604,6 +600,19 @@ export default function MerchantPagesPage() {
                                   </a>
                                 </Button>
                               )}
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8"
+                                asChild
+                              >
+                                <Link
+                                  href={`/admin/merchants/${merchant.id}/merchant-page`}
+                                  title="Merchant Page"
+                                >
+                                  <FileText className="w-4 h-4" />
+                                </Link>
+                              </Button>
                               <Button
                                 variant="ghost"
                                 size="icon"

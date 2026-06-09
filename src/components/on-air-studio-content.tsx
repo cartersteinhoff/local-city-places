@@ -11,10 +11,14 @@ import {
   type LucideIcon,
   Mic2,
   Music2,
+  Pause,
+  Play,
   RadioTower,
   UploadCloud,
+  Volume2,
 } from "lucide-react";
 import Link from "next/link";
+import { useRef, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -181,6 +185,17 @@ const statusToneClasses = {
 
 const emptyCaptionsTrack = "data:text/vtt,WEBVTT%0A%0A";
 
+function formatAudioTime(seconds: number) {
+  if (!Number.isFinite(seconds) || seconds <= 0) return "0:00";
+
+  const minutes = Math.floor(seconds / 60);
+  const remainingSeconds = Math.floor(seconds % 60)
+    .toString()
+    .padStart(2, "0");
+
+  return `${minutes}:${remainingSeconds}`;
+}
+
 function StudioStatusBadge({
   status,
   tone,
@@ -205,12 +220,93 @@ function AudioPlayer({
   audioSrc?: string | null;
   title: string;
 }) {
+  const audioRef = useRef<HTMLAudioElement>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(0);
+  const hasAudio = !!audioSrc;
+  const progressMax = duration || 1;
+  const progressValue = duration ? currentTime : 0;
+
+  const togglePlayback = async () => {
+    const audio = audioRef.current;
+    if (!audio || !hasAudio) return;
+
+    if (audio.paused) {
+      await audio.play();
+      setIsPlaying(true);
+    } else {
+      audio.pause();
+      setIsPlaying(false);
+    }
+  };
+
+  const handleSeek = (value: string) => {
+    const audio = audioRef.current;
+    if (!audio || !duration) return;
+
+    const nextTime = Number(value);
+    audio.currentTime = nextTime;
+    setCurrentTime(nextTime);
+  };
+
   return (
     <div className="space-y-2">
+      <div className="rounded-lg border bg-background/80 p-3">
+        <div className="flex items-center gap-3">
+          <button
+            type="button"
+            disabled={!hasAudio}
+            onClick={togglePlayback}
+            aria-label={isPlaying ? `Pause ${title}` : `Play ${title}`}
+            className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full border text-primary transition-colors ${
+              hasAudio
+                ? "border-primary/30 bg-primary/10 hover:bg-primary/15"
+                : "cursor-not-allowed border-muted bg-muted/40 text-muted-foreground"
+            }`}
+          >
+            {isPlaying ? (
+              <Pause className="h-4 w-4" />
+            ) : (
+              <Play className="ml-0.5 h-4 w-4" />
+            )}
+          </button>
+
+          <div className="min-w-0 flex-1">
+            <div className="mb-1.5 flex items-center justify-between gap-3 text-xs font-medium text-muted-foreground">
+              <span>{formatAudioTime(currentTime)}</span>
+              <span>{formatAudioTime(duration)}</span>
+            </div>
+            <input
+              aria-label={`${title} progress`}
+              className="h-2 w-full accent-primary"
+              disabled={!hasAudio}
+              max={progressMax}
+              min={0}
+              onChange={(event) => handleSeek(event.target.value)}
+              step="0.1"
+              type="range"
+              value={progressValue}
+            />
+          </div>
+
+          <Volume2 className="hidden h-4 w-4 shrink-0 text-muted-foreground sm:block" />
+        </div>
+      </div>
+
       <audio
+        ref={audioRef}
         aria-label={`${title} player`}
-        className="h-10 w-full min-w-0"
-        controls
+        className="sr-only"
+        onEnded={() => setIsPlaying(false)}
+        onLoadedMetadata={(event) => {
+          setDuration(event.currentTarget.duration || 0);
+        }}
+        onPause={() => setIsPlaying(false)}
+        onPlay={() => setIsPlaying(true)}
+        onTimeUpdate={(event) => {
+          setCurrentTime(event.currentTarget.currentTime || 0);
+        }}
         preload="metadata"
         src={audioSrc || undefined}
       >
@@ -225,8 +321,8 @@ function AudioPlayer({
         <FileAudio className="h-4 w-4 shrink-0" />
         <span>
           {audioSrc
-            ? "Ready to play in this dashboard."
-            : "Player ready. Final audio has not been uploaded yet."}
+            ? "Ready to preview in this studio."
+            : "Preview pending until final audio is uploaded."}
         </span>
       </div>
     </div>
@@ -248,14 +344,13 @@ function AudioDownloadButton({ audioSrc }: { audioSrc?: string | null }) {
   return (
     <Button variant="outline" size="sm" disabled className="w-full">
       <Download className="h-4 w-4" />
-      Download
+      Download pending
     </Button>
   );
 }
 
 function MerchantServicesOverview({
   displayName,
-  publicPageHref,
 }: {
   displayName: string;
   publicPageHref?: string | null;
@@ -263,26 +358,9 @@ function MerchantServicesOverview({
   const audioServices = merchantServices.filter(
     (service) => service.hasPreview,
   );
-  const visibilityServices = merchantServices.filter(
-    (service) => !service.hasPreview,
+  const airplayServices = merchantServices.filter(
+    (service) => service.key === "airplay",
   );
-  const getVisibilityAssetLink = (serviceKey: string) => {
-    if (serviceKey === "public-page") {
-      return {
-        href: publicPageHref || null,
-        label: "Open public page",
-      };
-    }
-
-    if (serviceKey === "category-reservation") {
-      return {
-        href: "/merchant/profile",
-        label: "View reservation",
-      };
-    }
-
-    return null;
-  };
 
   return (
     <div className="mx-auto max-w-7xl space-y-5">
@@ -296,56 +374,43 @@ function MerchantServicesOverview({
               On-Air Studio
             </h1>
             <p className="mt-1 text-sm text-muted-foreground sm:text-base">
-              Overview of the services included in your Local City Places media
-              package.
+              Radio production, audio previews, and KLCP 96.5 FM airplay status.
             </p>
           </div>
         </div>
-
-        {publicPageHref && (
-          <Button variant="outline" asChild>
-            <Link href={publicPageHref}>
-              <ExternalLink className="h-4 w-4" />
-              View public page
-            </Link>
-          </Button>
-        )}
       </div>
 
       <section className="overflow-hidden rounded-lg border bg-card">
         <div className="grid gap-5 p-5 sm:p-6 lg:grid-cols-[minmax(0,1fr)_390px] lg:items-start">
           <div>
             <Badge variant="secondary" className="mb-4">
-              Services overview
+              KLCP 96.5 FM
             </Badge>
             <h2 className="max-w-2xl text-xl font-semibold leading-tight text-foreground sm:text-2xl">
-              Local City Places package for {displayName}
+              Radio campaign for {displayName}
             </h2>
             <p className="mt-3 max-w-2xl text-sm leading-6 text-muted-foreground">
-              Your package combines audio production, a public merchant page,
-              category positioning, and KLCP 96.5 FM airplay into one local
-              media program.
+              Follow the spot, soundtrack, and airplay schedule from production
+              through approval.
             </p>
           </div>
 
           <div className="grid grid-cols-3 gap-3">
-            <div className="border-l-2 border-primary/70 pl-3">
-              <p className="text-2xl font-bold">5</p>
-              <p className="text-xs leading-4 text-muted-foreground">
-                included services
-              </p>
-            </div>
             <div className="border-l-2 border-primary/70 pl-3">
               <p className="text-2xl font-bold">2</p>
               <p className="text-xs leading-4 text-muted-foreground">
                 audio assets
               </p>
             </div>
-            <div className="border-l-2 border-success/70 pl-3">
+            <div className="border-l-2 border-primary/70 pl-3">
               <p className="text-2xl font-bold">1</p>
               <p className="text-xs leading-4 text-muted-foreground">
-                public page
+                airplay schedule
               </p>
+            </div>
+            <div className="border-l-2 border-success/70 pl-3">
+              <p className="text-2xl font-bold">96.5</p>
+              <p className="text-xs leading-4 text-muted-foreground">FM KLCP</p>
             </div>
           </div>
         </div>
@@ -353,10 +418,10 @@ function MerchantServicesOverview({
         <div className="grid border-t lg:grid-cols-[1fr_0.9fr] lg:divide-x">
           <div className="p-5 sm:p-6">
             <div className="mb-5">
-              <h2 className="text-lg font-semibold">Audio services</h2>
+              <h2 className="text-lg font-semibold">Audio production</h2>
               <p className="mt-1 text-sm text-muted-foreground">
-                These are the files you will be able to preview and download
-                when production is complete.
+                Preview and download the final files when production is
+                complete.
               </p>
             </div>
 
@@ -400,16 +465,15 @@ function MerchantServicesOverview({
 
           <div className="border-t lg:border-t-0">
             <div className="border-b p-5 sm:p-6">
-              <h2 className="text-lg font-semibold">Visibility services</h2>
+              <h2 className="text-lg font-semibold">Airplay readiness</h2>
               <p className="mt-1 text-sm text-muted-foreground">
-                The public-facing pieces that support the audio campaign.
+                KLCP placement unlocks after the final spot is approved.
               </p>
             </div>
 
             <div className="divide-y">
-              {visibilityServices.map((service) => {
+              {airplayServices.map((service) => {
                 const Icon = service.icon;
-                const assetLink = getVisibilityAssetLink(service.key);
 
                 return (
                   <article key={service.key} className="p-5 sm:p-6">
@@ -435,33 +499,39 @@ function MerchantServicesOverview({
                         tone={service.statusTone}
                       />
                     </div>
-
-                    {assetLink?.href ? (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        asChild
-                        className="mt-4"
-                      >
-                        <Link href={assetLink.href}>
-                          <ExternalLink className="h-4 w-4" />
-                          {assetLink.label}
-                        </Link>
-                      </Button>
-                    ) : assetLink ? (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        disabled
-                        className="mt-4"
-                      >
-                        <ExternalLink className="h-4 w-4" />
-                        {assetLink.label}
-                      </Button>
-                    ) : null}
                   </article>
                 );
               })}
+              <article className="p-5 sm:p-6">
+                <div className="flex items-start gap-3">
+                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-muted text-muted-foreground">
+                    <CheckCircle2 className="h-4 w-4" />
+                  </span>
+                  <div>
+                    <h3 className="text-sm font-semibold">Approval gate</h3>
+                    <p className="mt-1 text-sm leading-5 text-muted-foreground">
+                      The final radio spot is reviewed before airplay dates are
+                      confirmed.
+                    </p>
+                  </div>
+                </div>
+              </article>
+              <article className="p-5 sm:p-6">
+                <div className="flex items-start gap-3">
+                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-muted text-muted-foreground">
+                    <RadioTower className="h-4 w-4" />
+                  </span>
+                  <div>
+                    <h3 className="text-sm font-semibold">
+                      Broadcast confirmation
+                    </h3>
+                    <p className="mt-1 text-sm leading-5 text-muted-foreground">
+                      Airplay details will appear here when the schedule is
+                      ready.
+                    </p>
+                  </div>
+                </div>
+              </article>
             </div>
           </div>
         </div>
@@ -474,18 +544,17 @@ function MerchantServicesOverview({
           </div>
           <h2 className="font-semibold">1. Produce</h2>
           <p className="mt-2 text-sm leading-6 text-muted-foreground">
-            Local City Places produces the spot and soundtrack for your
-            business.
+            Local City Places produces your radio spot and signature soundtrack.
           </p>
         </div>
         <div className="rounded-lg border bg-card p-5">
           <div className="mb-3 flex h-9 w-9 items-center justify-center rounded-md bg-primary/10 text-primary">
-            <Globe2 className="h-4 w-4" />
+            <CheckCircle2 className="h-4 w-4" />
           </div>
-          <h2 className="font-semibold">2. Publish</h2>
+          <h2 className="font-semibold">2. Approve</h2>
           <p className="mt-2 text-sm leading-6 text-muted-foreground">
-            Your public merchant page and category reservation support the
-            campaign online.
+            You review the finished audio before it moves to broadcast
+            scheduling.
           </p>
         </div>
         <div className="rounded-lg border bg-card p-5">
@@ -494,8 +563,8 @@ function MerchantServicesOverview({
           </div>
           <h2 className="font-semibold">3. Play</h2>
           <p className="mt-2 text-sm leading-6 text-muted-foreground">
-            Approved audio moves into KLCP scheduling, with confirmation added
-            here.
+            Approved audio moves into KLCP 96.5 FM scheduling, with confirmation
+            added here.
           </p>
         </div>
       </section>
