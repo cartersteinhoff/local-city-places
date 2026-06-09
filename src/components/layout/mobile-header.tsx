@@ -67,7 +67,7 @@ export function MobileHeader() {
   const isAdmin = user?.role === "admin";
 
   return (
-    <header className="admin-dashboard-mobile-header md:hidden h-14 bg-card border-b border-border flex items-center justify-between px-4 sticky top-0 z-40">
+    <header className="dashboard-dark-blue-mobile-header md:hidden h-14 bg-card border-b border-border flex items-center justify-between px-4 sticky top-0 z-40">
       {/* Logo */}
       <Link
         href="/"
@@ -119,8 +119,10 @@ export function MobileHeader() {
             align="end"
             className={cn(
               "w-56",
-              currentView === "admin" &&
-                "dark:border-sky-300/20 dark:bg-[#041827] dark:text-slate-50",
+              (currentView === "admin" ||
+                currentView === "merchant" ||
+                currentView === "member") &&
+                "dark:border-sky-300/20 dark:bg-[#061f33] dark:text-slate-50",
             )}
           >
             {/* User Info Header */}

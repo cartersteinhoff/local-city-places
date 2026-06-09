@@ -9,13 +9,16 @@ import type { DashboardLayoutProps } from "./types";
 
 export function DashboardLayout({ children, navItems }: DashboardLayoutProps) {
   const pathname = usePathname();
-  const isAdminView = pathname.startsWith("/admin");
+  const usesSolidBlueShell =
+    pathname.startsWith("/admin") ||
+    pathname.startsWith("/merchant") ||
+    pathname.startsWith("/member");
 
   return (
     <div
       className={cn(
         "min-h-screen bg-background",
-        isAdminView && "admin-dashboard-shell",
+        usesSolidBlueShell && "dashboard-dark-blue-shell",
       )}
     >
       <div className="flex">

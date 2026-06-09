@@ -336,7 +336,7 @@ export function Sidebar({
   return (
     <aside
       className={cn(
-        "admin-dashboard-sidebar",
+        "dashboard-dark-blue-sidebar",
         "sticky top-0 hidden h-screen flex-col border-r border-sidebar-border bg-sidebar transition-all duration-200 md:flex",
         isCollapsed ? "w-16" : "w-64",
       )}
@@ -468,8 +468,10 @@ export function Sidebar({
               align="start"
               className={cn(
                 "w-56",
-                currentView === "admin" &&
-                  "dark:border-sky-300/20 dark:bg-[#041827] dark:text-slate-50",
+                (currentView === "admin" ||
+                  currentView === "merchant" ||
+                  currentView === "member") &&
+                  "dark:border-sky-300/20 dark:bg-[#061f33] dark:text-slate-50",
               )}
             >
               {/* User Info Header */}

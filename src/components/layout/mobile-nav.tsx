@@ -83,7 +83,7 @@ export function MobileNav({ navItems }: MobileNavProps) {
   const isAdmin = user?.role === "admin";
 
   return (
-    <nav className="admin-dashboard-mobile-nav md:hidden fixed bottom-0 left-0 right-0 bg-card border-t border-border z-50">
+    <nav className="dashboard-dark-blue-mobile-nav md:hidden fixed bottom-0 left-0 right-0 bg-card border-t border-border z-50">
       <div className="flex items-center justify-around h-16 px-2">
         {visibleItems.map((item) => {
           const isActive = item.href === activeHref;
@@ -128,8 +128,10 @@ export function MobileNav({ navItems }: MobileNavProps) {
           <SheetContent
             showCloseButton={false}
             className={cn(
-              currentView === "admin" &&
-                "dark:border-sky-300/20 dark:bg-[#041827] dark:text-slate-50",
+              (currentView === "admin" ||
+                currentView === "merchant" ||
+                currentView === "member") &&
+                "dark:border-sky-300/20 dark:bg-[#061f33] dark:text-slate-50",
             )}
           >
             {/* User info section */}
@@ -240,7 +242,7 @@ export function MobileNav({ navItems }: MobileNavProps) {
         </Sheet>
       </div>
       {/* Safe area padding for iOS */}
-      <div className="admin-dashboard-mobile-nav-safe-area h-safe-area-inset-bottom bg-card" />
+      <div className="dashboard-dark-blue-mobile-nav-safe-area h-safe-area-inset-bottom bg-card" />
     </nav>
   );
 }
