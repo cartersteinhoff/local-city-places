@@ -129,7 +129,7 @@ export function MobileNav({ navItems }: MobileNavProps) {
             showCloseButton={false}
             className={cn(
               currentView === "admin" &&
-                "dark:border-sky-300/20 dark:bg-[#08233a] dark:text-slate-50",
+                "dark:border-sky-300/20 dark:bg-[#041827] dark:text-slate-50",
             )}
           >
             {/* User info section */}
