@@ -747,7 +747,7 @@ export default function MerchantDashboardConceptPage() {
 
                     <div className="mt-5 flex flex-wrap gap-2">
                       <Button variant="outline" asChild>
-                        <Link href="/marketlock360">
+                        <Link href="/merchant/marketlock360">
                           <Search className="h-4 w-4" />
                           View MarketLock page
                         </Link>

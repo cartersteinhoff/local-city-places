@@ -1,8 +1,8 @@
 import {
   FileText,
   LayoutDashboard,
+  LockKeyhole,
   RadioTower,
-  Sparkles,
   Star,
   UserCircle,
 } from "lucide-react";
@@ -10,9 +10,9 @@ import {
 export const merchantNavItems = [
   { label: "Dashboard", href: "/merchant", icon: LayoutDashboard },
   {
-    label: "Dashboard Concept",
-    href: "/merchant/dashboard-concept",
-    icon: Sparkles,
+    label: "MarketLock360",
+    href: "/merchant/marketlock360",
+    icon: LockKeyhole,
   },
   { label: "Merchant Page", href: "/merchant/merchant-page", icon: FileText },
   { label: "On-Air Studio", href: "/merchant/on-air-studio", icon: RadioTower },

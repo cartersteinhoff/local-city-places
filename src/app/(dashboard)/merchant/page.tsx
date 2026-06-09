@@ -1,25 +1,29 @@
 "use client";
 
 import {
+  ArrowRight,
   Bot,
   CalendarClock,
+  Check,
   CheckCircle2,
-  Clock3,
   Download,
-  ExternalLink,
-  FileAudio,
   Globe2,
+  Info,
   Loader2,
   LockKeyhole,
+  type LucideIcon,
   Mailbox,
+  MapPin,
+  Mic2,
   Music2,
   Pause,
   Play,
   RadioTower,
+  RefreshCw,
   ShieldCheck,
   Sparkles,
-  Volume2,
 } from "lucide-react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { DashboardLayout } from "@/components/layout";
@@ -28,9 +32,10 @@ import {
   type MerchantPageManagementMerchant,
   MerchantPageManagementPanel,
 } from "@/components/merchant/merchant-page-management-panel";
+import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/ui/page-header";
 import { useUser } from "@/hooks/use-user";
-import { getMerchantPageUrl } from "@/lib/utils";
+import { cn, getMerchantPageUrl } from "@/lib/utils";
 import { merchantNavItems } from "./nav";
 
 interface DashboardData {
@@ -47,125 +52,74 @@ interface CampaignTrackData {
   updatedAt: string | null;
 }
 
-const marketLockItems = [
-  {
-    label: "Category lock",
-    detail: "Exclusive local category position.",
-    icon: ShieldCheck,
+const activationStatusMeta = {
+  Active: {
+    icon: "border-emerald-500/40 bg-emerald-500/10 text-emerald-600 dark:text-emerald-300",
+    dot: "bg-emerald-500",
+    caption: "text-emerald-700 dark:text-emerald-300",
   },
-  {
-    label: "Merchant page",
-    detail: "Customer-facing Local City Places page.",
-    icon: Globe2,
+  "In production": {
+    icon: "border-blue-500/40 bg-blue-500/10 text-blue-600 dark:text-blue-300",
+    dot: "bg-blue-500",
+    caption: "text-blue-700 dark:text-blue-300",
   },
-  {
-    label: "KLCP media",
-    detail: "Radio spot, interview, and airplay support.",
-    icon: RadioTower,
+  Waiting: {
+    icon: "border-amber-500/40 bg-amber-500/10 text-amber-600 dark:text-amber-300",
+    dot: "bg-amber-500",
+    caption: "text-amber-700 dark:text-amber-300",
   },
-  {
-    label: "Direct mail",
-    detail: "Local household reach for the campaign.",
-    icon: Mailbox,
-  },
-  {
-    label: "Sweepstakes",
-    detail: "Traffic and referral activity tied to the market.",
-    icon: Sparkles,
-  },
-  {
-    label: "Growth upgrades",
-    detail: "AI staff and Google profile support when enabled.",
-    icon: Bot,
-  },
-];
-
-const marketLockLevels = [
-  {
-    level: "Level 1",
-    label: "Current",
-    title: "Reserved category",
-    detail: "Your local category is held for this market.",
-    status: "You are here",
-    icon: ShieldCheck,
-  },
-  {
-    level: "Level 2",
-    label: "Recommended unlock",
-    title: "MarketLock360",
-    detail: "Category position plus local media package.",
-    status: "Upgrade target",
-    icon: LockKeyhole,
-  },
-  {
-    level: "Level 3",
-    label: "Pro upgrade",
-    title: "LOCAL AI Staff",
-    detail: "Follow-up, appointments, and communication support.",
-    status: "Add-on",
-    icon: Bot,
-  },
-  {
-    level: "Level 4",
-    label: "Dominator upgrade",
-    title: "Google profile support",
-    detail: "Maps visibility, reviews, and local search signals.",
-    status: "Add-on",
-    icon: Globe2,
-  },
-];
-
-const statusStyles = {
-  Active:
-    "border-emerald-500/40 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300",
-  "In production":
-    "border-blue-500/40 bg-blue-500/10 text-blue-700 dark:text-blue-300",
-  Waiting:
-    "border-amber-500/40 bg-amber-500/10 text-amber-700 dark:text-amber-300",
 } as const;
 
 const activationItems = [
   {
-    label: "Category",
-    value: "category",
-    detail: "Exclusive category position is activated for this market.",
+    label: "Category lock",
+    value: "Exclusive local category position",
     status: "Active",
     icon: ShieldCheck,
   },
   {
     label: "MarketLock status",
-    value: "market",
-    detail: "Your local market position is reserved and protected.",
+    value: "Position reserved and protected",
     status: "Active",
     icon: LockKeyhole,
   },
   {
+    label: "Merchant page",
+    value: "Customer-facing Local City Places page",
+    status: "Active",
+    icon: Globe2,
+  },
+  {
     label: "Radio spot",
-    value: "Final KLCP 96.5 FM ad production.",
-    detail: "Merchant campaign ad is moving through final production.",
+    value: "KLCP 96.5 FM ad",
     status: "In production",
     icon: RadioTower,
   },
   {
     label: "Signature soundtrack",
-    value: "Custom music bed for the merchant campaign.",
-    detail: "Original campaign audio bed is being prepared.",
+    value: "Custom campaign music bed",
     status: "In production",
     icon: Music2,
   },
   {
     label: "Airplay schedule",
-    value: "Schedule unlocks after audio approval.",
-    detail: "Airplay timing opens once the spot is approved.",
+    value: "Opens after audio approval",
     status: "Waiting",
     icon: CalendarClock,
   },
 ] as const;
 
+// Stub reach figures for sales framing — confirm with KLCP and the mail
+// vendor before these go in front of merchants.
+const reachStats = {
+  radioListeners: "280K+",
+  mailHouseholds: "12,000+",
+};
+
 const marketLock360Adds = [
   {
     label: "Direct mail",
-    detail: "Local household reach tied to the same protected market.",
+    detail: `Campaign mailers to ${reachStats.mailHouseholds} households in your protected market.`,
     icon: Mailbox,
   },
   {
@@ -185,24 +139,37 @@ const marketLock360Adds = [
   },
 ];
 
-const emptyCaptionsTrack = "data:text/vtt,WEBVTT%0A%0A";
+const upgradeSteps = [
+  { title: "Reserved category", note: "Active today", state: "done" },
+  { title: "MarketLock360", note: "Your next unlock", state: "next" },
+  { title: "LOCAL AI Staff", note: "Add-on after 360", state: "locked" },
+  {
+    title: "Google profile support",
+    note: "Add-on after 360",
+    state: "locked",
+  },
+] as const;
 
-const waveformBars = [
-  { id: "intro", height: 32 },
-  { id: "lift", height: 56 },
-  { id: "pulse", height: 44 },
-  { id: "hook", height: 72 },
-  { id: "drop", height: 38 },
-  { id: "rise", height: 62 },
-  { id: "peak", height: 84 },
-  { id: "break", height: 48 },
-  { id: "bridge", height: 70 },
-  { id: "turn", height: 52 },
-  { id: "bed", height: 36 },
-  { id: "tag", height: 60 },
-  { id: "outro", height: 78 },
-  { id: "end", height: 46 },
+const productionStages: Array<{
+  label: string;
+  caption: string;
+  icon?: LucideIcon;
+  step?: number;
+  isCurrent?: boolean;
+}> = [
+  // Stage timing is a stub — align with the real production schedule.
+  {
+    label: "Production",
+    caption: "Happening now",
+    icon: RefreshCw,
+    isCurrent: true,
+  },
+  { label: "Your approval", caption: "About 2 weeks out", step: 2 },
+  { label: "Airplay scheduled", caption: "Right after approval", step: 3 },
+  { label: "On air", caption: "Your debut on KLCP 96.5", icon: RadioTower },
 ];
+
+const emptyCaptionsTrack = "data:text/vtt,WEBVTT%0A%0A";
 
 function formatTrackTime(seconds: number) {
   if (!Number.isFinite(seconds) || seconds <= 0) return "0:00";
@@ -226,139 +193,132 @@ function MerchantActivationBanner({
     "Your market";
 
   return (
-    <section className="mb-6 overflow-hidden rounded-xl border bg-card">
-      <div className="grid 2xl:grid-cols-[minmax(0,1.45fr)_minmax(320px,0.75fr)]">
-        <div className="p-5 md:p-6">
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-            <div className="min-w-0">
-              <p className="text-xs font-semibold uppercase text-muted-foreground">
-                Activated market package
-              </p>
-              <h2 className="mt-2 text-2xl font-bold tracking-tight text-foreground md:text-3xl">
-                {categoryName} category lock is active
-              </h2>
-              <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
-                The core merchant campaign is turned on for {marketLabel}, with
-                radio production already moving and MarketLock360 upgrades ready
-                to add more reach.
-              </p>
-            </div>
+    <section className="mb-6 overflow-hidden rounded-xl border bg-card p-5 md:p-6">
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+        <div className="min-w-0">
+          <p className="text-xs font-semibold uppercase text-muted-foreground">
+            Activated market package
+          </p>
+          <h2 className="mt-2 text-2xl font-bold tracking-tight text-foreground md:text-3xl">
+            Your category lock is active
+          </h2>
+          <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
+            The core merchant campaign is live, with radio production already
+            moving.
+          </p>
+        </div>
 
-            <div className="flex flex-wrap gap-2">
-              <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/40 bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-700 dark:text-emerald-300">
-                <CheckCircle2 className="h-3.5 w-3.5" />
-                Activated
-              </span>
-              <span className="rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
-                MarketLock ready
-              </span>
-            </div>
+        <span className="inline-flex h-fit w-fit shrink-0 items-center gap-1.5 rounded-full border border-emerald-500/40 bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-700 dark:text-emerald-300">
+          <CheckCircle2 className="h-3.5 w-3.5" />
+          Activated
+        </span>
+      </div>
+
+      <div className="mt-5 grid gap-3 sm:grid-cols-2">
+        <div className="flex items-center gap-4 rounded-lg border border-emerald-500/30 bg-emerald-500/5 p-4 md:p-5">
+          <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg border border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-300">
+            <ShieldCheck className="h-6 w-6" />
+          </span>
+          <div className="min-w-0">
+            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              Locked category
+            </p>
+            <p
+              className="truncate text-xl font-bold tracking-tight md:text-2xl"
+              title={categoryName}
+            >
+              {categoryName}
+            </p>
+            <p className="text-xs text-muted-foreground">
+              {`No other ${categoryName} business in ${marketLabel} can hold this position — it's yours.`}
+            </p>
           </div>
+        </div>
 
-          <div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-5">
-            {activationItems.map((item) => {
-              const Icon = item.icon;
-              const value =
-                item.value === "category"
-                  ? categoryName
-                  : item.value === "market"
-                    ? marketLabel
-                    : item.value;
-              const statusClass = statusStyles[item.status];
+        <div className="flex items-center gap-4 rounded-lg border border-emerald-500/30 bg-emerald-500/5 p-4 md:p-5">
+          <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg border border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-300">
+            <MapPin className="h-6 w-6" />
+          </span>
+          <div className="min-w-0">
+            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              Locked market
+            </p>
+            <p
+              className="truncate text-xl font-bold tracking-tight md:text-2xl"
+              title={marketLabel}
+            >
+              {marketLabel}
+            </p>
+            <p className="text-xs text-muted-foreground">
+              Reserved for your campaign — competitors can&apos;t buy in.
+            </p>
+          </div>
+        </div>
+      </div>
 
-              return (
-                <div
-                  key={item.label}
-                  className="min-h-[156px] rounded-lg border bg-background p-4"
+      <div className="mt-6 border-t pt-5">
+        <p className="text-xs font-semibold uppercase text-muted-foreground">
+          Package status
+        </p>
+        <ol className="mt-4 grid gap-x-4 gap-y-5 sm:grid-cols-2 xl:grid-cols-3">
+          {activationItems.map((item) => {
+            const Icon = item.icon;
+            const meta = activationStatusMeta[item.status];
+
+            return (
+              <li key={item.label} className="flex gap-3">
+                <span
+                  className={cn(
+                    "flex h-10 w-10 shrink-0 items-center justify-center rounded-full border",
+                    meta.icon,
+                  )}
                 >
-                  <div className="mb-3 flex items-start justify-between gap-3">
-                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary">
-                      <Icon className="h-4 w-4" />
-                    </span>
-                    <span
-                      className={`rounded-full border px-2.5 py-1 text-xs font-semibold ${statusClass}`}
-                    >
-                      {item.status}
-                    </span>
-                  </div>
-                  <p className="text-xs font-semibold uppercase text-muted-foreground">
+                  <Icon className="h-4 w-4" />
+                </span>
+                <div className="min-w-0">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                     {item.label}
                   </p>
-                  <p className="mt-1 text-sm font-semibold leading-5">
-                    {value}
+                  <p
+                    className="mt-1 truncate text-sm font-semibold leading-5"
+                    title={item.value}
+                  >
+                    {item.value}
                   </p>
-                  <p className="mt-2 text-xs leading-5 text-muted-foreground">
-                    {item.detail}
+                  <p
+                    className={cn(
+                      "mt-1.5 flex items-center gap-1.5 text-xs font-semibold",
+                      meta.caption,
+                    )}
+                  >
+                    <span
+                      className={cn("h-1.5 w-1.5 rounded-full", meta.dot)}
+                    />
+                    {item.status}
                   </p>
                 </div>
-              );
-            })}
-          </div>
-        </div>
-
-        <div className="border-t bg-muted/30 p-5 md:p-6 2xl:border-l 2xl:border-t-0">
-          <p className="text-xs font-semibold uppercase text-muted-foreground">
-            MarketLock360 adds
-          </p>
-          <h3 className="mt-2 text-xl font-bold tracking-tight">
-            More local reach when upgraded
-          </h3>
-          <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4 2xl:grid-cols-1">
-            {marketLock360Adds.map((item) => {
-              const Icon = item.icon;
-
-              return (
-                <div key={item.label} className="flex gap-3">
-                  <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-background text-primary">
-                    <Icon className="h-4 w-4" />
-                  </span>
-                  <div className="min-w-0">
-                    <p className="text-sm font-semibold">{item.label}</p>
-                    <p className="text-xs leading-5 text-muted-foreground">
-                      {item.detail}
-                    </p>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-          <a
-            href="/marketlock360"
-            className="mt-5 inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
-          >
-            <ExternalLink className="mr-2 h-4 w-4" />
-            View MarketLock360
-          </a>
-        </div>
+              </li>
+            );
+          })}
+        </ol>
       </div>
     </section>
   );
 }
 
-function CampaignTrackPanel({
+function CampaignProductionPanel({
   track,
-  merchantName,
+  city,
 }: {
   track: CampaignTrackData | undefined;
-  merchantName: string | undefined;
+  city: string | null | undefined;
 }) {
   const audioRef = useRef<HTMLAudioElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const hasTrack = !!track?.audioSrc;
-  const title =
-    track?.title || `${merchantName || "Your merchant"} campaign soundtrack`;
-  const description =
-    track?.description ||
-    "A custom audio asset produced for your local media campaign.";
-  const updatedLabel = track?.updatedAt
-    ? new Date(track.updatedAt).toLocaleDateString(undefined, {
-        month: "short",
-        day: "numeric",
-        year: "numeric",
-      })
-    : null;
+  const soundtrackSub = track?.title || "Custom campaign music bed";
   const progressMax = duration || 1;
   const progressValue = duration ? currentTime : 0;
 
@@ -385,103 +345,144 @@ function CampaignTrackPanel({
   };
 
   return (
-    <section className="mb-6 overflow-hidden rounded-xl border bg-card">
-      <div className="grid gap-0 2xl:grid-cols-[minmax(0,0.7fr)_minmax(360px,1.3fr)]">
-        <div className="border-b bg-muted/30 p-5 md:p-6 2xl:border-b-0 2xl:border-r">
-          <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-lg bg-primary/10 text-primary">
-            <FileAudio className="h-5 w-5" />
-          </div>
+    <section className="mb-6 overflow-hidden rounded-xl border bg-card p-5 md:p-6">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div className="min-w-0">
           <p className="text-xs font-semibold uppercase text-muted-foreground">
-            Campaign audio
+            Campaign production
           </p>
-          <h2 className="mt-1 text-2xl font-bold tracking-tight">{title}</h2>
-          <p className="mt-2 text-sm leading-6 text-muted-foreground">
-            {description}
+          <h2 className="mt-1 text-lg font-bold tracking-tight">
+            Your radio campaign is being produced
+          </h2>
+          <p className="mt-1 text-sm text-muted-foreground">
+            KLCP 96.5 FM reaches{" "}
+            <span className="font-semibold text-foreground">
+              {reachStats.radioListeners} local listeners
+            </span>{" "}
+            across {city ? `the ${city} area` : "your market"}.
           </p>
-          <div className="mt-5 flex flex-wrap gap-2">
-            <span
-              className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-semibold ${
-                hasTrack
-                  ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300"
-                  : "border-blue-500/40 bg-blue-500/10 text-blue-700 dark:text-blue-300"
-              }`}
-            >
-              {hasTrack ? (
-                <CheckCircle2 className="h-3.5 w-3.5" />
-              ) : (
-                <Clock3 className="h-3.5 w-3.5" />
-              )}
-              {hasTrack ? "Ready to play" : "In production"}
-            </span>
-            <span className="rounded-full border px-3 py-1 text-xs font-semibold text-muted-foreground">
-              {updatedLabel ? `Updated ${updatedLabel}` : "Preview pending"}
-            </span>
-          </div>
         </div>
+        <Button asChild variant="outline" size="sm" className="w-fit shrink-0">
+          <Link href="/merchant/on-air-studio">
+            Open On-Air Studio
+            <ArrowRight className="h-4 w-4" />
+          </Link>
+        </Button>
+      </div>
 
-        <div className="p-5 md:p-6">
-          <div className="flex h-full flex-col justify-center">
-            <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-              <div className="min-w-0">
-                <p className="text-base font-semibold">
-                  {hasTrack
-                    ? "Listen to your track"
-                    : "Audio preview coming soon"}
+      <ol className="mt-6 grid grid-cols-2 gap-4 sm:flex sm:gap-0">
+        {productionStages.map((stage, index) => {
+          const StageIcon = stage.icon;
+          const isLast = index === productionStages.length - 1;
+
+          return (
+            <li
+              key={stage.label}
+              className="relative flex items-start gap-3 sm:block sm:flex-1 sm:text-center"
+            >
+              {!isLast && (
+                <span
+                  aria-hidden="true"
+                  className="absolute left-[calc(50%+22px)] right-[calc(-50%+22px)] top-3.5 hidden h-px bg-border sm:block"
+                />
+              )}
+              <span
+                className={cn(
+                  "flex h-7 w-7 shrink-0 items-center justify-center rounded-full border text-xs font-bold sm:mx-auto",
+                  stage.isCurrent
+                    ? "border-blue-500/40 bg-blue-500/10 text-blue-700 dark:text-blue-300"
+                    : "bg-background text-muted-foreground",
+                )}
+              >
+                {StageIcon ? <StageIcon className="h-3.5 w-3.5" /> : stage.step}
+              </span>
+              <div className="min-w-0 sm:mt-2">
+                <p
+                  className={cn(
+                    "text-xs font-semibold",
+                    stage.isCurrent
+                      ? "text-blue-700 dark:text-blue-300"
+                      : "text-foreground",
+                  )}
+                >
+                  {stage.label}
                 </p>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  {hasTrack
-                    ? "Play the approved campaign audio without leaving the dashboard."
-                    : "Once production is approved, your finished track will be playable here."}
+                <p className="mt-0.5 text-xs text-muted-foreground">
+                  {stage.caption}
                 </p>
               </div>
-              {hasTrack ? (
-                <a
-                  href={track.audioSrc || undefined}
-                  download
-                  className="inline-flex items-center justify-center rounded-md border px-3 py-2 text-sm font-medium transition-colors hover:bg-muted"
-                >
-                  <Download className="mr-2 h-4 w-4" />
-                  Download
-                </a>
-              ) : (
-                <span className="inline-flex h-10 items-center justify-center rounded-md border px-3 text-sm font-medium text-muted-foreground">
-                  <Download className="mr-2 h-4 w-4" />
-                  Download pending
-                </span>
-              )}
+            </li>
+          );
+        })}
+      </ol>
+
+      <div className="mt-6 divide-y border-t">
+        <div className="flex items-center gap-3 py-3.5">
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-muted/60 text-muted-foreground">
+            <Mic2 className="h-4 w-4" />
+          </span>
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-semibold">Radio spot</p>
+            <p className="truncate text-xs text-muted-foreground">
+              Your produced ad for KLCP 96.5 FM
+            </p>
+          </div>
+          <span className="shrink-0 rounded-full border border-blue-500/40 bg-blue-500/10 px-2.5 py-1 text-xs font-semibold text-blue-700 dark:text-blue-300">
+            In production
+          </span>
+        </div>
+
+        <div className="py-3.5">
+          <div className="flex items-center gap-3">
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-muted/60 text-muted-foreground">
+              <Music2 className="h-4 w-4" />
+            </span>
+            <div className="min-w-0 flex-1">
+              <p className="text-sm font-semibold">Signature soundtrack</p>
+              <p className="truncate text-xs text-muted-foreground">
+                {soundtrackSub}
+              </p>
             </div>
+            <span
+              className={cn(
+                "shrink-0 rounded-full border px-2.5 py-1 text-xs font-semibold",
+                hasTrack
+                  ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300"
+                  : "border-blue-500/40 bg-blue-500/10 text-blue-700 dark:text-blue-300",
+              )}
+            >
+              {hasTrack ? "Ready to play" : "In production"}
+            </span>
+          </div>
 
-            <div className="rounded-xl border bg-background/80 p-4">
-              <div className="flex items-center gap-4">
-                <button
-                  type="button"
-                  disabled={!hasTrack}
-                  onClick={togglePlayback}
-                  aria-label={
-                    isPlaying ? "Pause campaign track" : "Play campaign track"
-                  }
-                  className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-full border text-primary transition-colors ${
-                    hasTrack
-                      ? "border-primary/30 bg-primary/10 hover:bg-primary/15"
-                      : "cursor-not-allowed border-muted bg-muted/40 text-muted-foreground"
-                  }`}
-                >
-                  {isPlaying ? (
-                    <Pause className="h-5 w-5" />
-                  ) : (
-                    <Play className="ml-0.5 h-5 w-5" />
-                  )}
-                </button>
+          <div className="mt-3 flex items-center gap-3 rounded-lg bg-muted/40 p-2.5 sm:ml-12">
+            <button
+              type="button"
+              disabled={!hasTrack}
+              onClick={togglePlayback}
+              aria-label={
+                isPlaying ? "Pause campaign track" : "Play campaign track"
+              }
+              className={cn(
+                "flex h-9 w-9 shrink-0 items-center justify-center rounded-full border transition-colors",
+                hasTrack
+                  ? "border-primary/30 bg-primary/10 text-primary hover:bg-primary/15"
+                  : "cursor-not-allowed border-muted bg-muted/40 text-muted-foreground",
+              )}
+            >
+              {isPlaying ? (
+                <Pause className="h-4 w-4" />
+              ) : (
+                <Play className="ml-0.5 h-4 w-4" />
+              )}
+            </button>
 
+            {hasTrack ? (
+              <>
                 <div className="min-w-0 flex-1">
-                  <div className="mb-2 flex items-center justify-between gap-3 text-xs font-medium text-muted-foreground">
-                    <span>{formatTrackTime(currentTime)}</span>
-                    <span>{formatTrackTime(duration)}</span>
-                  </div>
                   <input
                     aria-label="Campaign track progress"
                     className="h-2 w-full accent-primary"
-                    disabled={!hasTrack}
                     max={progressMax}
                     min={0}
                     onChange={(event) => handleSeek(event.target.value)}
@@ -489,227 +490,130 @@ function CampaignTrackPanel({
                     type="range"
                     value={progressValue}
                   />
+                  <div className="mt-1 flex items-center justify-between text-[11px] font-medium text-muted-foreground">
+                    <span>{formatTrackTime(currentTime)}</span>
+                    <span>{formatTrackTime(duration)}</span>
+                  </div>
                 </div>
+                <Button asChild variant="outline" size="sm">
+                  <a href={track?.audioSrc || undefined} download>
+                    <Download className="h-4 w-4" />
+                    Download
+                  </a>
+                </Button>
+              </>
+            ) : (
+              <>
+                <span
+                  aria-hidden="true"
+                  className="h-1 min-w-0 flex-1 rounded-full bg-border"
+                />
+                <span className="shrink-0 text-xs text-muted-foreground">
+                  Preview appears here when ready
+                </span>
+              </>
+            )}
+          </div>
 
-                <Volume2 className="hidden h-5 w-5 shrink-0 text-muted-foreground sm:block" />
-              </div>
+          <audio
+            ref={audioRef}
+            aria-label="Signature soundtrack player"
+            className="sr-only"
+            onEnded={() => setIsPlaying(false)}
+            onLoadedMetadata={(event) => {
+              setDuration(event.currentTarget.duration || 0);
+            }}
+            onPause={() => setIsPlaying(false)}
+            onPlay={() => setIsPlaying(true)}
+            onTimeUpdate={(event) => {
+              setCurrentTime(event.currentTarget.currentTime || 0);
+            }}
+            preload="metadata"
+            src={track?.audioSrc || undefined}
+          >
+            <track
+              default
+              kind="captions"
+              label="Captions"
+              src={emptyCaptionsTrack}
+            />
+          </audio>
+        </div>
 
-              <div
-                aria-hidden="true"
-                className={`mt-4 grid h-10 grid-cols-[repeat(14,minmax(0,1fr))] items-end gap-1 ${
-                  hasTrack ? "opacity-100" : "opacity-45"
-                }`}
-              >
-                {waveformBars.map((bar) => (
-                  <span
-                    key={bar.id}
-                    className="rounded-full bg-primary/55"
-                    style={{ height: `${bar.height}%` }}
-                  />
-                ))}
-              </div>
-            </div>
-
-            <audio
-              ref={audioRef}
-              aria-label={`${title} player`}
-              className="sr-only"
-              onEnded={() => setIsPlaying(false)}
-              onLoadedMetadata={(event) => {
-                setDuration(event.currentTarget.duration || 0);
-              }}
-              onPause={() => setIsPlaying(false)}
-              onPlay={() => setIsPlaying(true)}
-              onTimeUpdate={(event) => {
-                setCurrentTime(event.currentTarget.currentTime || 0);
-              }}
-              preload="metadata"
-              src={track?.audioSrc || undefined}
-            >
-              <track
-                default
-                kind="captions"
-                label="Captions"
-                src={emptyCaptionsTrack}
-              />
-            </audio>
-
-            <p className="mt-3 text-xs leading-5 text-muted-foreground">
-              {hasTrack
-                ? "This is the current approved audio connected to the merchant campaign."
-                : "Your audio file will be added here after final production is complete."}
+        <div className="flex items-center gap-3 py-3.5">
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-muted/60 text-muted-foreground">
+            <CalendarClock className="h-4 w-4" />
+          </span>
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-semibold">Airplay schedule</p>
+            <p className="truncate text-xs text-muted-foreground">
+              Opens once the spot is approved
             </p>
           </div>
+          <span className="shrink-0 rounded-full border border-amber-500/40 bg-amber-500/10 px-2.5 py-1 text-xs font-semibold text-amber-700 dark:text-amber-300">
+            After approval
+          </span>
         </div>
+      </div>
+
+      <div className="mt-4 flex items-start gap-2.5 rounded-lg bg-muted/40 p-3">
+        <Info className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
+        <p className="text-xs leading-5 text-muted-foreground">
+          {hasTrack
+            ? "Your campaign track is ready to preview. We'll send the radio spot for your approval, and airplay scheduling opens right after."
+            : "Nothing needed from you yet — we'll send the radio spot for your approval, and airplay scheduling opens right after."}
+        </p>
       </div>
     </section>
   );
 }
 
-function MarketLockDashboardCard({
+function MarketLock360UpsellCard({
   merchant,
 }: {
   merchant: MerchantPageManagementMerchant | undefined;
 }) {
-  const categoryName = merchant?.categoryName || "Mexican";
+  const categoryName = merchant?.categoryName || "Your category";
   const marketLabel =
     [merchant?.city, merchant?.state].filter(Boolean).join(", ") ||
-    "Chandler, AZ";
+    "your market";
 
   return (
     <section
       id="marketlock-360"
-      className="mb-6 w-full overflow-hidden rounded-xl border bg-card"
+      className="mb-6 overflow-hidden rounded-xl border border-primary/25 bg-gradient-to-br from-primary/[0.06] via-card to-card p-5 md:p-6"
     >
-      <div className="border-b bg-muted/30 p-5 md:p-6">
-        <div className="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
-          <div className="min-w-0">
-            <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-lg bg-primary/10 text-primary">
+      <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
+        <div className="min-w-0 lg:max-w-2xl">
+          <div className="flex items-center gap-3">
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
               <LockKeyhole className="h-5 w-5" />
-            </div>
-            <p className="text-xs font-semibold uppercase text-muted-foreground">
-              MarketLock 360
-            </p>
-            <h2 className="mt-1 text-2xl font-bold tracking-tight">
-              Unlock MarketLock360
-            </h2>
-            <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
-              Your category is reserved. MarketLock360 adds the media and local
-              reach layer for this market.
-            </p>
-          </div>
-
-          <div className="grid gap-3 sm:grid-cols-2 xl:min-w-[440px]">
-            <div className="rounded-lg border bg-background/70 p-4">
-              <p className="text-xs font-semibold uppercase text-muted-foreground">
-                Locked category
-              </p>
-              <p className="mt-1 text-xl font-bold">{categoryName}</p>
-              <span className="mt-3 inline-flex rounded-full border border-emerald-500/40 bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-700 dark:text-emerald-300">
-                Reserved
-              </span>
-            </div>
-            <div className="rounded-lg border bg-background/70 p-4">
-              <p className="text-xs font-semibold uppercase text-muted-foreground">
-                Market
-              </p>
-              <p className="mt-1 text-xl font-bold">{marketLabel}</p>
-              <span className="mt-3 inline-flex rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
-                Next unlock
-              </span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div className="p-5 md:p-6">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <p className="text-xs font-semibold uppercase text-muted-foreground">
-              Upgrade path
-            </p>
-            <h3 className="mt-1 text-xl font-semibold">
-              Build toward MarketLock360.
-            </h3>
-          </div>
-          <span className="w-fit rounded-full border border-amber-500/40 bg-amber-500/10 px-3 py-1 text-xs font-semibold text-amber-700 dark:text-amber-300">
-            {marketLockItems.length} rewards unlock
-          </span>
-        </div>
-
-        <div className="mt-5 grid gap-3 lg:grid-cols-2 2xl:grid-cols-4">
-          {marketLockLevels.map((level, index) => {
-            const Icon = level.icon;
-            const isCurrent = index === 0;
-            const isTarget = index === 1;
-
-            return (
-              <div
-                key={level.label}
-                className={`min-w-0 rounded-lg border p-4 ${
-                  isTarget
-                    ? "border-amber-500/50 bg-amber-500/10"
-                    : isCurrent
-                      ? "border-emerald-500/40 bg-emerald-500/10"
-                      : "bg-background/70"
-                }`}
-              >
-                <div className="mb-4 flex items-start justify-between gap-3">
-                  <span
-                    className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full border text-sm font-bold ${
-                      isTarget
-                        ? "border-amber-500/50 bg-amber-500/15 text-amber-700 dark:text-amber-300"
-                        : isCurrent
-                          ? "border-emerald-500/40 bg-emerald-500/15 text-emerald-700 dark:text-emerald-300"
-                          : "bg-background text-muted-foreground"
-                    }`}
-                  >
-                    {index + 1}
-                  </span>
-                  <span
-                    className={`rounded-full border px-2.5 py-1 text-xs font-semibold ${
-                      isTarget
-                        ? "border-amber-500/50 bg-background text-amber-700 dark:text-amber-300"
-                        : isCurrent
-                          ? "border-emerald-500/40 bg-background text-emerald-700 dark:text-emerald-300"
-                          : "text-muted-foreground"
-                    }`}
-                  >
-                    {level.status}
-                  </span>
-                </div>
-
-                <div className="mb-2 flex items-center gap-2">
-                  <Icon
-                    className={`h-4 w-4 ${
-                      isTarget
-                        ? "text-amber-700 dark:text-amber-300"
-                        : isCurrent
-                          ? "text-emerald-700 dark:text-emerald-300"
-                          : "text-primary"
-                    }`}
-                  />
-                  <p className="text-xs font-semibold uppercase text-muted-foreground">
-                    {level.level}
-                  </p>
-                </div>
-                <p className="text-xs font-semibold uppercase text-muted-foreground">
-                  {level.label}
-                </p>
-                <p className="mt-1 text-lg font-semibold">{level.title}</p>
-                <p className="mt-1 text-sm leading-5 text-muted-foreground">
-                  {level.detail}
-                </p>
-              </div>
-            );
-          })}
-        </div>
-
-        <div className="mt-6 border-t pt-5">
-          <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-            <p className="text-xs font-semibold uppercase text-muted-foreground">
-              MarketLock360 unlocks
-            </p>
-            <span className="rounded-full border px-3 py-1 text-xs font-semibold text-muted-foreground">
-              Core package rewards
             </span>
+            <p className="text-xs font-semibold uppercase text-muted-foreground">
+              MarketLock360 &middot; Recommended unlock
+            </p>
           </div>
-          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-            {marketLockItems.map((item) => {
+          <h2 className="mt-4 text-2xl font-bold tracking-tight">
+            Unlock MarketLock360
+          </h2>
+          <p className="mt-2 text-sm leading-6 text-muted-foreground">
+            {`Your ${categoryName} category is reserved for ${marketLabel}. MarketLock360 turns that lock into a campaign by adding the media and local reach layer for this market.`}
+          </p>
+
+          <div className="mt-5 grid gap-3 sm:grid-cols-2">
+            {marketLock360Adds.map((item) => {
               const Icon = item.icon;
 
               return (
                 <div
                   key={item.label}
-                  className="rounded-md border bg-background/70 p-4"
+                  className="rounded-lg border bg-background/70 p-3"
                 >
-                  <div className="mb-2 flex items-center gap-2">
-                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary">
-                      <Icon className="h-4 w-4" />
-                    </span>
-                    <h3 className="text-sm font-semibold">{item.label}</h3>
+                  <div className="flex items-center gap-2">
+                    <Icon className="h-4 w-4 shrink-0 text-primary" />
+                    <p className="text-sm font-semibold">{item.label}</p>
                   </div>
-                  <p className="text-sm leading-5 text-muted-foreground">
+                  <p className="mt-1 text-xs leading-5 text-muted-foreground">
                     {item.detail}
                   </p>
                 </div>
@@ -718,14 +622,62 @@ function MarketLockDashboardCard({
           </div>
         </div>
 
-        <div className="mt-5">
-          <a
-            href="/marketlock360"
-            className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
-          >
-            <ExternalLink className="mr-2 h-4 w-4" />
-            Upgrade to MarketLock360
-          </a>
+        <div className="flex shrink-0 flex-col gap-4 border-t pt-5 lg:w-64 lg:border-l lg:border-t-0 lg:pl-6 lg:pt-0">
+          <div>
+            <p className="text-xs font-semibold uppercase text-muted-foreground">
+              Upgrade path
+            </p>
+            <ol className="mt-3 space-y-2.5">
+              {upgradeSteps.map((step, index) => (
+                <li key={step.title} className="flex items-center gap-3">
+                  <span
+                    className={cn(
+                      "flex h-7 w-7 shrink-0 items-center justify-center rounded-full border text-xs font-bold",
+                      step.state === "done" &&
+                        "border-emerald-500/40 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300",
+                      step.state === "next" &&
+                        "border-primary bg-primary text-primary-foreground",
+                      step.state === "locked" &&
+                        "bg-background text-muted-foreground",
+                    )}
+                  >
+                    {step.state === "done" ? (
+                      <Check className="h-3.5 w-3.5" />
+                    ) : (
+                      index + 1
+                    )}
+                  </span>
+                  <div className="min-w-0">
+                    <p
+                      className={cn(
+                        "text-sm font-semibold leading-5",
+                        step.state === "locked" && "text-muted-foreground",
+                      )}
+                    >
+                      {step.title}
+                    </p>
+                    <p
+                      className={cn(
+                        "text-xs",
+                        step.state === "next"
+                          ? "font-semibold text-primary"
+                          : "text-muted-foreground",
+                      )}
+                    >
+                      {step.note}
+                    </p>
+                  </div>
+                </li>
+              ))}
+            </ol>
+          </div>
+
+          <Button asChild>
+            <Link href="/merchant/marketlock360">
+              Start MarketLock360 activation
+              <ArrowRight className="h-4 w-4" />
+            </Link>
+          </Button>
         </div>
       </div>
     </section>
@@ -788,9 +740,9 @@ export default function MerchantDashboard() {
 
           <MerchantActivationBanner merchant={merchant} />
 
-          <CampaignTrackPanel
+          <CampaignProductionPanel
             track={dashboardData?.campaignTrack}
-            merchantName={merchant?.businessName}
+            city={merchant?.city}
           />
 
           {merchant && pageManagement && (
@@ -800,10 +752,11 @@ export default function MerchantDashboard() {
               publicPageHref={publicPageHref}
               editHref="/merchant/profile"
               className="mb-6"
+              queueTone="opportunity"
             />
           )}
 
-          <MarketLockDashboardCard merchant={merchant} />
+          <MarketLock360UpsellCard merchant={merchant} />
         </>
       )}
     </DashboardLayout>

@@ -9,6 +9,7 @@ import {
   ImageIcon,
   type LucideIcon,
   MapPin,
+  PlusCircle,
   Tag,
   UserCircle,
 } from "lucide-react";
@@ -53,6 +54,7 @@ interface MerchantPageManagementPanelProps {
   className?: string;
   editLabel?: string;
   summaryLabel?: string;
+  queueTone?: "alert" | "opportunity";
 }
 
 export function MerchantPageManagementPanel({
@@ -63,6 +65,7 @@ export function MerchantPageManagementPanel({
   className,
   editLabel = "Edit Page Details",
   summaryLabel = "Merchant Page Management for",
+  queueTone = "alert",
 }: MerchantPageManagementPanelProps) {
   const categoryName = merchant.categoryName || "Category not selected";
   const locationLabel = [merchant.city, merchant.state]
@@ -216,12 +219,20 @@ export function MerchantPageManagementPanel({
         </div>
 
         <div className="p-5 md:p-6">
-          <p className="text-sm font-medium">Maintenance queue</p>
+          <p className="text-sm font-medium">
+            {queueTone === "opportunity"
+              ? "Quick wins for your page"
+              : "Maintenance queue"}
+          </p>
           {pageManagement.missingSections.length ? (
             <div className="mt-4 space-y-3">
               {pageManagement.missingSections.map((section) => (
                 <div key={section.label} className="flex gap-3">
-                  <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" />
+                  {queueTone === "opportunity" ? (
+                    <PlusCircle className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                  ) : (
+                    <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" />
+                  )}
                   <div className="min-w-0">
                     <p className="text-sm font-medium">{section.label}</p>
                     <p className="text-xs text-muted-foreground">
