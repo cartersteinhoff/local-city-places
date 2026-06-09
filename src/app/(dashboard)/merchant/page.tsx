@@ -278,7 +278,7 @@ function MerchantActivationBanner({
                       <Icon className="h-4 w-4" />
                     </span>
                     <span
-                      className={`rounded-full border px-2.5 py-1 text-xs font-semibold ${statusClass}`}
+                      className={`whitespace-nowrap rounded-full border px-2.5 py-1 text-xs font-semibold ${statusClass}`}
                     >
                       {item.status}
                     </span>
@@ -621,7 +621,7 @@ function MarketLockDashboardCard({
           </span>
         </div>
 
-        <div className="mt-5 grid gap-3 lg:grid-cols-2 2xl:grid-cols-4">
+        <div className="mt-5 grid gap-3 lg:grid-cols-2 xl:grid-cols-[0.9fr_1.2fr_0.95fr_0.95fr] xl:gap-4">
           {marketLockLevels.map((level, index) => {
             const Icon = level.icon;
             const isCurrent = index === 0;
@@ -635,64 +635,80 @@ function MarketLockDashboardCard({
               : isTarget
                 ? "Activate the media, mail, sweepstakes, and support package for this market."
                 : level.detail;
+            const accentClass = isTarget
+              ? "bg-primary"
+              : isCurrent
+                ? "bg-emerald-500"
+                : "bg-border";
+            const cardClass = isTarget
+              ? "border-primary/60 bg-primary/10 ring-1 ring-primary/20"
+              : isCurrent
+                ? "border-emerald-500/50 bg-emerald-500/10 ring-1 ring-emerald-500/10"
+                : "border-border bg-background/70";
+            const numberClass = isTarget
+              ? "border-primary/50 bg-primary/15 text-primary"
+              : isCurrent
+                ? "border-emerald-500/50 bg-emerald-500/15 text-emerald-700 dark:text-emerald-300"
+                : "border-border bg-muted/40 text-muted-foreground";
+            const statusClass = isTarget
+              ? "border-primary/40 bg-background text-primary"
+              : isCurrent
+                ? "border-emerald-500/40 bg-background text-emerald-700 dark:text-emerald-300"
+                : "border-border text-muted-foreground";
+            const iconClass = isTarget
+              ? "bg-primary/15 text-primary"
+              : isCurrent
+                ? "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300"
+                : "bg-muted text-primary";
 
             return (
               <div
                 key={level.label}
-                className={`min-w-0 rounded-lg border p-4 ${
-                  isTarget
-                    ? "border-amber-500/50 bg-amber-500/10"
-                    : isCurrent
-                      ? "border-emerald-500/40 bg-emerald-500/10"
-                      : "bg-background/70"
-                }`}
+                className={`relative min-w-0 overflow-hidden rounded-xl border p-4 transition-colors xl:min-h-[250px] xl:p-5 ${cardClass}`}
               >
-                <div className="mb-4 flex items-start justify-between gap-3">
-                  <span
-                    className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full border text-sm font-bold ${
-                      isTarget
-                        ? "border-amber-500/50 bg-amber-500/15 text-amber-700 dark:text-amber-300"
-                        : isCurrent
-                          ? "border-emerald-500/40 bg-emerald-500/15 text-emerald-700 dark:text-emerald-300"
-                          : "bg-background text-muted-foreground"
-                    }`}
-                  >
-                    {index + 1}
-                  </span>
-                  <span
-                    className={`rounded-full border px-2.5 py-1 text-xs font-semibold ${
-                      isTarget
-                        ? "border-amber-500/50 bg-background text-amber-700 dark:text-amber-300"
-                        : isCurrent
-                          ? "border-emerald-500/40 bg-background text-emerald-700 dark:text-emerald-300"
-                          : "text-muted-foreground"
-                    }`}
-                  >
-                    {level.status}
-                  </span>
-                </div>
+                <div
+                  className={`absolute inset-x-0 top-0 h-1 ${accentClass}`}
+                />
 
-                <div className="mb-2 flex items-center gap-2">
-                  <Icon
-                    className={`h-4 w-4 ${
-                      isTarget
-                        ? "text-amber-700 dark:text-amber-300"
-                        : isCurrent
-                          ? "text-emerald-700 dark:text-emerald-300"
-                          : "text-primary"
-                    }`}
-                  />
-                  <p className="text-xs font-semibold uppercase text-muted-foreground">
-                    {level.level}
+                <div className="flex h-full flex-col">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex items-center gap-3">
+                      <span
+                        className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full border text-base font-bold ${numberClass}`}
+                      >
+                        {index + 1}
+                      </span>
+                      <div>
+                        <p className="text-xs font-semibold uppercase text-muted-foreground">
+                          {level.level}
+                        </p>
+                        <p className="mt-0.5 text-xs font-semibold uppercase text-muted-foreground">
+                          {levelLabel}
+                        </p>
+                      </div>
+                    </div>
+                    <span
+                      className={`rounded-full border px-2.5 py-1 text-xs font-semibold ${statusClass}`}
+                    >
+                      {level.status}
+                    </span>
+                  </div>
+
+                  <div className="mt-5 flex items-center gap-2">
+                    <span
+                      className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-md ${iconClass}`}
+                    >
+                      <Icon className="h-4 w-4" />
+                    </span>
+                    <p className="text-lg font-semibold leading-tight xl:text-xl">
+                      {levelTitle}
+                    </p>
+                  </div>
+
+                  <p className="mt-3 text-sm leading-6 text-muted-foreground">
+                    {levelDetail}
                   </p>
                 </div>
-                <p className="text-xs font-semibold uppercase text-muted-foreground">
-                  {levelLabel}
-                </p>
-                <p className="mt-1 text-lg font-semibold">{levelTitle}</p>
-                <p className="mt-1 text-sm leading-5 text-muted-foreground">
-                  {levelDetail}
-                </p>
               </div>
             );
           })}
