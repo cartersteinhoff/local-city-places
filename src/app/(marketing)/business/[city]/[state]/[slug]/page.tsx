@@ -52,6 +52,7 @@ async function getMerchantBySlug(slug: string) {
       photos: merchants.photos,
       services: merchants.services,
       aboutStory: merchants.aboutStory,
+      campaignAudio: merchants.campaignAudio,
     })
     .from(merchants)
     .leftJoin(categories, eq(merchants.categoryId, categories.id))
@@ -248,6 +249,7 @@ export default async function MerchantPage({ params }: PageProps) {
     photos: merchant.photos,
     services: merchant.services,
     aboutStory: merchant.aboutStory,
+    campaignAudio: merchant.campaignAudio,
     reviews: merchantReviews,
     favoriteMerchantTestimonials: merchantNominations,
   };

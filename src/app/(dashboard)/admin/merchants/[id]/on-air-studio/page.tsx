@@ -82,6 +82,7 @@ export default function AdminMerchantOnAirStudioPage({
       ) : (
         <OnAirStudioContent
           mode="admin"
+          merchantId={id}
           merchantName={merchant?.businessName}
           campaignAudio={merchant?.campaignAudio}
           publicPageHref={merchant?.urls.full}

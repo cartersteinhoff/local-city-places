@@ -9,6 +9,7 @@ import {
   Globe2,
   LockKeyhole,
   type LucideIcon,
+  Loader2,
   Mic2,
   Music2,
   Pause,
@@ -18,7 +19,7 @@ import {
   Volume2,
 } from "lucide-react";
 import Link from "next/link";
-import { useRef, useState } from "react";
+import { type ChangeEvent, useEffect, useRef, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -27,6 +28,7 @@ type StudioMode = "merchant" | "admin";
 
 interface OnAirStudioContentProps {
   mode?: StudioMode;
+  merchantId?: string;
   merchantName?: string | null;
   publicPageHref?: string | null;
   backHref?: string;
@@ -35,6 +37,7 @@ interface OnAirStudioContentProps {
 
 type StatusTone = "active" | "ready" | "waiting";
 type DeliverableType = "audio" | "proof";
+type CampaignAudioKind = "radioSpot" | "soundtrack";
 
 interface CampaignAudioAsset {
   title: string;
@@ -212,6 +215,12 @@ function getAudioAssetForKey(
   return null;
 }
 
+function getAudioKindForKey(key: string): CampaignAudioKind | null {
+  if (key === "radio-spot") return "radioSpot";
+  if (key === "soundtrack") return "soundtrack";
+  return null;
+}
+
 function applyCampaignAudio<
   T extends {
     key: string;
@@ -239,6 +248,96 @@ function applyCampaignAudio<
       audioSrc: asset.url,
     };
   });
+}
+
+function AdminAudioUploadControl({
+  item,
+  merchantId,
+  onUploaded,
+}: {
+  item: {
+    key: string;
+    title: string;
+    description: string;
+    audioSrc?: string | null;
+  };
+  merchantId?: string;
+  onUploaded: (campaignAudio: CampaignAudio) => void;
+}) {
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const [error, setError] = useState("");
+  const kind = getAudioKindForKey(item.key);
+  const canUpload = Boolean(kind && merchantId);
+
+  const handleFileChange = async (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    setError("");
+
+    if (!file || !kind || !merchantId) return;
+
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("kind", kind);
+    if (item.audioSrc) {
+      formData.append("title", item.title);
+      formData.append("description", item.description);
+    }
+
+    setIsUploading(true);
+    try {
+      const response = await fetch(
+        `/api/admin/merchants/${merchantId}/campaign-audio`,
+        {
+          method: "POST",
+          body: formData,
+        },
+      );
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to upload audio");
+      }
+
+      onUploaded(data.campaignAudio);
+    } catch (uploadError) {
+      setError(
+        uploadError instanceof Error
+          ? uploadError.message
+          : "Failed to upload audio",
+      );
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  return (
+    <div className="space-y-2 sm:text-right">
+      <input
+        ref={inputRef}
+        accept="audio/mpeg,audio/mp4,audio/aac,audio/wav,audio/x-wav,.mp3,.m4a,.aac,.wav"
+        className="sr-only"
+        disabled={!canUpload || isUploading}
+        onChange={handleFileChange}
+        type="file"
+      />
+      <Button
+        variant="outline"
+        size="sm"
+        disabled={!canUpload || isUploading}
+        onClick={() => inputRef.current?.click()}
+      >
+        {isUploading ? (
+          <Loader2 className="h-4 w-4 animate-spin" />
+        ) : (
+          <UploadCloud className="h-4 w-4" />
+        )}
+        {item.audioSrc ? "Replace" : "Upload"}
+      </Button>
+      {error && <p className="text-xs text-destructive">{error}</p>}
+    </div>
+  );
 }
 
 function formatAudioTime(seconds: number) {
@@ -633,6 +732,7 @@ function MerchantServicesOverview({
 
 export function OnAirStudioContent({
   mode = "merchant",
+  merchantId,
   merchantName,
   publicPageHref,
   backHref,
@@ -640,18 +740,29 @@ export function OnAirStudioContent({
 }: OnAirStudioContentProps) {
   const isAdmin = mode === "admin";
   const displayName = merchantName || "your business";
+  const [localCampaignAudio, setLocalCampaignAudio] =
+    useState<CampaignAudio | null>(campaignAudio || null);
+
+  useEffect(() => {
+    setLocalCampaignAudio(campaignAudio || null);
+  }, [campaignAudio]);
+
+  const effectiveCampaignAudio = localCampaignAudio || campaignAudio;
 
   if (!isAdmin) {
     return (
       <MerchantServicesOverview
         displayName={displayName}
-        campaignAudio={campaignAudio}
+        campaignAudio={effectiveCampaignAudio}
         publicPageHref={publicPageHref}
       />
     );
   }
 
-  const studioDeliverables = applyCampaignAudio(deliverables, campaignAudio);
+  const studioDeliverables = applyCampaignAudio(
+    deliverables,
+    effectiveCampaignAudio,
+  );
   const audioDeliverables = studioDeliverables.filter(
     (item) => item.type === "audio",
   );
@@ -895,10 +1006,18 @@ export function OnAirStudioContent({
                       </p>
                     </div>
                   </div>
-                  <Button variant="outline" size="sm" disabled>
-                    <UploadCloud className="h-4 w-4" />
-                    Upload
-                  </Button>
+                  {item.type === "audio" ? (
+                    <AdminAudioUploadControl
+                      item={item}
+                      merchantId={merchantId}
+                      onUploaded={setLocalCampaignAudio}
+                    />
+                  ) : (
+                    <Button variant="outline" size="sm" disabled>
+                      <UploadCloud className="h-4 w-4" />
+                      Upload
+                    </Button>
+                  )}
                 </div>
               );
             })}

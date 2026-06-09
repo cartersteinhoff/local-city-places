@@ -34,6 +34,7 @@ export async function GET(
         photos: merchants.photos,
         services: merchants.services,
         aboutStory: merchants.aboutStory,
+        campaignAudio: merchants.campaignAudio,
       })
       .from(merchants)
       .leftJoin(categories, eq(merchants.categoryId, categories.id))

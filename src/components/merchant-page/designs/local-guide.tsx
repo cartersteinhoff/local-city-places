@@ -17,13 +17,17 @@ import {
   ChevronRight,
   Clock,
   Copy,
+  Download,
   ExternalLink,
+  FileAudio,
   Globe,
   Heart,
   Image as ImageIcon,
   MapPin,
+  Music2,
   Navigation,
   Phone,
+  RadioTower,
   Share2,
   Sparkles,
   Star,
@@ -78,6 +82,23 @@ interface FavoriteMerchantTestimonial {
   photos: string[];
 }
 
+interface CampaignAudioAsset {
+  title: string;
+  description?: string;
+  url: string;
+  fileName?: string;
+  contentType?: string;
+  sizeBytes?: number;
+  uploadedAt?: string;
+  status?: "ready" | "in_production" | "pending";
+}
+
+interface CampaignAudio {
+  radioSpot?: CampaignAudioAsset | null;
+  soundtrack?: CampaignAudioAsset | null;
+  updatedAt?: string;
+}
+
 interface MerchantPageProps {
   merchantId?: string;
   businessName: string;
@@ -99,6 +120,7 @@ interface MerchantPageProps {
   photos?: string[] | null;
   services?: Service[] | null;
   aboutStory?: string | null;
+  campaignAudio?: CampaignAudio | null;
   reviews?: MerchantReview[];
   favoriteMerchantTestimonials?: FavoriteMerchantTestimonial[];
   heroVariant?: "standard" | "photo-strip";
@@ -114,11 +136,26 @@ const dayRows: { key: keyof Hours; short: string; label: string }[] = [
   { key: "sunday", short: "Sun", label: "Sunday" },
 ];
 
+const emptyCaptionsTrack = "data:text/vtt,WEBVTT%0A%0A";
+
 function formatWebsiteLabel(website: string) {
   return website.replace(/^https?:\/\//, "").replace(/\/$/, "");
 }
 
 function formatReviewDate(date: Date | string) {
+  const parsed = new Date(date);
+  if (Number.isNaN(parsed.getTime())) return "";
+
+  return parsed.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+}
+
+function formatAudioDate(date?: string) {
+  if (!date) return "";
+
   const parsed = new Date(date);
   if (Number.isNaN(parsed.getTime())) return "";
 
@@ -433,6 +470,7 @@ export function LocalGuideDesign({
   photos,
   services,
   aboutStory,
+  campaignAudio,
   reviews,
   favoriteMerchantTestimonials,
   heroVariant = "standard",
@@ -531,6 +569,20 @@ export function LocalGuideDesign({
   const overviewFeatures = hasServices
     ? serviceItems.slice(0, 4).map((service) => service.name)
     : [];
+  const campaignAudioItems = [
+    {
+      key: "radioSpot",
+      label: "KLCP radio spot",
+      icon: RadioTower,
+      asset: campaignAudio?.radioSpot,
+    },
+    {
+      key: "soundtrack",
+      label: "Signature soundtrack",
+      icon: Music2,
+      asset: campaignAudio?.soundtrack,
+    },
+  ].filter((item) => item.asset?.url);
   const actionButtonClass =
     "inline-flex min-h-11 items-center justify-center gap-2 rounded-md px-4 text-sm font-bold transition-all";
   const contentContainerClass =
@@ -876,6 +928,100 @@ export function LocalGuideDesign({
               </div>
             )}
           </section>
+
+          {campaignAudioItems.length > 0 && (
+            <section
+              id="campaign-audio"
+              className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm"
+            >
+              <div className="border-b border-slate-100 bg-[#061B2D] p-6 text-white">
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                  <div>
+                    <p className="text-xs font-black uppercase tracking-[0.1em] text-[#93C5FD]">
+                      Campaign audio
+                    </p>
+                    <h2 className="mt-2 text-2xl font-black tracking-normal">
+                      Hear {businessName} on KLCP
+                    </h2>
+                    <p className="mt-2 max-w-2xl text-sm leading-6 text-white/76">
+                      Listen to the finished campaign audio produced for this
+                      featured local place.
+                    </p>
+                  </div>
+                  <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-md bg-white/10 text-white">
+                    <RadioTower className="h-6 w-6" />
+                  </span>
+                </div>
+              </div>
+
+              <div className="divide-y divide-slate-100">
+                {campaignAudioItems.map((item) => {
+                  const asset = item.asset;
+                  if (!asset?.url) return null;
+
+                  const Icon = item.icon;
+                  const updatedLabel = formatAudioDate(asset.uploadedAt);
+
+                  return (
+                    <article key={item.key} className="p-5 sm:p-6">
+                      <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+                        <div className="flex min-w-0 items-start gap-3">
+                          <span className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-[#EEF4FF] text-[#2563EB]">
+                            <Icon className="h-5 w-5" />
+                          </span>
+                          <div className="min-w-0">
+                            <p className="text-xs font-black uppercase tracking-[0.1em] text-slate-500">
+                              {item.label}
+                            </p>
+                            <h3 className="mt-1 text-lg font-black text-slate-950">
+                              {asset.title}
+                            </h3>
+                            {asset.description && (
+                              <p className="mt-1 text-sm leading-6 text-slate-600">
+                                {asset.description}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                        <a
+                          href={asset.url}
+                          download
+                          className="inline-flex min-h-10 shrink-0 items-center justify-center gap-2 rounded-md border border-slate-200 px-3 text-sm font-bold text-slate-700 transition-colors hover:border-[#2563EB]/40 hover:text-[#2563EB]"
+                        >
+                          <Download className="h-4 w-4" />
+                          Download
+                        </a>
+                      </div>
+
+                      <div className="mt-4 rounded-md border border-slate-200 bg-slate-50 p-3">
+                        <div className="mb-2 flex items-center gap-2 text-xs font-bold text-slate-500">
+                          <FileAudio className="h-4 w-4 text-[#2563EB]" />
+                          <span>
+                            {updatedLabel
+                              ? `Updated ${updatedLabel}`
+                              : "Ready to play"}
+                          </span>
+                        </div>
+                        <audio
+                          controls
+                          preload="metadata"
+                          src={asset.url}
+                          className="h-10 w-full accent-[#2563EB]"
+                        >
+                          <track
+                            default
+                            kind="captions"
+                            label="Captions"
+                            src={emptyCaptionsTrack}
+                          />
+                        </audio>
+                      </div>
+                    </article>
+                  );
+                })}
+              </div>
+            </section>
+          )}
 
           {hasPhotos && (
             <section

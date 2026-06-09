@@ -35,6 +35,20 @@ interface MerchantData {
   photos: string[] | null;
   services: { name: string; description?: string; price?: string }[] | null;
   aboutStory: string | null;
+  campaignAudio: {
+    radioSpot?: {
+      title: string;
+      description?: string;
+      url: string;
+      uploadedAt?: string;
+    } | null;
+    soundtrack?: {
+      title: string;
+      description?: string;
+      url: string;
+      uploadedAt?: string;
+    } | null;
+  } | null;
 }
 
 export default function PreviewPage() {
@@ -99,6 +113,7 @@ export default function PreviewPage() {
           photos={merchant.photos}
           services={merchant.services}
           aboutStory={merchant.aboutStory}
+          campaignAudio={merchant.campaignAudio}
         />
       </main>
       <Footer variant="dark" />
