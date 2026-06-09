@@ -128,14 +128,14 @@ const activationItems = [
   {
     label: "Category",
     value: "category",
-    detail: "Exclusive category position is activated for this market.",
+    detail: "Exclusive category position is active in the selected city.",
     status: "Active",
     icon: ShieldCheck,
   },
   {
     label: "MarketLock status",
     value: "market",
-    detail: "Your local market position is reserved and protected.",
+    detail: "The city and category are reserved together.",
     status: "Active",
     icon: LockKeyhole,
   },
@@ -224,6 +224,7 @@ function MerchantActivationBanner({
   const marketLabel =
     [merchant?.city, merchant?.state].filter(Boolean).join(", ") ||
     "Your market";
+  const cityCategoryLock = `${categoryName} in ${marketLabel}`;
 
   return (
     <section className="mb-6 overflow-hidden rounded-xl border bg-card">
@@ -232,15 +233,16 @@ function MerchantActivationBanner({
           <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
             <div className="min-w-0">
               <p className="text-xs font-semibold uppercase text-muted-foreground">
-                Activated market package
+                City and category lock
               </p>
               <h2 className="mt-2 text-2xl font-bold tracking-tight text-foreground md:text-3xl">
-                {categoryName} category lock is active
+                {cityCategoryLock} is locked down
               </h2>
               <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
-                The core merchant campaign is turned on for {marketLabel}, with
-                radio production already moving and MarketLock360 upgrades ready
-                to add more reach.
+                Your campaign is anchored to this exact city and category:{" "}
+                {cityCategoryLock}. Radio production is already moving, and
+                MarketLock360 upgrades are ready to add more reach on top of the
+                locked position.
               </p>
             </div>
 
@@ -250,7 +252,7 @@ function MerchantActivationBanner({
                 Activated
               </span>
               <span className="rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
-                MarketLock ready
+                City + category locked
               </span>
             </div>
           </div>
