@@ -83,18 +83,18 @@ const marketLockItems = [
 const marketLockLevels = [
   {
     level: "Level 1",
-    label: "Current position",
-    title: "City + category reserved",
-    detail: "Your starting position is ready for MarketLock360.",
-    status: "Reserved",
+    label: "Current",
+    title: "Reserved category",
+    detail: "Your local category is held for this market.",
+    status: "You are here",
     icon: ShieldCheck,
   },
   {
     level: "Level 2",
-    label: "Recommended package",
+    label: "Recommended unlock",
     title: "MarketLock360",
-    detail: "Turn on media, mail, sweepstakes, and local growth support.",
-    status: "Next step",
+    detail: "Category position plus local media package.",
+    status: "Upgrade target",
     icon: LockKeyhole,
   },
   {
@@ -128,14 +128,14 @@ const activationItems = [
   {
     label: "Category",
     value: "category",
-    detail: "Exclusive category position is active in the selected city.",
+    detail: "Exclusive category position is activated for this market.",
     status: "Active",
     icon: ShieldCheck,
   },
   {
-    label: "City",
+    label: "MarketLock status",
     value: "market",
-    detail: "Locked with the selected category.",
+    detail: "Your local market position is reserved and protected.",
     status: "Active",
     icon: LockKeyhole,
   },
@@ -224,7 +224,6 @@ function MerchantActivationBanner({
   const marketLabel =
     [merchant?.city, merchant?.state].filter(Boolean).join(", ") ||
     "Your market";
-  const cityCategoryLock = `${categoryName} in ${marketLabel}`;
 
   return (
     <section className="mb-6 overflow-hidden rounded-xl border bg-card">
@@ -233,16 +232,15 @@ function MerchantActivationBanner({
           <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
             <div className="min-w-0">
               <p className="text-xs font-semibold uppercase text-muted-foreground">
-                City and category lock
+                Activated market package
               </p>
               <h2 className="mt-2 text-2xl font-bold tracking-tight text-foreground md:text-3xl">
-                {cityCategoryLock} is locked down
+                {categoryName} category lock is active
               </h2>
               <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
-                Your campaign is anchored to this exact city and category:{" "}
-                {cityCategoryLock}. Radio production is already moving, and
-                MarketLock360 upgrades are ready to add more reach on top of the
-                locked position.
+                The core merchant campaign is turned on for {marketLabel}, with
+                radio production already moving and MarketLock360 upgrades ready
+                to add more reach.
               </p>
             </div>
 
@@ -252,7 +250,7 @@ function MerchantActivationBanner({
                 Activated
               </span>
               <span className="rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
-                City + category locked
+                MarketLock ready
               </span>
             </div>
           </div>
@@ -278,7 +276,7 @@ function MerchantActivationBanner({
                       <Icon className="h-4 w-4" />
                     </span>
                     <span
-                      className={`whitespace-nowrap rounded-full border px-2.5 py-1 text-xs font-semibold ${statusClass}`}
+                      className={`rounded-full border px-2.5 py-1 text-xs font-semibold ${statusClass}`}
                     >
                       {item.status}
                     </span>
@@ -300,10 +298,10 @@ function MerchantActivationBanner({
 
         <div className="border-t bg-muted/30 p-5 md:p-6 2xl:border-l 2xl:border-t-0">
           <p className="text-xs font-semibold uppercase text-muted-foreground">
-            Get MarketLock360
+            MarketLock360 adds
           </p>
           <h3 className="mt-2 text-xl font-bold tracking-tight">
-            Turn the lock into a campaign
+            More local reach when upgraded
           </h3>
           <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4 2xl:grid-cols-1">
             {marketLock360Adds.map((item) => {
@@ -329,7 +327,7 @@ function MerchantActivationBanner({
             className="mt-5 inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
           >
             <ExternalLink className="mr-2 h-4 w-4" />
-            Get MarketLock360
+            View MarketLock360
           </a>
         </div>
       </div>
@@ -557,7 +555,6 @@ function MarketLockDashboardCard({
   const marketLabel =
     [merchant?.city, merchant?.state].filter(Boolean).join(", ") ||
     "Chandler, AZ";
-  const cityCategoryLock = `${categoryName} in ${marketLabel}`;
 
   return (
     <section
@@ -571,22 +568,21 @@ function MarketLockDashboardCard({
               <LockKeyhole className="h-5 w-5" />
             </div>
             <p className="text-xs font-semibold uppercase text-muted-foreground">
-              MarketLock360 upgrade
+              MarketLock 360
             </p>
             <h2 className="mt-1 text-2xl font-bold tracking-tight">
-              Get MarketLock360 for this market
+              Unlock MarketLock360
             </h2>
             <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
-              {cityCategoryLock} is reserved. MarketLock360 is the next step: it
-              turns that position into radio, direct mail, sweepstakes traffic,
-              and local growth support.
+              Your category is reserved. MarketLock360 adds the media and local
+              reach layer for this market.
             </p>
           </div>
 
           <div className="grid gap-3 sm:grid-cols-2 xl:min-w-[440px]">
             <div className="rounded-lg border bg-background/70 p-4">
               <p className="text-xs font-semibold uppercase text-muted-foreground">
-                Reserved category
+                Locked category
               </p>
               <p className="mt-1 text-xl font-bold">{categoryName}</p>
               <span className="mt-3 inline-flex rounded-full border border-emerald-500/40 bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-700 dark:text-emerald-300">
@@ -595,11 +591,11 @@ function MarketLockDashboardCard({
             </div>
             <div className="rounded-lg border bg-background/70 p-4">
               <p className="text-xs font-semibold uppercase text-muted-foreground">
-                Reserved city
+                Market
               </p>
               <p className="mt-1 text-xl font-bold">{marketLabel}</p>
-              <span className="mt-3 inline-flex rounded-full border border-emerald-500/40 bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-700 dark:text-emerald-300">
-                Reserved
+              <span className="mt-3 inline-flex rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
+                Next unlock
               </span>
             </div>
           </div>
@@ -613,102 +609,77 @@ function MarketLockDashboardCard({
               Upgrade path
             </p>
             <h3 className="mt-1 text-xl font-semibold">
-              Your next step is MarketLock360.
+              Build toward MarketLock360.
             </h3>
           </div>
           <span className="w-fit rounded-full border border-amber-500/40 bg-amber-500/10 px-3 py-1 text-xs font-semibold text-amber-700 dark:text-amber-300">
-            {marketLockItems.length} tools in MarketLock360
+            {marketLockItems.length} rewards unlock
           </span>
         </div>
 
-        <div className="mt-5 grid gap-3 lg:grid-cols-2 xl:grid-cols-[0.9fr_1.2fr_0.95fr_0.95fr] xl:gap-4">
+        <div className="mt-5 grid gap-3 lg:grid-cols-2 2xl:grid-cols-4">
           {marketLockLevels.map((level, index) => {
             const Icon = level.icon;
             const isCurrent = index === 0;
             const isTarget = index === 1;
-            const levelLabel = isTarget ? "Get MarketLock360" : level.label;
-            const levelTitle = isCurrent
-              ? "City + category reserved"
-              : level.title;
-            const levelDetail = isCurrent
-              ? `${categoryName} in ${marketLabel} is ready for MarketLock360.`
-              : isTarget
-                ? "Activate the media, mail, sweepstakes, and support package for this market."
-                : level.detail;
-            const accentClass = isTarget
-              ? "bg-primary"
-              : isCurrent
-                ? "bg-emerald-500"
-                : "bg-border";
-            const cardClass = isTarget
-              ? "border-primary/60 bg-primary/10 ring-1 ring-primary/20"
-              : isCurrent
-                ? "border-emerald-500/50 bg-emerald-500/10 ring-1 ring-emerald-500/10"
-                : "border-border bg-background/70";
-            const numberClass = isTarget
-              ? "border-primary/50 bg-primary/15 text-primary"
-              : isCurrent
-                ? "border-emerald-500/50 bg-emerald-500/15 text-emerald-700 dark:text-emerald-300"
-                : "border-border bg-muted/40 text-muted-foreground";
-            const statusClass = isTarget
-              ? "border-primary/40 bg-background text-primary"
-              : isCurrent
-                ? "border-emerald-500/40 bg-background text-emerald-700 dark:text-emerald-300"
-                : "border-border text-muted-foreground";
-            const iconClass = isTarget
-              ? "bg-primary/15 text-primary"
-              : isCurrent
-                ? "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300"
-                : "bg-muted text-primary";
 
             return (
               <div
                 key={level.label}
-                className={`relative min-w-0 overflow-hidden rounded-xl border p-4 transition-colors xl:min-h-[250px] xl:p-5 ${cardClass}`}
+                className={`min-w-0 rounded-lg border p-4 ${
+                  isTarget
+                    ? "border-amber-500/50 bg-amber-500/10"
+                    : isCurrent
+                      ? "border-emerald-500/40 bg-emerald-500/10"
+                      : "bg-background/70"
+                }`}
               >
-                <div
-                  className={`absolute inset-x-0 top-0 h-1 ${accentClass}`}
-                />
+                <div className="mb-4 flex items-start justify-between gap-3">
+                  <span
+                    className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full border text-sm font-bold ${
+                      isTarget
+                        ? "border-amber-500/50 bg-amber-500/15 text-amber-700 dark:text-amber-300"
+                        : isCurrent
+                          ? "border-emerald-500/40 bg-emerald-500/15 text-emerald-700 dark:text-emerald-300"
+                          : "bg-background text-muted-foreground"
+                    }`}
+                  >
+                    {index + 1}
+                  </span>
+                  <span
+                    className={`rounded-full border px-2.5 py-1 text-xs font-semibold ${
+                      isTarget
+                        ? "border-amber-500/50 bg-background text-amber-700 dark:text-amber-300"
+                        : isCurrent
+                          ? "border-emerald-500/40 bg-background text-emerald-700 dark:text-emerald-300"
+                          : "text-muted-foreground"
+                    }`}
+                  >
+                    {level.status}
+                  </span>
+                </div>
 
-                <div className="flex h-full flex-col">
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="flex items-center gap-3">
-                      <span
-                        className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full border text-base font-bold ${numberClass}`}
-                      >
-                        {index + 1}
-                      </span>
-                      <div>
-                        <p className="text-xs font-semibold uppercase text-muted-foreground">
-                          {level.level}
-                        </p>
-                        <p className="mt-0.5 text-xs font-semibold uppercase text-muted-foreground">
-                          {levelLabel}
-                        </p>
-                      </div>
-                    </div>
-                    <span
-                      className={`rounded-full border px-2.5 py-1 text-xs font-semibold ${statusClass}`}
-                    >
-                      {level.status}
-                    </span>
-                  </div>
-
-                  <div className="mt-5 flex items-center gap-2">
-                    <span
-                      className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-md ${iconClass}`}
-                    >
-                      <Icon className="h-4 w-4" />
-                    </span>
-                    <p className="text-lg font-semibold leading-tight xl:text-xl">
-                      {levelTitle}
-                    </p>
-                  </div>
-
-                  <p className="mt-3 text-sm leading-6 text-muted-foreground">
-                    {levelDetail}
+                <div className="mb-2 flex items-center gap-2">
+                  <Icon
+                    className={`h-4 w-4 ${
+                      isTarget
+                        ? "text-amber-700 dark:text-amber-300"
+                        : isCurrent
+                          ? "text-emerald-700 dark:text-emerald-300"
+                          : "text-primary"
+                    }`}
+                  />
+                  <p className="text-xs font-semibold uppercase text-muted-foreground">
+                    {level.level}
                   </p>
                 </div>
+                <p className="text-xs font-semibold uppercase text-muted-foreground">
+                  {level.label}
+                </p>
+                <p className="mt-1 text-lg font-semibold">{level.title}</p>
+                <p className="mt-1 text-sm leading-5 text-muted-foreground">
+                  {level.detail}
+                </p>
               </div>
             );
           })}
@@ -717,10 +688,10 @@ function MarketLockDashboardCard({
         <div className="mt-6 border-t pt-5">
           <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
             <p className="text-xs font-semibold uppercase text-muted-foreground">
-              What MarketLock360 includes
+              MarketLock360 unlocks
             </p>
             <span className="rounded-full border px-3 py-1 text-xs font-semibold text-muted-foreground">
-              Core package tools
+              Core package rewards
             </span>
           </div>
           <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
@@ -753,7 +724,7 @@ function MarketLockDashboardCard({
             className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
           >
             <ExternalLink className="mr-2 h-4 w-4" />
-            Get MarketLock360
+            Upgrade to MarketLock360
           </a>
         </div>
       </div>
