@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
-import {
-  FEATURED_MERCHANT_CACHE_SECONDS,
-  getFeaturedMerchants,
-} from "@/lib/featured-merchants";
+import { getFeaturedMerchants } from "@/lib/featured-merchants";
+
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 export async function GET() {
   try {
@@ -12,7 +12,7 @@ export async function GET() {
       { merchants: featured },
       {
         headers: {
-          "Cache-Control": `public, s-maxage=${FEATURED_MERCHANT_CACHE_SECONDS}, stale-while-revalidate=86400`,
+          "Cache-Control": "no-store",
         },
       },
     );
@@ -24,5 +24,3 @@ export async function GET() {
     );
   }
 }
-
-export const revalidate = 3600;

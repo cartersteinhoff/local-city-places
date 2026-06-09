@@ -15,7 +15,6 @@ import {
   reviews,
   users,
 } from "@/db/schema";
-import { getMerchantPageUrl } from "@/lib/utils";
 
 // Cache pages, auto-revalidate every hour as fallback
 // Admin can manually trigger rebuild for instant updates
@@ -254,17 +253,9 @@ export default async function MerchantPage({ params }: PageProps) {
     reviews: merchantReviews,
     favoriteMerchantTestimonials: merchantNominations,
   };
-  const publicPageHref =
-    merchant.city && merchant.state && merchant.slug
-      ? getMerchantPageUrl(merchant.city, merchant.state, merchant.slug)
-      : null;
-
   return (
     <div className="relative flex min-h-screen flex-col bg-[#F5F7FB]">
-      <HomeHeader
-        contextLabel={merchant.businessName}
-        contextHref={publicPageHref}
-      />
+      <HomeHeader />
       <main className="flex-1">
         <PhotoStripDesign {...merchantPageProps} />
       </main>

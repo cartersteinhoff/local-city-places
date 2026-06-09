@@ -1,8 +1,7 @@
-import { and, asc, desc, eq } from "drizzle-orm";
+import { asc, desc, eq } from "drizzle-orm";
 import { categories, db, merchants } from "@/db";
 import type { FeaturedMerchant } from "@/lib/featured-merchants-types";
 
-export const FEATURED_MERCHANT_CACHE_SECONDS = 3600;
 const FEATURED_MERCHANT_LIMIT = 30;
 
 function getCappedLimit(limit: number) {
@@ -33,12 +32,7 @@ export async function getFeaturedMerchants(
     })
     .from(merchants)
     .leftJoin(categories, eq(merchants.categoryId, categories.id))
-    .where(
-      and(
-        eq(merchants.featuredOnHomepage, true),
-        eq(merchants.isPublicPage, true),
-      ),
-    )
+    .where(eq(merchants.featuredOnHomepage, true))
     .orderBy(desc(merchants.createdAt), asc(merchants.businessName))
     .limit(cappedLimit);
 
