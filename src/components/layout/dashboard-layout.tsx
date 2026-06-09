@@ -1,13 +1,23 @@
 "use client";
 
+import { usePathname } from "next/navigation";
+import { cn } from "@/lib/utils";
 import { MobileHeader } from "./mobile-header";
 import { MobileNav } from "./mobile-nav";
 import { Sidebar } from "./sidebar";
 import type { DashboardLayoutProps } from "./types";
 
 export function DashboardLayout({ children, navItems }: DashboardLayoutProps) {
+  const pathname = usePathname();
+  const isAdminView = pathname.startsWith("/admin");
+
   return (
-    <div className="min-h-screen bg-background">
+    <div
+      className={cn(
+        "min-h-screen bg-background",
+        isAdminView && "admin-dashboard-shell",
+      )}
+    >
       <div className="flex">
         {/* Sidebar (desktop/tablet) */}
         <Sidebar navItems={navItems} />

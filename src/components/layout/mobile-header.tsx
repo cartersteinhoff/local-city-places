@@ -15,6 +15,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useUser } from "@/hooks/use-user";
+import { cn } from "@/lib/utils";
 
 const roleConfig = {
   admin: {
@@ -66,7 +67,7 @@ export function MobileHeader() {
   const isAdmin = user?.role === "admin";
 
   return (
-    <header className="md:hidden h-14 bg-card border-b border-border flex items-center justify-between px-4 sticky top-0 z-40">
+    <header className="admin-dashboard-mobile-header md:hidden h-14 bg-card border-b border-border flex items-center justify-between px-4 sticky top-0 z-40">
       {/* Logo */}
       <Link
         href="/"
@@ -114,7 +115,14 @@ export function MobileHeader() {
               </Avatar>
             </button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-56">
+          <DropdownMenuContent
+            align="end"
+            className={cn(
+              "w-56",
+              currentView === "admin" &&
+                "dark:border-sky-300/20 dark:bg-[#08233a] dark:text-slate-50",
+            )}
+          >
             {/* User Info Header */}
             <div className="px-3 py-2">
               <p className="text-sm font-medium">{displayName}</p>

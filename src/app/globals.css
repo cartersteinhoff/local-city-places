@@ -124,6 +124,44 @@
   --sidebar-ring: oklch(0.646 0.222 41.116);
 }
 
+.dark .admin-dashboard-shell {
+  --background: #04131f;
+  --foreground: #f8fbff;
+  --card: #08233a;
+  --card-foreground: #f8fbff;
+  --popover: #08233a;
+  --popover-foreground: #f8fbff;
+  --secondary: #0b2f4d;
+  --secondary-foreground: #f8fbff;
+  --muted: #0b2f4d;
+  --muted-foreground: #b7cee3;
+  --accent: #0e4167;
+  --accent-foreground: #f8fbff;
+  --border: rgba(148, 197, 235, 0.18);
+  --input: rgba(148, 197, 235, 0.22);
+  --sidebar: #06213a;
+  --sidebar-foreground: #f8fbff;
+  --sidebar-accent: rgba(148, 197, 235, 0.12);
+  --sidebar-accent-foreground: #f8fbff;
+  --sidebar-border: rgba(148, 197, 235, 0.18);
+  background:
+    radial-gradient(circle at 10% 0%, rgba(56, 189, 248, 0.16), transparent 34%),
+    linear-gradient(135deg, #04131f 0%, #01233f 54%, #063860 100%);
+}
+
+.dark .admin-dashboard-shell .admin-dashboard-sidebar {
+  background:
+    radial-gradient(circle at 12% 0%, rgba(56, 189, 248, 0.18), transparent 36%),
+    linear-gradient(180deg, #063860 0%, #01233f 56%, #04131f 100%);
+  box-shadow: inset -1px 0 rgba(148, 197, 235, 0.12);
+}
+
+.dark .admin-dashboard-shell .admin-dashboard-mobile-header,
+.dark .admin-dashboard-shell .admin-dashboard-mobile-nav,
+.dark .admin-dashboard-shell .admin-dashboard-mobile-nav-safe-area {
+  background: linear-gradient(135deg, #063860 0%, #01233f 58%, #04131f 100%);
+}
+
 /* Primary gradient utility */
 .bg-primary-gradient {
   background: linear-gradient(

@@ -336,6 +336,7 @@ export function Sidebar({
   return (
     <aside
       className={cn(
+        "admin-dashboard-sidebar",
         "sticky top-0 hidden h-screen flex-col border-r border-sidebar-border bg-sidebar transition-all duration-200 md:flex",
         isCollapsed ? "w-16" : "w-64",
       )}
@@ -462,7 +463,15 @@ export function Sidebar({
                 )}
               </button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent side="top" align="start" className="w-56">
+            <DropdownMenuContent
+              side="top"
+              align="start"
+              className={cn(
+                "w-56",
+                currentView === "admin" &&
+                  "dark:border-sky-300/20 dark:bg-[#08233a] dark:text-slate-50",
+              )}
+            >
               {/* User Info Header */}
               <div className="px-3 py-2">
                 <p className="text-sm font-medium">{displayName}</p>
