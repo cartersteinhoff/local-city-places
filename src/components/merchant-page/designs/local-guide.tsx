@@ -26,17 +26,20 @@ import {
   MapPin,
   Music2,
   Navigation,
+  Pause,
   Phone,
+  Play,
   RadioTower,
   Share2,
   Sparkles,
   Star,
   Tag,
   Utensils,
+  Volume2,
   X,
 } from "lucide-react";
 import Image from "next/image";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Facebook, Instagram } from "@/components/icons/social-icons";
 import { formatHoursDisplay, formatPhoneNumber } from "@/lib/utils";
 import {
@@ -164,6 +167,151 @@ function formatAudioDate(date?: string) {
     day: "numeric",
     year: "numeric",
   });
+}
+
+function formatAudioTime(seconds: number) {
+  if (!Number.isFinite(seconds) || seconds <= 0) return "0:00";
+
+  const minutes = Math.floor(seconds / 60);
+  const remainingSeconds = Math.floor(seconds % 60);
+
+  return `${minutes}:${remainingSeconds.toString().padStart(2, "0")}`;
+}
+
+function PublicCampaignAudioPlayer({
+  audioSrc,
+  title,
+  updatedLabel,
+  stationLabel,
+}: {
+  audioSrc: string;
+  title: string;
+  updatedLabel: string;
+  stationLabel: string;
+}) {
+  const audioRef = useRef<HTMLAudioElement>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [duration, setDuration] = useState(0);
+  const [currentTime, setCurrentTime] = useState(0);
+
+  const progress = duration
+    ? Math.min(100, Math.max(0, (currentTime / duration) * 100))
+    : 0;
+
+  useEffect(() => {
+    setIsPlaying(false);
+    setDuration(0);
+    setCurrentTime(0);
+    audioRef.current?.load();
+  }, [audioSrc]);
+
+  const togglePlayback = async () => {
+    const audio = audioRef.current;
+    if (!audio) return;
+
+    if (audio.paused) {
+      try {
+        await audio.play();
+        setIsPlaying(true);
+      } catch {
+        setIsPlaying(false);
+      }
+      return;
+    }
+
+    audio.pause();
+    setIsPlaying(false);
+  };
+
+  const handleSeek = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const audio = audioRef.current;
+    if (!audio || !duration) return;
+
+    const nextTime = Number(event.target.value);
+    audio.currentTime = nextTime;
+    setCurrentTime(nextTime);
+  };
+
+  const handleLoadedMetadata = () => {
+    const audio = audioRef.current;
+    const nextDuration = audio?.duration || 0;
+    setDuration(Number.isFinite(nextDuration) ? nextDuration : 0);
+  };
+
+  return (
+    <div className="overflow-hidden rounded-lg border border-[#123B5F] bg-[#061B2D] text-white shadow-[0_16px_34px_rgba(2,18,32,0.18)]">
+      <div className="flex flex-col gap-5 p-4 sm:flex-row sm:items-center sm:p-5">
+        <button
+          type="button"
+          onClick={togglePlayback}
+          aria-label={isPlaying ? `Pause ${title}` : `Play ${title}`}
+          aria-pressed={isPlaying}
+          className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-[#FF6A00] text-white shadow-[0_10px_24px_rgba(255,106,0,0.34)] transition-transform hover:scale-[1.03] focus:outline-none focus:ring-2 focus:ring-[#FFB46E] focus:ring-offset-2 focus:ring-offset-[#061B2D]"
+        >
+          {isPlaying ? (
+            <Pause className="h-5 w-5" fill="currentColor" />
+          ) : (
+            <Play className="ml-0.5 h-5 w-5" fill="currentColor" />
+          )}
+        </button>
+
+        <div className="min-w-0 flex-1">
+          <div className="mb-3 flex flex-wrap items-center gap-2">
+            <span className="inline-flex items-center gap-1.5 rounded-md border border-white/12 bg-white/8 px-2.5 py-1 text-[11px] font-black uppercase tracking-[0.08em] text-[#93C5FD]">
+              <RadioTower className="h-3.5 w-3.5" />
+              {stationLabel}
+            </span>
+            <span className="inline-flex items-center gap-1.5 rounded-md border border-white/12 bg-white/8 px-2.5 py-1 text-[11px] font-bold text-white/72">
+              <FileAudio className="h-3.5 w-3.5 text-white/60" />
+              {updatedLabel || "Final audio"}
+            </span>
+          </div>
+
+          <input
+            aria-label={`Seek ${title}`}
+            type="range"
+            min={0}
+            max={duration || 0}
+            step={0.1}
+            value={duration ? currentTime : 0}
+            onChange={handleSeek}
+            disabled={!duration}
+            className="h-2 w-full cursor-pointer appearance-none rounded-full accent-[#FF6A00] disabled:cursor-not-allowed disabled:opacity-60"
+            style={{
+              background: `linear-gradient(to right, #FF6A00 0%, #FF6A00 ${progress}%, rgba(255,255,255,0.18) ${progress}%, rgba(255,255,255,0.18) 100%)`,
+            }}
+          />
+
+          <div className="mt-2 flex items-center justify-between gap-3 text-xs font-bold text-white/64">
+            <span>{formatAudioTime(currentTime)}</span>
+            <span className="inline-flex items-center gap-1.5">
+              <Volume2 className="h-3.5 w-3.5" />
+              {duration ? formatAudioTime(duration) : "Loading"}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <audio
+        ref={audioRef}
+        preload="metadata"
+        src={audioSrc}
+        onEnded={() => setIsPlaying(false)}
+        onDurationChange={handleLoadedMetadata}
+        onLoadedMetadata={handleLoadedMetadata}
+        onPause={() => setIsPlaying(false)}
+        onPlay={() => setIsPlaying(true)}
+        onTimeUpdate={(event) => setCurrentTime(event.currentTarget.currentTime)}
+      >
+        <track
+          default
+          kind="captions"
+          label="Captions"
+          src={emptyCaptionsTrack}
+        />
+      </audio>
+    </div>
+  );
 }
 
 function getReviewerName(review: MerchantReview) {
@@ -573,16 +721,31 @@ export function LocalGuideDesign({
     {
       key: "radioSpot",
       label: "KLCP radio spot",
+      stationLabel: "KLCP 96.5 FM",
+      description: `A finished KLCP spot created for ${businessName} and ready for local listeners.`,
+      downloadLabel: "Download spot",
       icon: RadioTower,
       asset: campaignAudio?.radioSpot,
     },
     {
       key: "soundtrack",
       label: "Signature soundtrack",
+      stationLabel: "Campaign bed",
+      description: `Custom campaign music created to support the ${businessName} local media package.`,
+      downloadLabel: "Download track",
       icon: Music2,
       asset: campaignAudio?.soundtrack,
     },
   ].filter((item) => item.asset?.url);
+  const hasRadioSpot = campaignAudioItems.some(
+    (item) => item.key === "radioSpot",
+  );
+  const campaignAudioHeading = hasRadioSpot
+    ? `Hear the ${businessName} KLCP radio spot`
+    : `${businessName} campaign audio`;
+  const campaignAudioDescription = hasRadioSpot
+    ? `Produced for ${businessName} as part of its Local City Places feature on KLCP 96.5 FM.`
+    : `Listen to the finished audio assets created for the Local City Places campaign behind ${businessName}.`;
   const actionButtonClass =
     "inline-flex min-h-11 items-center justify-center gap-2 rounded-md px-4 text-sm font-bold transition-all";
   const contentContainerClass =
@@ -932,25 +1095,25 @@ export function LocalGuideDesign({
           {campaignAudioItems.length > 0 && (
             <section
               id="campaign-audio"
-              className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm"
+              className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-[0_18px_42px_rgba(15,23,42,0.09)]"
             >
-              <div className="border-b border-slate-100 bg-[#061B2D] p-6 text-white">
-                <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-                  <div>
-                    <p className="text-xs font-black uppercase tracking-[0.1em] text-[#93C5FD]">
-                      Campaign audio
+              <div className="relative overflow-hidden border-b border-slate-100 bg-[#061B2D] p-6 text-white sm:p-7">
+                <div className="absolute inset-y-0 right-0 hidden w-1/2 bg-[radial-gradient(circle_at_70%_35%,rgba(255,106,0,0.22),transparent_32%),radial-gradient(circle_at_82%_75%,rgba(37,99,235,0.26),transparent_34%)] sm:block" />
+                <div className="relative flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
+                  <div className="max-w-3xl">
+                    <p className="text-xs font-black uppercase tracking-[0.14em] text-[#93C5FD]">
+                      KLCP campaign audio
                     </p>
-                    <h2 className="mt-2 text-2xl font-black tracking-normal">
-                      Hear {businessName} on KLCP
+                    <h2 className="mt-3 text-3xl font-black leading-tight tracking-normal sm:text-4xl">
+                      {campaignAudioHeading}
                     </h2>
-                    <p className="mt-2 max-w-2xl text-sm leading-6 text-white/76">
-                      Listen to the finished campaign audio produced for this
-                      featured local place.
+                    <p className="mt-3 max-w-2xl text-base leading-7 text-white/78">
+                      {campaignAudioDescription}
                     </p>
                   </div>
-                  <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-md bg-white/10 text-white">
-                    <RadioTower className="h-6 w-6" />
-                  </span>
+                  <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-lg border border-white/10 bg-white/12 text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.1)]">
+                    <RadioTower className="h-8 w-8" />
+                  </div>
                 </div>
               </div>
 
@@ -963,58 +1126,45 @@ export function LocalGuideDesign({
                   const updatedLabel = formatAudioDate(asset.uploadedAt);
 
                   return (
-                    <article key={item.key} className="p-5 sm:p-6">
-                      <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+                    <article key={item.key} className="p-5 sm:p-7">
+                      <div className="flex flex-col gap-5 md:flex-row md:items-start md:justify-between">
                         <div className="flex min-w-0 items-start gap-3">
-                          <span className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-[#EEF4FF] text-[#2563EB]">
+                          <span className="mt-0.5 flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-[#EEF4FF] text-[#2563EB]">
                             <Icon className="h-5 w-5" />
                           </span>
                           <div className="min-w-0">
-                            <p className="text-xs font-black uppercase tracking-[0.1em] text-slate-500">
+                            <p className="text-xs font-black uppercase tracking-[0.14em] text-slate-500">
                               {item.label}
                             </p>
-                            <h3 className="mt-1 text-lg font-black text-slate-950">
+                            <h3 className="mt-1 text-2xl font-black leading-tight tracking-normal text-slate-950">
                               {asset.title}
                             </h3>
-                            {asset.description && (
-                              <p className="mt-1 text-sm leading-6 text-slate-600">
-                                {asset.description}
-                              </p>
-                            )}
+                            <p className="mt-2 max-w-2xl text-base leading-7 text-slate-600">
+                              {item.description}
+                            </p>
                           </div>
                         </div>
                         <a
                           href={asset.url}
                           download
-                          className="inline-flex min-h-10 shrink-0 items-center justify-center gap-2 rounded-md border border-slate-200 px-3 text-sm font-bold text-slate-700 transition-colors hover:border-[#2563EB]/40 hover:text-[#2563EB]"
+                          className="inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-md border border-slate-200 bg-white px-4 text-sm font-black text-slate-800 shadow-sm transition-colors hover:border-[#FF6A00]/40 hover:text-[#FF6A00]"
                         >
                           <Download className="h-4 w-4" />
-                          Download
+                          {item.downloadLabel}
                         </a>
                       </div>
 
-                      <div className="mt-4 rounded-md border border-slate-200 bg-slate-50 p-3">
-                        <div className="mb-2 flex items-center gap-2 text-xs font-bold text-slate-500">
-                          <FileAudio className="h-4 w-4 text-[#2563EB]" />
-                          <span>
-                            {updatedLabel
+                      <div className="mt-5">
+                        <PublicCampaignAudioPlayer
+                          audioSrc={asset.url}
+                          title={asset.title}
+                          updatedLabel={
+                            updatedLabel
                               ? `Updated ${updatedLabel}`
-                              : "Ready to play"}
-                          </span>
-                        </div>
-                        <audio
-                          controls
-                          preload="metadata"
-                          src={asset.url}
-                          className="h-10 w-full accent-[#2563EB]"
-                        >
-                          <track
-                            default
-                            kind="captions"
-                            label="Captions"
-                            src={emptyCaptionsTrack}
-                          />
-                        </audio>
+                              : "Ready to play"
+                          }
+                          stationLabel={item.stationLabel}
+                        />
                       </div>
                     </article>
                   );
