@@ -19,6 +19,9 @@ type HomeHeaderVariant = "white" | "transparent";
 
 interface HomeHeaderProps {
   variant?: HomeHeaderVariant;
+  contextLabel?: string | null;
+  contextHref?: string | null;
+  contextEyebrow?: string;
 }
 
 const headerVariants = {
@@ -213,11 +216,28 @@ function HeaderRadioPlayer({ className }: { className: string }) {
   );
 }
 
-export function HomeHeader({ variant = "white" }: HomeHeaderProps) {
+export function HomeHeader({
+  variant = "white",
+  contextLabel,
+  contextHref,
+  contextEyebrow = "Featured merchant",
+}: HomeHeaderProps) {
   const styles = headerVariants[variant];
   const { user, member } = useUser();
   const isAuthenticated = Boolean(user);
   const dashboardHref = getDashboardHref(user?.role, Boolean(member));
+  const hasContext = Boolean(contextLabel?.trim());
+  const contextContent = hasContext ? (
+    <>
+      <Store className="h-3.5 w-3.5 shrink-0 text-orange-300" />
+      <span className="hidden shrink-0 text-[10px] font-black uppercase tracking-[0.14em] text-white/58 sm:inline">
+        {contextEyebrow}
+      </span>
+      <span className="min-w-0 truncate text-xs font-black text-white sm:text-sm">
+        {contextLabel}
+      </span>
+    </>
+  ) : null;
 
   return (
     <header
@@ -346,6 +366,22 @@ export function HomeHeader({ variant = "white" }: HomeHeaderProps) {
             )}
           </div>
         </div>
+        {hasContext && (
+          <div className="mx-auto max-w-7xl px-4 pb-3 sm:px-6">
+            {contextHref ? (
+              <Link
+                href={contextHref}
+                className="inline-flex max-w-full items-center gap-2 rounded-md border border-white/12 bg-white/8 px-3 py-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] transition-colors hover:bg-white/12"
+              >
+                {contextContent}
+              </Link>
+            ) : (
+              <div className="inline-flex max-w-full items-center gap-2 rounded-md border border-white/12 bg-white/8 px-3 py-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]">
+                {contextContent}
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </header>
   );

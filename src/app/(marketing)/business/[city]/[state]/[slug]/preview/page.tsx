@@ -91,7 +91,7 @@ export default function PreviewPage() {
 
   return (
     <div className="relative flex min-h-screen flex-col bg-[#F5F7FB]">
-      <HomeHeader />
+      <HomeHeader contextLabel={merchant.businessName} />
       <main className="flex-1">
         <PhotoStripDesign
           businessName={merchant.businessName}
