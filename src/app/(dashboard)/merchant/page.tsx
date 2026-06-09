@@ -2,7 +2,6 @@
 
 import {
   Bot,
-  CalendarClock,
   CheckCircle2,
   Clock3,
   Download,
@@ -12,7 +11,6 @@ import {
   Loader2,
   LockKeyhole,
   Mailbox,
-  Music2,
   Pause,
   Play,
   RadioTower,
@@ -47,125 +45,15 @@ interface CampaignTrackData {
   updatedAt: string | null;
 }
 
-const marketLockItems = [
+const marketLockCoreTools = [
   {
-    label: "Category lock",
-    detail: "Exclusive local category position.",
-    icon: ShieldCheck,
-  },
-  {
-    label: "Merchant page",
-    detail: "Customer-facing Local City Places page.",
-    icon: Globe2,
-  },
-  {
-    label: "KLCP media",
-    detail: "Radio spot, interview, and airplay support.",
+    label: "Radio campaign",
+    detail: "KLCP spot, interview, and airplay support for the market.",
     icon: RadioTower,
   },
   {
-    label: "Direct mail",
-    detail: "Local household reach for the campaign.",
-    icon: Mailbox,
-  },
-  {
-    label: "Sweepstakes",
-    detail: "Traffic and referral activity tied to the market.",
-    icon: Sparkles,
-  },
-  {
-    label: "Growth upgrades",
-    detail: "AI staff and Google profile support when enabled.",
-    icon: Bot,
-  },
-];
-
-const marketLockLevels = [
-  {
-    level: "Level 1",
-    label: "Current position",
-    title: "City + category reserved",
-    detail: "Your starting position is ready for MarketLock360.",
-    status: "Reserved",
-    icon: ShieldCheck,
-  },
-  {
-    level: "Level 2",
-    label: "Recommended package",
-    title: "MarketLock360",
-    detail: "Turn on media, mail, sweepstakes, and local growth support.",
-    status: "Next step",
-    icon: LockKeyhole,
-  },
-  {
-    level: "Level 3",
-    label: "Pro upgrade",
-    title: "LOCAL AI Staff",
-    detail: "Follow-up, appointments, and communication support.",
-    status: "Add-on",
-    icon: Bot,
-  },
-  {
-    level: "Level 4",
-    label: "Dominator upgrade",
-    title: "Google profile support",
-    detail: "Maps visibility, reviews, and local search signals.",
-    status: "Add-on",
-    icon: Globe2,
-  },
-];
-
-const statusStyles = {
-  Active:
-    "border-emerald-500/40 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300",
-  "In production":
-    "border-blue-500/40 bg-blue-500/10 text-blue-700 dark:text-blue-300",
-  Waiting:
-    "border-amber-500/40 bg-amber-500/10 text-amber-700 dark:text-amber-300",
-} as const;
-
-const activationItems = [
-  {
-    label: "Category",
-    value: "category",
-    detail: "Exclusive category position is active in the selected city.",
-    status: "Active",
-    icon: ShieldCheck,
-  },
-  {
-    label: "City",
-    value: "market",
-    detail: "Locked with the selected category.",
-    status: "Active",
-    icon: LockKeyhole,
-  },
-  {
-    label: "Radio spot",
-    value: "Final KLCP 96.5 FM ad production.",
-    detail: "Merchant campaign ad is moving through final production.",
-    status: "In production",
-    icon: RadioTower,
-  },
-  {
-    label: "Signature soundtrack",
-    value: "Custom music bed for the merchant campaign.",
-    detail: "Original campaign audio bed is being prepared.",
-    status: "In production",
-    icon: Music2,
-  },
-  {
-    label: "Airplay schedule",
-    value: "Schedule unlocks after audio approval.",
-    detail: "Airplay timing opens once the spot is approved.",
-    status: "Waiting",
-    icon: CalendarClock,
-  },
-] as const;
-
-const marketLock360Adds = [
-  {
-    label: "Direct mail",
-    detail: "Local household reach tied to the same protected market.",
+    label: "Direct mail reach",
+    detail: "Household reach tied to the same city and category position.",
     icon: Mailbox,
   },
   {
@@ -173,6 +61,15 @@ const marketLock360Adds = [
     detail: "Member nominations, referrals, and campaign engagement.",
     icon: Sparkles,
   },
+  {
+    label: "Local growth support",
+    detail:
+      "Merchant page visibility, campaign coordination, and local signals.",
+    icon: Globe2,
+  },
+];
+
+const marketLockAddOns = [
   {
     label: "LOCAL AI Staff",
     detail: "Follow-up, appointments, and customer communication support.",
@@ -225,69 +122,65 @@ function MerchantActivationBanner({
     [merchant?.city, merchant?.state].filter(Boolean).join(", ") ||
     "Your market";
   const cityCategoryLock = `${categoryName} in ${marketLabel}`;
+  const proofItems = [
+    {
+      label: "Category",
+      value: categoryName,
+      detail: "Reserved for this market",
+      icon: ShieldCheck,
+    },
+    {
+      label: "City",
+      value: marketLabel,
+      detail: "Protected campaign area",
+      icon: LockKeyhole,
+    },
+    {
+      label: "Status",
+      value: "Reserved",
+      detail: "Ready for MarketLock360",
+      icon: CheckCircle2,
+    },
+    {
+      label: "Page",
+      value: merchant?.isPublicPage ? "Active" : "Private",
+      detail: "Merchant profile surface",
+      icon: Globe2,
+    },
+  ];
 
   return (
     <section className="mb-6 overflow-hidden rounded-xl border bg-card">
-      <div className="grid 2xl:grid-cols-[minmax(0,1.45fr)_minmax(320px,0.75fr)]">
-        <div className="p-5 md:p-6">
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-            <div className="min-w-0">
-              <p className="text-xs font-semibold uppercase text-muted-foreground">
-                City and category lock
-              </p>
-              <h2 className="mt-2 text-2xl font-bold tracking-tight text-foreground md:text-3xl">
-                {cityCategoryLock} is locked down
-              </h2>
-              <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
-                Your campaign is anchored to this exact city and category:{" "}
-                {cityCategoryLock}. Radio production is already moving, and
-                MarketLock360 upgrades are ready to add more reach on top of the
-                locked position.
-              </p>
-            </div>
+      <div className="grid xl:grid-cols-[minmax(0,0.9fr)_minmax(480px,1.1fr)]">
+        <div className="border-b bg-muted/25 p-5 md:p-6 xl:border-b-0 xl:border-r">
+          <p className="text-xs font-semibold uppercase text-muted-foreground">
+            Reserved position
+          </p>
+          <h2 className="mt-2 text-2xl font-bold tracking-tight text-foreground md:text-3xl">
+            {cityCategoryLock}
+          </h2>
+          <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
+            Your city and category position is ready. MarketLock360 is the next
+            step that turns it into a local campaign.
+          </p>
 
-            <div className="flex flex-wrap gap-2">
-              <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/40 bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-700 dark:text-emerald-300">
-                <CheckCircle2 className="h-3.5 w-3.5" />
-                Activated
-              </span>
-              <span className="rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
-                City + category locked
-              </span>
-            </div>
-          </div>
-
-          <div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-5">
-            {activationItems.map((item) => {
+          <div className="mt-5 grid gap-3 sm:grid-cols-2">
+            {proofItems.map((item) => {
               const Icon = item.icon;
-              const value =
-                item.value === "category"
-                  ? categoryName
-                  : item.value === "market"
-                    ? marketLabel
-                    : item.value;
-              const statusClass = statusStyles[item.status];
 
               return (
                 <div
                   key={item.label}
-                  className="min-h-[156px] rounded-lg border bg-background p-4"
+                  className="rounded-lg border bg-background/80 p-4"
                 >
-                  <div className="mb-3 flex items-start justify-between gap-3">
-                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary">
-                      <Icon className="h-4 w-4" />
-                    </span>
-                    <span
-                      className={`whitespace-nowrap rounded-full border px-2.5 py-1 text-xs font-semibold ${statusClass}`}
-                    >
-                      {item.status}
-                    </span>
+                  <div className="mb-3 flex h-8 w-8 items-center justify-center rounded-md bg-emerald-500/10 text-emerald-700 dark:text-emerald-300">
+                    <Icon className="h-4 w-4" />
                   </div>
                   <p className="text-xs font-semibold uppercase text-muted-foreground">
                     {item.label}
                   </p>
-                  <p className="mt-1 text-sm font-semibold leading-5">
-                    {value}
+                  <p className="mt-1 text-lg font-semibold leading-tight">
+                    {item.value}
                   </p>
                   <p className="mt-2 text-xs leading-5 text-muted-foreground">
                     {item.detail}
@@ -298,20 +191,38 @@ function MerchantActivationBanner({
           </div>
         </div>
 
-        <div className="border-t bg-muted/30 p-5 md:p-6 2xl:border-l 2xl:border-t-0">
-          <p className="text-xs font-semibold uppercase text-muted-foreground">
-            Get MarketLock360
-          </p>
-          <h3 className="mt-2 text-xl font-bold tracking-tight">
-            Turn the lock into a campaign
-          </h3>
-          <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4 2xl:grid-cols-1">
-            {marketLock360Adds.map((item) => {
+        <div className="relative overflow-hidden p-5 md:p-6">
+          <div className="absolute inset-x-0 top-0 h-1 bg-primary" />
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+            <div className="min-w-0">
+              <p className="text-xs font-semibold uppercase text-primary">
+                MarketLock360 activation
+              </p>
+              <h2 className="mt-2 text-3xl font-bold tracking-tight text-foreground md:text-4xl">
+                Activate MarketLock360
+              </h2>
+              <p className="mt-3 max-w-2xl text-sm leading-6 text-muted-foreground">
+                Turn your {categoryName} category position in {marketLabel} into
+                radio, direct mail, sweepstakes traffic, and local growth
+                support.
+              </p>
+            </div>
+            <span className="inline-flex w-fit items-center gap-1.5 rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
+              <Sparkles className="h-3.5 w-3.5" />
+              Next step
+            </span>
+          </div>
+
+          <div className="mt-6 grid gap-3 sm:grid-cols-2">
+            {marketLockCoreTools.map((item) => {
               const Icon = item.icon;
 
               return (
-                <div key={item.label} className="flex gap-3">
-                  <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-background text-primary">
+                <div
+                  key={item.label}
+                  className="flex gap-3 rounded-lg border bg-primary/5 p-4"
+                >
+                  <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary">
                     <Icon className="h-4 w-4" />
                   </span>
                   <div className="min-w-0">
@@ -326,10 +237,10 @@ function MerchantActivationBanner({
           </div>
           <a
             href="/marketlock360"
-            className="mt-5 inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
+            className="mt-6 inline-flex items-center justify-center rounded-md bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
           >
             <ExternalLink className="mr-2 h-4 w-4" />
-            Get MarketLock360
+            Activate MarketLock360
           </a>
         </div>
       </div>
@@ -564,198 +475,47 @@ function MarketLockDashboardCard({
       id="marketlock-360"
       className="mb-6 w-full overflow-hidden rounded-xl border bg-card"
     >
-      <div className="border-b bg-muted/30 p-5 md:p-6">
-        <div className="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
-          <div className="min-w-0">
-            <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-lg bg-primary/10 text-primary">
-              <LockKeyhole className="h-5 w-5" />
-            </div>
-            <p className="text-xs font-semibold uppercase text-muted-foreground">
-              MarketLock360 upgrade
-            </p>
-            <h2 className="mt-1 text-2xl font-bold tracking-tight">
-              Get MarketLock360 for this market
-            </h2>
-            <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
-              {cityCategoryLock} is reserved. MarketLock360 is the next step: it
-              turns that position into radio, direct mail, sweepstakes traffic,
-              and local growth support.
-            </p>
+      <div className="flex flex-col gap-4 p-5 md:p-6 lg:flex-row lg:items-start lg:justify-between">
+        <div className="min-w-0">
+          <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-lg bg-primary/10 text-primary">
+            <Bot className="h-5 w-5" />
           </div>
-
-          <div className="grid gap-3 sm:grid-cols-2 xl:min-w-[440px]">
-            <div className="rounded-lg border bg-background/70 p-4">
-              <p className="text-xs font-semibold uppercase text-muted-foreground">
-                Reserved category
-              </p>
-              <p className="mt-1 text-xl font-bold">{categoryName}</p>
-              <span className="mt-3 inline-flex rounded-full border border-emerald-500/40 bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-700 dark:text-emerald-300">
-                Reserved
-              </span>
-            </div>
-            <div className="rounded-lg border bg-background/70 p-4">
-              <p className="text-xs font-semibold uppercase text-muted-foreground">
-                Reserved city
-              </p>
-              <p className="mt-1 text-xl font-bold">{marketLabel}</p>
-              <span className="mt-3 inline-flex rounded-full border border-emerald-500/40 bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-700 dark:text-emerald-300">
-                Reserved
-              </span>
-            </div>
-          </div>
+          <p className="text-xs font-semibold uppercase text-muted-foreground">
+            Optional add-ons
+          </p>
+          <h2 className="mt-1 text-2xl font-bold tracking-tight md:text-3xl">
+            Build beyond MarketLock360
+          </h2>
+          <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
+            After activating MarketLock360 for {cityCategoryLock}, add extra
+            support for follow-up, appointments, search visibility, and reviews.
+          </p>
         </div>
+        <a
+          href="/marketlock360"
+          className="inline-flex w-fit items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
+        >
+          <ExternalLink className="mr-2 h-4 w-4" />
+          Activate MarketLock360 first
+        </a>
       </div>
 
-      <div className="p-5 md:p-6">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <p className="text-xs font-semibold uppercase text-muted-foreground">
-              Upgrade path
-            </p>
-            <h3 className="mt-1 text-xl font-semibold">
-              Your next step is MarketLock360.
-            </h3>
-          </div>
-          <span className="w-fit rounded-full border border-amber-500/40 bg-amber-500/10 px-3 py-1 text-xs font-semibold text-amber-700 dark:text-amber-300">
-            {marketLockItems.length} tools in MarketLock360
-          </span>
-        </div>
+      <div className="grid gap-3 border-t bg-muted/25 p-5 md:grid-cols-2 md:p-6">
+        {marketLockAddOns.map((item) => {
+          const Icon = item.icon;
 
-        <div className="mt-5 grid gap-3 lg:grid-cols-2 xl:grid-cols-[0.9fr_1.2fr_0.95fr_0.95fr] xl:gap-4">
-          {marketLockLevels.map((level, index) => {
-            const Icon = level.icon;
-            const isCurrent = index === 0;
-            const isTarget = index === 1;
-            const levelLabel = isTarget ? "Get MarketLock360" : level.label;
-            const levelTitle = isCurrent
-              ? "City + category reserved"
-              : level.title;
-            const levelDetail = isCurrent
-              ? `${categoryName} in ${marketLabel} is ready for MarketLock360.`
-              : isTarget
-                ? "Activate the media, mail, sweepstakes, and support package for this market."
-                : level.detail;
-            const accentClass = isTarget
-              ? "bg-primary"
-              : isCurrent
-                ? "bg-emerald-500"
-                : "bg-border";
-            const cardClass = isTarget
-              ? "border-primary/60 bg-primary/10 ring-1 ring-primary/20"
-              : isCurrent
-                ? "border-emerald-500/50 bg-emerald-500/10 ring-1 ring-emerald-500/10"
-                : "border-border bg-background/70";
-            const numberClass = isTarget
-              ? "border-primary/50 bg-primary/15 text-primary"
-              : isCurrent
-                ? "border-emerald-500/50 bg-emerald-500/15 text-emerald-700 dark:text-emerald-300"
-                : "border-border bg-muted/40 text-muted-foreground";
-            const statusClass = isTarget
-              ? "border-primary/40 bg-background text-primary"
-              : isCurrent
-                ? "border-emerald-500/40 bg-background text-emerald-700 dark:text-emerald-300"
-                : "border-border text-muted-foreground";
-            const iconClass = isTarget
-              ? "bg-primary/15 text-primary"
-              : isCurrent
-                ? "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300"
-                : "bg-muted text-primary";
-
-            return (
-              <div
-                key={level.label}
-                className={`relative min-w-0 overflow-hidden rounded-xl border p-4 transition-colors xl:min-h-[250px] xl:p-5 ${cardClass}`}
-              >
-                <div
-                  className={`absolute inset-x-0 top-0 h-1 ${accentClass}`}
-                />
-
-                <div className="flex h-full flex-col">
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="flex items-center gap-3">
-                      <span
-                        className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full border text-base font-bold ${numberClass}`}
-                      >
-                        {index + 1}
-                      </span>
-                      <div>
-                        <p className="text-xs font-semibold uppercase text-muted-foreground">
-                          {level.level}
-                        </p>
-                        <p className="mt-0.5 text-xs font-semibold uppercase text-muted-foreground">
-                          {levelLabel}
-                        </p>
-                      </div>
-                    </div>
-                    <span
-                      className={`rounded-full border px-2.5 py-1 text-xs font-semibold ${statusClass}`}
-                    >
-                      {level.status}
-                    </span>
-                  </div>
-
-                  <div className="mt-5 flex items-center gap-2">
-                    <span
-                      className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-md ${iconClass}`}
-                    >
-                      <Icon className="h-4 w-4" />
-                    </span>
-                    <p className="text-lg font-semibold leading-tight xl:text-xl">
-                      {levelTitle}
-                    </p>
-                  </div>
-
-                  <p className="mt-3 text-sm leading-6 text-muted-foreground">
-                    {levelDetail}
-                  </p>
-                </div>
+          return (
+            <div key={item.label} className="rounded-lg border bg-card p-4">
+              <div className="mb-3 flex h-9 w-9 items-center justify-center rounded-md bg-primary/10 text-primary">
+                <Icon className="h-4 w-4" />
               </div>
-            );
-          })}
-        </div>
-
-        <div className="mt-6 border-t pt-5">
-          <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-            <p className="text-xs font-semibold uppercase text-muted-foreground">
-              What MarketLock360 includes
-            </p>
-            <span className="rounded-full border px-3 py-1 text-xs font-semibold text-muted-foreground">
-              Core package tools
-            </span>
-          </div>
-          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-            {marketLockItems.map((item) => {
-              const Icon = item.icon;
-
-              return (
-                <div
-                  key={item.label}
-                  className="rounded-md border bg-background/70 p-4"
-                >
-                  <div className="mb-2 flex items-center gap-2">
-                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary">
-                      <Icon className="h-4 w-4" />
-                    </span>
-                    <h3 className="text-sm font-semibold">{item.label}</h3>
-                  </div>
-                  <p className="text-sm leading-5 text-muted-foreground">
-                    {item.detail}
-                  </p>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-
-        <div className="mt-5">
-          <a
-            href="/marketlock360"
-            className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
-          >
-            <ExternalLink className="mr-2 h-4 w-4" />
-            Get MarketLock360
-          </a>
-        </div>
+              <h3 className="text-base font-semibold">{item.label}</h3>
+              <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                {item.detail}
+              </p>
+            </div>
+          );
+        })}
       </div>
     </section>
   );
@@ -812,10 +572,12 @@ export default function MerchantDashboard() {
         <>
           <PageHeader
             title="Merchant Dashboard"
-            description="Manage your merchant page, campaign media, and customer reviews"
+            description="Activate MarketLock360 for your reserved market, then track setup and page readiness"
           />
 
           <MerchantActivationBanner merchant={merchant} />
+
+          <MarketLockDashboardCard merchant={merchant} />
 
           <CampaignTrackPanel
             track={dashboardData?.campaignTrack}
@@ -831,8 +593,6 @@ export default function MerchantDashboard() {
               className="mb-6"
             />
           )}
-
-          <MarketLockDashboardCard merchant={merchant} />
         </>
       )}
     </DashboardLayout>
