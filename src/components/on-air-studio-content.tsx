@@ -30,10 +30,28 @@ interface OnAirStudioContentProps {
   merchantName?: string | null;
   publicPageHref?: string | null;
   backHref?: string;
+  campaignAudio?: CampaignAudio | null;
 }
 
 type StatusTone = "active" | "ready" | "waiting";
 type DeliverableType = "audio" | "proof";
+
+interface CampaignAudioAsset {
+  title: string;
+  description?: string;
+  url: string;
+  fileName?: string;
+  contentType?: string;
+  sizeBytes?: number;
+  uploadedAt?: string;
+  status?: "ready" | "in_production" | "pending";
+}
+
+interface CampaignAudio {
+  radioSpot?: CampaignAudioAsset | null;
+  soundtrack?: CampaignAudioAsset | null;
+  updatedAt?: string;
+}
 
 interface StudioDeliverable {
   key: string;
@@ -184,6 +202,44 @@ const statusToneClasses = {
 } satisfies Record<StatusTone, string>;
 
 const emptyCaptionsTrack = "data:text/vtt,WEBVTT%0A%0A";
+
+function getAudioAssetForKey(
+  campaignAudio: CampaignAudio | null | undefined,
+  key: string,
+) {
+  if (key === "radio-spot") return campaignAudio?.radioSpot || null;
+  if (key === "soundtrack") return campaignAudio?.soundtrack || null;
+  return null;
+}
+
+function applyCampaignAudio<
+  T extends {
+    key: string;
+    title: string;
+    description: string;
+    status: string;
+    statusTone: StatusTone;
+    audioSrc?: string | null;
+  },
+>(
+  items: readonly T[],
+  campaignAudio: CampaignAudio | null | undefined,
+) {
+  return items.map((item) => {
+    const asset = getAudioAssetForKey(campaignAudio, item.key);
+
+    if (!asset?.url) return item;
+
+    return {
+      ...item,
+      title: asset.title || item.title,
+      description: asset.description || item.description,
+      status: "Ready",
+      statusTone: "ready" as StatusTone,
+      audioSrc: asset.url,
+    };
+  });
+}
 
 function formatAudioTime(seconds: number) {
   if (!Number.isFinite(seconds) || seconds <= 0) return "0:00";
@@ -351,14 +407,17 @@ function AudioDownloadButton({ audioSrc }: { audioSrc?: string | null }) {
 
 function MerchantServicesOverview({
   displayName,
+  campaignAudio,
 }: {
   displayName: string;
   publicPageHref?: string | null;
+  campaignAudio?: CampaignAudio | null;
 }) {
-  const audioServices = merchantServices.filter(
+  const services = applyCampaignAudio(merchantServices, campaignAudio);
+  const audioServices = services.filter(
     (service) => service.hasPreview,
   );
-  const airplayServices = merchantServices.filter(
+  const airplayServices = services.filter(
     (service) => service.key === "airplay",
   );
 
@@ -577,6 +636,7 @@ export function OnAirStudioContent({
   merchantName,
   publicPageHref,
   backHref,
+  campaignAudio,
 }: OnAirStudioContentProps) {
   const isAdmin = mode === "admin";
   const displayName = merchantName || "your business";
@@ -585,15 +645,17 @@ export function OnAirStudioContent({
     return (
       <MerchantServicesOverview
         displayName={displayName}
+        campaignAudio={campaignAudio}
         publicPageHref={publicPageHref}
       />
     );
   }
 
-  const audioDeliverables = deliverables.filter(
+  const studioDeliverables = applyCampaignAudio(deliverables, campaignAudio);
+  const audioDeliverables = studioDeliverables.filter(
     (item) => item.type === "audio",
   );
-  const proofDeliverables = deliverables.filter(
+  const proofDeliverables = studioDeliverables.filter(
     (item) => item.type === "proof",
   );
 
@@ -674,7 +736,7 @@ export function OnAirStudioContent({
         </div>
 
         <ol className="grid divide-y border-t md:grid-cols-5 md:divide-x md:divide-y-0">
-          {deliverables.map((item) => {
+          {studioDeliverables.map((item) => {
             const Icon = item.icon;
 
             return (
@@ -813,7 +875,7 @@ export function OnAirStudioContent({
           </div>
 
           <div className="-mx-5 divide-y border-y sm:-mx-6">
-            {deliverables.map((item) => {
+            {studioDeliverables.map((item) => {
               const Icon = item.icon;
               return (
                 <div

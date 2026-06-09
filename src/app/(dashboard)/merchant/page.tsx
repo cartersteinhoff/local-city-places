@@ -1,7 +1,6 @@
 "use client";
 
 import {
-  ArrowRight,
   Bot,
   CalendarClock,
   CheckCircle2,
@@ -228,7 +227,7 @@ function MerchantActivationBanner({
 
   return (
     <section className="mb-6 overflow-hidden rounded-xl border bg-card">
-      <div className="grid xl:grid-cols-[minmax(0,1.45fr)_minmax(320px,0.75fr)]">
+      <div className="grid 2xl:grid-cols-[minmax(0,1.45fr)_minmax(320px,0.75fr)]">
         <div className="p-5 md:p-6">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
             <div className="min-w-0">
@@ -256,7 +255,7 @@ function MerchantActivationBanner({
             </div>
           </div>
 
-          <div className="mt-5 grid gap-3 md:grid-cols-2 2xl:grid-cols-5">
+          <div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-5">
             {activationItems.map((item) => {
               const Icon = item.icon;
               const value =
@@ -297,14 +296,14 @@ function MerchantActivationBanner({
           </div>
         </div>
 
-        <div className="border-t bg-muted/30 p-5 md:p-6 xl:border-l xl:border-t-0">
+        <div className="border-t bg-muted/30 p-5 md:p-6 2xl:border-l 2xl:border-t-0">
           <p className="text-xs font-semibold uppercase text-muted-foreground">
             MarketLock360 adds
           </p>
           <h3 className="mt-2 text-xl font-bold tracking-tight">
             More local reach when upgraded
           </h3>
-          <div className="mt-5 space-y-3">
+          <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4 2xl:grid-cols-1">
             {marketLock360Adds.map((item) => {
               const Icon = item.icon;
 
@@ -387,8 +386,8 @@ function CampaignTrackPanel({
 
   return (
     <section className="mb-6 overflow-hidden rounded-xl border bg-card">
-      <div className="grid gap-0 lg:grid-cols-[minmax(0,0.7fr)_minmax(360px,1.3fr)]">
-        <div className="border-b bg-muted/30 p-5 md:p-6 lg:border-b-0 lg:border-r">
+      <div className="grid gap-0 2xl:grid-cols-[minmax(0,0.7fr)_minmax(360px,1.3fr)]">
+        <div className="border-b bg-muted/30 p-5 md:p-6 2xl:border-b-0 2xl:border-r">
           <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-lg bg-primary/10 text-primary">
             <FileAudio className="h-5 w-5" />
           </div>
@@ -560,190 +559,173 @@ function MarketLockDashboardCard({
   return (
     <section
       id="marketlock-360"
-      className="mb-6 overflow-hidden rounded-xl border bg-card"
+      className="mb-6 w-full overflow-hidden rounded-xl border bg-card"
     >
-      <div className="grid lg:grid-cols-[minmax(240px,0.42fr)_1fr]">
-        <div className="border-b bg-muted/30 p-5 md:p-6 lg:border-b-0 lg:border-r">
-          <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-lg bg-primary/10 text-primary">
-            <LockKeyhole className="h-5 w-5" />
+      <div className="border-b bg-muted/30 p-5 md:p-6">
+        <div className="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
+          <div className="min-w-0">
+            <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-lg bg-primary/10 text-primary">
+              <LockKeyhole className="h-5 w-5" />
+            </div>
+            <p className="text-xs font-semibold uppercase text-muted-foreground">
+              MarketLock 360
+            </p>
+            <h2 className="mt-1 text-2xl font-bold tracking-tight">
+              Unlock MarketLock360
+            </h2>
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
+              Your category is reserved. MarketLock360 adds the media and local
+              reach layer for this market.
+            </p>
           </div>
-          <p className="text-xs font-semibold uppercase text-muted-foreground">
-            MarketLock 360
-          </p>
-          <h2 className="mt-1 text-2xl font-bold tracking-tight">
-            Unlock MarketLock360
-          </h2>
-          <p className="mt-2 text-sm leading-6 text-muted-foreground">
-            Your category is reserved. Level up into media, direct mail, and
-            campaign support for this market.
-          </p>
 
-          <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-1">
-            <div>
+          <div className="grid gap-3 sm:grid-cols-2 xl:min-w-[440px]">
+            <div className="rounded-lg border bg-background/70 p-4">
               <p className="text-xs font-semibold uppercase text-muted-foreground">
                 Locked category
               </p>
               <p className="mt-1 text-xl font-bold">{categoryName}</p>
+              <span className="mt-3 inline-flex rounded-full border border-emerald-500/40 bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-700 dark:text-emerald-300">
+                Reserved
+              </span>
             </div>
-            <div>
+            <div className="rounded-lg border bg-background/70 p-4">
               <p className="text-xs font-semibold uppercase text-muted-foreground">
                 Market
               </p>
-              <p className="mt-1 text-lg font-semibold">{marketLabel}</p>
+              <p className="mt-1 text-xl font-bold">{marketLabel}</p>
+              <span className="mt-3 inline-flex rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
+                Next unlock
+              </span>
             </div>
           </div>
+        </div>
+      </div>
 
-          <div className="mt-5 flex flex-wrap gap-2">
-            <span className="rounded-full border border-emerald-500/40 bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-700 dark:text-emerald-300">
-              Category reserved
+      <div className="p-5 md:p-6">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <p className="text-xs font-semibold uppercase text-muted-foreground">
+              Upgrade path
+            </p>
+            <h3 className="mt-1 text-xl font-semibold">
+              Build toward MarketLock360.
+            </h3>
+          </div>
+          <span className="w-fit rounded-full border border-amber-500/40 bg-amber-500/10 px-3 py-1 text-xs font-semibold text-amber-700 dark:text-amber-300">
+            {marketLockItems.length} rewards unlock
+          </span>
+        </div>
+
+        <div className="mt-5 grid gap-3 lg:grid-cols-2 2xl:grid-cols-4">
+          {marketLockLevels.map((level, index) => {
+            const Icon = level.icon;
+            const isCurrent = index === 0;
+            const isTarget = index === 1;
+
+            return (
+              <div
+                key={level.label}
+                className={`min-w-0 rounded-lg border p-4 ${
+                  isTarget
+                    ? "border-amber-500/50 bg-amber-500/10"
+                    : isCurrent
+                      ? "border-emerald-500/40 bg-emerald-500/10"
+                      : "bg-background/70"
+                }`}
+              >
+                <div className="mb-4 flex items-start justify-between gap-3">
+                  <span
+                    className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full border text-sm font-bold ${
+                      isTarget
+                        ? "border-amber-500/50 bg-amber-500/15 text-amber-700 dark:text-amber-300"
+                        : isCurrent
+                          ? "border-emerald-500/40 bg-emerald-500/15 text-emerald-700 dark:text-emerald-300"
+                          : "bg-background text-muted-foreground"
+                    }`}
+                  >
+                    {index + 1}
+                  </span>
+                  <span
+                    className={`rounded-full border px-2.5 py-1 text-xs font-semibold ${
+                      isTarget
+                        ? "border-amber-500/50 bg-background text-amber-700 dark:text-amber-300"
+                        : isCurrent
+                          ? "border-emerald-500/40 bg-background text-emerald-700 dark:text-emerald-300"
+                          : "text-muted-foreground"
+                    }`}
+                  >
+                    {level.status}
+                  </span>
+                </div>
+
+                <div className="mb-2 flex items-center gap-2">
+                  <Icon
+                    className={`h-4 w-4 ${
+                      isTarget
+                        ? "text-amber-700 dark:text-amber-300"
+                        : isCurrent
+                          ? "text-emerald-700 dark:text-emerald-300"
+                          : "text-primary"
+                    }`}
+                  />
+                  <p className="text-xs font-semibold uppercase text-muted-foreground">
+                    {level.level}
+                  </p>
+                </div>
+                <p className="text-xs font-semibold uppercase text-muted-foreground">
+                  {level.label}
+                </p>
+                <p className="mt-1 text-lg font-semibold">{level.title}</p>
+                <p className="mt-1 text-sm leading-5 text-muted-foreground">
+                  {level.detail}
+                </p>
+              </div>
+            );
+          })}
+        </div>
+
+        <div className="mt-6 border-t pt-5">
+          <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+            <p className="text-xs font-semibold uppercase text-muted-foreground">
+              MarketLock360 unlocks
+            </p>
+            <span className="rounded-full border px-3 py-1 text-xs font-semibold text-muted-foreground">
+              Core package rewards
             </span>
-            <span className="rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
-              Next unlock: MarketLock360
-            </span>
+          </div>
+          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+            {marketLockItems.map((item) => {
+              const Icon = item.icon;
+
+              return (
+                <div
+                  key={item.label}
+                  className="rounded-md border bg-background/70 p-4"
+                >
+                  <div className="mb-2 flex items-center gap-2">
+                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary">
+                      <Icon className="h-4 w-4" />
+                    </span>
+                    <h3 className="text-sm font-semibold">{item.label}</h3>
+                  </div>
+                  <p className="text-sm leading-5 text-muted-foreground">
+                    {item.detail}
+                  </p>
+                </div>
+              );
+            })}
           </div>
         </div>
 
-        <div className="p-5 md:p-6">
-          <div className="rounded-lg border bg-background/80 p-4">
-            <div className="flex flex-wrap items-end justify-between gap-3">
-              <div>
-                <p className="text-xs font-semibold uppercase text-muted-foreground">
-                  Upgrade path
-                </p>
-                <h3 className="mt-1 text-lg font-semibold">
-                  Build toward market dominance.
-                </h3>
-              </div>
-              <span className="rounded-full border border-amber-500/40 bg-amber-500/10 px-3 py-1 text-xs font-semibold text-amber-700 dark:text-amber-300">
-                {marketLockItems.length} rewards unlock
-              </span>
-            </div>
-
-            <div className="mt-4 grid gap-3 xl:grid-cols-[1fr_auto_1.12fr_auto_1fr_auto_1fr] xl:items-stretch">
-              {marketLockLevels.map((level, index) => {
-                const Icon = level.icon;
-                const isCurrent = index === 0;
-                const isTarget = index === 1;
-
-                return (
-                  <div key={level.label} className="contents">
-                    <div
-                      className={`min-w-0 rounded-lg border p-4 ${
-                        isTarget
-                          ? "border-amber-500/50 bg-amber-500/10"
-                          : isCurrent
-                            ? "border-emerald-500/40 bg-emerald-500/10"
-                            : "bg-card"
-                      }`}
-                    >
-                      <div className="mb-4 flex items-start justify-between gap-3">
-                        <span
-                          className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full border text-sm font-bold ${
-                            isTarget
-                              ? "border-amber-500/50 bg-amber-500/15 text-amber-700 dark:text-amber-300"
-                              : isCurrent
-                                ? "border-emerald-500/40 bg-emerald-500/15 text-emerald-700 dark:text-emerald-300"
-                                : "bg-background text-muted-foreground"
-                          }`}
-                        >
-                          {index + 1}
-                        </span>
-                        <span
-                          className={`rounded-full border px-2.5 py-1 text-xs font-semibold ${
-                            isTarget
-                              ? "border-amber-500/50 bg-background text-amber-700 dark:text-amber-300"
-                              : isCurrent
-                                ? "border-emerald-500/40 bg-background text-emerald-700 dark:text-emerald-300"
-                                : "text-muted-foreground"
-                          }`}
-                        >
-                          {level.status}
-                        </span>
-                      </div>
-
-                      <div className="mb-2 flex items-center gap-2">
-                        <Icon
-                          className={`h-4 w-4 ${
-                            isTarget
-                              ? "text-amber-700 dark:text-amber-300"
-                              : isCurrent
-                                ? "text-emerald-700 dark:text-emerald-300"
-                                : "text-primary"
-                          }`}
-                        />
-                        <p className="text-xs font-semibold uppercase text-muted-foreground">
-                          {level.level}
-                        </p>
-                      </div>
-                      <p className="text-xs font-semibold uppercase text-muted-foreground">
-                        {level.label}
-                      </p>
-                      <p className="mt-1 font-semibold">{level.title}</p>
-                      <p className="mt-1 text-sm leading-5 text-muted-foreground">
-                        {level.detail}
-                      </p>
-                    </div>
-
-                    {index < marketLockLevels.length - 1 && (
-                      <div
-                        aria-hidden="true"
-                        className="flex items-center justify-center text-muted-foreground"
-                      >
-                        <span className="flex h-9 w-9 items-center justify-center rounded-full border bg-background shadow-sm">
-                          <ArrowRight className="h-4 w-4 rotate-90 xl:rotate-0" />
-                        </span>
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-
-          <div className="mt-5 border-t pt-5">
-            <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-              <div>
-                <p className="text-xs font-semibold uppercase text-muted-foreground">
-                  MarketLock360 unlocks
-                </p>
-              </div>
-              <span className="rounded-full border px-3 py-1 text-xs font-semibold text-muted-foreground">
-                Core package rewards
-              </span>
-            </div>
-            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-              {marketLockItems.map((item) => {
-                const Icon = item.icon;
-
-                return (
-                  <div
-                    key={item.label}
-                    className="rounded-md border bg-background p-3"
-                  >
-                    <div className="mb-2 flex items-center gap-2">
-                      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary">
-                        <Icon className="h-4 w-4" />
-                      </span>
-                      <h3 className="text-sm font-semibold">{item.label}</h3>
-                    </div>
-                    <p className="text-sm leading-5 text-muted-foreground">
-                      {item.detail}
-                    </p>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-
-          <div className="mt-5">
-            <a
-              href="/marketlock360"
-              className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
-            >
-              <ExternalLink className="mr-2 h-4 w-4" />
-              Upgrade to MarketLock360
-            </a>
-          </div>
+        <div className="mt-5">
+          <a
+            href="/marketlock360"
+            className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
+          >
+            <ExternalLink className="mr-2 h-4 w-4" />
+            Upgrade to MarketLock360
+          </a>
         </div>
       </div>
     </section>

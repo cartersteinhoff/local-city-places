@@ -1,8 +1,41 @@
 import { desc, eq, sql } from "drizzle-orm";
 import { NextResponse } from "next/server";
-import { categories, db, merchants, reviews } from "@/db";
+import {
+  categories,
+  db,
+  type MerchantCampaignAudio,
+  merchants,
+  reviews,
+} from "@/db";
 import { getSession } from "@/lib/auth";
 import { calculateCompletion } from "@/lib/merchant-completion";
+
+function getCampaignTrack(
+  campaignAudio: MerchantCampaignAudio | null,
+  businessName: string,
+) {
+  const asset = campaignAudio?.radioSpot || campaignAudio?.soundtrack;
+
+  if (!asset?.url) {
+    return {
+      title: `${businessName} campaign soundtrack`,
+      description: "A custom audio asset produced for your local media campaign.",
+      audioSrc: null,
+      status: "in_production" as const,
+      updatedAt: campaignAudio?.updatedAt || null,
+    };
+  }
+
+  return {
+    title: asset.title || `${businessName} campaign audio`,
+    description:
+      asset.description ||
+      "Final campaign audio produced for your local media package.",
+    audioSrc: asset.url,
+    status: asset.status || ("ready" as const),
+    updatedAt: asset.uploadedAt || campaignAudio?.updatedAt || null,
+  };
+}
 
 export async function GET() {
   try {
@@ -39,6 +72,7 @@ export async function GET() {
         vimeoUrl: merchants.vimeoUrl,
         photos: merchants.photos,
         services: merchants.services,
+        campaignAudio: merchants.campaignAudio,
         updatedAt: merchants.updatedAt,
       })
       .from(merchants)
@@ -110,8 +144,13 @@ export async function GET() {
         phone: merchant.phone,
         website: merchant.website,
         photoCount: merchant.photos?.length || 0,
+        campaignAudio: merchant.campaignAudio,
         updatedAt: merchant.updatedAt.toISOString(),
       },
+      campaignTrack: getCampaignTrack(
+        merchant.campaignAudio || null,
+        merchant.businessName,
+      ),
       pageManagement: {
         completionPercentage: completion.percentage,
         completedFields: completion.completed,

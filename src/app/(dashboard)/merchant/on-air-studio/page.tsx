@@ -13,6 +13,9 @@ interface MerchantSummary {
   city: string | null;
   state: string | null;
   slug: string | null;
+  campaignAudio?: React.ComponentProps<
+    typeof OnAirStudioContent
+  >["campaignAudio"];
 }
 
 export default function MerchantOnAirStudioPage() {
@@ -62,6 +65,7 @@ export default function MerchantOnAirStudioPage() {
         <OnAirStudioContent
           mode="merchant"
           merchantName={merchant?.businessName}
+          campaignAudio={merchant?.campaignAudio}
           publicPageHref={publicPageHref}
         />
       )}

@@ -364,6 +364,23 @@ export const categories = pgTable("categories", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+export interface MerchantCampaignAudioAsset {
+  title: string;
+  description?: string;
+  url: string;
+  fileName?: string;
+  contentType?: string;
+  sizeBytes?: number;
+  uploadedAt?: string;
+  status?: "ready" | "in_production" | "pending";
+}
+
+export interface MerchantCampaignAudio {
+  radioSpot?: MerchantCampaignAudioAsset | null;
+  soundtrack?: MerchantCampaignAudioAsset | null;
+  updatedAt?: string;
+}
+
 // Merchants table
 export const merchants = pgTable("merchants", {
   id: uuid("id").primaryKey().defaultRandom(),
@@ -401,6 +418,7 @@ export const merchants = pgTable("merchants", {
       { name: string; description?: string; price?: string }[]
     >(), // Services/menu items
   aboutStory: text("about_story"), // Longer about/history section
+  campaignAudio: jsonb("campaign_audio").$type<MerchantCampaignAudio>(),
   featuredOnHomepage: boolean("featured_on_homepage").default(false).notNull(),
   googleRating: decimal("google_rating", { precision: 2, scale: 1 }),
   googleReviewCount: integer("google_review_count"),

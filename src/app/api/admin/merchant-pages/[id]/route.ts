@@ -53,6 +53,7 @@ export async function GET(
         photos: merchants.photos,
         services: merchants.services,
         aboutStory: merchants.aboutStory,
+        campaignAudio: merchants.campaignAudio,
         createdAt: merchants.createdAt,
         updatedAt: merchants.updatedAt,
       })

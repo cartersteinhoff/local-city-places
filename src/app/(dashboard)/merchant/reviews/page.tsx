@@ -13,7 +13,6 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { DashboardLayout } from "@/components/layout";
 import { Button } from "@/components/ui/button";
-import { EmptyState } from "@/components/ui/empty-state";
 import { PageHeader } from "@/components/ui/page-header";
 import { StatCard } from "@/components/ui/stat-card";
 import { useUser } from "@/hooks/use-user";
@@ -25,6 +24,9 @@ interface Review {
   content: string;
   wordCount: number;
   createdAt: string;
+  isDemo?: boolean;
+  timeLabel?: string;
+  submittedLabel?: string;
 }
 
 interface ReviewsData {
@@ -42,11 +44,23 @@ interface ReviewsData {
   };
 }
 
+const demoReview: Review = {
+  id: "demo-review",
+  memberName: "Local customer preview",
+  content:
+    "This demo shows how a customer review will look once real feedback starts coming in. Real customer names, dates, ratings, and review text will replace this preview automatically.",
+  wordCount: 30,
+  createdAt: "",
+  isDemo: true,
+  timeLabel: "Preview",
+  submittedLabel: "Demo review preview",
+};
+
 export default function ReviewsPage() {
   const router = useRouter();
   const { user, isLoading: loading, isAuthenticated } = useUser();
   const [data, setData] = useState<ReviewsData | null>(null);
-  const [_dataLoading, setDataLoading] = useState(true);
+  const [dataLoading, setDataLoading] = useState(true);
   const [page, setPage] = useState(1);
 
   useEffect(() => {
@@ -77,6 +91,14 @@ export default function ReviewsPage() {
     }
   }, [loading, isAuthenticated, page]);
 
+  const hasReviews = Boolean(data?.reviews.length);
+  const showReviewDemo = Boolean(data && !hasReviews);
+  const displayedReviews = data
+    ? hasReviews
+      ? data.reviews
+      : [demoReview]
+    : [];
+
   return (
     <DashboardLayout navItems={merchantNavItems}>
       {loading ? null : (
@@ -105,17 +127,30 @@ export default function ReviewsPage() {
             />
           </div>
 
-          {/* Reviews List */}
-          {!data || data.reviews.length === 0 ? (
-            <EmptyState
-              icon={Star}
-              title="No reviews yet"
-              description="Reviews will appear here when customers write about their experience."
-            />
+          {dataLoading && !data ? (
+            <div className="rounded-lg border border-border bg-card p-6 text-sm text-muted-foreground">
+              Loading reviews...
+            </div>
+          ) : !data ? (
+            <div className="rounded-lg border border-border bg-card p-6 text-sm text-muted-foreground">
+              Reviews could not be loaded.
+            </div>
           ) : (
             <>
+              {showReviewDemo && (
+                <div className="mb-4 rounded-lg border border-dashed border-primary/35 bg-primary/5 p-4">
+                  <p className="text-sm font-semibold text-foreground">
+                    Demo review preview
+                  </p>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    This appears only while the merchant has no real customer
+                    reviews.
+                  </p>
+                </div>
+              )}
+
               <div className="space-y-4">
-                {data.reviews.map((review) => (
+                {displayedReviews.map((review) => (
                   <div
                     key={review.id}
                     className="bg-card rounded-xl border border-border p-6 hover:border-primary/30 transition-colors"
@@ -130,14 +165,22 @@ export default function ReviewsPage() {
                         <div>
                           <p className="font-medium">{review.memberName}</p>
                           <p className="text-sm text-muted-foreground">
-                            {formatDistanceToNow(new Date(review.createdAt), {
-                              addSuffix: true,
-                            })}
+                            {review.timeLabel ||
+                              formatDistanceToNow(
+                                new Date(review.createdAt),
+                                {
+                                  addSuffix: true,
+                                },
+                              )}
                           </p>
                         </div>
                       </div>
                       <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <span>{review.wordCount} words</span>
+                        <span>
+                          {review.isDemo
+                            ? "Demo review"
+                            : `${review.wordCount} words`}
+                        </span>
                       </div>
                     </div>
 
@@ -150,11 +193,11 @@ export default function ReviewsPage() {
 
                     <div className="mt-4 pt-4 border-t border-border">
                       <p className="text-xs text-muted-foreground">
-                        Submitted on{" "}
-                        {format(
-                          new Date(review.createdAt),
-                          "MMMM d, yyyy 'at' h:mm a",
-                        )}
+                        {review.submittedLabel ||
+                          `Submitted on ${format(
+                            new Date(review.createdAt),
+                            "MMMM d, yyyy 'at' h:mm a",
+                          )}`}
                       </p>
                     </div>
                   </div>
@@ -162,7 +205,7 @@ export default function ReviewsPage() {
               </div>
 
               {/* Pagination */}
-              {data.pagination.totalPages > 1 && (
+              {data && data.pagination.totalPages > 1 && (
                 <div className="mt-6 flex items-center justify-between">
                   <p className="text-sm text-muted-foreground">
                     Showing{" "}

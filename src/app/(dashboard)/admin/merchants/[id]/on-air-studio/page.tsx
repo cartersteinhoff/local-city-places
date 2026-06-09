@@ -11,6 +11,9 @@ import { adminNavItems } from "../../../nav";
 
 interface MerchantData {
   businessName: string;
+  campaignAudio?: React.ComponentProps<
+    typeof OnAirStudioContent
+  >["campaignAudio"];
   urls: {
     full: string | null;
   };
@@ -80,6 +83,7 @@ export default function AdminMerchantOnAirStudioPage({
         <OnAirStudioContent
           mode="admin"
           merchantName={merchant?.businessName}
+          campaignAudio={merchant?.campaignAudio}
           publicPageHref={merchant?.urls.full}
           backHref={`/admin/merchants/${id}/edit`}
         />
