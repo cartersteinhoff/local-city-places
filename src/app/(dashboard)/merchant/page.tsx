@@ -83,18 +83,18 @@ const marketLockItems = [
 const marketLockLevels = [
   {
     level: "Level 1",
-    label: "Current",
-    title: "Reserved category",
-    detail: "Your local category is held for this market.",
-    status: "You are here",
+    label: "Current position",
+    title: "City + category reserved",
+    detail: "Your starting position is ready for MarketLock360.",
+    status: "Reserved",
     icon: ShieldCheck,
   },
   {
     level: "Level 2",
-    label: "Recommended unlock",
+    label: "Recommended package",
     title: "MarketLock360",
-    detail: "Category position plus local media package.",
-    status: "Upgrade target",
+    detail: "Turn on media, mail, sweepstakes, and local growth support.",
+    status: "Next step",
     icon: LockKeyhole,
   },
   {
@@ -300,10 +300,10 @@ function MerchantActivationBanner({
 
         <div className="border-t bg-muted/30 p-5 md:p-6 2xl:border-l 2xl:border-t-0">
           <p className="text-xs font-semibold uppercase text-muted-foreground">
-            Next reach layer
+            Get MarketLock360
           </p>
           <h3 className="mt-2 text-xl font-bold tracking-tight">
-            MarketLock360 adds reach
+            Turn the lock into a campaign
           </h3>
           <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4 2xl:grid-cols-1">
             {marketLock360Adds.map((item) => {
@@ -329,7 +329,7 @@ function MerchantActivationBanner({
             className="mt-5 inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
           >
             <ExternalLink className="mr-2 h-4 w-4" />
-            View MarketLock360
+            Get MarketLock360
           </a>
         </div>
       </div>
@@ -571,35 +571,35 @@ function MarketLockDashboardCard({
               <LockKeyhole className="h-5 w-5" />
             </div>
             <p className="text-xs font-semibold uppercase text-muted-foreground">
-              Locked position
+              MarketLock360 upgrade
             </p>
             <h2 className="mt-1 text-2xl font-bold tracking-tight">
-              Add reach to this locked position
+              Get MarketLock360 for this market
             </h2>
             <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
-              {cityCategoryLock} is already reserved. MarketLock360 adds the
-              media, mail, sweepstakes, and local support layer around that
-              protected position.
+              {cityCategoryLock} is reserved. MarketLock360 is the next step: it
+              turns that position into radio, direct mail, sweepstakes traffic,
+              and local growth support.
             </p>
           </div>
 
           <div className="grid gap-3 sm:grid-cols-2 xl:min-w-[440px]">
             <div className="rounded-lg border bg-background/70 p-4">
               <p className="text-xs font-semibold uppercase text-muted-foreground">
-                Locked category
+                Reserved category
               </p>
               <p className="mt-1 text-xl font-bold">{categoryName}</p>
               <span className="mt-3 inline-flex rounded-full border border-emerald-500/40 bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-700 dark:text-emerald-300">
-                Locked
+                Reserved
               </span>
             </div>
             <div className="rounded-lg border bg-background/70 p-4">
               <p className="text-xs font-semibold uppercase text-muted-foreground">
-                Locked city
+                Reserved city
               </p>
               <p className="mt-1 text-xl font-bold">{marketLabel}</p>
               <span className="mt-3 inline-flex rounded-full border border-emerald-500/40 bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-700 dark:text-emerald-300">
-                Locked
+                Reserved
               </span>
             </div>
           </div>
@@ -610,14 +610,14 @@ function MarketLockDashboardCard({
         <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <p className="text-xs font-semibold uppercase text-muted-foreground">
-              Reach path
+              Upgrade path
             </p>
             <h3 className="mt-1 text-xl font-semibold">
-              Extend the city and category lock.
+              Your next step is MarketLock360.
             </h3>
           </div>
           <span className="w-fit rounded-full border border-amber-500/40 bg-amber-500/10 px-3 py-1 text-xs font-semibold text-amber-700 dark:text-amber-300">
-            {marketLockItems.length} reach tools available
+            {marketLockItems.length} tools in MarketLock360
           </span>
         </div>
 
@@ -626,14 +626,14 @@ function MarketLockDashboardCard({
             const Icon = level.icon;
             const isCurrent = index === 0;
             const isTarget = index === 1;
-            const levelLabel = isTarget ? "Reach layer" : level.label;
+            const levelLabel = isTarget ? "Get MarketLock360" : level.label;
             const levelTitle = isCurrent
-              ? "City + category locked"
+              ? "City + category reserved"
               : level.title;
             const levelDetail = isCurrent
-              ? `${categoryName} is reserved in ${marketLabel}.`
+              ? `${categoryName} in ${marketLabel} is ready for MarketLock360.`
               : isTarget
-                ? "Add media, mail, sweepstakes, and local growth support to this lock."
+                ? "Activate the media, mail, sweepstakes, and support package for this market."
                 : level.detail;
 
             return (
@@ -701,10 +701,10 @@ function MarketLockDashboardCard({
         <div className="mt-6 border-t pt-5">
           <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
             <p className="text-xs font-semibold uppercase text-muted-foreground">
-              MarketLock360 reach tools
+              What MarketLock360 includes
             </p>
             <span className="rounded-full border px-3 py-1 text-xs font-semibold text-muted-foreground">
-              Built around the locked position
+              Core package tools
             </span>
           </div>
           <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
@@ -737,7 +737,7 @@ function MarketLockDashboardCard({
             className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
           >
             <ExternalLink className="mr-2 h-4 w-4" />
-            Add MarketLock360 reach
+            Get MarketLock360
           </a>
         </div>
       </div>
