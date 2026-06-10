@@ -81,6 +81,11 @@ const activationStatusMeta = {
     dot: "bg-amber-500",
     caption: "text-amber-700 dark:text-amber-300",
   },
+  Upgrade: {
+    icon: "border-muted-foreground/25 bg-muted/40 text-muted-foreground",
+    dot: "bg-muted-foreground/50",
+    caption: "text-muted-foreground",
+  },
 } as const;
 
 const marketLayerStatusClasses = {
@@ -173,22 +178,12 @@ const marketLock360Adds = [
     detail: "Follow-up, appointments, and customer communication support.",
     icon: Bot,
   },
-  {
-    label: "Google profile support",
-    detail: "Maps visibility, reviews, and local search signals.",
-    icon: Globe2,
-  },
 ];
 
 const upgradeSteps = [
   { title: "Reserved category", note: "Active today", state: "done" },
   { title: "MarketLock360", note: "Your next unlock", state: "next" },
   { title: "LOCAL AI Staff", note: "Add-on after 360", state: "locked" },
-  {
-    title: "Google profile support",
-    note: "Add-on after 360",
-    state: "locked",
-  },
 ] as const;
 
 const productionStages: Array<{
@@ -548,6 +543,45 @@ function MerchantActivationBanner({
                       className={cn("h-1.5 w-1.5 rounded-full", meta.dot)}
                     />
                     {itemStatus}
+                  </p>
+                </div>
+              </li>
+            );
+          })}
+          {marketLock360Adds.map((item) => {
+            const Icon = item.icon;
+            const meta = activationStatusMeta.Upgrade;
+
+            return (
+              <li key={item.label} className="flex gap-3">
+                <span
+                  className={cn(
+                    "flex h-10 w-10 shrink-0 items-center justify-center rounded-full border",
+                    meta.icon,
+                  )}
+                >
+                  <Icon className="h-4 w-4" />
+                </span>
+                <div className="min-w-0">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                    {item.label}
+                  </p>
+                  <p
+                    className="mt-1 truncate text-sm font-semibold leading-5 text-muted-foreground"
+                    title={item.detail}
+                  >
+                    {item.detail}
+                  </p>
+                  <p
+                    className={cn(
+                      "mt-1.5 flex items-center gap-1.5 text-xs font-semibold",
+                      meta.caption,
+                    )}
+                  >
+                    <span
+                      className={cn("h-1.5 w-1.5 rounded-full", meta.dot)}
+                    />
+                    Upgrade
                   </p>
                 </div>
               </li>
