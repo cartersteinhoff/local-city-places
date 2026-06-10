@@ -440,9 +440,11 @@ function CampaignAudioPanel({
 
 function MerchantActivationBanner({
   merchant,
+  merchantTrial,
   track,
 }: {
   merchant: MerchantPageManagementMerchant | undefined;
+  merchantTrial?: MerchantTrialData | null;
   track: CampaignTrackData | undefined;
 }) {
   const categoryName = merchant?.categoryName || "Local category";
@@ -457,35 +459,56 @@ function MerchantActivationBanner({
 
   return (
     <section className="mb-5 overflow-hidden rounded-xl border bg-card p-4 md:p-5">
-      <div className="flex min-w-0 items-center gap-3">
-        {merchant?.logoUrl ? (
-          <Image
-            src={merchant.logoUrl}
-            alt={`${merchant.businessName} logo`}
-            width={48}
-            height={48}
-            className="h-10 w-10 shrink-0 rounded-lg border object-cover"
-          />
-        ) : (
-          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-300">
-            <ShieldCheck className="h-5 w-5" />
-          </span>
-        )}
-        <div className="min-w-0">
-          <p className="text-xs font-semibold uppercase text-muted-foreground">
-            Activated market package
-          </p>
-          <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1">
-            <h2 className="truncate text-lg font-bold tracking-tight md:text-xl">
-              {categoryName} &middot; {marketLabel}
-            </h2>
-            <span className="inline-flex shrink-0 items-center gap-1 rounded-full border border-emerald-500/40 bg-emerald-500/10 px-2.5 py-0.5 text-xs font-semibold text-emerald-700 dark:text-emerald-300">
-              <LockKeyhole className="h-3 w-3" />
-              Lock active
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+        <div className="flex min-w-0 items-center gap-3">
+          {merchant?.logoUrl ? (
+            <Image
+              src={merchant.logoUrl}
+              alt={`${merchant.businessName} logo`}
+              width={48}
+              height={48}
+              className="h-10 w-10 shrink-0 rounded-lg border object-cover"
+            />
+          ) : (
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-300">
+              <ShieldCheck className="h-5 w-5" />
             </span>
+          )}
+          <div className="min-w-0">
+            <p className="text-xs font-semibold uppercase text-muted-foreground">
+              Activated market package
+            </p>
+            <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1">
+              <h2 className="truncate text-lg font-bold tracking-tight md:text-xl">
+                {categoryName} &middot; {marketLabel}
+              </h2>
+              <span className="inline-flex shrink-0 items-center gap-1 rounded-full border border-emerald-500/40 bg-emerald-500/10 px-2.5 py-0.5 text-xs font-semibold text-emerald-700 dark:text-emerald-300">
+                <LockKeyhole className="h-3 w-3" />
+                Lock active
+              </span>
+            </div>
+            <p className="mt-0.5 text-xs text-muted-foreground md:text-sm">
+              {`No other ${categoryName} business in ${marketLabel} can hold this position — it's yours.`}
+            </p>
           </div>
-          <p className="mt-0.5 text-xs text-muted-foreground md:text-sm">
-            {`No other ${categoryName} business in ${marketLabel} can hold this position — it's yours.`}
+        </div>
+
+        <div className="min-w-0 shrink-0 lg:max-w-sm lg:text-right">
+          <div className="flex flex-wrap items-center gap-2 lg:justify-end">
+            <h1 className="text-2xl font-bold tracking-tight text-foreground md:text-3xl">
+              MarketLock360
+            </h1>
+            {merchantTrial && (
+              <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-primary/30 bg-primary/10 px-3 py-1.5 text-sm font-semibold text-primary">
+                <CalendarClock className="h-4 w-4" />
+                {`Trial day ${merchantTrial.day} of ${merchantTrial.totalDays}`}
+              </span>
+            )}
+          </div>
+          <p className="mt-1 text-sm text-muted-foreground">
+            {merchant?.businessName
+              ? `Welcome back, ${merchant.businessName}`
+              : "Manage your merchant page, campaign media, and customer reviews"}
           </p>
         </div>
       </div>
@@ -795,27 +818,9 @@ export default function MerchantDashboard() {
         </div>
       ) : (
         <>
-          <div className="mb-6 md:mb-8">
-            <div className="flex flex-wrap items-center gap-3">
-              <h1 className="text-2xl font-bold text-foreground md:text-3xl">
-                MarketLock360
-              </h1>
-              {dashboardData?.merchantTrial && (
-                <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/30 bg-primary/10 px-3 py-1.5 text-sm font-semibold text-primary">
-                  <CalendarClock className="h-4 w-4" />
-                  {`Trial day ${dashboardData.merchantTrial.day} of ${dashboardData.merchantTrial.totalDays}`}
-                </span>
-              )}
-            </div>
-            <p className="mt-1 text-muted-foreground">
-              {merchant?.businessName
-                ? `Welcome back, ${merchant.businessName}`
-                : "Manage your merchant page, campaign media, and customer reviews"}
-            </p>
-          </div>
-
           <MerchantActivationBanner
             merchant={merchant}
+            merchantTrial={dashboardData?.merchantTrial}
             track={dashboardData?.campaignTrack}
           />
 
