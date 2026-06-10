@@ -10,9 +10,7 @@ import {
 } from "@/db";
 import { getSession } from "@/lib/auth";
 import { calculateCompletion } from "@/lib/merchant-completion";
-
-const merchantTrialDays = 14;
-const dayMs = 24 * 60 * 60 * 1000;
+import { getMerchantTrialProgress } from "@/lib/merchant-trial";
 
 function getCampaignAudioAsset(
   campaignAudio: MerchantCampaignAudio | null,
@@ -44,26 +42,6 @@ function getCampaignAudioAsset(
     audioSrc: asset.url,
     status: asset.status || ("ready" as const),
     updatedAt: asset.uploadedAt || campaignAudio?.updatedAt || null,
-  };
-}
-
-function getMerchantTrialProgress(usedAt: Date | null | undefined) {
-  if (!usedAt) return null;
-
-  const now = new Date();
-  const startedAt = new Date(usedAt);
-  const endsAt = new Date(startedAt.getTime() + merchantTrialDays * dayMs);
-  const elapsedMs = now.getTime() - startedAt.getTime();
-
-  if (elapsedMs < 0 || now.getTime() >= endsAt.getTime()) {
-    return null;
-  }
-
-  return {
-    day: Math.min(merchantTrialDays, Math.floor(elapsedMs / dayMs) + 1),
-    totalDays: merchantTrialDays,
-    startedAt: startedAt.toISOString(),
-    endsAt: endsAt.toISOString(),
   };
 }
 

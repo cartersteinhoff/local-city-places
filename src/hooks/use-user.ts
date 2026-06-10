@@ -15,6 +15,7 @@ interface Member {
 interface Merchant {
   id: string;
   businessName: string;
+  marketLockStatus?: "trial" | "pro";
 }
 
 interface AuthData {

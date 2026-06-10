@@ -8,7 +8,6 @@ import {
   LogOut,
   Mic,
   Moon,
-  RotateCw,
   Shield,
   Store,
   Sun,
@@ -239,7 +238,13 @@ function CollapsedOnAirStudioMark({ isActive }: { isActive: boolean }) {
   );
 }
 
-function MarketLock360Mark({ isActive }: { isActive: boolean }) {
+function MarketLock360Mark({
+  isActive,
+  statusLabel,
+}: {
+  isActive: boolean;
+  statusLabel: "Trial" | "Pro";
+}) {
   return (
     <span
       className={cn(
@@ -264,9 +269,15 @@ function MarketLock360Mark({ isActive }: { isActive: boolean }) {
         <span className="min-w-0 flex-1 whitespace-nowrap text-sm font-extrabold leading-none tracking-normal text-[#061c34] dark:text-sidebar-foreground">
           MarketLock360
         </span>
-        <span className="flex shrink-0 items-center gap-0.5 rounded-full bg-primary/10 px-1.5 py-0.5 text-[10px] font-black leading-none text-primary">
-          <RotateCw className="h-3 w-3" strokeWidth={2.6} />
-          360°
+        <span
+          className={cn(
+            "flex shrink-0 items-center rounded-full px-2 py-0.5 text-[10px] font-black leading-none ring-1",
+            statusLabel === "Trial"
+              ? "bg-orange-500/10 text-orange-500 ring-orange-500/20"
+              : "bg-emerald-500/10 text-emerald-500 ring-emerald-500/20",
+          )}
+        >
+          {statusLabel}
         </span>
       </span>
     </span>
@@ -305,7 +316,7 @@ export function Sidebar({
 }: SidebarProps) {
   const pathname = usePathname();
   const { theme, setTheme } = useTheme();
-  const { user, userName } = useUser();
+  const { merchant, user, userName } = useUser();
   const activeHref = getActiveHref(pathname, navItems);
   const [localCollapsed, setLocalCollapsed] = useState(collapsedProp);
   const isCollapsed = onToggleCollapse ? collapsedProp : localCollapsed;
@@ -336,6 +347,8 @@ export function Sidebar({
   const hasSections = navItems.some((item) => item.section);
   const navGroups = groupNavItems(navItems);
   const nextTheme = theme === "dark" ? "light" : "dark";
+  const marketLockStatusLabel =
+    merchant?.marketLockStatus === "trial" ? "Trial" : "Pro";
 
   const handleToggleCollapse = () => {
     if (onToggleCollapse) {
@@ -364,7 +377,10 @@ export function Sidebar({
           {isCollapsed ? (
             <CollapsedMarketLock360Mark isActive={isActive} />
           ) : (
-            <MarketLock360Mark isActive={isActive} />
+            <MarketLock360Mark
+              isActive={isActive}
+              statusLabel={marketLockStatusLabel}
+            />
           )}
         </Link>
       );
