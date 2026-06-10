@@ -1008,15 +1008,15 @@ export default function MerchantDashboard() {
             </p>
           </div>
 
-          <CampaignAudioPanel
-            radioSpot={dashboardData?.radioSpot}
-            soundtrack={dashboardData?.campaignTrack}
-          />
-
           <MerchantActivationBanner
             merchant={merchant}
             merchantTrial={dashboardData?.merchantTrial}
             track={dashboardData?.campaignTrack}
+          />
+
+          <CampaignAudioPanel
+            radioSpot={dashboardData?.radioSpot}
+            soundtrack={dashboardData?.campaignTrack}
           />
 
           <CampaignProductionPanel city={merchant?.city} />
