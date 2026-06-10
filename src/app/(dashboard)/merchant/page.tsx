@@ -190,57 +190,6 @@ function formatTrackTime(seconds: number) {
   return `${minutes}:${remainingSeconds}`;
 }
 
-function MerchantTrialStatusCard({
-  merchantTrial,
-}: {
-  merchantTrial?: MerchantTrialData | null;
-}) {
-  if (!merchantTrial) return null;
-
-  const progress = Math.min(
-    100,
-    Math.max(0, (merchantTrial.day / merchantTrial.totalDays) * 100),
-  );
-  const daysLeft = Math.max(0, merchantTrial.totalDays - merchantTrial.day);
-
-  return (
-    <div className="w-full shrink-0 rounded-xl border border-primary/25 bg-primary/[0.055] p-3.5 sm:w-[260px]">
-      <div className="flex items-start justify-between gap-3">
-        <div className="flex min-w-0 items-center gap-3">
-          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-primary/25 bg-primary/10 text-primary">
-            <CalendarClock className="h-5 w-5" />
-          </span>
-          <div className="min-w-0">
-            <p className="text-xs font-semibold uppercase text-muted-foreground">
-              Merchant trial
-            </p>
-            <p className="mt-0.5 text-lg font-bold leading-none">
-              Day {merchantTrial.day}
-              <span className="text-sm font-semibold text-muted-foreground">
-                {" "}
-                of {merchantTrial.totalDays}
-              </span>
-            </p>
-          </div>
-        </div>
-        <span className="shrink-0 rounded-full border border-primary/30 bg-primary/10 px-2.5 py-1 text-[11px] font-semibold text-primary">
-          Active
-        </span>
-      </div>
-
-      <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-primary/15">
-        <span
-          className="block h-full rounded-full bg-primary"
-          style={{ width: `${progress}%` }}
-        />
-      </div>
-      <p className="mt-2 text-xs font-medium text-muted-foreground">
-        {daysLeft === 1 ? "1 day left" : `${daysLeft} days left`}
-      </p>
-    </div>
-  );
-}
-
 // Deterministic pseudo-random bar heights so the waveform renders
 // identically on every mount.
 const waveformBars = Array.from({ length: 44 }, (_, index) => {
@@ -515,11 +464,9 @@ function CampaignAudioPanel({
 
 function MerchantActivationBanner({
   merchant,
-  merchantTrial,
   track,
 }: {
   merchant: MerchantPageManagementMerchant | undefined;
-  merchantTrial: MerchantTrialData | null | undefined;
   track: CampaignTrackData | undefined;
 }) {
   const categoryName = merchant?.categoryName || "Local category";
@@ -533,48 +480,44 @@ function MerchantActivationBanner({
   ];
 
   return (
-    <section className="mb-6 overflow-hidden rounded-xl border bg-card p-5 md:p-6">
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-        <div className="flex min-w-0 items-center gap-4">
-          {merchant?.logoUrl ? (
-            <Image
-              src={merchant.logoUrl}
-              alt={`${merchant.businessName} logo`}
-              width={48}
-              height={48}
-              className="h-12 w-12 shrink-0 rounded-lg border object-cover"
-            />
-          ) : (
-            <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg border border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-300">
-              <ShieldCheck className="h-6 w-6" />
+    <section className="mb-5 overflow-hidden rounded-xl border bg-card p-4 md:p-5">
+      <div className="flex min-w-0 items-center gap-3">
+        {merchant?.logoUrl ? (
+          <Image
+            src={merchant.logoUrl}
+            alt={`${merchant.businessName} logo`}
+            width={48}
+            height={48}
+            className="h-10 w-10 shrink-0 rounded-lg border object-cover"
+          />
+        ) : (
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-300">
+            <ShieldCheck className="h-5 w-5" />
+          </span>
+        )}
+        <div className="min-w-0">
+          <p className="text-xs font-semibold uppercase text-muted-foreground">
+            Activated market package
+          </p>
+          <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1">
+            <h2 className="truncate text-lg font-bold tracking-tight md:text-xl">
+              {categoryName} &middot; {marketLabel}
+            </h2>
+            <span className="inline-flex shrink-0 items-center gap-1 rounded-full border border-emerald-500/40 bg-emerald-500/10 px-2.5 py-0.5 text-xs font-semibold text-emerald-700 dark:text-emerald-300">
+              <LockKeyhole className="h-3 w-3" />
+              Lock active
             </span>
-          )}
-          <div className="min-w-0">
-            <p className="text-xs font-semibold uppercase text-muted-foreground">
-              Activated market package
-            </p>
-            <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1">
-              <h2 className="truncate text-xl font-bold tracking-tight md:text-2xl">
-                {categoryName} &middot; {marketLabel}
-              </h2>
-              <span className="inline-flex shrink-0 items-center gap-1 rounded-full border border-emerald-500/40 bg-emerald-500/10 px-2.5 py-0.5 text-xs font-semibold text-emerald-700 dark:text-emerald-300">
-                <LockKeyhole className="h-3 w-3" />
-                Lock active
-              </span>
-            </div>
-            <p className="mt-1 text-xs text-muted-foreground md:text-sm">
-              {`No other ${categoryName} business in ${marketLabel} can hold this position — it's yours.`}
-            </p>
           </div>
+          <p className="mt-0.5 text-xs text-muted-foreground md:text-sm">
+            {`No other ${categoryName} business in ${marketLabel} can hold this position — it's yours.`}
+          </p>
         </div>
-
-        <MerchantTrialStatusCard merchantTrial={merchantTrial} />
       </div>
 
-      <div className="mt-5 grid gap-5 border-t pt-5 xl:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
+      <div className="mt-4 grid gap-4 border-t pt-4 xl:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
         <MerchantTerritoryMapBlock merchant={merchant} />
 
-        <div className="xl:border-l xl:pl-5">
+        <div className="xl:border-l xl:pl-4">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <p className="text-xs font-semibold uppercase text-muted-foreground">
               Package status
@@ -599,7 +542,7 @@ function MerchantActivationBanner({
             <LockKeyhole className="h-3 w-3 shrink-0" />
             {`${marketLock360Adds.length} tools locked — MarketLock360 turns them on.`}
           </p>
-          <ol className="mt-5 grid gap-x-4 gap-y-5 sm:grid-cols-2 2xl:grid-cols-3">
+          <ol className="mt-4 grid gap-x-4 gap-y-4 sm:grid-cols-2 2xl:grid-cols-3">
             {activationItems.map((item) => {
               const Icon = item.icon;
               const isSignatureSoundtrack =
@@ -1010,7 +953,6 @@ export default function MerchantDashboard() {
 
           <MerchantActivationBanner
             merchant={merchant}
-            merchantTrial={dashboardData?.merchantTrial}
             track={dashboardData?.campaignTrack}
           />
 
