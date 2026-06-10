@@ -1,11 +1,13 @@
 "use client";
 
 import {
+  ArrowUpRight,
   Bot,
   CalendarClock,
   Check,
   Download,
   Globe2,
+  LifeBuoy,
   Loader2,
   LockKeyhole,
   type LucideIcon,
@@ -129,29 +131,32 @@ const activationItems = [
   },
 ] as const;
 
-const marketLock360Adds = [
+const marketLockProAdds = [
   {
     label: "Direct mail",
     detail: `Campaign mailers to ${reachStats.mailHouseholds} households in your protected market.`,
+    tag: "Pro",
     icon: Mailbox,
   },
   {
     label: "Sweepstakes traffic",
     detail: "Member nominations, referrals, and campaign engagement.",
+    tag: "Pro",
     icon: Sparkles,
   },
   {
     label: "LOCAL AI Staff",
     detail: "Follow-up, appointments, and customer communication support.",
+    tag: "Pro",
     icon: Bot,
   },
+  {
+    label: "Concierge service",
+    detail: "Support for market questions, platform help, and next steps.",
+    tag: "Pro",
+    icon: LifeBuoy,
+  },
 ];
-
-const upgradeSteps = [
-  { title: "Reserved category", note: "Active today", state: "done" },
-  { title: "MarketLock360", note: "Your next unlock", state: "next" },
-  { title: "LOCAL AI Staff", note: "Add-on after 360", state: "locked" },
-] as const;
 
 const emptyCaptionsTrack = "data:text/vtt,WEBVTT%0A%0A";
 
@@ -451,10 +456,10 @@ function MerchantActivationBanner({
   const marketLabel =
     [merchant?.city, merchant?.state].filter(Boolean).join(", ") ||
     "Your market";
-  const totalTools = activationItems.length + marketLock360Adds.length;
+  const totalTools = activationItems.length + marketLockProAdds.length;
   const toolSegments = [
     ...activationItems.map((item) => ({ key: item.label, active: true })),
-    ...marketLock360Adds.map((item) => ({ key: item.label, active: false })),
+    ...marketLockProAdds.map((item) => ({ key: item.label, active: false })),
   ];
 
   return (
@@ -539,7 +544,7 @@ function MerchantActivationBanner({
           </div>
           <p className="mt-2 flex items-center gap-1.5 text-xs text-muted-foreground">
             <LockKeyhole className="h-3 w-3 shrink-0" />
-            {`${marketLock360Adds.length} tools locked — MarketLock360 turns them on.`}
+            {`${marketLockProAdds.length} tools locked - MarketLock360 Pro turns them on.`}
           </p>
           <ol className="mt-4 grid gap-x-4 gap-y-4 sm:grid-cols-2 2xl:grid-cols-3">
             {activationItems.map((item) => {
@@ -591,7 +596,7 @@ function MerchantActivationBanner({
                 </li>
               );
             })}
-            {marketLock360Adds.map((item) => {
+            {marketLockProAdds.map((item) => {
               const Icon = item.icon;
               const meta = activationStatusMeta.Upgrade;
 
@@ -660,7 +665,7 @@ function MerchantTerritoryMapBlock({
   );
 }
 
-function MarketLock360UpsellCard({
+function MarketLockProUpsellCard({
   merchant,
 }: {
   merchant: MerchantPageManagementMerchant | undefined;
@@ -672,97 +677,79 @@ function MarketLock360UpsellCard({
 
   return (
     <section
-      id="marketlock-360"
-      className="mb-6 overflow-hidden rounded-xl border border-primary/25 bg-gradient-to-br from-primary/[0.06] via-card to-card p-5 md:p-6"
+      id="marketlock-pro"
+      className="mb-6 overflow-hidden rounded-xl border border-primary/25 bg-card shadow-sm"
     >
-      <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
-        <div className="min-w-0 lg:max-w-2xl">
-          <div className="flex items-center gap-3">
-            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
-              <LockKeyhole className="h-5 w-5" />
-            </span>
-            <p className="text-xs font-semibold uppercase text-muted-foreground">
-              MarketLock360 &middot; Recommended unlock
+      <div className="min-w-0 p-5 md:p-6">
+        <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
+          <div className="min-w-0">
+            <div className="flex items-center gap-3">
+              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary ring-1 ring-primary/20">
+                <LockKeyhole className="h-5 w-5" />
+              </span>
+              <div className="min-w-0">
+                <p className="text-xs font-semibold uppercase text-muted-foreground">
+                  Pro subscription upgrade
+                </p>
+                <h2 className="mt-1 text-2xl font-bold tracking-tight">
+                  Upgrade to MarketLock360 Pro
+                </h2>
+              </div>
+            </div>
+            <p className="mt-4 max-w-3xl text-sm leading-6 text-muted-foreground">
+              {`Upgrade to keep your subscription active and your ${categoryName} category locked down in ${marketLabel}. The 6 market tools already turned on stay on, and MarketLock360 Pro adds 4 more ways to keep the campaign moving.`}
             </p>
           </div>
-          <h2 className="mt-4 text-2xl font-bold tracking-tight">
-            Unlock MarketLock360
-          </h2>
-          <p className="mt-2 text-sm leading-6 text-muted-foreground">
-            {`Your ${categoryName} category is reserved for ${marketLabel}. MarketLock360 turns that lock into a campaign by adding the media and local reach layer for this market.`}
-          </p>
 
-          <div className="mt-5 grid gap-3 sm:grid-cols-2">
-            {marketLock360Adds.map((item) => {
-              const Icon = item.icon;
-
-              return (
-                <div
-                  key={item.label}
-                  className="rounded-lg border bg-background/70 p-3"
-                >
-                  <div className="flex items-center gap-2">
-                    <Icon className="h-4 w-4 shrink-0 text-primary" />
-                    <p className="text-sm font-semibold">{item.label}</p>
-                  </div>
-                  <p className="mt-1 text-xs leading-5 text-muted-foreground">
-                    {item.detail}
-                  </p>
-                </div>
-              );
-            })}
+          <div className="flex shrink-0 flex-col items-start gap-2 sm:flex-row xl:flex-col xl:items-end">
+            <Button
+              type="button"
+              size="sm"
+              className="h-10 rounded-lg px-4 text-sm font-semibold"
+              aria-label="Upgrade today"
+            >
+              <ArrowUpRight className="h-4 w-4" />
+              Upgrade today
+            </Button>
+            <div className="flex items-center gap-2 rounded-lg border border-primary/25 bg-primary/10 px-3 py-2 text-sm font-semibold text-primary">
+              <Check className="h-4 w-4" />4 Pro tools ready to unlock
+            </div>
           </div>
         </div>
 
-        <div className="flex shrink-0 flex-col gap-4 border-t pt-5 lg:w-64 lg:border-l lg:border-t-0 lg:pl-6 lg:pt-0">
-          <div>
-            <p className="text-xs font-semibold uppercase text-muted-foreground">
-              Upgrade path
-            </p>
-            <ol className="mt-3 space-y-2.5">
-              {upgradeSteps.map((step, index) => (
-                <li key={step.title} className="flex items-center gap-3">
-                  <span
-                    className={cn(
-                      "flex h-7 w-7 shrink-0 items-center justify-center rounded-full border text-xs font-bold",
-                      step.state === "done" &&
-                        "border-emerald-500/40 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300",
-                      step.state === "next" &&
-                        "border-primary bg-primary text-primary-foreground",
-                      step.state === "locked" &&
-                        "bg-background text-muted-foreground",
-                    )}
-                  >
-                    {step.state === "done" ? (
-                      <Check className="h-3.5 w-3.5" />
-                    ) : (
-                      index + 1
-                    )}
-                  </span>
-                  <div className="min-w-0">
-                    <p
-                      className={cn(
-                        "text-sm font-semibold leading-5",
-                        step.state === "locked" && "text-muted-foreground",
-                      )}
-                    >
-                      {step.title}
-                    </p>
-                    <p
-                      className={cn(
-                        "text-xs",
-                        step.state === "next"
-                          ? "font-semibold text-primary"
-                          : "text-muted-foreground",
-                      )}
-                    >
-                      {step.note}
+        <div className="mt-5 grid overflow-hidden rounded-lg border border-border/80 bg-background/45 sm:grid-cols-2">
+          {marketLockProAdds.map((item, index) => {
+            const Icon = item.icon;
+
+            return (
+              <div
+                key={item.label}
+                className={cn(
+                  "group min-w-0 p-4 transition-colors hover:bg-primary/[0.06]",
+                  index > 0 && "border-t",
+                  index % 2 === 1 && "sm:border-l",
+                  index < 2 && "sm:border-t-0",
+                )}
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex min-w-0 items-start gap-2">
+                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary">
+                      <Icon className="h-4 w-4" />
+                    </span>
+                    <p className="min-w-0 text-sm font-semibold leading-5">
+                      {item.label}
                     </p>
                   </div>
-                </li>
-              ))}
-            </ol>
-          </div>
+                  <span className="shrink-0 rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-bold uppercase text-primary">
+                    {item.tag}
+                  </span>
+                </div>
+                <p className="mt-3 text-xs leading-5 text-muted-foreground">
+                  {item.detail}
+                </p>
+              </div>
+            );
+          })}
         </div>
       </div>
     </section>
@@ -840,7 +827,7 @@ export default function MerchantDashboard() {
             />
           )}
 
-          <MarketLock360UpsellCard merchant={merchant} />
+          <MarketLockProUpsellCard merchant={merchant} />
         </>
       )}
     </DashboardLayout>
