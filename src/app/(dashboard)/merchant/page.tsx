@@ -1,13 +1,11 @@
 "use client";
 
 import {
-  ArrowRight,
   Bot,
   CalendarClock,
   Check,
   Download,
   Globe2,
-  Info,
   Loader2,
   LockKeyhole,
   type LucideIcon,
@@ -17,12 +15,10 @@ import {
   Pause,
   Play,
   RadioTower,
-  RefreshCw,
   ShieldCheck,
   Sparkles,
 } from "lucide-react";
 import Image from "next/image";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { DashboardLayout } from "@/components/layout";
@@ -88,10 +84,9 @@ const activationStatusMeta = {
   },
 } as const;
 
-// Stub reach figures for sales framing — confirm with KLCP and the mail
-// vendor before these go in front of merchants.
+// Stub reach figure for sales framing — confirm with the mail vendor before
+// this goes in front of merchants.
 const reachStats = {
-  radioListeners: "280K+",
   mailHouseholds: "12,000+",
 };
 
@@ -157,25 +152,6 @@ const upgradeSteps = [
   { title: "MarketLock360", note: "Your next unlock", state: "next" },
   { title: "LOCAL AI Staff", note: "Add-on after 360", state: "locked" },
 ] as const;
-
-const productionStages: Array<{
-  label: string;
-  caption: string;
-  icon?: LucideIcon;
-  step?: number;
-  isCurrent?: boolean;
-}> = [
-  // Stage timing is a stub — align with the real production schedule.
-  {
-    label: "Production",
-    caption: "Happening now",
-    icon: RefreshCw,
-    isCurrent: true,
-  },
-  { label: "Your approval", caption: "About 2 weeks out", step: 2 },
-  { label: "Airplay scheduled", caption: "Right after approval", step: 3 },
-  { label: "On air", caption: "Your debut on KLCP 96.5", icon: RadioTower },
-];
 
 const emptyCaptionsTrack = "data:text/vtt,WEBVTT%0A%0A";
 
@@ -638,119 +614,6 @@ function MerchantActivationBanner({
   );
 }
 
-function CampaignProductionPanel({
-  className,
-  city,
-}: {
-  className?: string;
-  city: string | null | undefined;
-}) {
-  return (
-    <section
-      id="campaign-production"
-      className={cn(
-        "mb-6 overflow-hidden rounded-xl border bg-card p-5 md:p-6",
-        className,
-      )}
-    >
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-        <div className="min-w-0">
-          <p className="text-xs font-semibold uppercase text-muted-foreground">
-            Campaign production
-          </p>
-          <h2 className="mt-1 text-lg font-bold tracking-tight">
-            Your radio campaign is being produced
-          </h2>
-          <p className="mt-1 text-sm text-muted-foreground">
-            KLCP 96.5 FM reaches{" "}
-            <span className="font-semibold text-foreground">
-              {reachStats.radioListeners} local listeners
-            </span>{" "}
-            across {city ? `the ${city} area` : "your market"}.
-          </p>
-        </div>
-        <Button asChild variant="outline" size="sm" className="w-fit shrink-0">
-          <Link href="/merchant/on-air-studio">
-            Open On-Air Studio
-            <ArrowRight className="h-4 w-4" />
-          </Link>
-        </Button>
-      </div>
-
-      <ol className="mt-6 grid grid-cols-2 gap-4 sm:flex sm:gap-0">
-        {productionStages.map((stage, index) => {
-          const StageIcon = stage.icon;
-          const isLast = index === productionStages.length - 1;
-
-          return (
-            <li
-              key={stage.label}
-              className="relative flex items-start gap-3 sm:block sm:flex-1 sm:text-center"
-            >
-              {!isLast && (
-                <span
-                  aria-hidden="true"
-                  className="absolute left-[calc(50%+22px)] right-[calc(-50%+22px)] top-3.5 hidden h-px bg-border sm:block"
-                />
-              )}
-              <span
-                className={cn(
-                  "flex h-7 w-7 shrink-0 items-center justify-center rounded-full border text-xs font-bold sm:mx-auto",
-                  stage.isCurrent
-                    ? "border-blue-500/40 bg-blue-500/10 text-blue-700 dark:text-blue-300"
-                    : "bg-background text-muted-foreground",
-                )}
-              >
-                {StageIcon ? <StageIcon className="h-3.5 w-3.5" /> : stage.step}
-              </span>
-              <div className="min-w-0 sm:mt-2">
-                <p
-                  className={cn(
-                    "text-xs font-semibold",
-                    stage.isCurrent
-                      ? "text-blue-700 dark:text-blue-300"
-                      : "text-foreground",
-                  )}
-                >
-                  {stage.label}
-                </p>
-                <p className="mt-0.5 text-xs text-muted-foreground">
-                  {stage.caption}
-                </p>
-              </div>
-            </li>
-          );
-        })}
-      </ol>
-
-      <div className="mt-6 border-t">
-        <div className="flex items-center gap-3 py-3.5">
-          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-muted/60 text-muted-foreground">
-            <CalendarClock className="h-4 w-4" />
-          </span>
-          <div className="min-w-0 flex-1">
-            <p className="text-sm font-semibold">Airplay schedule</p>
-            <p className="truncate text-xs text-muted-foreground">
-              Opens once the spot is approved
-            </p>
-          </div>
-          <span className="shrink-0 rounded-full border border-amber-500/40 bg-amber-500/10 px-2.5 py-1 text-xs font-semibold text-amber-700 dark:text-amber-300">
-            After approval
-          </span>
-        </div>
-      </div>
-
-      <div className="mt-4 flex items-start gap-2.5 rounded-lg bg-muted/40 p-3">
-        <Info className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
-        <p className="text-xs leading-5 text-muted-foreground">
-          We'll send the radio spot for your approval, and airplay scheduling
-          opens right after.
-        </p>
-      </div>
-    </section>
-  );
-}
-
 function MerchantTerritoryMapBlock({
   className,
   merchant,
@@ -960,8 +823,6 @@ export default function MerchantDashboard() {
             radioSpot={dashboardData?.radioSpot}
             soundtrack={dashboardData?.campaignTrack}
           />
-
-          <CampaignProductionPanel city={merchant?.city} />
 
           {merchant && pageManagement && (
             <MerchantPageManagementPanel
