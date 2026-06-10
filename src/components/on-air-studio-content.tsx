@@ -7,9 +7,9 @@ import {
   ExternalLink,
   FileAudio,
   Globe2,
+  Loader2,
   LockKeyhole,
   type LucideIcon,
-  Loader2,
   Mic2,
   Music2,
   Pause,
@@ -230,10 +230,7 @@ function applyCampaignAudio<
     statusTone: StatusTone;
     audioSrc?: string | null;
   },
->(
-  items: readonly T[],
-  campaignAudio: CampaignAudio | null | undefined,
-) {
+>(items: readonly T[], campaignAudio: CampaignAudio | null | undefined) {
   return items.map((item) => {
     const asset = getAudioAssetForKey(campaignAudio, item.key);
 
@@ -513,9 +510,7 @@ function MerchantServicesOverview({
   campaignAudio?: CampaignAudio | null;
 }) {
   const services = applyCampaignAudio(merchantServices, campaignAudio);
-  const audioServices = services.filter(
-    (service) => service.hasPreview,
-  );
+  const audioServices = services.filter((service) => service.hasPreview);
   const airplayServices = services.filter(
     (service) => service.key === "airplay",
   );
@@ -692,38 +687,6 @@ function MerchantServicesOverview({
               </article>
             </div>
           </div>
-        </div>
-      </section>
-
-      <section className="grid gap-4 lg:grid-cols-3">
-        <div className="rounded-lg border bg-card p-5">
-          <div className="mb-3 flex h-9 w-9 items-center justify-center rounded-md bg-primary/10 text-primary">
-            <Mic2 className="h-4 w-4" />
-          </div>
-          <h2 className="font-semibold">1. Produce</h2>
-          <p className="mt-2 text-sm leading-6 text-muted-foreground">
-            Local City Places produces your radio spot and signature soundtrack.
-          </p>
-        </div>
-        <div className="rounded-lg border bg-card p-5">
-          <div className="mb-3 flex h-9 w-9 items-center justify-center rounded-md bg-primary/10 text-primary">
-            <CheckCircle2 className="h-4 w-4" />
-          </div>
-          <h2 className="font-semibold">2. Approve</h2>
-          <p className="mt-2 text-sm leading-6 text-muted-foreground">
-            You review the finished audio before it moves to broadcast
-            scheduling.
-          </p>
-        </div>
-        <div className="rounded-lg border bg-card p-5">
-          <div className="mb-3 flex h-9 w-9 items-center justify-center rounded-md bg-primary/10 text-primary">
-            <RadioTower className="h-4 w-4" />
-          </div>
-          <h2 className="font-semibold">3. Play</h2>
-          <p className="mt-2 text-sm leading-6 text-muted-foreground">
-            Approved audio moves into KLCP 96.5 FM scheduling, with confirmation
-            added here.
-          </p>
         </div>
       </section>
     </div>

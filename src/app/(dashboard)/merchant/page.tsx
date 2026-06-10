@@ -5,7 +5,6 @@ import {
   Bot,
   CalendarClock,
   Check,
-  CheckCircle2,
   Download,
   Globe2,
   Info,
@@ -13,7 +12,6 @@ import {
   LockKeyhole,
   type LucideIcon,
   Mailbox,
-  MapPin,
   Mic2,
   Music2,
   Pause,
@@ -23,10 +21,12 @@ import {
   ShieldCheck,
   Sparkles,
 } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { DashboardLayout } from "@/components/layout";
+import { CityTerritoryMap } from "@/components/merchant/city-territory-map";
 import {
   type MerchantPageManagementData,
   type MerchantPageManagementMerchant,
@@ -42,6 +42,7 @@ interface DashboardData {
   merchant: MerchantPageManagementMerchant;
   pageManagement: MerchantPageManagementData;
   campaignTrack?: CampaignTrackData;
+  merchantTrial?: MerchantTrialData | null;
 }
 
 interface CampaignTrackData {
@@ -50,6 +51,13 @@ interface CampaignTrackData {
   audioSrc: string | null;
   status: "ready" | "in_production" | "pending";
   updatedAt: string | null;
+}
+
+interface MerchantTrialData {
+  day: number;
+  totalDays: number;
+  startedAt: string;
+  endsAt: string;
 }
 
 const activationStatusMeta = {
@@ -63,12 +71,52 @@ const activationStatusMeta = {
     dot: "bg-blue-500",
     caption: "text-blue-700 dark:text-blue-300",
   },
+  Ready: {
+    icon: "border-emerald-500/40 bg-emerald-500/10 text-emerald-600 dark:text-emerald-300",
+    dot: "bg-emerald-500",
+    caption: "text-emerald-700 dark:text-emerald-300",
+  },
   Waiting: {
     icon: "border-amber-500/40 bg-amber-500/10 text-amber-600 dark:text-amber-300",
     dot: "bg-amber-500",
     caption: "text-amber-700 dark:text-amber-300",
   },
 } as const;
+
+const marketLayerStatusClasses = {
+  Active:
+    "border-emerald-500/40 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300",
+  "In production":
+    "border-blue-500/40 bg-blue-500/10 text-blue-700 dark:text-blue-300",
+  MarketLock360:
+    "border-primary/35 bg-primary/10 text-primary dark:text-orange-300",
+  Dominator:
+    "border-amber-500/40 bg-amber-500/10 text-amber-700 dark:text-amber-300",
+} as const;
+
+function MarketLayerStatusBadge({
+  status,
+}: {
+  status: keyof typeof marketLayerStatusClasses;
+}) {
+  return (
+    <span
+      className={cn(
+        "inline-flex rounded-full border px-2.5 py-1 text-xs font-semibold",
+        marketLayerStatusClasses[status],
+      )}
+    >
+      {status}
+    </span>
+  );
+}
+
+// Stub reach figures for sales framing — confirm with KLCP and the mail
+// vendor before these go in front of merchants.
+const reachStats = {
+  radioListeners: "280K+",
+  mailHouseholds: "12,000+",
+};
 
 const activationItems = [
   {
@@ -108,13 +156,6 @@ const activationItems = [
     icon: CalendarClock,
   },
 ] as const;
-
-// Stub reach figures for sales framing — confirm with KLCP and the mail
-// vendor before these go in front of merchants.
-const reachStats = {
-  radioListeners: "280K+",
-  mailHouseholds: "12,000+",
-};
 
 const marketLock360Adds = [
   {
@@ -182,136 +223,61 @@ function formatTrackTime(seconds: number) {
   return `${minutes}:${remainingSeconds}`;
 }
 
-function MerchantActivationBanner({
-  merchant,
+function MerchantTrialStatusCard({
+  merchantTrial,
 }: {
-  merchant: MerchantPageManagementMerchant | undefined;
+  merchantTrial?: MerchantTrialData | null;
 }) {
-  const categoryName = merchant?.categoryName || "Local category";
-  const marketLabel =
-    [merchant?.city, merchant?.state].filter(Boolean).join(", ") ||
-    "Your market";
+  if (!merchantTrial) return null;
+
+  const progress = Math.min(
+    100,
+    Math.max(0, (merchantTrial.day / merchantTrial.totalDays) * 100),
+  );
+  const daysLeft = Math.max(0, merchantTrial.totalDays - merchantTrial.day);
 
   return (
-    <section className="mb-6 overflow-hidden rounded-xl border bg-card p-5 md:p-6">
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-        <div className="min-w-0">
-          <p className="text-xs font-semibold uppercase text-muted-foreground">
-            Activated market package
-          </p>
-          <h2 className="mt-2 text-2xl font-bold tracking-tight text-foreground md:text-3xl">
-            Your category lock is active
-          </h2>
-          <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
-            The core merchant campaign is live, with radio production already
-            moving.
-          </p>
+    <div className="w-full shrink-0 rounded-xl border border-primary/25 bg-primary/[0.055] p-3.5 sm:w-[260px]">
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex min-w-0 items-center gap-3">
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-primary/25 bg-primary/10 text-primary">
+            <CalendarClock className="h-5 w-5" />
+          </span>
+          <div className="min-w-0">
+            <p className="text-xs font-semibold uppercase text-muted-foreground">
+              Merchant trial
+            </p>
+            <p className="mt-0.5 text-lg font-bold leading-none">
+              Day {merchantTrial.day}
+              <span className="text-sm font-semibold text-muted-foreground">
+                {" "}
+                of {merchantTrial.totalDays}
+              </span>
+            </p>
+          </div>
         </div>
-
-        <span className="inline-flex h-fit w-fit shrink-0 items-center gap-1.5 rounded-full border border-emerald-500/40 bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-700 dark:text-emerald-300">
-          <CheckCircle2 className="h-3.5 w-3.5" />
-          Activated
+        <span className="shrink-0 rounded-full border border-primary/30 bg-primary/10 px-2.5 py-1 text-[11px] font-semibold text-primary">
+          Active
         </span>
       </div>
 
-      <div className="mt-5 grid gap-3 sm:grid-cols-2">
-        <div className="flex items-center gap-4 rounded-lg border border-emerald-500/30 bg-emerald-500/5 p-4 md:p-5">
-          <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg border border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-300">
-            <ShieldCheck className="h-6 w-6" />
-          </span>
-          <div className="min-w-0">
-            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-              Locked category
-            </p>
-            <p
-              className="truncate text-xl font-bold tracking-tight md:text-2xl"
-              title={categoryName}
-            >
-              {categoryName}
-            </p>
-            <p className="text-xs text-muted-foreground">
-              {`No other ${categoryName} business in ${marketLabel} can hold this position — it's yours.`}
-            </p>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-4 rounded-lg border border-emerald-500/30 bg-emerald-500/5 p-4 md:p-5">
-          <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg border border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-300">
-            <MapPin className="h-6 w-6" />
-          </span>
-          <div className="min-w-0">
-            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-              Locked market
-            </p>
-            <p
-              className="truncate text-xl font-bold tracking-tight md:text-2xl"
-              title={marketLabel}
-            >
-              {marketLabel}
-            </p>
-            <p className="text-xs text-muted-foreground">
-              Reserved for your campaign — competitors can&apos;t buy in.
-            </p>
-          </div>
-        </div>
+      <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-primary/15">
+        <span
+          className="block h-full rounded-full bg-primary"
+          style={{ width: `${progress}%` }}
+        />
       </div>
-
-      <div className="mt-6 border-t pt-5">
-        <p className="text-xs font-semibold uppercase text-muted-foreground">
-          Package status
-        </p>
-        <ol className="mt-4 grid gap-x-4 gap-y-5 sm:grid-cols-2 xl:grid-cols-3">
-          {activationItems.map((item) => {
-            const Icon = item.icon;
-            const meta = activationStatusMeta[item.status];
-
-            return (
-              <li key={item.label} className="flex gap-3">
-                <span
-                  className={cn(
-                    "flex h-10 w-10 shrink-0 items-center justify-center rounded-full border",
-                    meta.icon,
-                  )}
-                >
-                  <Icon className="h-4 w-4" />
-                </span>
-                <div className="min-w-0">
-                  <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                    {item.label}
-                  </p>
-                  <p
-                    className="mt-1 truncate text-sm font-semibold leading-5"
-                    title={item.value}
-                  >
-                    {item.value}
-                  </p>
-                  <p
-                    className={cn(
-                      "mt-1.5 flex items-center gap-1.5 text-xs font-semibold",
-                      meta.caption,
-                    )}
-                  >
-                    <span
-                      className={cn("h-1.5 w-1.5 rounded-full", meta.dot)}
-                    />
-                    {item.status}
-                  </p>
-                </div>
-              </li>
-            );
-          })}
-        </ol>
-      </div>
-    </section>
+      <p className="mt-2 text-xs font-medium text-muted-foreground">
+        {daysLeft === 1 ? "1 day left" : `${daysLeft} days left`}
+      </p>
+    </div>
   );
 }
 
-function CampaignProductionPanel({
+function SignatureSoundtrackRow({
   track,
-  city,
 }: {
   track: CampaignTrackData | undefined;
-  city: string | null | undefined;
 }) {
   const audioRef = useRef<HTMLAudioElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -345,7 +311,269 @@ function CampaignProductionPanel({
   };
 
   return (
+    <section className="mb-4 rounded-xl border bg-card p-3">
+      <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
+        <div className="flex min-w-0 items-center gap-3 lg:w-80 lg:shrink-0">
+          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-muted/60 text-muted-foreground">
+            <Music2 className="h-5 w-5" />
+          </span>
+          <div className="min-w-0">
+            <div className="flex flex-wrap items-center gap-2">
+              <p className="text-sm font-semibold">Signature soundtrack</p>
+              <span
+                className={cn(
+                  "shrink-0 rounded-full border px-2.5 py-1 text-xs font-semibold",
+                  hasTrack
+                    ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300"
+                    : "border-blue-500/40 bg-blue-500/10 text-blue-700 dark:text-blue-300",
+                )}
+              >
+                {hasTrack ? "Ready to play" : "In production"}
+              </span>
+            </div>
+            <p className="mt-1 truncate text-xs text-muted-foreground">
+              {soundtrackSub}
+            </p>
+          </div>
+        </div>
+
+        <div className="flex min-w-0 flex-1 items-center gap-3 rounded-lg bg-muted/40 p-2">
+          <button
+            type="button"
+            disabled={!hasTrack}
+            onClick={togglePlayback}
+            aria-label={
+              isPlaying ? "Pause campaign track" : "Play campaign track"
+            }
+            className={cn(
+              "flex h-9 w-9 shrink-0 items-center justify-center rounded-full border transition-colors",
+              hasTrack
+                ? "border-primary/30 bg-primary/10 text-primary hover:bg-primary/15"
+                : "cursor-not-allowed border-muted bg-muted/40 text-muted-foreground",
+            )}
+          >
+            {isPlaying ? (
+              <Pause className="h-4 w-4" />
+            ) : (
+              <Play className="ml-0.5 h-4 w-4" />
+            )}
+          </button>
+
+          {hasTrack ? (
+            <>
+              <div className="min-w-0 flex-1">
+                <input
+                  aria-label="Campaign track progress"
+                  className="h-2 w-full accent-primary"
+                  max={progressMax}
+                  min={0}
+                  onChange={(event) => handleSeek(event.target.value)}
+                  step="0.1"
+                  type="range"
+                  value={progressValue}
+                />
+                <div className="mt-1 flex items-center justify-between text-[11px] font-medium text-muted-foreground">
+                  <span>{formatTrackTime(currentTime)}</span>
+                  <span>{formatTrackTime(duration)}</span>
+                </div>
+              </div>
+              <Button asChild variant="outline" size="sm">
+                <a href={track?.audioSrc || undefined} download>
+                  <Download className="h-4 w-4" />
+                  Download
+                </a>
+              </Button>
+            </>
+          ) : (
+            <>
+              <span
+                aria-hidden="true"
+                className="h-1 min-w-0 flex-1 rounded-full bg-border"
+              />
+              <span className="shrink-0 text-xs text-muted-foreground">
+                Preview appears here when ready
+              </span>
+            </>
+          )}
+        </div>
+      </div>
+
+      <audio
+        ref={audioRef}
+        aria-label="Signature soundtrack player"
+        className="sr-only"
+        onEnded={() => setIsPlaying(false)}
+        onLoadedMetadata={(event) => {
+          setDuration(event.currentTarget.duration || 0);
+        }}
+        onPause={() => setIsPlaying(false)}
+        onPlay={() => setIsPlaying(true)}
+        onTimeUpdate={(event) => {
+          setCurrentTime(event.currentTarget.currentTime || 0);
+        }}
+        preload="metadata"
+        src={track?.audioSrc || undefined}
+      >
+        <track
+          default
+          kind="captions"
+          label="Captions"
+          src={emptyCaptionsTrack}
+        />
+      </audio>
+    </section>
+  );
+}
+
+function MerchantActivationBanner({
+  merchant,
+  merchantTrial,
+  track,
+}: {
+  merchant: MerchantPageManagementMerchant | undefined;
+  merchantTrial: MerchantTrialData | null | undefined;
+  track: CampaignTrackData | undefined;
+}) {
+  const categoryName = merchant?.categoryName || "Local category";
+  const marketLabel =
+    [merchant?.city, merchant?.state].filter(Boolean).join(", ") ||
+    "Your market";
+  const totalTools = activationItems.length + marketLock360Adds.length;
+  const toolSegments = [
+    ...activationItems.map((item) => ({ key: item.label, active: true })),
+    ...marketLock360Adds.map((item) => ({ key: item.label, active: false })),
+  ];
+
+  return (
     <section className="mb-6 overflow-hidden rounded-xl border bg-card p-5 md:p-6">
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+        <div className="flex min-w-0 items-center gap-4">
+          {merchant?.logoUrl ? (
+            <Image
+              src={merchant.logoUrl}
+              alt={`${merchant.businessName} logo`}
+              width={48}
+              height={48}
+              className="h-12 w-12 shrink-0 rounded-lg border object-cover"
+            />
+          ) : (
+            <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg border border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-300">
+              <ShieldCheck className="h-6 w-6" />
+            </span>
+          )}
+          <div className="min-w-0">
+            <p className="text-xs font-semibold uppercase text-muted-foreground">
+              Activated market package
+            </p>
+            <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1">
+              <h2 className="truncate text-xl font-bold tracking-tight md:text-2xl">
+                {categoryName} &middot; {marketLabel}
+              </h2>
+              <span className="inline-flex shrink-0 items-center gap-1 rounded-full border border-emerald-500/40 bg-emerald-500/10 px-2.5 py-0.5 text-xs font-semibold text-emerald-700 dark:text-emerald-300">
+                <LockKeyhole className="h-3 w-3" />
+                Lock active
+              </span>
+            </div>
+            <p className="mt-1 text-xs text-muted-foreground md:text-sm">
+              {`No other ${categoryName} business in ${marketLabel} can hold this position — it's yours.`}
+            </p>
+          </div>
+        </div>
+
+        <MerchantTrialStatusCard merchantTrial={merchantTrial} />
+      </div>
+
+      <div className="mt-5 border-t pt-5">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <p className="text-xs font-semibold uppercase text-muted-foreground">
+            Package status
+          </p>
+          <p className="text-xs font-semibold text-muted-foreground">
+            {`${activationItems.length} of ${totalTools} market tools active`}
+          </p>
+        </div>
+        <div className="mt-3 flex gap-1">
+          {toolSegments.map((segment) => (
+            <span
+              key={segment.key}
+              title={segment.key}
+              className={cn(
+                "h-1.5 flex-1 rounded-full",
+                segment.active ? "bg-emerald-500" : "bg-muted",
+              )}
+            />
+          ))}
+        </div>
+        <p className="mt-2 flex items-center gap-1.5 text-xs text-muted-foreground">
+          <LockKeyhole className="h-3 w-3 shrink-0" />
+          {`${marketLock360Adds.length} tools locked — MarketLock360 turns them on.`}
+        </p>
+        <ol className="mt-5 grid gap-x-4 gap-y-5 sm:grid-cols-2 xl:grid-cols-3">
+          {activationItems.map((item) => {
+            const Icon = item.icon;
+            const isSignatureSoundtrack = item.label === "Signature soundtrack";
+            const itemValue =
+              isSignatureSoundtrack && track?.title ? track.title : item.value;
+            const itemStatus =
+              isSignatureSoundtrack && track?.audioSrc ? "Ready" : item.status;
+            const meta = activationStatusMeta[itemStatus];
+
+            return (
+              <li key={item.label} className="flex gap-3">
+                <span
+                  className={cn(
+                    "flex h-10 w-10 shrink-0 items-center justify-center rounded-full border",
+                    meta.icon,
+                  )}
+                >
+                  <Icon className="h-4 w-4" />
+                </span>
+                <div className="min-w-0">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                    {item.label}
+                  </p>
+                  <p
+                    className="mt-1 truncate text-sm font-semibold leading-5"
+                    title={itemValue}
+                  >
+                    {itemValue}
+                  </p>
+                  <p
+                    className={cn(
+                      "mt-1.5 flex items-center gap-1.5 text-xs font-semibold",
+                      meta.caption,
+                    )}
+                  >
+                    <span
+                      className={cn("h-1.5 w-1.5 rounded-full", meta.dot)}
+                    />
+                    {itemStatus}
+                  </p>
+                </div>
+              </li>
+            );
+          })}
+        </ol>
+      </div>
+    </section>
+  );
+}
+
+function CampaignProductionPanel({
+  className,
+  city,
+}: {
+  className?: string;
+  city: string | null | undefined;
+}) {
+  return (
+    <section
+      id="campaign-production"
+      className={cn(
+        "mb-6 overflow-hidden rounded-xl border bg-card p-5 md:p-6",
+        className,
+      )}
+    >
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div className="min-w-0">
           <p className="text-xs font-semibold uppercase text-muted-foreground">
@@ -432,114 +660,6 @@ function CampaignProductionPanel({
           </span>
         </div>
 
-        <div className="py-3.5">
-          <div className="flex items-center gap-3">
-            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-muted/60 text-muted-foreground">
-              <Music2 className="h-4 w-4" />
-            </span>
-            <div className="min-w-0 flex-1">
-              <p className="text-sm font-semibold">Signature soundtrack</p>
-              <p className="truncate text-xs text-muted-foreground">
-                {soundtrackSub}
-              </p>
-            </div>
-            <span
-              className={cn(
-                "shrink-0 rounded-full border px-2.5 py-1 text-xs font-semibold",
-                hasTrack
-                  ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300"
-                  : "border-blue-500/40 bg-blue-500/10 text-blue-700 dark:text-blue-300",
-              )}
-            >
-              {hasTrack ? "Ready to play" : "In production"}
-            </span>
-          </div>
-
-          <div className="mt-3 flex items-center gap-3 rounded-lg bg-muted/40 p-2.5 sm:ml-12">
-            <button
-              type="button"
-              disabled={!hasTrack}
-              onClick={togglePlayback}
-              aria-label={
-                isPlaying ? "Pause campaign track" : "Play campaign track"
-              }
-              className={cn(
-                "flex h-9 w-9 shrink-0 items-center justify-center rounded-full border transition-colors",
-                hasTrack
-                  ? "border-primary/30 bg-primary/10 text-primary hover:bg-primary/15"
-                  : "cursor-not-allowed border-muted bg-muted/40 text-muted-foreground",
-              )}
-            >
-              {isPlaying ? (
-                <Pause className="h-4 w-4" />
-              ) : (
-                <Play className="ml-0.5 h-4 w-4" />
-              )}
-            </button>
-
-            {hasTrack ? (
-              <>
-                <div className="min-w-0 flex-1">
-                  <input
-                    aria-label="Campaign track progress"
-                    className="h-2 w-full accent-primary"
-                    max={progressMax}
-                    min={0}
-                    onChange={(event) => handleSeek(event.target.value)}
-                    step="0.1"
-                    type="range"
-                    value={progressValue}
-                  />
-                  <div className="mt-1 flex items-center justify-between text-[11px] font-medium text-muted-foreground">
-                    <span>{formatTrackTime(currentTime)}</span>
-                    <span>{formatTrackTime(duration)}</span>
-                  </div>
-                </div>
-                <Button asChild variant="outline" size="sm">
-                  <a href={track?.audioSrc || undefined} download>
-                    <Download className="h-4 w-4" />
-                    Download
-                  </a>
-                </Button>
-              </>
-            ) : (
-              <>
-                <span
-                  aria-hidden="true"
-                  className="h-1 min-w-0 flex-1 rounded-full bg-border"
-                />
-                <span className="shrink-0 text-xs text-muted-foreground">
-                  Preview appears here when ready
-                </span>
-              </>
-            )}
-          </div>
-
-          <audio
-            ref={audioRef}
-            aria-label="Signature soundtrack player"
-            className="sr-only"
-            onEnded={() => setIsPlaying(false)}
-            onLoadedMetadata={(event) => {
-              setDuration(event.currentTarget.duration || 0);
-            }}
-            onPause={() => setIsPlaying(false)}
-            onPlay={() => setIsPlaying(true)}
-            onTimeUpdate={(event) => {
-              setCurrentTime(event.currentTarget.currentTime || 0);
-            }}
-            preload="metadata"
-            src={track?.audioSrc || undefined}
-          >
-            <track
-              default
-              kind="captions"
-              label="Captions"
-              src={emptyCaptionsTrack}
-            />
-          </audio>
-        </div>
-
         <div className="flex items-center gap-3 py-3.5">
           <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-muted/60 text-muted-foreground">
             <CalendarClock className="h-4 w-4" />
@@ -559,9 +679,65 @@ function CampaignProductionPanel({
       <div className="mt-4 flex items-start gap-2.5 rounded-lg bg-muted/40 p-3">
         <Info className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
         <p className="text-xs leading-5 text-muted-foreground">
-          {hasTrack
-            ? "Your campaign track is ready to preview. We'll send the radio spot for your approval, and airplay scheduling opens right after."
-            : "Nothing needed from you yet — we'll send the radio spot for your approval, and airplay scheduling opens right after."}
+          We'll send the radio spot for your approval, and airplay scheduling
+          opens right after.
+        </p>
+      </div>
+    </section>
+  );
+}
+
+function MerchantTerritoryPanel({
+  merchant,
+}: {
+  merchant: MerchantPageManagementMerchant | undefined;
+}) {
+  const marketLabel =
+    [merchant?.city, merchant?.state].filter(Boolean).join(", ") ||
+    "Selected market";
+
+  return (
+    <section className="rounded-xl border bg-card p-5 md:p-6">
+      <p className="text-xs font-semibold uppercase text-muted-foreground">
+        Your territory
+      </p>
+      <div className="mt-4">
+        <CityTerritoryMap
+          city={merchant?.city}
+          state={merchant?.state}
+          className="h-56 w-full sm:h-64"
+        />
+        <h3 className="mt-4 text-lg font-semibold">
+          {`Layers around ${marketLabel}`}
+        </h3>
+        <ul className="mt-3 grid gap-x-6 gap-y-2.5 sm:grid-cols-2">
+          <li className="flex items-center gap-3">
+            <span className="h-3 w-3 shrink-0 rounded-full border-2 border-emerald-500 bg-emerald-500/20" />
+            <span className="min-w-0 flex-1 text-sm">Category lock</span>
+            <MarketLayerStatusBadge status="Active" />
+          </li>
+          <li className="flex items-center gap-3">
+            <span className="h-3 w-3 shrink-0 rounded-full border-2 border-blue-500/70 bg-blue-500/15" />
+            <span className="min-w-0 flex-1 text-sm">KLCP airwaves</span>
+            <MarketLayerStatusBadge status="In production" />
+          </li>
+          <li className="flex items-center gap-3">
+            <span className="h-3 w-3 shrink-0 rounded-full border-2 border-dashed border-muted-foreground/60" />
+            <span className="min-w-0 flex-1 text-sm">
+              Direct mail households
+            </span>
+            <MarketLayerStatusBadge status="MarketLock360" />
+          </li>
+          <li className="flex items-center gap-3">
+            <span className="h-3 w-3 shrink-0 rounded-full border border-dashed border-muted-foreground/40" />
+            <span className="min-w-0 flex-1 text-sm">
+              Search &amp; Maps presence
+            </span>
+            <MarketLayerStatusBadge status="Dominator" />
+          </li>
+        </ul>
+        <p className="mt-4 text-xs leading-5 text-muted-foreground">
+          {`The highlighted perimeter marks your locked ${marketLabel} market. MarketLock360 activates the remaining layers inside it.`}
         </p>
       </div>
     </section>
@@ -735,15 +911,25 @@ export default function MerchantDashboard() {
         <>
           <PageHeader
             title="Merchant Dashboard"
-            description="Manage your merchant page, campaign media, and customer reviews"
+            description={
+              merchant?.businessName
+                ? `Welcome back, ${merchant.businessName}`
+                : "Manage your merchant page, campaign media, and customer reviews"
+            }
           />
 
-          <MerchantActivationBanner merchant={merchant} />
+          <SignatureSoundtrackRow track={dashboardData?.campaignTrack} />
 
-          <CampaignProductionPanel
+          <MerchantActivationBanner
+            merchant={merchant}
+            merchantTrial={dashboardData?.merchantTrial}
             track={dashboardData?.campaignTrack}
-            city={merchant?.city}
           />
+
+          <div className="mb-6 grid gap-6 xl:grid-cols-[minmax(0,1.05fr)_minmax(360px,0.95fr)] xl:items-start">
+            <CampaignProductionPanel className="mb-0" city={merchant?.city} />
+            <MerchantTerritoryPanel merchant={merchant} />
+          </div>
 
           {merchant && pageManagement && (
             <MerchantPageManagementPanel

@@ -1,25 +1,30 @@
-import { desc, eq, sql } from "drizzle-orm";
+import { and, desc, eq, isNotNull, sql } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import {
   categories,
   db,
   type MerchantCampaignAudio,
+  merchantInvites,
   merchants,
   reviews,
 } from "@/db";
 import { getSession } from "@/lib/auth";
 import { calculateCompletion } from "@/lib/merchant-completion";
 
+const merchantTrialDays = 14;
+const dayMs = 24 * 60 * 60 * 1000;
+
 function getCampaignTrack(
   campaignAudio: MerchantCampaignAudio | null,
   businessName: string,
 ) {
-  const asset = campaignAudio?.radioSpot || campaignAudio?.soundtrack;
+  const asset = campaignAudio?.soundtrack || campaignAudio?.radioSpot;
 
   if (!asset?.url) {
     return {
       title: `${businessName} campaign soundtrack`,
-      description: "A custom audio asset produced for your local media campaign.",
+      description:
+        "A custom audio asset produced for your local media campaign.",
       audioSrc: null,
       status: "in_production" as const,
       updatedAt: campaignAudio?.updatedAt || null,
@@ -34,6 +39,26 @@ function getCampaignTrack(
     audioSrc: asset.url,
     status: asset.status || ("ready" as const),
     updatedAt: asset.uploadedAt || campaignAudio?.updatedAt || null,
+  };
+}
+
+function getMerchantTrialProgress(usedAt: Date | null | undefined) {
+  if (!usedAt) return null;
+
+  const now = new Date();
+  const startedAt = new Date(usedAt);
+  const endsAt = new Date(startedAt.getTime() + merchantTrialDays * dayMs);
+  const elapsedMs = now.getTime() - startedAt.getTime();
+
+  if (elapsedMs < 0 || now.getTime() >= endsAt.getTime()) {
+    return null;
+  }
+
+  return {
+    day: Math.min(merchantTrialDays, Math.floor(elapsedMs / dayMs) + 1),
+    totalDays: merchantTrialDays,
+    startedAt: startedAt.toISOString(),
+    endsAt: endsAt.toISOString(),
   };
 }
 
@@ -86,6 +111,23 @@ export async function GET() {
         { status: 404 },
       );
     }
+
+    const [merchantTrialInvite] = await db
+      .select({
+        usedAt: merchantInvites.usedAt,
+      })
+      .from(merchantInvites)
+      .where(
+        and(
+          eq(merchantInvites.usedByUserId, session.user.id),
+          isNotNull(merchantInvites.usedAt),
+        ),
+      )
+      .orderBy(desc(merchantInvites.usedAt))
+      .limit(1);
+    const trialStartedAt =
+      merchantTrialInvite?.usedAt ||
+      (session.user.role === "admin" ? merchant.updatedAt : null);
 
     const [reviewStats] = await db
       .select({
@@ -151,6 +193,7 @@ export async function GET() {
         merchant.campaignAudio || null,
         merchant.businessName,
       ),
+      merchantTrial: getMerchantTrialProgress(trialStartedAt),
       pageManagement: {
         completionPercentage: completion.percentage,
         completedFields: completion.completed,
