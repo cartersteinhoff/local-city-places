@@ -14,17 +14,22 @@ import { calculateCompletion } from "@/lib/merchant-completion";
 const merchantTrialDays = 14;
 const dayMs = 24 * 60 * 60 * 1000;
 
-function getCampaignTrack(
+function getCampaignAudioAsset(
   campaignAudio: MerchantCampaignAudio | null,
   businessName: string,
+  kind: "radioSpot" | "soundtrack",
 ) {
-  const asset = campaignAudio?.soundtrack || campaignAudio?.radioSpot;
+  const asset = campaignAudio?.[kind];
+  const isRadioSpot = kind === "radioSpot";
 
   if (!asset?.url) {
     return {
-      title: `${businessName} campaign soundtrack`,
-      description:
-        "A custom audio asset produced for your local media campaign.",
+      title: isRadioSpot
+        ? `${businessName} KLCP radio spot`
+        : `${businessName} signature soundtrack`,
+      description: isRadioSpot
+        ? "Radio spot audio appears here after it is uploaded."
+        : "A custom audio asset produced for your local media campaign.",
       audioSrc: null,
       status: "in_production" as const,
       updatedAt: campaignAudio?.updatedAt || null,
@@ -189,9 +194,15 @@ export async function GET() {
         campaignAudio: merchant.campaignAudio,
         updatedAt: merchant.updatedAt.toISOString(),
       },
-      campaignTrack: getCampaignTrack(
+      campaignTrack: getCampaignAudioAsset(
         merchant.campaignAudio || null,
         merchant.businessName,
+        "soundtrack",
+      ),
+      radioSpot: getCampaignAudioAsset(
+        merchant.campaignAudio || null,
+        merchant.businessName,
+        "radioSpot",
       ),
       merchantTrial: getMerchantTrialProgress(trialStartedAt),
       pageManagement: {

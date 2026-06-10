@@ -130,6 +130,9 @@ export function CityTerritoryMap({
   className,
 }: CityTerritoryMapProps) {
   const mapRef = useRef<HTMLDivElement>(null);
+  // Re-applies the last bounds fit, so the territory stays framed when the
+  // container changes size (e.g. responsive layout changes).
+  const refitRef = useRef<(() => void) | null>(null);
   const [status, setStatus] = useState<"loading" | "ready" | "error">(
     "loading",
   );
@@ -190,7 +193,8 @@ export function CityTerritoryMap({
 
         const circleBounds = circle.getBounds();
         if (circleBounds) {
-          map.fitBounds(circleBounds, 24);
+          refitRef.current = () => map.fitBounds(circleBounds, 12);
+          refitRef.current();
         }
 
         setStatus("ready");
@@ -238,13 +242,32 @@ export function CityTerritoryMap({
         title: [city, state].filter(Boolean).join(", "),
       });
 
-      map.fitBounds(bounds, 24);
+      refitRef.current = () => map.fitBounds(bounds, 12);
+      refitRef.current();
       setStatus("ready");
+    };
+
+    let refitTimer: ReturnType<typeof setTimeout> | undefined;
+    const observer = new ResizeObserver(() => {
+      clearTimeout(refitTimer);
+      refitTimer = setTimeout(() => refitRef.current?.(), 150);
+    });
+    if (mapRef.current) {
+      observer.observe(mapRef.current);
+    }
+
+    const cleanupObserver = () => {
+      observer.disconnect();
+      clearTimeout(refitTimer);
+      refitRef.current = null;
     };
 
     if (getMapsApi()) {
       init();
-      return;
+      return () => {
+        cancelled = true;
+        cleanupObserver();
+      };
     }
 
     if (!document.querySelector('script[src*="maps.googleapis.com"]')) {
@@ -271,6 +294,7 @@ export function CityTerritoryMap({
       cancelled = true;
       clearInterval(interval);
       clearTimeout(timeout);
+      cleanupObserver();
     };
   }, [city, state]);
 

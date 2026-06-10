@@ -355,7 +355,7 @@ export default function MerchantDashboardConceptPage() {
             actions={
               <div className="flex flex-wrap gap-2">
                 <Button variant="outline" asChild>
-                  <Link href="/merchant/merchant-page">
+                  <Link href="/merchant">
                     <FileText className="h-4 w-4" />
                     Merchant Page
                   </Link>
@@ -483,9 +483,7 @@ export default function MerchantDashboardConceptPage() {
                         asChild
                         className="mt-4"
                       >
-                        <Link href="/merchant/merchant-page">
-                          Open page tools
-                        </Link>
+                        <Link href="/merchant">Open page tools</Link>
                       </Button>
                     </div>
 
@@ -747,7 +745,7 @@ export default function MerchantDashboardConceptPage() {
 
                     <div className="mt-5 flex flex-wrap gap-2">
                       <Button variant="outline" asChild>
-                        <Link href="/merchant/marketlock360">
+                        <Link href="/merchant">
                           <Search className="h-4 w-4" />
                           View MarketLock page
                         </Link>

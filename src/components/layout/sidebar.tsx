@@ -4,9 +4,11 @@ import {
   Check,
   ChevronLeft,
   ChevronRight,
+  LockKeyhole,
   LogOut,
   Mic,
   Moon,
+  RotateCw,
   Shield,
   Store,
   Sun,
@@ -51,9 +53,12 @@ const roleConfig = {
   },
 };
 
+const MARKETLOCK360_HREF = "/merchant";
 const ON_AIR_STUDIO_HREF = "/merchant/on-air-studio";
 const ON_AIR_GRADIENT =
   "linear-gradient(90deg, #f43a20 0%, #ff1b14 42%, #10b9b4 100%)";
+const MARKETLOCK360_GRADIENT =
+  "linear-gradient(90deg, #10b981 0%, #0f766e 52%, #f97316 100%)";
 
 interface SidebarProps {
   navItems: NavItem[];
@@ -234,6 +239,65 @@ function CollapsedOnAirStudioMark({ isActive }: { isActive: boolean }) {
   );
 }
 
+function MarketLock360Mark({ isActive }: { isActive: boolean }) {
+  return (
+    <span
+      className={cn(
+        "flex h-10 w-full rounded-full p-[1.5px] transition-[box-shadow,opacity,transform] duration-200",
+        isActive
+          ? "opacity-100 shadow-[0_6px_16px_rgba(249,115,22,0.14)]"
+          : "opacity-[0.82] group-hover:opacity-100 group-hover:shadow-[0_6px_14px_rgba(15,23,42,0.08)]",
+      )}
+      style={{ background: MARKETLOCK360_GRADIENT }}
+    >
+      <span
+        className={cn(
+          "flex min-w-0 flex-1 items-center gap-2 rounded-full px-2.5 transition-colors",
+          isActive
+            ? "bg-white dark:bg-sidebar"
+            : "bg-sidebar group-hover:bg-background dark:group-hover:bg-sidebar-accent",
+        )}
+      >
+        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-500">
+          <LockKeyhole className="h-3.5 w-3.5" strokeWidth={2.4} />
+        </span>
+        <span className="min-w-0 flex-1 whitespace-nowrap text-sm font-extrabold leading-none tracking-normal text-[#061c34] dark:text-sidebar-foreground">
+          MarketLock360
+        </span>
+        <span className="flex shrink-0 items-center gap-0.5 rounded-full bg-primary/10 px-1.5 py-0.5 text-[10px] font-black leading-none text-primary">
+          <RotateCw className="h-3 w-3" strokeWidth={2.6} />
+          360°
+        </span>
+      </span>
+    </span>
+  );
+}
+
+function CollapsedMarketLock360Mark({ isActive }: { isActive: boolean }) {
+  return (
+    <span
+      className={cn(
+        "flex h-8 w-8 items-center justify-center rounded-full p-[1.5px] transition-[box-shadow,opacity] duration-200",
+        isActive
+          ? "opacity-100 shadow-[0_6px_14px_rgba(249,115,22,0.16)]"
+          : "opacity-[0.82] group-hover:opacity-100 group-hover:shadow-[0_6px_14px_rgba(15,23,42,0.1)]",
+      )}
+      style={{ background: MARKETLOCK360_GRADIENT }}
+    >
+      <span
+        className={cn(
+          "flex h-full w-full items-center justify-center rounded-full transition-colors",
+          isActive
+            ? "bg-white dark:bg-sidebar"
+            : "bg-sidebar group-hover:bg-background dark:group-hover:bg-sidebar-accent",
+        )}
+      >
+        <LockKeyhole className="h-4 w-4 text-emerald-500" strokeWidth={2.4} />
+      </span>
+    </span>
+  );
+}
+
 export function Sidebar({
   navItems,
   isCollapsed: collapsedProp = false,
@@ -285,6 +349,26 @@ export function Sidebar({
   const renderNavItem = (item: NavItem) => {
     const isActive = item.href === activeHref;
     const Icon = item.icon;
+
+    if (item.href === MARKETLOCK360_HREF) {
+      return (
+        <Link
+          key={item.href}
+          href={item.href}
+          title={isCollapsed ? item.label : undefined}
+          className={cn(
+            "group rounded-md transition-colors",
+            isCollapsed ? "flex justify-center py-1" : "block px-0.5 py-0",
+          )}
+        >
+          {isCollapsed ? (
+            <CollapsedMarketLock360Mark isActive={isActive} />
+          ) : (
+            <MarketLock360Mark isActive={isActive} />
+          )}
+        </Link>
+      );
+    }
 
     if (item.href === ON_AIR_STUDIO_HREF) {
       return (
