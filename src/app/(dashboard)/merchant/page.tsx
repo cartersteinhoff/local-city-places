@@ -78,9 +78,9 @@ const activationStatusMeta = {
     caption: "text-amber-700 dark:text-amber-300",
   },
   Upgrade: {
-    icon: "border-muted-foreground/25 bg-muted/40 text-muted-foreground",
-    dot: "bg-muted-foreground/50",
-    caption: "text-muted-foreground",
+    icon: "border-primary/30 bg-primary/10 text-primary",
+    dot: "bg-primary",
+    caption: "text-primary",
   },
 } as const;
 

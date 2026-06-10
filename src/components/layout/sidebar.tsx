@@ -17,6 +17,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
+import { RadioPlayerButton } from "@/components/radio-player-button";
 import { useTheme } from "@/components/theme-provider";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -512,12 +513,13 @@ export function Sidebar({
         )}
       </nav>
 
-      <div
-        className={cn(
-          "border-t border-sidebar-border p-2",
-          isCollapsed ? "space-y-2" : "space-y-0",
-        )}
-      >
+      <div className={cn("px-2 pb-2", isCollapsed && "flex justify-center")}>
+        <RadioPlayerButton
+          variant={isCollapsed ? "sidebar-collapsed" : "sidebar"}
+        />
+      </div>
+
+      <div className="border-t border-sidebar-border p-2">
         <div
           className={cn(
             "flex items-center",

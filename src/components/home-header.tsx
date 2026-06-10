@@ -1,9 +1,9 @@
 "use client";
 
-import { ChevronDown, Pause, Play, Store, User } from "lucide-react";
+import { ChevronDown, Store, User } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { useRadioPlayback } from "@/components/radio-playback-provider";
+import { RadioPlayerButton } from "@/components/radio-player-button";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -12,7 +12,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useUser } from "@/hooks/use-user";
-import type { NowPlayingTrack } from "@/lib/radio";
 import { cn } from "@/lib/utils";
 
 type HomeHeaderVariant = "white" | "transparent";
@@ -44,8 +43,6 @@ const loginMenuItemClass =
 const loginMenuIconClass =
   "flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-orange-400/12 text-orange-300 transition-colors group-focus:bg-orange-500 group-focus:text-white group-data-[highlighted]:bg-orange-500 group-data-[highlighted]:text-white";
 
-const headerProgramTextLimit = 30;
-const headerProgramTextSeparator = " - ";
 const dashboardHrefByRole = {
   admin: "/admin",
   merchant: "/merchant",
@@ -60,162 +57,7 @@ function getDashboardHref(
   return role ? dashboardHrefByRole[role] : "/";
 }
 
-function normalizeHeaderProgramText(value: string) {
-  return value.replace(/\s+/g, " ").trim();
-}
-
-function truncateHeaderProgramText(value: string, maxLength: number) {
-  if (value.length <= maxLength) return value;
-  if (maxLength <= 3) return value.slice(0, maxLength);
-
-  return `${value.slice(0, maxLength - 3).trimEnd()}...`;
-}
-
-function getHeaderProgramTitle(track: NowPlayingTrack) {
-  return normalizeHeaderProgramText(track.title);
-}
-
-function getHeaderProgramSubtitle(track: NowPlayingTrack) {
-  const subtitle = normalizeHeaderProgramText(track.subtitle);
-  return subtitle && subtitle !== track.title ? subtitle : "";
-}
-
-function getHeaderProgramDisplay(track: NowPlayingTrack) {
-  const fullTitle = getHeaderProgramTitle(track);
-  const subtitle = getHeaderProgramSubtitle(track);
-  const fullText = [fullTitle, subtitle]
-    .filter(Boolean)
-    .join(headerProgramTextSeparator);
-
-  if (fullTitle.length >= headerProgramTextLimit) {
-    return {
-      fullText,
-      title: truncateHeaderProgramText(fullTitle, headerProgramTextLimit),
-      subtitle: "",
-    };
-  }
-
-  const subtitleCharacterLimit =
-    headerProgramTextLimit -
-    fullTitle.length -
-    headerProgramTextSeparator.length;
-
-  return {
-    fullText,
-    title: fullTitle,
-    subtitle:
-      subtitle && subtitleCharacterLimit > 0
-        ? truncateHeaderProgramText(subtitle, subtitleCharacterLimit)
-        : "",
-  };
-}
-
-function HeaderRadioPlayer({ className }: { className: string }) {
-  const { isPlaying, nowPlaying, playerStatus, togglePlayback } =
-    useRadioPlayback();
-
-  const isLoading = playerStatus === "loading";
-  const shouldStop = isLoading || isPlaying;
-  const programDisplay = getHeaderProgramDisplay(nowPlaying);
-  const playerLabel = `${shouldStop ? "Pause" : "Play"} ${
-    programDisplay.fullText
-  }`;
-
-  return (
-    <Button
-      type="button"
-      size="sm"
-      className={cn(
-        className,
-        "h-12 overflow-hidden rounded-[18px] border-sky-100/20 bg-[#12334b]/72 px-2.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.12),0_10px_24px_rgba(0,0,0,0.18)] backdrop-blur transition-[width,background-color,border-color] duration-200 hover:bg-[#163b56]/78 sm:px-3",
-        "w-fit min-w-[112px] max-w-[112px] justify-start gap-2 min-[360px]:min-w-[128px] min-[360px]:max-w-[128px] min-[420px]:min-w-[144px] min-[420px]:max-w-[144px] sm:min-w-[206px] sm:max-w-[206px] md:max-w-[352px]",
-      )}
-      style={{
-        display: "inline-flex",
-        height: "3rem",
-        alignItems: "center",
-        justifyContent: "flex-start",
-        gap: "0.5rem",
-        overflow: "hidden",
-        whiteSpace: "nowrap",
-      }}
-      onClick={togglePlayback}
-      aria-label={playerLabel}
-      aria-pressed={isPlaying}
-    >
-      <span
-        className={cn(
-          "flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-red-500 text-white shadow-[0_8px_18px_rgba(239,68,68,0.28)] transition-transform duration-200 hover:scale-[1.03] sm:h-8 sm:w-8",
-        )}
-        style={{
-          display: "flex",
-          width: "1.75rem",
-          height: "1.75rem",
-          flexShrink: 0,
-          alignItems: "center",
-          justifyContent: "center",
-          borderRadius: "9999px",
-        }}
-        aria-hidden="true"
-      >
-        {shouldStop ? (
-          <Pause className="h-3.5 w-3.5 sm:h-4 sm:w-4" fill="currentColor" />
-        ) : (
-          <Play
-            className="ml-0.5 h-3.5 w-3.5 sm:h-4 sm:w-4"
-            fill="currentColor"
-          />
-        )}
-      </span>
-      <span
-        className="flex min-w-0 flex-1 flex-col items-start justify-center gap-1 text-left md:flex-none"
-        style={{
-          display: "flex",
-          minWidth: 0,
-          flex: "1 1 auto",
-          flexDirection: "column",
-          alignItems: "flex-start",
-          justifyContent: "center",
-          gap: "0.25rem",
-          textAlign: "left",
-        }}
-      >
-        <span className="flex w-full max-w-full min-w-0 items-baseline gap-1.5 text-[12px] leading-none sm:text-[15px]">
-          <span className="min-w-0 truncate font-bold text-white">
-            {programDisplay.title}
-          </span>
-          {programDisplay.subtitle && (
-            <>
-              <span className="hidden shrink-0 font-bold text-white/35 md:inline">
-                -
-              </span>
-              <span className="hidden min-w-0 truncate text-[11px] font-bold text-white/58 md:inline xl:text-[12px]">
-                {programDisplay.subtitle}
-              </span>
-            </>
-          )}
-        </span>
-        <span className="flex w-full max-w-full items-center gap-1.5 text-[10px] font-bold leading-none text-white/76 sm:text-[12px]">
-          <span
-            className={cn(
-              "h-1.5 w-1.5 shrink-0 rounded-full bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.7)]",
-              shouldStop && "animate-pulse",
-            )}
-            aria-hidden="true"
-          />
-          <span className="truncate">
-            KLCP 96.5 FM -{" "}
-            <span className="font-black text-red-400">On Air</span>
-          </span>
-        </span>
-      </span>
-    </Button>
-  );
-}
-
-export function HomeHeader({
-  variant = "white",
-}: HomeHeaderProps) {
+export function HomeHeader({ variant = "white" }: HomeHeaderProps) {
   const styles = headerVariants[variant];
   const { user, member } = useUser();
   const isAuthenticated = Boolean(user);
@@ -265,7 +107,7 @@ export function HomeHeader({
             }}
           >
             <div>
-              <HeaderRadioPlayer className={styles.radio} />
+              <RadioPlayerButton className={styles.radio} variant="header" />
             </div>
             {isAuthenticated ? (
               <Button
