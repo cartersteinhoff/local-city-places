@@ -15,12 +15,10 @@ import {
   Mic,
   Music,
   Newspaper,
-  Radio,
   Search,
   ShieldCheck,
   Sparkles,
   Star,
-  Trophy,
   Users,
   Zap,
 } from "lucide-react";
@@ -31,58 +29,83 @@ import { Footer } from "@/components/footer";
 import { cn } from "@/lib/utils";
 
 export const metadata: Metadata = {
-  title: "MarketLOCK360 Pricing | Local City Places",
+  title: "MarketLOCK360 | Local City Places",
   description:
-    "Compare MarketLOCK360 local growth plans with category exclusivity, KLCP radio, City LIVE magazine, direct mail, sweepstakes, AI staff, and Google Business Profile optimization.",
+    "Explore what MarketLOCK360 includes: category exclusivity, a high-traffic merchant page, City LIVE magazine, direct mail, KLCP radio, sweepstakes, and Phoenix METRO Chamber membership.",
 };
 
-const baseFeatures = [
+const includedFeatures = [
   {
-    title: "Category exclusivity",
-    detail:
-      "Be the exclusive featured business in your category inside your city marketplace.",
+    number: "01",
+    title: "Category EXCLUSIVITY in City Marketplace",
+    description:
+      "Become the only featured business in your category within your city. Once your category is locked, competitors cannot occupy that position, giving you a powerful advantage in local visibility and lead generation.",
+    image: "/images/marketlock360/category-exclusivity.webp",
+    alt: "Category exclusivity locked for one featured city business",
     icon: ShieldCheck,
   },
   {
-    title: "High traffic merchant page",
-    detail:
-      "A Local City Places merchant page built for local visibility and customer action.",
+    number: "02",
+    title: "High Traffic Merchant Page",
+    description:
+      "Your own professional Merchant Page showcasing your business, offers, photos, videos, reviews, contact information, and direct customer actions designed to convert visitors into paying customers.",
+    image: "/images/marketlock360/merchant-page.webp",
+    alt: "High traffic digital merchant page shown across laptop and mobile",
     icon: Building2,
   },
   {
-    title: "1/4 page City LIVE Magazine ad",
-    detail: "Print and digital placement in City LIVE Magazine.",
+    number: "03",
+    title: "1/4 Page Ad in City LIVE Magazine Monthly (Print & Digital)",
+    description:
+      "Reach local consumers every month through professionally designed advertising in both print and digital editions of your city's City LIVE Magazine.",
+    image: "/images/marketlock360/city-live-ad.webp",
+    alt: "City LIVE magazine print and digital ad placement",
     icon: Newspaper,
   },
   {
-    title: "100 printed City LIVE magazines",
-    detail: "Copies for distribution through your merchant location.",
+    number: "04",
+    title: "100 Printed City LIVE\u2122 Magazines for Distribution",
+    description:
+      "Receive 100 professionally printed magazines each month to place in your business, giving customers valuable local content while reinforcing your brand presence.",
+    image: "/images/marketlock360/city-live-distribution.webp",
+    alt: "Printed City LIVE magazines distributed at a local business counter",
     icon: BadgeCheck,
   },
   {
-    title: "Merchant ad to 5,000 homes",
-    detail: "EDDM postcard campaign delivered to local households.",
+    number: "05",
+    title: "Merchant Ad Mailed to 5,000 Homes via EDDM Postcard Campaign",
+    description:
+      "Your business is featured in a professionally designed postcard mailed directly to thousands of local households, helping you stay top-of-mind with nearby consumers.",
+    image: "/images/marketlock360/eddm-postcard-campaign.webp",
+    alt: "EDDM postcard campaign delivered directly to neighborhood mailboxes",
     icon: Mailbox,
   },
   {
-    title: "First-month merchant interview",
-    detail: "Interview exposure on KLCP 96.5 FM with unlimited plays.",
+    number: "06",
+    title:
+      "Merchant Interview (First Month) with UNLIMITED Plays on KLCP 96.5 FM",
+    description:
+      "Tell your story through a professionally produced Merchant Interview broadcast on KLCP 96.5 FM with unlimited airplay throughout the month.",
+    image: "/images/marketlock360/merchant-interview.webp",
+    alt: "Merchant interview recorded in a KLCP 96.5 FM radio studio",
     icon: Mic,
   },
   {
-    title: "15, 30 and 60 second radio spots",
-    detail: "KLCP 96.5 FM radio spots with unlimited plays.",
-    icon: Radio,
-  },
-  {
-    title: "Citywide prize sweepstakes",
-    detail:
-      "Matching prize sweepstakes plus custom merchant sweepstakes support.",
+    number: "07",
+    title: "Citywide Matching Prize Sweepstakes - Custom Merchant Sweepstakes",
+    description:
+      "Generate leads and customer engagement through your own branded sweepstakes while benefiting from participation in the citywide Matching Prize Sweepstakes network.",
+    image: "/images/marketlock360/citywide-sweepstakes.webp",
+    alt: "Citywide matching prize sweepstakes with customers and entry forms",
     icon: Gift,
   },
   {
-    title: "Phoenix METRO Chamber membership",
-    detail: "Premium membership positioning for added local credibility.",
+    number: "08",
+    title: "PREMIUM Membership in The Phoenix METRO Chamber of Commerce",
+    description:
+      "Enjoy premium access to Arizona's fastest-growing business community, designed to help local businesses increase visibility, connections, and revenue opportunities.",
+    image: "/images/marketlock360/phoenix-metro-chamber.webp",
+    alt: "Phoenix METRO Chamber of Commerce premium membership",
     icon: Handshake,
   },
 ];
@@ -104,53 +127,11 @@ const gbpFeatures = [
   { title: "Profile performance", icon: BarChart3 },
 ];
 
-const planRows = [
-  {
-    name: "MarketLOCK360",
-    price: "$998",
-    cadence: "/mo.",
-    accent: "blue",
-    line: "Exclusive. Visible. Trusted. Preferred.",
-    summary:
-      "The core local visibility package for locking in one city category and turning media into marketplace traffic.",
-    includes: [
-      "Category exclusivity in city marketplace",
-      "Merchant page, magazine, radio and direct mail",
-      "Citywide and custom merchant sweepstakes",
-      "Phoenix METRO Chamber premium membership",
-    ],
-  },
-  {
-    name: "MarketLOCK360 Pro",
-    price: "$1,497",
-    cadence: "/mo.",
-    accent: "green",
-    line: "Smarter business. Stronger results.",
-    summary:
-      "Everything in MarketLOCK360, plus four premium LOCAL AI Staff employees for follow-up and automation.",
-    includes: [
-      "Everything in MarketLOCK360",
-      "4 premium LOCAL AI Staff employees",
-      "Lead follow-up and appointment request support",
-      "Content and communication assistance",
-    ],
-    featured: true,
-  },
-  {
-    name: "MarketLOCK360 Dominator",
-    price: "$1,996",
-    cadence: "/mo.",
-    accent: "gold",
-    line: "Maximum visibility. Market domination.",
-    summary:
-      "Everything in MarketLOCK360 Pro, plus premium Google Business Profile optimization.",
-    includes: [
-      "Everything in MarketLOCK360 and Pro",
-      "Premium Google Business Profile optimization",
-      "Google Maps and local search visibility support",
-      "Review activity and business profile performance focus",
-    ],
-  },
+const heroStats = [
+  { value: "8", label: "Growth channels" },
+  { value: "5,000", label: "Homes mailed monthly" },
+  { value: "96.5 FM", label: "Unlimited airplay" },
+  { value: "$1,050", label: "Trial bonus value" },
 ];
 
 const trialHighlights = [
@@ -169,37 +150,10 @@ const whyDifferent = [
   "Referral-driven city marketplace positioning",
 ];
 
-function PlanAccentIcon({ accent }: { accent: string }) {
-  const iconClasses = {
-    blue: "bg-sky-500 text-white shadow-sky-950/20",
-    green: "bg-emerald-500 text-white shadow-emerald-950/20",
-    gold: "bg-amber-500 text-slate-950 shadow-amber-950/20",
-  }[accent];
+type MarketLock360Surface = "public" | "dashboard";
 
-  const Icon =
-    accent === "green" ? Bot : accent === "gold" ? Trophy : Building2;
-
-  return (
-    <span
-      className={cn(
-        "flex h-11 w-11 items-center justify-center rounded-lg shadow-lg",
-        iconClasses,
-      )}
-      aria-hidden="true"
-    >
-      <Icon className="h-6 w-6" />
-    </span>
-  );
-}
-
-function PlanAccentBar({ accent }: { accent: string }) {
-  const className = {
-    blue: "bg-sky-500",
-    green: "bg-emerald-500",
-    gold: "bg-amber-500",
-  }[accent];
-
-  return <span className={cn("block h-1 w-full rounded-full", className)} />;
+interface MarketLock360ContentProps {
+  surface?: MarketLock360Surface;
 }
 
 function MarketLockHeader() {
@@ -222,10 +176,10 @@ function MarketLockHeader() {
           className="flex items-center gap-2"
         >
           <Link
-            href="#pricing"
+            href="#included"
             className="hidden h-10 items-center justify-center rounded-lg border border-white/15 bg-white/8 px-4 text-sm font-black uppercase tracking-wide text-white transition hover:bg-white/14 sm:inline-flex"
           >
-            Pricing
+            Included
           </Link>
           <Link
             href="#trial"
@@ -239,10 +193,19 @@ function MarketLockHeader() {
   );
 }
 
-export default function MarketLock360Page() {
+export function MarketLock360Content({
+  surface = "public",
+}: MarketLock360ContentProps) {
+  const isDashboard = surface === "dashboard";
+
   return (
-    <div className="min-h-screen overflow-x-hidden bg-[#061b2d] text-white">
-      <MarketLockHeader />
+    <div
+      className={cn(
+        "overflow-x-hidden bg-[#061b2d] text-white",
+        isDashboard ? "min-h-full" : "min-h-screen",
+      )}
+    >
+      {!isDashboard && <MarketLockHeader />}
 
       <main>
         <section className="relative isolate overflow-hidden bg-[#04131f] text-white">
@@ -259,9 +222,21 @@ export default function MarketLock360Page() {
             <div className="absolute inset-x-0 bottom-0 h-28 bg-[linear-gradient(180deg,rgba(4,19,31,0)_0%,#061b2d_100%)]" />
           </div>
 
-          <div className="relative mx-auto grid min-h-[calc(100svh-10rem)] max-w-7xl gap-8 px-4 py-8 sm:px-6 sm:py-10 lg:min-h-[calc(100svh-14rem)] lg:grid-cols-[minmax(0,1fr)_minmax(320px,430px)] lg:items-center lg:px-8 lg:py-12">
+          <div
+            className={cn(
+              "relative mx-auto grid gap-8 px-4 py-8 sm:px-6 sm:py-10 lg:items-center",
+              isDashboard
+                ? "max-w-[1500px] px-6 py-10 sm:px-8 lg:min-h-[560px] lg:grid-cols-[minmax(0,1fr)_minmax(280px,360px)] lg:px-9 lg:py-12 xl:grid-cols-[minmax(0,1fr)_minmax(320px,390px)]"
+                : "min-h-[calc(100svh-10rem)] max-w-7xl lg:min-h-[calc(100svh-14rem)] lg:grid-cols-[minmax(0,1fr)_minmax(320px,430px)] lg:px-8 lg:py-12",
+            )}
+          >
             <div className="animate-rise-in max-w-4xl">
-              <div className="mb-5 flex flex-wrap items-center gap-3 text-xs font-black uppercase tracking-[0.22em] text-white/78">
+              <div
+                className={cn(
+                  "flex flex-wrap items-center gap-3 text-xs font-black uppercase tracking-[0.22em] text-white/78",
+                  isDashboard ? "mb-4" : "mb-5",
+                )}
+              >
                 <span className="rounded-full border border-orange-300/35 bg-orange-500/18 px-3 py-1.5 text-orange-100">
                   Local City Places Growth Engine
                 </span>
@@ -269,14 +244,28 @@ export default function MarketLock360Page() {
                 <span>City LIVE Magazine</span>
               </div>
 
-              <h1 className="max-w-4xl text-balance text-4xl font-black uppercase leading-[0.95] text-white sm:text-6xl lg:text-7xl xl:text-8xl">
+              <h1
+                className={cn(
+                  "font-black uppercase leading-[0.95] text-white",
+                  isDashboard
+                    ? "max-w-[860px] text-[clamp(2.6rem,4.2vw,4.5rem)]"
+                    : "max-w-4xl text-balance text-4xl sm:text-6xl lg:text-7xl xl:text-8xl",
+                )}
+              >
                 MarketLOCK360
                 <span className="block text-orange-400">
                   Lock in your city.
                 </span>
               </h1>
 
-              <p className="mt-6 max-w-2xl text-lg font-semibold leading-8 text-white/82 sm:text-xl">
+              <p
+                className={cn(
+                  "font-semibold text-white/82",
+                  isDashboard
+                    ? "mt-5 max-w-2xl text-base leading-7 xl:text-lg"
+                    : "mt-6 max-w-2xl text-lg leading-8 sm:text-xl",
+                )}
+              >
                 Built to position your business as the exclusive local leader in
                 your category with merchant pages, live media, direct mail,
                 sweepstakes, AI staff, and search optimization.
@@ -284,10 +273,10 @@ export default function MarketLock360Page() {
 
               <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
                 <Link
-                  href="#pricing"
+                  href="#included"
                   className="inline-flex h-12 w-full items-center justify-center rounded-lg bg-orange-500 px-5 text-sm font-black uppercase tracking-wide text-white shadow-[0_14px_30px_rgba(249,115,22,0.28)] transition hover:bg-orange-400 sm:w-auto"
                 >
-                  Compare plans
+                  See what is included
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Link>
                 <Link
@@ -297,10 +286,33 @@ export default function MarketLock360Page() {
                   Start 14-day trial
                 </Link>
               </div>
+
+              <div
+                className={cn(
+                  "grid max-w-2xl grid-cols-2 gap-x-6 gap-y-5 border-t border-white/12 pt-6 sm:grid-cols-4",
+                  isDashboard ? "mt-8" : "mt-10",
+                )}
+              >
+                {heroStats.map((stat) => (
+                  <div key={stat.label}>
+                    <p className="text-2xl font-black leading-none text-white">
+                      {stat.value}
+                    </p>
+                    <p className="mt-2 text-[11px] font-black uppercase tracking-[0.14em] text-white/55">
+                      {stat.label}
+                    </p>
+                  </div>
+                ))}
+              </div>
             </div>
 
             <div
-              className="animate-rise-in relative mx-auto hidden w-full max-w-[430px] lg:ml-auto lg:block"
+              className={cn(
+                "animate-rise-in relative mx-auto hidden w-full lg:ml-auto lg:block",
+                isDashboard
+                  ? "max-w-[360px] xl:max-w-[390px]"
+                  : "max-w-[430px]",
+              )}
               style={{ animationDelay: "120ms" }}
             >
               <div className="absolute -inset-4 rounded-full bg-sky-400/12 blur-3xl" />
@@ -310,207 +322,195 @@ export default function MarketLock360Page() {
                 width={1024}
                 height={1024}
                 className="relative h-auto w-full drop-shadow-[0_28px_65px_rgba(0,0,0,0.42)]"
-                sizes="(min-width: 1024px) 430px, 80vw"
+                sizes={
+                  isDashboard
+                    ? "(min-width: 1280px) 390px, (min-width: 1024px) 360px, 80vw"
+                    : "(min-width: 1024px) 430px, 80vw"
+                }
               />
             </div>
           </div>
         </section>
 
         <section
-          id="pricing"
-          className="relative bg-[#061b2d] px-4 py-12 text-white sm:px-6 lg:py-16"
+          id="included"
+          className={cn(
+            "relative bg-[#061b2d] text-white",
+            isDashboard
+              ? "px-6 py-10 sm:px-8 lg:py-12"
+              : "px-4 py-12 sm:px-6 lg:py-16",
+          )}
         >
-          <div className="mx-auto max-w-7xl">
-            <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+          <div
+            className={cn(
+              "mx-auto",
+              isDashboard ? "max-w-[1500px]" : "max-w-7xl",
+            )}
+          >
+            <div className="mb-10 grid gap-5 lg:grid-cols-[0.85fr_1.15fr] lg:items-center">
               <div>
-                <p className="text-sm font-black uppercase tracking-[0.2em] text-orange-600">
-                  Pricing
+                <p className="text-sm font-black uppercase tracking-[0.2em] text-orange-400">
+                  Included in MarketLOCK360
                 </p>
-                <h2 className="mt-2 text-3xl font-black uppercase leading-tight text-white sm:text-4xl">
-                  Choose your local growth level.
+                <h2
+                  className={cn(
+                    "mt-2 font-black uppercase leading-tight text-white",
+                    isDashboard
+                      ? "text-3xl sm:text-4xl lg:text-[2.8rem]"
+                      : "text-3xl sm:text-4xl lg:text-5xl",
+                  )}
+                >
+                  Eight ways to lock down your local market.
                 </h2>
               </div>
-              <p className="max-w-xl text-base font-medium leading-7 text-white/68">
-                Each plan starts with city-category positioning. Upgrade when
-                you want AI staff support or premium Google Business Profile
-                optimization layered onto the media package.
-              </p>
-            </div>
-
-            <div className="grid gap-4 lg:grid-cols-3">
-              {planRows.map((plan, index) => (
-                <article
-                  key={plan.name}
-                  className={cn(
-                    "animate-rise-in flex h-full flex-col rounded-lg border bg-[#0b2537] p-5 shadow-[0_20px_55px_rgba(0,0,0,0.22)] transition hover:-translate-y-1 hover:bg-[#0e2c41] hover:shadow-[0_24px_70px_rgba(0,0,0,0.28)]",
-                    plan.featured
-                      ? "border-emerald-300/70"
-                      : "border-sky-200/15",
-                  )}
-                  style={{ animationDelay: `${80 * index}ms` }}
-                >
-                  <PlanAccentBar accent={plan.accent} />
-                  <div className="mt-5 flex items-start justify-between gap-4">
-                    <div>
-                      <h3 className="text-xl font-black uppercase leading-tight text-white">
-                        {plan.name}
-                      </h3>
-                      <p className="mt-2 text-sm font-black uppercase tracking-wide text-white/52">
-                        {plan.line}
-                      </p>
-                    </div>
-                    <PlanAccentIcon accent={plan.accent} />
-                  </div>
-
-                  {plan.featured && (
-                    <p className="mt-4 w-fit rounded-full bg-emerald-400/16 px-3 py-1 text-xs font-black uppercase tracking-wide text-emerald-200">
-                      Best fit for follow-up
-                    </p>
-                  )}
-
-                  <div className="mt-6 flex items-end gap-1">
-                    <span className="text-5xl font-black tracking-tight text-white">
-                      {plan.price}
-                    </span>
-                    <span className="pb-1 text-lg font-black text-white/52">
-                      {plan.cadence}
-                    </span>
-                  </div>
-
-                  <p className="mt-5 min-h-[84px] text-base leading-7 text-white/68">
-                    {plan.summary}
-                  </p>
-
-                  <div className="my-6 h-px bg-white/10" />
-
-                  <ul className="space-y-3">
-                    {plan.includes.map((item) => (
-                      <li
-                        key={item}
-                        className="flex gap-3 text-sm font-semibold text-white/76"
-                      >
-                        <Check className="mt-0.5 h-4 w-4 shrink-0 text-orange-500" />
-                        <span>{item}</span>
-                      </li>
-                    ))}
-                  </ul>
-
-                  <Link
-                    href="#trial"
-                    className="mt-auto inline-flex h-11 items-center justify-center rounded-lg border border-white/14 px-4 text-sm font-black uppercase tracking-wide text-white transition hover:border-orange-400 hover:text-orange-300"
-                  >
-                    See trial offer
-                  </Link>
-                </article>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        <section className="bg-[#04131f] px-4 py-12 text-white sm:px-6 lg:py-16">
-          <div className="mx-auto grid max-w-7xl gap-8 lg:grid-cols-[0.92fr_1.08fr] lg:items-start">
-            <div className="lg:sticky lg:top-6">
-              <p className="text-sm font-black uppercase tracking-[0.2em] text-orange-400">
-                Included in MarketLOCK360
-              </p>
-              <h2 className="mt-2 text-3xl font-black uppercase leading-tight sm:text-4xl">
-                Media, marketplace, and sweepstakes in one local package.
-              </h2>
-              <p className="mt-4 text-base font-medium leading-7 text-white/72">
+              <p className="max-w-2xl text-base font-medium leading-7 text-white/72 lg:ml-auto lg:border-l-2 lg:border-orange-400/60 lg:pl-6">
                 Unlike traditional ad platforms that place you beside
                 competitors, MarketLOCK360 positions your business as the
                 exclusive featured business in your category within your city.
               </p>
             </div>
 
-            <div className="grid gap-3 sm:grid-cols-2">
-              {baseFeatures.map((feature) => (
-                <div
-                  key={feature.title}
-                  className="group rounded-lg border border-white/10 bg-white/[0.045] p-4 transition hover:border-orange-300/50 hover:bg-white/[0.075]"
-                >
-                  <div className="flex items-start gap-3">
-                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-sky-400/12 text-sky-200 transition group-hover:bg-orange-500 group-hover:text-white">
-                      <feature.icon className="h-5 w-5" />
-                    </span>
-                    <div>
-                      <h3 className="text-base font-black uppercase leading-snug text-white">
-                        {feature.title}
-                      </h3>
-                      <p className="mt-1 text-sm font-medium leading-6 text-white/68">
-                        {feature.detail}
-                      </p>
+            <div className="space-y-6 lg:space-y-8">
+              {includedFeatures.map((feature, index) => {
+                const Icon = feature.icon;
+                const imageFirst = index % 2 === 1;
+
+                return (
+                  <article
+                    key={feature.title}
+                    className="group animate-rise-in overflow-hidden rounded-2xl border border-white/10 bg-[#0b2537] shadow-[0_20px_55px_rgba(0,0,0,0.22)] transition hover:border-orange-300/45 hover:bg-[#0e2c41] hover:shadow-[0_26px_65px_rgba(0,0,0,0.32)]"
+                    style={{ animationDelay: `${70 * index}ms` }}
+                  >
+                    <div className="grid lg:grid-cols-[minmax(0,1.08fr)_minmax(360px,0.92fr)]">
+                      <div
+                        className={cn(
+                          "relative aspect-[3/2] min-h-[230px] overflow-hidden bg-[#04131f]",
+                          imageFirst && "lg:order-2",
+                        )}
+                      >
+                        <Image
+                          src={feature.image}
+                          alt={feature.alt}
+                          fill
+                          className="object-cover transition duration-700 group-hover:scale-[1.025]"
+                          sizes="(min-width: 1024px) 58vw, 100vw"
+                        />
+                      </div>
+
+                      <div className="relative flex min-h-full flex-col justify-center p-5 sm:p-7 lg:p-9">
+                        <span
+                          aria-hidden
+                          className="pointer-events-none absolute right-5 top-4 select-none text-[4rem] font-black leading-none text-white/[0.07] transition group-hover:text-orange-400/20 sm:right-7 sm:top-6 lg:text-[5rem]"
+                        >
+                          {feature.number}
+                        </span>
+
+                        <span className="mb-5 flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-sky-400/12 text-sky-200 transition group-hover:bg-orange-500 group-hover:text-white">
+                          <Icon className="h-5 w-5" />
+                        </span>
+
+                        <h3 className="pr-10 text-xl font-black uppercase leading-tight text-white sm:text-2xl">
+                          {feature.title}
+                        </h3>
+                        <div className="mt-4 h-1 w-12 rounded-full bg-orange-400/80 transition-all duration-500 group-hover:w-20" />
+                        <p className="mt-4 max-w-xl text-base font-medium leading-7 text-white/72">
+                          {feature.description}
+                        </p>
+                      </div>
                     </div>
-                  </div>
-                </div>
-              ))}
+                  </article>
+                );
+              })}
             </div>
           </div>
         </section>
 
-        <section className="bg-[#061b2d] px-4 py-12 text-white sm:px-6 lg:py-16">
-          <div className="mx-auto grid max-w-7xl gap-6 lg:grid-cols-2">
-            <div className="rounded-lg border border-emerald-300/35 bg-[#0b2537] p-5 shadow-[0_20px_55px_rgba(0,0,0,0.22)]">
-              <div className="flex items-center gap-3">
-                <span className="flex h-12 w-12 items-center justify-center rounded-lg bg-emerald-500 text-white">
-                  <Bot className="h-6 w-6" />
-                </span>
-                <div>
-                  <p className="text-sm font-black uppercase tracking-[0.2em] text-emerald-300">
-                    Pro upgrade
-                  </p>
-                  <h2 className="text-2xl font-black uppercase text-white">
-                    4 premium LOCAL AI Staff employees
-                  </h2>
-                </div>
-              </div>
-              <p className="mt-4 text-base font-semibold italic text-white/68">
-                Your AI staff can assist with:
+        <section
+          className={cn(
+            "bg-[#061b2d] text-white",
+            isDashboard
+              ? "px-6 py-10 sm:px-8 lg:py-12"
+              : "px-4 py-12 sm:px-6 lg:py-16",
+          )}
+        >
+          <div
+            className={cn(
+              "mx-auto",
+              isDashboard ? "max-w-[1500px]" : "max-w-7xl",
+            )}
+          >
+            <div className="mb-8 max-w-3xl">
+              <p className="text-sm font-black uppercase tracking-[0.2em] text-orange-400">
+                Optional upgrades
               </p>
-              <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3">
-                {aiStaff.map((item) => (
-                  <div
-                    key={item.title}
-                    className="rounded-lg border border-emerald-300/16 bg-emerald-400/10 p-3 text-center"
-                  >
-                    <item.icon className="mx-auto h-6 w-6 text-emerald-300" />
-                    <p className="mt-2 text-sm font-black leading-tight text-white/86">
-                      {item.title}
-                    </p>
-                  </div>
-                ))}
-              </div>
+              <h2 className="mt-2 text-3xl font-black uppercase leading-tight text-white sm:text-4xl">
+                Go even further when you are ready.
+              </h2>
             </div>
 
-            <div className="rounded-lg border border-amber-300/35 bg-[#0b2537] p-5 shadow-[0_20px_55px_rgba(0,0,0,0.22)]">
-              <div className="flex items-center gap-3">
-                <span className="flex h-12 w-12 items-center justify-center rounded-lg bg-amber-500 text-slate-950">
-                  <MapIcon className="h-6 w-6" />
-                </span>
-                <div>
-                  <p className="text-sm font-black uppercase tracking-[0.2em] text-amber-300">
-                    Dominator upgrade
-                  </p>
-                  <h2 className="text-2xl font-black uppercase text-white">
-                    Premium Google Business Profile optimization
-                  </h2>
+            <div className="grid gap-6 lg:grid-cols-2">
+              <div className="rounded-2xl border border-emerald-300/35 bg-[#0b2537] p-6 shadow-[0_20px_55px_rgba(0,0,0,0.22)] transition hover:border-emerald-300/60">
+                <div className="flex items-center gap-4">
+                  <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-emerald-500 text-white shadow-[0_10px_24px_rgba(16,185,129,0.3)]">
+                    <Bot className="h-6 w-6" />
+                  </span>
+                  <div>
+                    <p className="text-sm font-black uppercase tracking-[0.2em] text-emerald-300">
+                      Pro upgrade
+                    </p>
+                    <h3 className="text-2xl font-black uppercase text-white">
+                      4 premium LOCAL AI Staff employees
+                    </h3>
+                  </div>
+                </div>
+                <p className="mt-4 text-base font-semibold italic text-white/68">
+                  Your AI staff can assist with:
+                </p>
+                <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3">
+                  {aiStaff.map((item) => (
+                    <div
+                      key={item.title}
+                      className="rounded-xl border border-emerald-300/16 bg-emerald-400/10 p-3 text-center transition hover:border-emerald-300/40 hover:bg-emerald-400/16"
+                    >
+                      <item.icon className="mx-auto h-6 w-6 text-emerald-300" />
+                      <p className="mt-2 text-sm font-black leading-tight text-white/86">
+                        {item.title}
+                      </p>
+                    </div>
+                  ))}
                 </div>
               </div>
-              <p className="mt-4 text-base font-semibold italic text-white/68">
-                Designed to help dominate:
-              </p>
-              <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-5">
-                {gbpFeatures.map((item) => (
-                  <div
-                    key={item.title}
-                    className="rounded-lg border border-amber-300/16 bg-amber-400/10 p-3 text-center"
-                  >
-                    <item.icon className="mx-auto h-6 w-6 text-amber-300" />
-                    <p className="mt-2 text-sm font-black leading-tight text-white/86">
-                      {item.title}
+
+              <div className="rounded-2xl border border-amber-300/35 bg-[#0b2537] p-6 shadow-[0_20px_55px_rgba(0,0,0,0.22)] transition hover:border-amber-300/60">
+                <div className="flex items-center gap-4">
+                  <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-amber-500 text-slate-950 shadow-[0_10px_24px_rgba(245,158,11,0.3)]">
+                    <MapIcon className="h-6 w-6" />
+                  </span>
+                  <div>
+                    <p className="text-sm font-black uppercase tracking-[0.2em] text-amber-300">
+                      Dominator upgrade
                     </p>
+                    <h3 className="text-2xl font-black uppercase text-white">
+                      Premium Google Business Profile optimization
+                    </h3>
                   </div>
-                ))}
+                </div>
+                <p className="mt-4 text-base font-semibold italic text-white/68">
+                  Designed to help dominate:
+                </p>
+                <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-5">
+                  {gbpFeatures.map((item) => (
+                    <div
+                      key={item.title}
+                      className="rounded-xl border border-amber-300/16 bg-amber-400/10 p-3 text-center transition hover:border-amber-300/40 hover:bg-amber-400/16"
+                    >
+                      <item.icon className="mx-auto h-6 w-6 text-amber-300" />
+                      <p className="mt-2 text-sm font-black leading-tight text-white/86">
+                        {item.title}
+                      </p>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
           </div>
@@ -518,10 +518,20 @@ export default function MarketLock360Page() {
 
         <section
           id="trial"
-          className="relative overflow-hidden bg-[#061b2d] px-4 py-12 text-white sm:px-6 lg:py-16"
+          className={cn(
+            "relative overflow-hidden bg-[#061b2d] text-white",
+            isDashboard
+              ? "px-6 py-10 sm:px-8 lg:py-12"
+              : "px-4 py-12 sm:px-6 lg:py-16",
+          )}
         >
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_14%_18%,rgba(249,115,22,0.26),transparent_28%),radial-gradient(circle_at_85%_12%,rgba(56,189,248,0.18),transparent_32%)]" />
-          <div className="relative mx-auto max-w-7xl">
+          <div
+            className={cn(
+              "relative mx-auto",
+              isDashboard ? "max-w-[1500px]" : "max-w-7xl",
+            )}
+          >
             <div className="grid gap-8 lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)] lg:items-center">
               <div>
                 <p className="text-sm font-black uppercase tracking-[0.22em] text-orange-300">
@@ -539,7 +549,7 @@ export default function MarketLock360Page() {
                   {trialHighlights.map((item) => (
                     <div
                       key={item}
-                      className="flex min-h-12 items-center gap-3 rounded-lg border border-white/10 bg-white/7 px-4 py-3"
+                      className="flex min-h-12 items-center gap-3 rounded-xl border border-white/10 bg-white/7 px-4 py-3"
                     >
                       <Check className="h-5 w-5 shrink-0 text-orange-300" />
                       <span className="text-sm font-black uppercase tracking-wide">
@@ -551,7 +561,7 @@ export default function MarketLock360Page() {
               </div>
 
               <div className="grid gap-4 sm:grid-cols-2">
-                <div className="rounded-lg border border-amber-300/35 bg-black/24 p-5">
+                <div className="rounded-2xl border border-amber-300/35 bg-black/24 p-5 transition hover:border-amber-300/60 hover:bg-black/32">
                   <div className="mb-5 flex items-center justify-between gap-3">
                     <span className="rounded-lg bg-amber-400 px-3 py-2 text-sm font-black uppercase text-slate-950">
                       Bonus #1
@@ -560,7 +570,9 @@ export default function MarketLock360Page() {
                       Value $300
                     </span>
                   </div>
-                  <Newspaper className="h-10 w-10 text-amber-300" />
+                  <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-amber-400/14 text-amber-300">
+                    <Newspaper className="h-6 w-6" />
+                  </span>
                   <h3 className="mt-5 text-xl font-black uppercase">
                     Premium press release
                   </h3>
@@ -570,7 +582,7 @@ export default function MarketLock360Page() {
                   </p>
                 </div>
 
-                <div className="rounded-lg border border-sky-300/35 bg-black/24 p-5">
+                <div className="rounded-2xl border border-sky-300/35 bg-black/24 p-5 transition hover:border-sky-300/60 hover:bg-black/32">
                   <div className="mb-5 flex items-center justify-between gap-3">
                     <span className="rounded-lg bg-sky-300 px-3 py-2 text-sm font-black uppercase text-slate-950">
                       Bonus #2
@@ -579,7 +591,9 @@ export default function MarketLock360Page() {
                       Value $750
                     </span>
                   </div>
-                  <Music className="h-10 w-10 text-sky-300" />
+                  <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-sky-400/14 text-sky-300">
+                    <Music className="h-6 w-6" />
+                  </span>
                   <h3 className="mt-5 text-xl font-black uppercase">
                     Signature soundtrack production
                   </h3>
@@ -591,7 +605,7 @@ export default function MarketLock360Page() {
               </div>
             </div>
 
-            <div className="mt-10 rounded-lg border border-white/10 bg-white/[0.055] p-5">
+            <div className="mt-10 rounded-2xl border border-white/10 bg-white/[0.055] p-6">
               <div className="grid gap-6 lg:grid-cols-[0.78fr_1.22fr] lg:items-center">
                 <div>
                   <p className="text-sm font-black uppercase tracking-[0.2em] text-orange-300">
@@ -637,7 +651,11 @@ export default function MarketLock360Page() {
         </section>
       </main>
 
-      <Footer variant="dark" />
+      {!isDashboard && <Footer variant="dark" />}
     </div>
   );
+}
+
+export default function MarketLock360Page() {
+  return <MarketLock360Content />;
 }
