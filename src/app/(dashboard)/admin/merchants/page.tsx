@@ -926,10 +926,10 @@ export default function MerchantPagesPage() {
 
           {/* Manager Dialog */}
           <Dialog open={ownerDialogOpen} onOpenChange={handleOwnerDialogChange}>
-            <DialogContent className="sm:max-w-lg">
+            <DialogContent className="bg-card sm:max-w-lg dark:border-sky-300/20 dark:bg-[#061f33] dark:text-slate-50 dark:shadow-[0_24px_80px_rgba(0,0,0,0.58)]">
               <DialogHeader>
                 <DialogTitle>Assign Merchant Managers</DialogTitle>
-                <DialogDescription>
+                <DialogDescription className="dark:text-slate-300">
                   {ownerMerchant?.businessName
                     ? `${ownerMerchant.businessName} dashboard access`
                     : "Manage merchant dashboard access"}
@@ -939,9 +939,11 @@ export default function MerchantPagesPage() {
               <div className="space-y-5">
                 <div>
                   <div className="flex min-h-[24px] items-center justify-between gap-3">
-                    <Label>Current Managers</Label>
+                    <Label className="dark:text-slate-100">
+                      Current Managers
+                    </Label>
                     {isOwnerSaving && (
-                      <span className="inline-flex items-center gap-1.5 text-sm text-muted-foreground">
+                      <span className="inline-flex items-center gap-1.5 text-sm text-muted-foreground dark:text-slate-300">
                         <Loader2 className="h-3.5 w-3.5 animate-spin" />
                         Saving
                       </span>
@@ -951,13 +953,13 @@ export default function MerchantPagesPage() {
                     {(ownerMerchant?.owners || []).map((owner) => (
                       <div
                         key={owner.id}
-                        className="flex items-center justify-between gap-3 rounded-lg border bg-muted/30 px-3 py-2"
+                        className="flex items-center justify-between gap-3 rounded-lg border bg-muted/30 px-3 py-2 dark:border-sky-300/15 dark:bg-[#082a43]/75 dark:shadow-[inset_0_1px_rgba(255,255,255,0.04)]"
                       >
                         <div className="min-w-0">
                           <p className="truncate text-sm font-medium">
                             {getOwnerDisplayName(owner)}
                           </p>
-                          <p className="truncate text-xs text-muted-foreground">
+                          <p className="truncate text-xs text-muted-foreground dark:text-slate-300">
                             {owner.email} · {owner.role}
                           </p>
                         </div>
@@ -965,7 +967,7 @@ export default function MerchantPagesPage() {
                           type="button"
                           variant="ghost"
                           size="icon"
-                          className="h-8 w-8 shrink-0"
+                          className="h-8 w-8 shrink-0 dark:text-slate-200 dark:hover:bg-sky-300/10 dark:hover:text-white"
                           onClick={() => removeOwner(owner.id)}
                           disabled={
                             isOwnerSaving ||
@@ -985,7 +987,10 @@ export default function MerchantPagesPage() {
                 </div>
 
                 <div>
-                  <Label htmlFor="merchant-owner-search">
+                  <Label
+                    htmlFor="merchant-owner-search"
+                    className="dark:text-slate-100"
+                  >
                     Add Existing User
                   </Label>
                   <Input
@@ -994,12 +999,13 @@ export default function MerchantPagesPage() {
                     onChange={(event) => setOwnerSearch(event.target.value)}
                     placeholder="Search name or email"
                     disabled={isOwnerSaving}
+                    className="dark:border-sky-300/20 dark:bg-[#041827] dark:text-slate-50 dark:placeholder:text-slate-400 dark:focus-visible:border-sky-300/55 dark:focus-visible:ring-sky-400/25"
                   />
 
                   {(isOwnerSearchLoading || ownerResults.length > 0) && (
-                    <div className="mt-3 overflow-hidden rounded-lg border">
+                    <div className="mt-3 overflow-hidden rounded-lg border dark:border-sky-300/15 dark:bg-[#071f33]">
                       {isOwnerSearchLoading ? (
-                        <div className="flex items-center gap-2 px-3 py-2 text-sm text-muted-foreground">
+                        <div className="flex items-center gap-2 px-3 py-2 text-sm text-muted-foreground dark:text-slate-300">
                           <Loader2 className="h-4 w-4 animate-spin" />
                           Searching users
                         </div>
@@ -1008,7 +1014,7 @@ export default function MerchantPagesPage() {
                           <button
                             key={owner.id}
                             type="button"
-                            className="flex w-full items-center justify-between gap-3 px-3 py-2 text-left text-sm hover:bg-muted disabled:cursor-not-allowed disabled:opacity-60"
+                            className="flex w-full items-center justify-between gap-3 px-3 py-2 text-left text-sm hover:bg-muted disabled:cursor-not-allowed disabled:opacity-60 dark:hover:bg-sky-300/10"
                             onClick={() => addOwner(owner)}
                             disabled={isOwnerSaving}
                           >
@@ -1016,7 +1022,7 @@ export default function MerchantPagesPage() {
                               <span className="block truncate font-medium">
                                 {getOwnerDisplayName(owner)}
                               </span>
-                              <span className="block truncate text-xs text-muted-foreground">
+                              <span className="block truncate text-xs text-muted-foreground dark:text-slate-300">
                                 {owner.email} · {owner.role}
                               </span>
                             </span>
@@ -1030,7 +1036,7 @@ export default function MerchantPagesPage() {
                   {!isOwnerSearchLoading &&
                     ownerSearch.trim().length >= 2 &&
                     ownerResults.length === 0 && (
-                      <p className="mt-2 text-sm text-muted-foreground">
+                      <p className="mt-2 text-sm text-muted-foreground dark:text-slate-300">
                         No matching assignable users found.
                       </p>
                     )}
@@ -1045,6 +1051,7 @@ export default function MerchantPagesPage() {
                 <Button
                   variant="outline"
                   onClick={() => handleOwnerDialogChange(false)}
+                  className="dark:border-sky-300/20 dark:bg-sky-300/10 dark:text-slate-50 dark:hover:bg-sky-300/15"
                 >
                   Close
                 </Button>
