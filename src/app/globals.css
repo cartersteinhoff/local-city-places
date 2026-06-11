@@ -479,6 +479,23 @@ html::-webkit-scrollbar-button:vertical:hover {
   animation: rise-in 700ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
+/* Scroll-driven rise-in: plays as the element scrolls into view instead of
+   on mount. Browsers without scroll timelines render the element static. */
+@supports (animation-timeline: view()) {
+  .animate-rise-in-scroll {
+    animation: rise-in cubic-bezier(0.22, 1, 0.36, 1) both;
+    animation-timeline: view();
+    animation-range: entry 0% entry 50%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-rise-in,
+  .animate-rise-in-scroll {
+    animation: none;
+  }
+}
+
 /* Campaign audio equalizer */
 @keyframes audio-eq {
   0%,

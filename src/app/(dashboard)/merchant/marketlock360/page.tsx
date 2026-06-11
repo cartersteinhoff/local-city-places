@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
-import { MarketLock360Content } from "@/app/(marketing)/marketlock360/page";
 import { getSession } from "@/lib/auth";
+import { MarketLock360Content } from "./marketlock360-content";
 import { MarketLock360DashboardShell } from "./marketlock360-dashboard-shell";
 
 export default async function MerchantMarketLock360Page() {
@@ -15,7 +15,7 @@ export default async function MerchantMarketLock360Page() {
 
   return (
     <MarketLock360DashboardShell>
-      <MarketLock360Content surface="dashboard" />
+      <MarketLock360Content />
     </MarketLock360DashboardShell>
   );
 }

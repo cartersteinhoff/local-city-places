@@ -13,7 +13,7 @@ export function MarketLock360DashboardShell({
 }: MarketLock360DashboardShellProps) {
   return (
     <DashboardLayout navItems={merchantNavItems}>
-      <div className="-m-4 overflow-hidden md:-m-6">{children}</div>
+      <div className="-m-4 overflow-clip md:-m-6">{children}</div>
     </DashboardLayout>
   );
 }

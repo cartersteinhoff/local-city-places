@@ -40,8 +40,8 @@ const sitePages = [
   },
   {
     label: "MarketLOCK360",
-    href: "/marketlock360",
-    description: "Pricing and local growth plan page.",
+    href: "/merchant/marketlock360",
+    description: "Merchant dashboard growth plan page (login required).",
     icon: Megaphone,
   },
   {
