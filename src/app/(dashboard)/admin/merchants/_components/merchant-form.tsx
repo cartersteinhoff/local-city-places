@@ -45,6 +45,7 @@ import {
 } from "@/components/ui/select";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { SortableImageGrid, SortableList } from "@/components/ui/sortable-list";
+import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { useManualSave } from "@/hooks/use-manual-save";
 import type { MerchantData } from "@/lib/merchant-completion";
@@ -103,6 +104,7 @@ export interface FormData {
   services: Service[];
   slug: string;
   featuredOnHomepage: boolean;
+  isPublicPage: boolean;
 }
 
 export const INITIAL_FORM_DATA: FormData = {
@@ -127,6 +129,7 @@ export const INITIAL_FORM_DATA: FormData = {
   services: [],
   slug: "",
   featuredOnHomepage: false,
+  isPublicPage: true,
 };
 
 const INITIAL_URLS = { full: null, short: null } as const;
@@ -269,6 +272,7 @@ export function MerchantForm({
               : null,
           aboutStory: data.aboutStory?.trim() || null,
           featuredOnHomepage: data.featuredOnHomepage,
+          isPublicPage: data.isPublicPage,
         }),
       });
 
@@ -871,6 +875,26 @@ export function MerchantForm({
                 </p>
               )}
             </div>
+          </div>
+        )}
+
+        {mode === "edit" && (
+          <div className="mb-6 flex items-center justify-between gap-4 rounded-lg border bg-card p-4">
+            <div>
+              <Label htmlFor="isPublicPage">Public visibility</Label>
+              <p className="mt-1 text-xs text-muted-foreground">
+                {formData.isPublicPage
+                  ? "Public page is on"
+                  : "Public page is off"}
+              </p>
+            </div>
+            <Switch
+              id="isPublicPage"
+              checked={formData.isPublicPage}
+              onCheckedChange={(checked) =>
+                updateField("isPublicPage", Boolean(checked))
+              }
+            />
           </div>
         )}
 

@@ -110,6 +110,7 @@ export default function EditMerchantPage({
             ),
             slug: m.slug || "",
             featuredOnHomepage: m.featuredOnHomepage || false,
+            isPublicPage: Boolean(m.isPublicPage),
           };
 
           setInitialData(loadedData);

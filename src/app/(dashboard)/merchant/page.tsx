@@ -793,7 +793,7 @@ export default function MerchantDashboard() {
   const merchant = dashboardData?.merchant;
   const pageManagement = dashboardData?.pageManagement;
   const publicPageHref =
-    merchant?.city && merchant.state && merchant.slug
+    merchant?.isPublicPage && merchant.city && merchant.state && merchant.slug
       ? getMerchantPageUrl(merchant.city, merchant.state, merchant.slug)
       : null;
 

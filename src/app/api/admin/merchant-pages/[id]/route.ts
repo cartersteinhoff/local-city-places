@@ -146,10 +146,16 @@ export async function GET(
         updatedAt: merchant.updatedAt.toISOString(),
         urls: {
           full:
-            merchant.city && merchant.state && merchant.slug
+            merchant.isPublicPage &&
+            merchant.city &&
+            merchant.state &&
+            merchant.slug
               ? getMerchantPageUrl(merchant.city, merchant.state, merchant.slug)
               : null,
-          short: merchant.phone ? getMerchantShortUrl(merchant.phone) : null,
+          short:
+            merchant.isPublicPage && merchant.phone
+              ? getMerchantShortUrl(merchant.phone)
+              : null,
         },
       },
       pageManagement: {
@@ -224,6 +230,7 @@ export async function PATCH(
       services,
       aboutStory,
       featuredOnHomepage,
+      isPublicPage,
     } = body;
 
     // Build update object
@@ -367,6 +374,37 @@ export async function PATCH(
       updates.featuredOnHomepage = Boolean(featuredOnHomepage);
     }
 
+    if (isPublicPage !== undefined) {
+      const nextIsPublicPage = Boolean(isPublicPage);
+      const nextCity = updates.city ?? existing.city;
+      const nextState = updates.state ?? existing.state;
+      const nextPhone = updates.phone ?? existing.phone;
+      const nextSlug =
+        slug !== undefined
+          ? String(slug)
+              .trim()
+              .toLowerCase()
+              .replace(/[^a-z0-9-]/g, "-")
+              .replace(/-+/g, "-")
+              .replace(/^-|-$/g, "")
+          : existing.slug;
+
+      if (
+        nextIsPublicPage &&
+        (!nextCity || !nextState || !nextPhone || !nextSlug)
+      ) {
+        return NextResponse.json(
+          {
+            error:
+              "City, state, phone, and URL slug are required before making this page public.",
+          },
+          { status: 400 },
+        );
+      }
+
+      updates.isPublicPage = nextIsPublicPage;
+    }
+
     // Handle custom slug or regenerate if business name changed and no custom slug
     if (slug !== undefined) {
       // Custom slug provided - sanitize it
@@ -429,10 +467,11 @@ export async function PATCH(
         id: updated.id,
         businessName: updated.businessName,
         slug: updated.slug,
+        isPublicPage: Boolean(updated.isPublicPage),
       },
       urls: {
-        full: fullUrl,
-        short: shortUrl,
+        full: updated.isPublicPage ? fullUrl : null,
+        short: updated.isPublicPage ? shortUrl : null,
       },
     });
   } catch (error) {

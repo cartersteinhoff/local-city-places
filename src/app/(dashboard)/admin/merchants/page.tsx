@@ -40,6 +40,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
 import {
   Table,
   TableBody,
@@ -78,6 +79,7 @@ interface MerchantPageData {
   updatedAt: string;
   completionPercentage: number;
   reviewCount: number;
+  isPublicPage: boolean;
   owners: MerchantOwner[];
   urls: {
     full: string | null;
@@ -97,6 +99,9 @@ export default function MerchantPagesPage() {
   const [totalPages, setTotalPages] = useState(1);
   const [total, setTotal] = useState(0);
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [visibilitySavingIds, setVisibilitySavingIds] = useState<Set<string>>(
+    new Set(),
+  );
 
   // Filters and sorting
   const [categoryFilter, setCategoryFilter] = useState("");
@@ -281,6 +286,58 @@ export default function MerchantPagesPage() {
       alert("Failed to delete merchant page");
     } finally {
       setIsDeleting(false);
+    }
+  };
+
+  const updateVisibilitySaving = (merchantId: string, isSaving: boolean) => {
+    setVisibilitySavingIds((currentIds) => {
+      const nextIds = new Set(currentIds);
+      if (isSaving) {
+        nextIds.add(merchantId);
+      } else {
+        nextIds.delete(merchantId);
+      }
+      return nextIds;
+    });
+  };
+
+  const togglePublicVisibility = async (
+    merchant: MerchantPageData,
+    isPublicPage: boolean,
+  ) => {
+    updateVisibilitySaving(merchant.id, true);
+
+    try {
+      const res = await fetch(`/api/admin/merchant-pages/${merchant.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ isPublicPage }),
+      });
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || "Failed to update public visibility");
+      }
+
+      setMerchants((currentMerchants) =>
+        currentMerchants.map((currentMerchant) =>
+          currentMerchant.id === merchant.id
+            ? {
+                ...currentMerchant,
+                isPublicPage: Boolean(data.merchant?.isPublicPage),
+                urls: data.urls || currentMerchant.urls,
+              }
+            : currentMerchant,
+        ),
+      );
+    } catch (err) {
+      alert(
+        err instanceof Error
+          ? err.message
+          : "Failed to update public visibility",
+      );
+    } finally {
+      updateVisibilitySaving(merchant.id, false);
     }
   };
 
@@ -617,6 +674,23 @@ export default function MerchantPagesPage() {
                       </span>
                     </div>
 
+                    <div className="mb-3 flex items-center justify-between gap-3 rounded-lg border bg-muted/30 px-3 py-2">
+                      <div>
+                        <p className="text-sm font-medium">Public page</p>
+                        <p className="text-xs text-muted-foreground">
+                          {merchant.isPublicPage ? "Visible" : "Hidden"}
+                        </p>
+                      </div>
+                      <Switch
+                        checked={merchant.isPublicPage}
+                        disabled={visibilitySavingIds.has(merchant.id)}
+                        onCheckedChange={(checked) =>
+                          togglePublicVisibility(merchant, checked)
+                        }
+                        aria-label={`Toggle public page for ${merchant.businessName}`}
+                      />
+                    </div>
+
                     {merchant.urls.short && (
                       <div className="flex items-center gap-2 mb-3">
                         <code className="text-xs bg-muted px-2 py-1 rounded flex-1 truncate">
@@ -696,6 +770,7 @@ export default function MerchantPagesPage() {
                     <TableRow>
                       <TableHead>Business</TableHead>
                       <TableHead className="w-[180px]">Managers</TableHead>
+                      <TableHead className="w-[105px]">Public</TableHead>
                       <TableHead className="w-[80px] text-center">
                         Complete
                       </TableHead>
@@ -714,7 +789,7 @@ export default function MerchantPagesPage() {
                     {!isLoading && merchants.length === 0 ? (
                       <TableRow>
                         <TableCell
-                          colSpan={8}
+                          colSpan={9}
                           className="px-4 py-8 text-center text-muted-foreground"
                         >
                           No merchant pages found
@@ -767,6 +842,21 @@ export default function MerchantPagesPage() {
                                   )
                                 )}
                               </div>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center gap-2">
+                              <Switch
+                                checked={merchant.isPublicPage}
+                                disabled={visibilitySavingIds.has(merchant.id)}
+                                onCheckedChange={(checked) =>
+                                  togglePublicVisibility(merchant, checked)
+                                }
+                                aria-label={`Toggle public page for ${merchant.businessName}`}
+                              />
+                              <span className="text-xs font-medium text-muted-foreground">
+                                {merchant.isPublicPage ? "On" : "Off"}
+                              </span>
                             </div>
                           </TableCell>
                           <TableCell className="text-center">

@@ -5,6 +5,7 @@ import {
   eq,
   ilike,
   inArray,
+  isNotNull,
   or,
   type SQL,
   sql,
@@ -157,8 +158,16 @@ export async function GET(request: NextRequest) {
     const sortBy = searchParams.get("sortBy") || "updatedAt"; // "name", "completion", "updatedAt", "createdAt"
     const sortOrder = searchParams.get("sortOrder") || "desc"; // "asc" or "desc"
 
-    // Build where clauses
-    const conditions: SQL[] = [eq(merchants.isPublicPage, true)];
+    // Build where clauses. Keep unpublished merchant pages in this admin list
+    // so admins can turn public visibility back on.
+    const managedPageClause = or(
+      eq(merchants.isPublicPage, true),
+      and(isNotNull(merchants.slug), isNotNull(merchants.phone)),
+    );
+    if (!managedPageClause) {
+      throw new Error("Unable to build merchant page visibility condition");
+    }
+    const conditions: SQL[] = [managedPageClause];
 
     if (categoryId) {
       conditions.push(eq(merchants.categoryId, categoryId));
@@ -237,6 +246,7 @@ export async function GET(request: NextRequest) {
         slug: merchants.slug,
         categoryId: merchants.categoryId,
         categoryName: categories.name,
+        isPublicPage: merchants.isPublicPage,
         description: merchants.description,
         logoUrl: merchants.logoUrl,
         createdAt: merchants.createdAt,
@@ -304,6 +314,7 @@ export async function GET(request: NextRequest) {
         slug: m.slug,
         categoryId: m.categoryId,
         categoryName: m.categoryName,
+        isPublicPage: Boolean(m.isPublicPage),
         description: m.description,
         logoUrl: m.logoUrl,
         createdAt: m.createdAt.toISOString(),
@@ -312,10 +323,11 @@ export async function GET(request: NextRequest) {
         reviewCount: Number(m.reviewCount) || 0,
         urls: {
           full:
-            m.city && m.state && m.slug
+            m.isPublicPage && m.city && m.state && m.slug
               ? getMerchantPageUrl(m.city, m.state, m.slug)
               : null,
-          short: m.phone ? getMerchantShortUrl(m.phone) : null,
+          short:
+            m.isPublicPage && m.phone ? getMerchantShortUrl(m.phone) : null,
         },
       };
     });

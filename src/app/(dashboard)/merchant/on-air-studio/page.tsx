@@ -10,6 +10,7 @@ import { merchantNavItems } from "../nav";
 
 interface MerchantSummary {
   businessName: string;
+  isPublicPage: boolean | null;
   city: string | null;
   state: string | null;
   slug: string | null;
@@ -51,7 +52,7 @@ export default function MerchantOnAirStudioPage() {
   }, [authLoading, isAuthenticated]);
 
   const publicPageHref =
-    merchant?.city && merchant.state && merchant.slug
+    merchant?.isPublicPage && merchant.city && merchant.state && merchant.slug
       ? `/business/${merchant.city.toLowerCase()}/${merchant.state.toLowerCase()}/${merchant.slug}`
       : null;
 

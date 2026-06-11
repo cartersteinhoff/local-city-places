@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { redirect } from "next/navigation";
 import { db } from "@/db";
 import { merchants } from "@/db/schema";
@@ -24,7 +24,9 @@ export default async function MerchantPagePhoneRedirect({ params }: PageProps) {
       slug: merchants.slug,
     })
     .from(merchants)
-    .where(eq(merchants.phone, phoneNumber))
+    .where(
+      and(eq(merchants.phone, phoneNumber), eq(merchants.isPublicPage, true)),
+    )
     .limit(1);
 
   if (!merchant?.city || !merchant.state || !merchant.slug) {

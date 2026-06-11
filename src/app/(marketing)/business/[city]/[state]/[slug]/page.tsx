@@ -56,7 +56,7 @@ async function getMerchantBySlug(slug: string) {
     })
     .from(merchants)
     .leftJoin(categories, eq(merchants.categoryId, categories.id))
-    .where(eq(merchants.slug, slug))
+    .where(and(eq(merchants.slug, slug), eq(merchants.isPublicPage, true)))
     .limit(1);
 
   return merchant;

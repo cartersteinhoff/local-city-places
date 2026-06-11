@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { type NextRequest, NextResponse } from "next/server";
 import { db } from "@/db";
 import { categories, merchants } from "@/db/schema";
@@ -38,7 +38,7 @@ export async function GET(
       })
       .from(merchants)
       .leftJoin(categories, eq(merchants.categoryId, categories.id))
-      .where(eq(merchants.slug, slug))
+      .where(and(eq(merchants.slug, slug), eq(merchants.isPublicPage, true)))
       .limit(1);
 
     if (!merchant) {
