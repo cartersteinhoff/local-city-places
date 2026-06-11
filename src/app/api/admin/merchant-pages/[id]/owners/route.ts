@@ -1,4 +1,4 @@
-import { eq, inArray } from "drizzle-orm";
+import { and, eq, inArray, ne, sql } from "drizzle-orm";
 import { type NextRequest, NextResponse } from "next/server";
 import { db, merchantOwners, merchants, users } from "@/db";
 import { getSession } from "@/lib/auth";
@@ -143,6 +143,31 @@ export async function PUT(
 
     await db.transaction(async (tx) => {
       await tx.delete(merchantOwners).where(eq(merchantOwners.merchantId, id));
+
+      await tx
+        .delete(merchantOwners)
+        .where(
+          and(
+            ne(merchantOwners.merchantId, id),
+            inArray(merchantOwners.userId, ownerUserIds),
+          ),
+        );
+
+      await tx
+        .update(merchants)
+        .set({
+          userId: sql`(
+            select mo.user_id
+            from merchant_owners mo
+            where mo.merchant_id = ${merchants.id}
+            order by mo.created_at asc
+            limit 1
+          )`,
+          updatedAt: new Date(),
+        })
+        .where(
+          and(ne(merchants.id, id), inArray(merchants.userId, ownerUserIds)),
+        );
 
       await tx.insert(merchantOwners).values(
         ownerUserIds.map((userId) => ({

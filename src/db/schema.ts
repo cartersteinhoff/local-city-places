@@ -448,7 +448,7 @@ export const merchantOwners = pgTable(
       table.merchantId,
       table.userId,
     ),
-    index("merchant_owners_user_idx").on(table.userId),
+    uniqueIndex("merchant_owners_user_unique_idx").on(table.userId),
     index("merchant_owners_merchant_idx").on(table.merchantId),
   ],
 );
