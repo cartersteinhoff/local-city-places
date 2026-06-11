@@ -108,6 +108,7 @@ export default function EditMerchantPage({
                 id: `service-${i}-${Date.now()}`,
               }),
             ),
+            campaignAudio: m.campaignAudio || null,
             slug: m.slug || "",
             featuredOnHomepage: m.featuredOnHomepage || false,
             isPublicPage: Boolean(m.isPublicPage),

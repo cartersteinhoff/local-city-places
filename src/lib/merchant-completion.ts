@@ -29,6 +29,10 @@ export interface MerchantData {
   vimeoUrl?: string;
   photos?: string[];
   services?: { name: string; description?: string; price?: string }[];
+  campaignAudio?: {
+    radioSpot?: { url?: string } | null;
+    soundtrack?: { url?: string } | null;
+  } | null;
 }
 
 interface SectionCompletion {
@@ -177,6 +181,33 @@ export function calculateCompletion(data: MerchantData): CompletionResult {
     percentage: hasServices ? 100 : 0,
     missingFields: hasServices ? [] : ["Services/Menu Items"],
   });
+
+  if ("campaignAudio" in data) {
+    const trackFields = [
+      {
+        key: "radioSpot",
+        label: "Radio Spot",
+        value: data.campaignAudio?.radioSpot?.url,
+      },
+      {
+        key: "soundtrack",
+        label: "Signature Soundtrack",
+        value: data.campaignAudio?.soundtrack?.url,
+      },
+    ];
+    const tracksCompleted = trackFields.filter((f) => hasValue(f.value)).length;
+    const tracksMissing = trackFields
+      .filter((f) => !hasValue(f.value))
+      .map((f) => f.label);
+    sections.push({
+      id: "tracks",
+      label: "Tracks",
+      completed: tracksCompleted,
+      total: 2,
+      percentage: Math.round((tracksCompleted / 2) * 100),
+      missingFields: tracksMissing,
+    });
+  }
 
   // Calculate totals
   const totalCompleted = sections.reduce((sum, s) => sum + s.completed, 0);

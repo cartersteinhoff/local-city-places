@@ -14,12 +14,16 @@ import { cn } from "@/lib/utils";
 
 interface CompletionIndicatorProps {
   data: MerchantData;
+  activeSection?: string;
   className?: string;
+  onSectionSelect?: (sectionId: string) => void;
 }
 
 export function CompletionIndicator({
+  activeSection,
   data,
   className,
+  onSectionSelect,
 }: CompletionIndicatorProps) {
   const completion = calculateCompletion(data);
   const isComplete = completion.percentage === 100;
@@ -53,14 +57,19 @@ export function CompletionIndicator({
         {completion.sections.map((section) => {
           const isSectionComplete = section.percentage === 100;
           const hasPartial = section.completed > 0 && !isSectionComplete;
+          const isActive = activeSection === section.id;
 
           return (
             <Tooltip key={section.id}>
               <TooltipTrigger asChild>
                 <button
                   type="button"
+                  onClick={() => onSectionSelect?.(section.id)}
+                  aria-pressed={isActive}
                   className={cn(
                     "flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium transition-colors",
+                    onSectionSelect && "cursor-pointer",
+                    isActive && "ring-2 ring-ring/35 ring-offset-1",
                     isSectionComplete && "bg-green-100 text-green-700",
                     hasPartial && "bg-yellow-100 text-yellow-700",
                     !isSectionComplete &&
