@@ -1,0 +1,21 @@
+"use client";
+
+import type { ReactNode } from "react";
+import { DashboardLayout } from "@/components/layout";
+import { merchantNavItems } from "../nav";
+
+interface MarketLock360DashboardShellProps {
+  children: ReactNode;
+}
+
+export function MarketLock360DashboardShell({
+  children,
+}: MarketLock360DashboardShellProps) {
+  return (
+    <DashboardLayout navItems={merchantNavItems}>
+      <div className="-m-4 overflow-hidden md:-m-6 [&>div>footer]:hidden [&>div>header]:hidden">
+        {children}
+      </div>
+    </DashboardLayout>
+  );
+}

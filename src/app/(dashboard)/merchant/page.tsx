@@ -501,7 +501,7 @@ function MerchantActivationBanner({
         <div className="min-w-0 shrink-0 lg:max-w-sm lg:text-right">
           <div className="flex flex-wrap items-center gap-2 lg:justify-end">
             <h1 className="text-2xl font-bold tracking-tight text-foreground md:text-3xl">
-              MarketLock360
+              Dashboard
             </h1>
             {merchantTrial && (
               <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-primary/30 bg-primary/10 px-3 py-1.5 text-sm font-semibold text-primary">

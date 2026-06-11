@@ -53,7 +53,7 @@ const roleConfig = {
   },
 };
 
-const MARKETLOCK360_HREF = "/merchant";
+const MARKETLOCK360_HREF = "/merchant/marketlock360";
 const ON_AIR_STUDIO_HREF = "/merchant/on-air-studio";
 const ON_AIR_GRADIENT =
   "linear-gradient(90deg, #f43a20 0%, #ff1b14 42%, #10b9b4 100%)";
