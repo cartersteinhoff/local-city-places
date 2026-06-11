@@ -100,7 +100,7 @@ export async function PUT(
 
     if (ownerUserIds.length === 0) {
       return NextResponse.json(
-        { error: "At least one owner is required" },
+        { error: "At least one manager is required" },
         { status: 400 },
       );
     }
@@ -125,7 +125,7 @@ export async function PUT(
 
     if (selectedUsers.length !== ownerUserIds.length) {
       return NextResponse.json(
-        { error: "One or more selected owners were not found" },
+        { error: "One or more selected managers were not found" },
         { status: 400 },
       );
     }
@@ -136,7 +136,7 @@ export async function PUT(
 
     if (invalidUsers.length > 0) {
       return NextResponse.json(
-        { error: "Owners must be merchant or admin users" },
+        { error: "Managers must be merchant or admin users" },
         { status: 400 },
       );
     }

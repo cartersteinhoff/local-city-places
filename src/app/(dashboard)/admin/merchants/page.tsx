@@ -13,6 +13,7 @@ import {
   Search,
   Store,
   Trash2,
+  Users,
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -29,6 +30,7 @@ import {
 } from "@/components/ui/dialog";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { PageHeader } from "@/components/ui/page-header";
 import { Pagination } from "@/components/ui/pagination";
 import {
@@ -55,6 +57,13 @@ interface Category {
   name: string;
 }
 
+interface MerchantOwner {
+  id: string;
+  email: string;
+  role: string;
+  name: string | null;
+}
+
 interface MerchantPageData {
   id: string;
   businessName: string;
@@ -69,6 +78,7 @@ interface MerchantPageData {
   updatedAt: string;
   completionPercentage: number;
   reviewCount: number;
+  owners: MerchantOwner[];
   urls: {
     full: string | null;
     short: string | null;
@@ -99,6 +109,17 @@ export default function MerchantPagesPage() {
   const [selectedMerchant, setSelectedMerchant] =
     useState<MerchantPageData | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+
+  // Owner dialog
+  const [ownerDialogOpen, setOwnerDialogOpen] = useState(false);
+  const [ownerMerchant, setOwnerMerchant] = useState<MerchantPageData | null>(
+    null,
+  );
+  const [ownerSearch, setOwnerSearch] = useState("");
+  const [ownerResults, setOwnerResults] = useState<MerchantOwner[]>([]);
+  const [isOwnerSearchLoading, setIsOwnerSearchLoading] = useState(false);
+  const [isOwnerSaving, setIsOwnerSaving] = useState(false);
+  const [ownerError, setOwnerError] = useState("");
 
   useEffect(() => {
     if (!authLoading && (!isAuthenticated || user?.role !== "admin")) {
@@ -177,6 +198,59 @@ export default function MerchantPagesPage() {
     }
   }, [authLoading, isAuthenticated, fetchMerchants]);
 
+  useEffect(() => {
+    if (!ownerDialogOpen || !ownerMerchant || ownerSearch.trim().length < 2) {
+      setOwnerResults([]);
+      setIsOwnerSearchLoading(false);
+      return;
+    }
+
+    const controller = new AbortController();
+    const timer = window.setTimeout(async () => {
+      setIsOwnerSearchLoading(true);
+      setOwnerError("");
+
+      try {
+        const res = await fetch(
+          `/api/admin/users/search?q=${encodeURIComponent(ownerSearch.trim())}`,
+          { signal: controller.signal },
+        );
+        const data = await res.json();
+
+        if (!res.ok) {
+          throw new Error(data.error || "Failed to search users");
+        }
+
+        const currentOwnerIds = new Set(
+          ownerMerchant.owners.map((owner) => owner.id),
+        );
+
+        setOwnerResults(
+          (data.users || []).filter(
+            (user: MerchantOwner) =>
+              !currentOwnerIds.has(user.id) &&
+              (user.role === "merchant" || user.role === "admin"),
+          ),
+        );
+      } catch (err) {
+        if (!controller.signal.aborted) {
+          setOwnerError(
+            err instanceof Error ? err.message : "Failed to search users",
+          );
+        }
+      } finally {
+        if (!controller.signal.aborted) {
+          setIsOwnerSearchLoading(false);
+        }
+      }
+    }, 250);
+
+    return () => {
+      controller.abort();
+      window.clearTimeout(timer);
+    };
+  }, [ownerDialogOpen, ownerMerchant, ownerSearch]);
+
   // Reset page when filters change
   const handleFilterChange =
     (setter: (value: string) => void) => (value: string) => {
@@ -208,6 +282,111 @@ export default function MerchantPagesPage() {
     } finally {
       setIsDeleting(false);
     }
+  };
+
+  const getOwnerDisplayName = (owner: MerchantOwner) =>
+    owner.name || owner.email;
+
+  const getOwnerSummary = (owners: MerchantOwner[]) =>
+    owners.length > 0
+      ? owners.map(getOwnerDisplayName).join(", ")
+      : "Unassigned";
+
+  const getPrimaryManagerName = (owners: MerchantOwner[]) =>
+    owners[0] ? getOwnerDisplayName(owners[0]) : "Unassigned";
+
+  const getAdditionalManagerCount = (owners: MerchantOwner[]) =>
+    Math.max(0, owners.length - 1);
+
+  const handleOwnerDialogChange = (open: boolean) => {
+    setOwnerDialogOpen(open);
+
+    if (!open) {
+      setOwnerMerchant(null);
+      setOwnerSearch("");
+      setOwnerResults([]);
+      setOwnerError("");
+      setIsOwnerSearchLoading(false);
+    }
+  };
+
+  const openOwnerDialog = (merchant: MerchantPageData) => {
+    setOwnerMerchant(merchant);
+    setOwnerSearch("");
+    setOwnerResults([]);
+    setOwnerError("");
+    setOwnerDialogOpen(true);
+  };
+
+  const saveOwners = async (nextOwners: MerchantOwner[]) => {
+    if (!ownerMerchant) return;
+
+    if (nextOwners.length === 0) {
+      setOwnerError("At least one manager is required");
+      return;
+    }
+
+    setIsOwnerSaving(true);
+    setOwnerError("");
+
+    try {
+      const res = await fetch(
+        `/api/admin/merchant-pages/${ownerMerchant.id}/owners`,
+        {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            ownerUserIds: nextOwners.map((owner) => owner.id),
+          }),
+        },
+      );
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || "Failed to update managers");
+      }
+
+      const updatedOwners = data.owners || nextOwners;
+      setOwnerMerchant({ ...ownerMerchant, owners: updatedOwners });
+      setMerchants((currentMerchants) =>
+        currentMerchants.map((merchant) =>
+          merchant.id === ownerMerchant.id
+            ? { ...merchant, owners: updatedOwners }
+            : merchant,
+        ),
+      );
+      setOwnerSearch("");
+      setOwnerResults([]);
+      await fetchMerchants();
+    } catch (err) {
+      setOwnerError(
+        err instanceof Error ? err.message : "Failed to update managers",
+      );
+    } finally {
+      setIsOwnerSaving(false);
+    }
+  };
+
+  const addOwner = (owner: MerchantOwner) => {
+    if (!ownerMerchant) return;
+    if (
+      ownerMerchant.owners.some((currentOwner) => currentOwner.id === owner.id)
+    ) {
+      return;
+    }
+
+    saveOwners([...ownerMerchant.owners, owner]);
+  };
+
+  const removeOwner = (ownerId: string) => {
+    if (!ownerMerchant) return;
+
+    if (ownerMerchant.owners.length <= 1) {
+      setOwnerError("At least one manager is required");
+      return;
+    }
+
+    saveOwners(ownerMerchant.owners.filter((owner) => owner.id !== ownerId));
   };
 
   const copyToClipboard = async (text: string, id: string) => {
@@ -419,6 +598,25 @@ export default function MerchantPagesPage() {
                       </span>
                     </div>
 
+                    <div className="mb-3 flex items-start gap-2 text-sm text-muted-foreground">
+                      <Users className="mt-0.5 h-4 w-4 shrink-0" />
+                      <span className="min-w-0 truncate">
+                        <span className="font-medium text-foreground">
+                          Managers:
+                        </span>{" "}
+                        {getPrimaryManagerName(merchant.owners)}
+                        {getAdditionalManagerCount(merchant.owners) > 0 && (
+                          <button
+                            type="button"
+                            className="ml-1 font-medium text-primary underline-offset-2 hover:underline"
+                            onClick={() => openOwnerDialog(merchant)}
+                          >
+                            +{getAdditionalManagerCount(merchant.owners)} more
+                          </button>
+                        )}
+                      </span>
+                    </div>
+
                     {merchant.urls.short && (
                       <div className="flex items-center gap-2 mb-3">
                         <code className="text-xs bg-muted px-2 py-1 rounded flex-1 truncate">
@@ -469,6 +667,14 @@ export default function MerchantPagesPage() {
                       <Button
                         variant="outline"
                         size="sm"
+                        onClick={() => openOwnerDialog(merchant)}
+                      >
+                        <Users className="w-4 h-4 mr-1" />
+                        Managers
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
                         className="text-destructive hover:text-destructive"
                         onClick={() => {
                           setSelectedMerchant(merchant);
@@ -489,6 +695,7 @@ export default function MerchantPagesPage() {
                   <TableHeader>
                     <TableRow>
                       <TableHead>Business</TableHead>
+                      <TableHead className="w-[180px]">Managers</TableHead>
                       <TableHead className="w-[80px] text-center">
                         Complete
                       </TableHead>
@@ -498,7 +705,7 @@ export default function MerchantPagesPage() {
                       <TableHead className="w-[120px]">Location</TableHead>
                       <TableHead className="w-[180px]">Short URL</TableHead>
                       <TableHead className="w-[90px]">Updated</TableHead>
-                      <TableHead className="w-[145px] text-right">
+                      <TableHead className="w-[180px] text-right">
                         Actions
                       </TableHead>
                     </TableRow>
@@ -507,7 +714,7 @@ export default function MerchantPagesPage() {
                     {!isLoading && merchants.length === 0 ? (
                       <TableRow>
                         <TableCell
-                          colSpan={7}
+                          colSpan={8}
                           className="px-4 py-8 text-center text-muted-foreground"
                         >
                           No merchant pages found
@@ -529,6 +736,37 @@ export default function MerchantPagesPage() {
                               ]
                                 .filter(Boolean)
                                 .join(" · ")}
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-start gap-2">
+                              <Users className="mt-0.5 h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                              <div className="min-w-0">
+                                <div
+                                  className="truncate text-sm"
+                                  title={getOwnerSummary(merchant.owners)}
+                                >
+                                  {getPrimaryManagerName(merchant.owners)}
+                                </div>
+                                {getAdditionalManagerCount(merchant.owners) >
+                                0 ? (
+                                  <button
+                                    type="button"
+                                    className="text-xs font-medium text-primary underline-offset-2 hover:underline"
+                                    onClick={() => openOwnerDialog(merchant)}
+                                  >
+                                    +
+                                    {getAdditionalManagerCount(merchant.owners)}{" "}
+                                    more
+                                  </button>
+                                ) : (
+                                  merchant.owners.length === 1 && (
+                                    <div className="text-xs text-muted-foreground">
+                                      1 manager
+                                    </div>
+                                  )
+                                )}
+                              </div>
                             </div>
                           </TableCell>
                           <TableCell className="text-center">
@@ -604,6 +842,16 @@ export default function MerchantPagesPage() {
                                 variant="ghost"
                                 size="icon"
                                 className="h-8 w-8"
+                                onClick={() => openOwnerDialog(merchant)}
+                                title="Assign managers"
+                                aria-label={`Assign managers for ${merchant.businessName}`}
+                              >
+                                <Users className="w-4 h-4" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8"
                                 asChild
                               >
                                 <Link
@@ -675,6 +923,134 @@ export default function MerchantPagesPage() {
               )}
             </>
           )}
+
+          {/* Manager Dialog */}
+          <Dialog open={ownerDialogOpen} onOpenChange={handleOwnerDialogChange}>
+            <DialogContent className="sm:max-w-lg">
+              <DialogHeader>
+                <DialogTitle>Assign Merchant Managers</DialogTitle>
+                <DialogDescription>
+                  {ownerMerchant?.businessName
+                    ? `${ownerMerchant.businessName} dashboard access`
+                    : "Manage merchant dashboard access"}
+                </DialogDescription>
+              </DialogHeader>
+
+              <div className="space-y-5">
+                <div>
+                  <div className="flex min-h-[24px] items-center justify-between gap-3">
+                    <Label>Current Managers</Label>
+                    {isOwnerSaving && (
+                      <span className="inline-flex items-center gap-1.5 text-sm text-muted-foreground">
+                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                        Saving
+                      </span>
+                    )}
+                  </div>
+                  <div className="mt-2 space-y-2">
+                    {(ownerMerchant?.owners || []).map((owner) => (
+                      <div
+                        key={owner.id}
+                        className="flex items-center justify-between gap-3 rounded-lg border bg-muted/30 px-3 py-2"
+                      >
+                        <div className="min-w-0">
+                          <p className="truncate text-sm font-medium">
+                            {getOwnerDisplayName(owner)}
+                          </p>
+                          <p className="truncate text-xs text-muted-foreground">
+                            {owner.email} · {owner.role}
+                          </p>
+                        </div>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 shrink-0"
+                          onClick={() => removeOwner(owner.id)}
+                          disabled={
+                            isOwnerSaving ||
+                            (ownerMerchant?.owners.length || 0) <= 1
+                          }
+                          title={
+                            (ownerMerchant?.owners.length || 0) <= 1
+                              ? "At least one manager is required"
+                              : "Remove manager"
+                          }
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <Label htmlFor="merchant-owner-search">
+                    Add Existing User
+                  </Label>
+                  <Input
+                    id="merchant-owner-search"
+                    value={ownerSearch}
+                    onChange={(event) => setOwnerSearch(event.target.value)}
+                    placeholder="Search name or email"
+                    disabled={isOwnerSaving}
+                  />
+
+                  {(isOwnerSearchLoading || ownerResults.length > 0) && (
+                    <div className="mt-3 overflow-hidden rounded-lg border">
+                      {isOwnerSearchLoading ? (
+                        <div className="flex items-center gap-2 px-3 py-2 text-sm text-muted-foreground">
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                          Searching users
+                        </div>
+                      ) : (
+                        ownerResults.map((owner) => (
+                          <button
+                            key={owner.id}
+                            type="button"
+                            className="flex w-full items-center justify-between gap-3 px-3 py-2 text-left text-sm hover:bg-muted disabled:cursor-not-allowed disabled:opacity-60"
+                            onClick={() => addOwner(owner)}
+                            disabled={isOwnerSaving}
+                          >
+                            <span className="min-w-0">
+                              <span className="block truncate font-medium">
+                                {getOwnerDisplayName(owner)}
+                              </span>
+                              <span className="block truncate text-xs text-muted-foreground">
+                                {owner.email} · {owner.role}
+                              </span>
+                            </span>
+                            <Plus className="h-4 w-4 shrink-0" />
+                          </button>
+                        ))
+                      )}
+                    </div>
+                  )}
+
+                  {!isOwnerSearchLoading &&
+                    ownerSearch.trim().length >= 2 &&
+                    ownerResults.length === 0 && (
+                      <p className="mt-2 text-sm text-muted-foreground">
+                        No matching assignable users found.
+                      </p>
+                    )}
+                </div>
+
+                {ownerError && (
+                  <p className="text-sm text-destructive">{ownerError}</p>
+                )}
+              </div>
+
+              <DialogFooter>
+                <Button
+                  variant="outline"
+                  onClick={() => handleOwnerDialogChange(false)}
+                >
+                  Close
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
 
           {/* Delete Dialog */}
           <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>

@@ -1,7 +1,23 @@
-import { and, asc, desc, eq, ilike, or, type SQL, sql } from "drizzle-orm";
+import {
+  and,
+  asc,
+  desc,
+  eq,
+  ilike,
+  inArray,
+  or,
+  type SQL,
+  sql,
+} from "drizzle-orm";
 import { type NextRequest, NextResponse } from "next/server";
 import { db } from "@/db";
-import { categories, merchants, reviews } from "@/db/schema";
+import {
+  categories,
+  merchantOwners,
+  merchants,
+  reviews,
+  users,
+} from "@/db/schema";
 import { getSession } from "@/lib/auth";
 import { calculateCompletion } from "@/lib/merchant-completion";
 import { revalidateMerchantPublicPaths } from "@/lib/merchant-public-revalidation";
@@ -12,6 +28,114 @@ import {
   stripPhoneNumber,
 } from "@/lib/utils";
 import { isValidVimeoUrl } from "@/lib/vimeo";
+
+type MerchantOwner = {
+  id: string;
+  email: string;
+  role: string;
+  name: string | null;
+};
+
+function formatOwner(row: {
+  id: string;
+  email: string;
+  role: string;
+  firstName: string | null;
+  lastName: string | null;
+}): MerchantOwner {
+  const name = [row.firstName, row.lastName].filter(Boolean).join(" ");
+
+  return {
+    id: row.id,
+    email: row.email,
+    role: row.role,
+    name: name || null,
+  };
+}
+
+async function getOwnersByMerchant(
+  merchantIds: string[],
+  legacyUserIdByMerchantId: Map<string, string | null>,
+) {
+  const ownersByMerchantId = new Map<string, MerchantOwner[]>();
+
+  if (merchantIds.length === 0) {
+    return ownersByMerchantId;
+  }
+
+  const ownerRows = await db
+    .select({
+      merchantId: merchantOwners.merchantId,
+      id: users.id,
+      email: users.email,
+      role: users.role,
+      firstName: users.firstName,
+      lastName: users.lastName,
+    })
+    .from(merchantOwners)
+    .innerJoin(users, eq(merchantOwners.userId, users.id))
+    .where(inArray(merchantOwners.merchantId, merchantIds))
+    .orderBy(users.email);
+
+  for (const row of ownerRows) {
+    const owners = ownersByMerchantId.get(row.merchantId) || [];
+    owners.push(formatOwner(row));
+    ownersByMerchantId.set(row.merchantId, owners);
+  }
+
+  const ownerIdsByMerchantId = new Map<string, Set<string>>();
+  for (const merchantId of merchantIds) {
+    ownerIdsByMerchantId.set(
+      merchantId,
+      new Set(
+        (ownersByMerchantId.get(merchantId) || []).map((owner) => owner.id),
+      ),
+    );
+  }
+
+  const legacyOwnerIds = Array.from(
+    new Set(
+      merchantIds
+        .map((merchantId) => legacyUserIdByMerchantId.get(merchantId))
+        .filter((userId): userId is string => Boolean(userId)),
+    ),
+  );
+
+  if (legacyOwnerIds.length > 0) {
+    const legacyOwners = await db
+      .select({
+        id: users.id,
+        email: users.email,
+        role: users.role,
+        firstName: users.firstName,
+        lastName: users.lastName,
+      })
+      .from(users)
+      .where(inArray(users.id, legacyOwnerIds));
+    const legacyOwnerById = new Map(
+      legacyOwners.map((owner) => [owner.id, formatOwner(owner)]),
+    );
+
+    for (const merchantId of merchantIds) {
+      const legacyUserId = legacyUserIdByMerchantId.get(merchantId);
+      const ownerIds = ownerIdsByMerchantId.get(merchantId);
+
+      if (!legacyUserId || ownerIds?.has(legacyUserId)) {
+        continue;
+      }
+
+      const legacyOwner = legacyOwnerById.get(legacyUserId);
+      if (legacyOwner) {
+        ownersByMerchantId.set(merchantId, [
+          legacyOwner,
+          ...(ownersByMerchantId.get(merchantId) || []),
+        ]);
+      }
+    }
+  }
+
+  return ownersByMerchantId;
+}
 
 export async function GET(request: NextRequest) {
   try {
@@ -101,6 +225,7 @@ export async function GET(request: NextRequest) {
     let query = db
       .select({
         id: merchants.id,
+        userId: merchants.userId,
         businessName: merchants.businessName,
         streetAddress: merchants.streetAddress,
         city: merchants.city,
@@ -139,6 +264,9 @@ export async function GET(request: NextRequest) {
     }
 
     const merchantList = await query;
+    const legacyUserIdByMerchantId = new Map(
+      merchantList.map((merchant) => [merchant.id, merchant.userId]),
+    );
 
     // Transform merchants with completion calculation
     let processedMerchants = merchantList.map((m) => {
@@ -220,6 +348,15 @@ export async function GET(request: NextRequest) {
       filteredTotal = Number(count);
     }
     const totalPages = Math.ceil(filteredTotal / limit);
+
+    const ownersByMerchantId = await getOwnersByMerchant(
+      processedMerchants.map((merchant) => merchant.id),
+      legacyUserIdByMerchantId,
+    );
+    processedMerchants = processedMerchants.map((merchant) => ({
+      ...merchant,
+      owners: ownersByMerchantId.get(merchant.id) || [],
+    }));
 
     return NextResponse.json({
       merchants: processedMerchants,

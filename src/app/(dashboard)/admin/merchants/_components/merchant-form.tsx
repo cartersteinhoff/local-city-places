@@ -460,7 +460,7 @@ export function MerchantForm({
         const data = await res.json();
 
         if (!res.ok) {
-          throw new Error(data.error || "Failed to update owners");
+          throw new Error(data.error || "Failed to update managers");
         }
 
         setOwners(data.owners || nextOwners);
@@ -468,7 +468,7 @@ export function MerchantForm({
         setOwnerResults([]);
       } catch (err) {
         setOwnerError(
-          err instanceof Error ? err.message : "Failed to update owners",
+          err instanceof Error ? err.message : "Failed to update managers",
         );
       } finally {
         setIsOwnerSaving(false);
@@ -488,7 +488,7 @@ export function MerchantForm({
   const removeOwner = useCallback(
     (ownerId: string) => {
       if (owners.length <= 1) {
-        setOwnerError("At least one owner is required");
+        setOwnerError("At least one manager is required");
         return;
       }
 
@@ -880,11 +880,11 @@ export function MerchantForm({
               <div>
                 <h3 className="flex items-center gap-2 font-semibold">
                   <Users className="h-4 w-4" />
-                  Merchant Dashboard Owners
+                  Merchant Dashboard Managers
                 </h3>
                 <p className="mt-1 text-sm text-muted-foreground">
-                  Owners can open this merchant dashboard and manage the shared
-                  profile.
+                  Managers can open this merchant dashboard and manage the
+                  shared profile.
                 </p>
               </div>
               {isOwnerSaving && (
@@ -918,8 +918,8 @@ export function MerchantForm({
                     disabled={isOwnerSaving || owners.length <= 1}
                     title={
                       owners.length <= 1
-                        ? "At least one owner is required"
-                        : "Remove owner"
+                        ? "At least one manager is required"
+                        : "Remove manager"
                     }
                   >
                     <Trash2 className="h-4 w-4" />
@@ -929,7 +929,7 @@ export function MerchantForm({
             </div>
 
             <div className="mt-4">
-              <Label htmlFor="ownerSearch">Add Owner</Label>
+              <Label htmlFor="ownerSearch">Add Manager</Label>
               <Input
                 id="ownerSearch"
                 value={ownerSearch}
@@ -939,7 +939,7 @@ export function MerchantForm({
               />
               <p className="mt-1 text-xs text-muted-foreground">
                 Only admin and merchant users can be assigned as dashboard
-                owners.
+                managers.
               </p>
             </div>
 
