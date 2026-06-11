@@ -1,12 +1,13 @@
 import { eq } from "drizzle-orm";
 import { type NextRequest, NextResponse } from "next/server";
-import { db, members, merchants } from "@/db";
+import { db, members } from "@/db";
 import {
   getRedirectPath,
   isValidCallbackUrl,
   SESSION_COOKIE_NAME,
   verifyMagicLinkToken,
 } from "@/lib/auth";
+import { getMerchantForUser } from "@/lib/merchant-ownership";
 import { confirmSweepstakesEntry } from "@/lib/sweepstakes";
 
 export async function GET(request: NextRequest) {
@@ -57,11 +58,7 @@ export async function GET(request: NextRequest) {
         .limit(1);
       hasProfile = !!member;
     } else if (result.role === "merchant" && result.userId) {
-      const [merchant] = await db
-        .select()
-        .from(merchants)
-        .where(eq(merchants.userId, result.userId))
-        .limit(1);
+      const merchant = await getMerchantForUser(result.userId);
       hasProfile = !!merchant;
     } else if (result.role === "admin") {
       hasProfile = true; // Admins don't need a profile

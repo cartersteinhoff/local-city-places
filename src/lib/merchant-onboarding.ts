@@ -1,5 +1,5 @@
 import { eq } from "drizzle-orm";
-import { db, merchants, users } from "@/db";
+import { db, merchantOwners, merchants, users } from "@/db";
 
 export interface CreateMerchantOptions {
   email: string;
@@ -100,6 +100,11 @@ export async function createMerchantAccount(
       verified: false,
     })
     .returning();
+
+  await db.insert(merchantOwners).values({
+    merchantId: newMerchant.id,
+    userId: newUser.id,
+  });
 
   return {
     user: newUser,

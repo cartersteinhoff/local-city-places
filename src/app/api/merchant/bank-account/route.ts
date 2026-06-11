@@ -1,8 +1,12 @@
 import { eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { db } from "@/db";
-import { merchantBankAccounts, merchants } from "@/db/schema";
+import { merchantBankAccounts, merchantOwners, merchants } from "@/db/schema";
 import { getSession } from "@/lib/auth";
+import {
+  merchantOwnerJoin,
+  merchantOwnerWhere,
+} from "@/lib/merchant-ownership";
 
 export async function GET() {
   try {
@@ -14,11 +18,13 @@ export async function GET() {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const [merchant] = await db
-      .select()
+    const [merchantRow] = await db
+      .select({ merchant: merchants })
       .from(merchants)
-      .where(eq(merchants.userId, session.user.id))
+      .leftJoin(merchantOwners, merchantOwnerJoin(session.user.id))
+      .where(merchantOwnerWhere(session.user.id))
       .limit(1);
+    const merchant = merchantRow?.merchant;
 
     if (!merchant) {
       return NextResponse.json(
@@ -65,11 +71,13 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const [merchant] = await db
-      .select()
+    const [merchantRow] = await db
+      .select({ merchant: merchants })
       .from(merchants)
-      .where(eq(merchants.userId, session.user.id))
+      .leftJoin(merchantOwners, merchantOwnerJoin(session.user.id))
+      .where(merchantOwnerWhere(session.user.id))
       .limit(1);
+    const merchant = merchantRow?.merchant;
 
     if (!merchant) {
       return NextResponse.json(

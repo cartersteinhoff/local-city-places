@@ -1,7 +1,11 @@
 import { desc, eq, sql } from "drizzle-orm";
 import { type NextRequest, NextResponse } from "next/server";
-import { db, members, merchants, reviews, users } from "@/db";
+import { db, members, merchantOwners, merchants, reviews, users } from "@/db";
 import { getSession } from "@/lib/auth";
+import {
+  merchantOwnerJoin,
+  merchantOwnerWhere,
+} from "@/lib/merchant-ownership";
 
 export async function GET(request: NextRequest) {
   try {
@@ -14,11 +18,13 @@ export async function GET(request: NextRequest) {
     }
 
     // Get merchant
-    const [merchant] = await db
-      .select()
+    const [merchantRow] = await db
+      .select({ merchant: merchants })
       .from(merchants)
-      .where(eq(merchants.userId, session.user.id))
+      .leftJoin(merchantOwners, merchantOwnerJoin(session.user.id))
+      .where(merchantOwnerWhere(session.user.id))
       .limit(1);
+    const merchant = merchantRow?.merchant;
 
     if (!merchant) {
       return NextResponse.json(

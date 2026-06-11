@@ -2,7 +2,8 @@ import { createHash, randomBytes } from "node:crypto";
 import { and, eq, gt } from "drizzle-orm";
 import { jwtVerify, SignJWT } from "jose";
 import { cookies } from "next/headers";
-import { db, magicLinkTokens, members, merchants, users } from "@/db";
+import { db, magicLinkTokens, members, type merchants, users } from "@/db";
+import { getMerchantForUser } from "@/lib/merchant-ownership";
 
 export const SESSION_COOKIE_NAME = "session_token";
 const MAGIC_LINK_EXPIRY_MINUTES = 4320; // 3 days
@@ -175,11 +176,7 @@ export async function getSession(): Promise<{
     .where(eq(members.userId, user.id))
     .limit(1);
 
-  const [merchant] = await db
-    .select()
-    .from(merchants)
-    .where(eq(merchants.userId, user.id))
-    .limit(1);
+  const merchant = await getMerchantForUser(user.id);
 
   return { user, member, merchant };
 }

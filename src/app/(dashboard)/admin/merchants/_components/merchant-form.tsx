@@ -19,6 +19,7 @@ import {
   RefreshCw,
   Save,
   Trash2,
+  Users,
   Video,
 } from "lucide-react";
 import Link from "next/link";
@@ -71,6 +72,13 @@ interface Service {
   name: string;
   description?: string;
   price?: string;
+}
+
+interface MerchantOwner {
+  id: string;
+  email: string;
+  role: "member" | "merchant" | "admin";
+  name: string | null;
 }
 
 export interface FormData {
@@ -137,6 +145,7 @@ interface MerchantFormProps {
   merchantId?: string;
   initialData?: FormData;
   initialUrls?: { full: string | null; short: string | null };
+  initialOwners?: MerchantOwner[];
   initialCategoryName?: string;
   categories: Category[];
   onSuccess?: (data: {
@@ -150,6 +159,7 @@ export function MerchantForm({
   merchantId,
   initialData = INITIAL_FORM_DATA,
   initialUrls = INITIAL_URLS,
+  initialOwners = [],
   initialCategoryName = "",
   categories,
   onSuccess,
@@ -168,6 +178,12 @@ export function MerchantForm({
   const [previewOpen, setPreviewOpen] = useState(false);
   const [categoryName, setCategoryName] = useState(initialCategoryName);
   const [isRebuilding, setIsRebuilding] = useState(false);
+  const [owners, setOwners] = useState<MerchantOwner[]>(initialOwners);
+  const [ownerSearch, setOwnerSearch] = useState("");
+  const [ownerResults, setOwnerResults] = useState<MerchantOwner[]>([]);
+  const [isOwnerSearchLoading, setIsOwnerSearchLoading] = useState(false);
+  const [isOwnerSaving, setIsOwnerSaving] = useState(false);
+  const [ownerError, setOwnerError] = useState("");
 
   // Sync initial data changes (for edit mode when data loads)
   useEffect(() => {
@@ -178,6 +194,10 @@ export function MerchantForm({
   useEffect(() => {
     setUrls(initialUrls);
   }, [initialUrls]);
+
+  useEffect(() => {
+    setOwners(initialOwners);
+  }, [initialOwners]);
 
   useEffect(() => {
     setCategoryName(initialCategoryName);
@@ -368,6 +388,114 @@ export function MerchantForm({
       setIsRebuilding(false);
     }
   }, [merchantId]);
+
+  useEffect(() => {
+    if (mode !== "edit" || ownerSearch.trim().length < 2) {
+      setOwnerResults([]);
+      setIsOwnerSearchLoading(false);
+      return;
+    }
+
+    const controller = new AbortController();
+    const timer = window.setTimeout(async () => {
+      setIsOwnerSearchLoading(true);
+      setOwnerError("");
+
+      try {
+        const res = await fetch(
+          `/api/admin/users/search?q=${encodeURIComponent(ownerSearch.trim())}`,
+          { signal: controller.signal },
+        );
+        const data = await res.json();
+
+        if (!res.ok) {
+          throw new Error(data.error || "Failed to search users");
+        }
+
+        const currentOwnerIds = new Set(owners.map((owner) => owner.id));
+        setOwnerResults(
+          (data.users || []).filter(
+            (user: MerchantOwner) =>
+              !currentOwnerIds.has(user.id) &&
+              (user.role === "merchant" || user.role === "admin"),
+          ),
+        );
+      } catch (err) {
+        if (!controller.signal.aborted) {
+          setOwnerError(
+            err instanceof Error ? err.message : "Failed to search users",
+          );
+        }
+      } finally {
+        if (!controller.signal.aborted) {
+          setIsOwnerSearchLoading(false);
+        }
+      }
+    }, 250);
+
+    return () => {
+      controller.abort();
+      window.clearTimeout(timer);
+    };
+  }, [mode, ownerSearch, owners]);
+
+  const saveOwners = useCallback(
+    async (nextOwners: MerchantOwner[]) => {
+      if (mode !== "edit" || !merchantId) return;
+
+      setOwnerError("");
+      setIsOwnerSaving(true);
+
+      try {
+        const res = await fetch(
+          `/api/admin/merchant-pages/${merchantId}/owners`,
+          {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              ownerUserIds: nextOwners.map((owner) => owner.id),
+            }),
+          },
+        );
+        const data = await res.json();
+
+        if (!res.ok) {
+          throw new Error(data.error || "Failed to update owners");
+        }
+
+        setOwners(data.owners || nextOwners);
+        setOwnerSearch("");
+        setOwnerResults([]);
+      } catch (err) {
+        setOwnerError(
+          err instanceof Error ? err.message : "Failed to update owners",
+        );
+      } finally {
+        setIsOwnerSaving(false);
+      }
+    },
+    [merchantId, mode],
+  );
+
+  const addOwner = useCallback(
+    (owner: MerchantOwner) => {
+      if (owners.some((currentOwner) => currentOwner.id === owner.id)) return;
+      saveOwners([...owners, owner]);
+    },
+    [owners, saveOwners],
+  );
+
+  const removeOwner = useCallback(
+    (ownerId: string) => {
+      if (owners.length <= 1) {
+        setOwnerError("At least one owner is required");
+        return;
+      }
+
+      saveOwners(owners.filter((owner) => owner.id !== ownerId));
+    },
+    [owners, saveOwners],
+  );
 
   // Update category name when category changes
   useEffect(() => {
@@ -743,6 +871,112 @@ export function MerchantForm({
                 </p>
               )}
             </div>
+          </div>
+        )}
+
+        {mode === "edit" && merchantId && (
+          <div className="bg-card border rounded-lg p-4 mb-6">
+            <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+              <div>
+                <h3 className="flex items-center gap-2 font-semibold">
+                  <Users className="h-4 w-4" />
+                  Merchant Dashboard Owners
+                </h3>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  Owners can open this merchant dashboard and manage the shared
+                  profile.
+                </p>
+              </div>
+              {isOwnerSaving && (
+                <span className="inline-flex items-center gap-1.5 text-sm text-muted-foreground">
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  Saving
+                </span>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              {owners.map((owner) => (
+                <div
+                  key={owner.id}
+                  className="flex items-center justify-between gap-3 rounded-lg border bg-muted/30 px-3 py-2"
+                >
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-medium">
+                      {owner.name || owner.email}
+                    </p>
+                    <p className="truncate text-xs text-muted-foreground">
+                      {owner.email} · {owner.role}
+                    </p>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 shrink-0"
+                    onClick={() => removeOwner(owner.id)}
+                    disabled={isOwnerSaving || owners.length <= 1}
+                    title={
+                      owners.length <= 1
+                        ? "At least one owner is required"
+                        : "Remove owner"
+                    }
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              ))}
+            </div>
+
+            <div className="mt-4">
+              <Label htmlFor="ownerSearch">Add Owner</Label>
+              <Input
+                id="ownerSearch"
+                value={ownerSearch}
+                onChange={(event) => setOwnerSearch(event.target.value)}
+                placeholder="Search admin or merchant users by name or email"
+                disabled={isOwnerSaving}
+              />
+              <p className="mt-1 text-xs text-muted-foreground">
+                Only admin and merchant users can be assigned as dashboard
+                owners.
+              </p>
+            </div>
+
+            {(isOwnerSearchLoading || ownerResults.length > 0) && (
+              <div className="mt-3 overflow-hidden rounded-lg border">
+                {isOwnerSearchLoading ? (
+                  <div className="flex items-center gap-2 px-3 py-2 text-sm text-muted-foreground">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Searching users
+                  </div>
+                ) : (
+                  ownerResults.map((owner) => (
+                    <button
+                      key={owner.id}
+                      type="button"
+                      className="flex w-full items-center justify-between gap-3 px-3 py-2 text-left text-sm hover:bg-muted"
+                      onClick={() => addOwner(owner)}
+                      disabled={isOwnerSaving}
+                    >
+                      <span className="min-w-0">
+                        <span className="block truncate font-medium">
+                          {owner.name || owner.email}
+                        </span>
+                        <span className="block truncate text-xs text-muted-foreground">
+                          {owner.email} · {owner.role}
+                        </span>
+                      </span>
+                      <Plus className="h-4 w-4 shrink-0" />
+                    </button>
+                  ))
+                )}
+              </div>
+            )}
+
+            {ownerError && (
+              <p className="mt-3 text-sm text-destructive">{ownerError}</p>
+            )}
           </div>
         )}
 

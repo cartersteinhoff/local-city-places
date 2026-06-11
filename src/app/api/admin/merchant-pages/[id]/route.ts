@@ -1,7 +1,7 @@
 import { and, eq, ne } from "drizzle-orm";
 import { type NextRequest, NextResponse } from "next/server";
 import { db } from "@/db";
-import { categories, merchants } from "@/db/schema";
+import { categories, merchantOwners, merchants, users } from "@/db/schema";
 import { getSession } from "@/lib/auth";
 import { calculateCompletion } from "@/lib/merchant-completion";
 import { revalidateMerchantPublicPaths } from "@/lib/merchant-public-revalidation";
@@ -28,6 +28,7 @@ export async function GET(
     const [merchant] = await db
       .select({
         id: merchants.id,
+        userId: merchants.userId,
         businessName: merchants.businessName,
         streetAddress: merchants.streetAddress,
         city: merchants.city,
@@ -90,9 +91,57 @@ export async function GET(
       services: merchant.services || undefined,
     });
 
+    const ownerRows = await db
+      .select({
+        id: users.id,
+        email: users.email,
+        role: users.role,
+        firstName: users.firstName,
+        lastName: users.lastName,
+      })
+      .from(merchantOwners)
+      .innerJoin(users, eq(merchantOwners.userId, users.id))
+      .where(eq(merchantOwners.merchantId, id))
+      .orderBy(users.email);
+
+    const owners = ownerRows.map((owner) => ({
+      id: owner.id,
+      email: owner.email,
+      role: owner.role,
+      name: [owner.firstName, owner.lastName].filter(Boolean).join(" ") || null,
+    }));
+    const ownerIds = new Set(owners.map((owner) => owner.id));
+
+    if (merchant.userId && !ownerIds.has(merchant.userId)) {
+      const [legacyOwner] = await db
+        .select({
+          id: users.id,
+          email: users.email,
+          role: users.role,
+          firstName: users.firstName,
+          lastName: users.lastName,
+        })
+        .from(users)
+        .where(eq(users.id, merchant.userId))
+        .limit(1);
+
+      if (legacyOwner) {
+        owners.unshift({
+          id: legacyOwner.id,
+          email: legacyOwner.email,
+          role: legacyOwner.role,
+          name:
+            [legacyOwner.firstName, legacyOwner.lastName]
+              .filter(Boolean)
+              .join(" ") || null,
+        });
+      }
+    }
+
     return NextResponse.json({
       merchant: {
         ...merchant,
+        owners,
         createdAt: merchant.createdAt.toISOString(),
         updatedAt: merchant.updatedAt.toISOString(),
         urls: {

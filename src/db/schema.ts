@@ -427,6 +427,32 @@ export const merchants = pgTable("merchants", {
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
+// Merchant owners join table. `merchants.userId` remains as the legacy primary
+// owner for backwards compatibility, while this table supports shared access.
+export const merchantOwners = pgTable(
+  "merchant_owners",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    merchantId: uuid("merchant_id")
+      .notNull()
+      .references(() => merchants.id, { onDelete: "cascade" }),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    role: varchar("role", { length: 50 }).notNull().default("owner"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    createdBy: uuid("created_by").references(() => users.id),
+  },
+  (table) => [
+    uniqueIndex("merchant_owners_merchant_user_idx").on(
+      table.merchantId,
+      table.userId,
+    ),
+    index("merchant_owners_user_idx").on(table.userId),
+    index("merchant_owners_merchant_idx").on(table.merchantId),
+  ],
+);
+
 // Merchant bank accounts table
 export const merchantBankAccounts = pgTable("merchant_bank_accounts", {
   id: uuid("id").primaryKey().defaultRandom(),
@@ -682,7 +708,7 @@ export const emailPreferences = pgTable("email_preferences", {
 });
 
 // Relations
-export const usersRelations = relations(users, ({ one }) => ({
+export const usersRelations = relations(users, ({ one, many }) => ({
   member: one(members, {
     fields: [users.id],
     references: [members.userId],
@@ -691,6 +717,7 @@ export const usersRelations = relations(users, ({ one }) => ({
     fields: [users.id],
     references: [merchants.userId],
   }),
+  merchantOwnerships: many(merchantOwners),
 }));
 
 export const membersRelations = relations(members, ({ one, many }) => ({
@@ -733,6 +760,22 @@ export const merchantsRelations = relations(merchants, ({ one, many }) => ({
   reviews: many(reviews),
   favoriteMerchantTestimonials: many(favoriteMerchantTestimonials),
   marketplaceOffers: many(marketplaceOffers),
+  owners: many(merchantOwners),
+}));
+
+export const merchantOwnersRelations = relations(merchantOwners, ({ one }) => ({
+  merchant: one(merchants, {
+    fields: [merchantOwners.merchantId],
+    references: [merchants.id],
+  }),
+  user: one(users, {
+    fields: [merchantOwners.userId],
+    references: [users.id],
+  }),
+  createdByUser: one(users, {
+    fields: [merchantOwners.createdBy],
+    references: [users.id],
+  }),
 }));
 
 export const merchantInvitesRelations = relations(

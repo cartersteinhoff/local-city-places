@@ -5,11 +5,16 @@ import {
   db,
   type MerchantCampaignAudio,
   merchantInvites,
+  merchantOwners,
   merchants,
   reviews,
 } from "@/db";
 import { getSession } from "@/lib/auth";
 import { calculateCompletion } from "@/lib/merchant-completion";
+import {
+  merchantOwnerJoin,
+  merchantOwnerWhere,
+} from "@/lib/merchant-ownership";
 import { getMerchantTrialProgress } from "@/lib/merchant-trial";
 
 function getCampaignAudioAsset(
@@ -85,7 +90,8 @@ export async function GET() {
       })
       .from(merchants)
       .leftJoin(categories, eq(merchants.categoryId, categories.id))
-      .where(eq(merchants.userId, session.user.id))
+      .leftJoin(merchantOwners, merchantOwnerJoin(session.user.id))
+      .where(merchantOwnerWhere(session.user.id))
       .limit(1);
 
     if (!merchant) {

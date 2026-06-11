@@ -20,6 +20,13 @@ interface Category {
   name: string;
 }
 
+interface MerchantOwner {
+  id: string;
+  email: string;
+  role: "member" | "merchant" | "admin";
+  name: string | null;
+}
+
 export default function EditMerchantPage({
   params,
 }: {
@@ -35,6 +42,7 @@ export default function EditMerchantPage({
     full: string | null;
     short: string | null;
   }>({ full: null, short: null });
+  const [initialOwners, setInitialOwners] = useState<MerchantOwner[]>([]);
   const [initialCategoryName, setInitialCategoryName] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
@@ -106,6 +114,7 @@ export default function EditMerchantPage({
 
           setInitialData(loadedData);
           setInitialUrls(m.urls);
+          setInitialOwners(m.owners || []);
           setInitialCategoryName(m.categoryName || "");
         } else {
           setError("Merchant not found");
@@ -142,6 +151,7 @@ export default function EditMerchantPage({
           merchantId={id}
           initialData={initialData}
           initialUrls={initialUrls}
+          initialOwners={initialOwners}
           initialCategoryName={initialCategoryName}
           categories={categories}
         />

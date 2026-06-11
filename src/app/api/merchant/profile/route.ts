@@ -4,10 +4,15 @@ import { db } from "@/db";
 import {
   categories,
   merchantBankAccounts,
+  merchantOwners,
   merchants,
   users,
 } from "@/db/schema";
 import { getSession } from "@/lib/auth";
+import {
+  merchantOwnerJoin,
+  merchantOwnerWhere,
+} from "@/lib/merchant-ownership";
 import { revalidateMerchantPublicPaths } from "@/lib/merchant-public-revalidation";
 import {
   uploadMerchantLogo,
@@ -48,7 +53,8 @@ export async function GET() {
       })
       .from(merchants)
       .leftJoin(categories, eq(merchants.categoryId, categories.id))
-      .where(eq(merchants.userId, session.user.id))
+      .leftJoin(merchantOwners, merchantOwnerJoin(session.user.id))
+      .where(merchantOwnerWhere(session.user.id))
       .limit(1);
 
     const merchant = merchantResult[0];
@@ -136,11 +142,13 @@ export async function PATCH(request: NextRequest) {
     } = body;
 
     // Get merchant
-    const [merchant] = await db
-      .select()
+    const [merchantRow] = await db
+      .select({ merchant: merchants })
       .from(merchants)
-      .where(eq(merchants.userId, session.user.id))
+      .leftJoin(merchantOwners, merchantOwnerJoin(session.user.id))
+      .where(merchantOwnerWhere(session.user.id))
       .limit(1);
+    const merchant = merchantRow?.merchant;
 
     if (!merchant) {
       return NextResponse.json(
