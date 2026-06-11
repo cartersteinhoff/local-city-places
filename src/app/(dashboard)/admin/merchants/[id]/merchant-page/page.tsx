@@ -72,6 +72,7 @@ export default function AdminMerchantPage({
             phone: merchant.phone,
             website: merchant.website,
             photoCount: merchant.photos?.length || 0,
+            marketLockStatus: merchant.marketLockStatus,
             updatedAt: merchant.updatedAt,
             urls: merchant.urls,
             photos: merchant.photos,

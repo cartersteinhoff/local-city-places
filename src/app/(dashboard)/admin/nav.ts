@@ -5,6 +5,7 @@ import {
   FolderOpen,
   Globe,
   LayoutDashboard,
+  LockKeyhole,
   Mail,
   MessageSquare,
   Send,
@@ -42,6 +43,12 @@ export const adminNavItems = [
     label: "Merchant Requests",
     href: "/admin/merchant-requests",
     icon: ClipboardList,
+    section: "Merchants",
+  },
+  {
+    label: "Trial Queue",
+    href: "/admin/marketlock-trials",
+    icon: LockKeyhole,
     section: "Merchants",
   },
   {

@@ -66,6 +66,7 @@ const previewDashboardData: DashboardConceptData = {
     phone: "4254518599",
     website: "https://localcityplaces.com",
     photoCount: 4,
+    marketLockStatus: "basic",
     updatedAt: "2026-06-08T00:00:00.000Z",
   },
   pageManagement: {

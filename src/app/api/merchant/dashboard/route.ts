@@ -1,10 +1,9 @@
-import { and, desc, eq, isNotNull, sql } from "drizzle-orm";
+import { desc, eq, sql } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import {
   categories,
   db,
   type MerchantCampaignAudio,
-  merchantInvites,
   merchantOwners,
   merchants,
   reviews,
@@ -86,6 +85,8 @@ export async function GET() {
         photos: merchants.photos,
         services: merchants.services,
         campaignAudio: merchants.campaignAudio,
+        marketLockStatus: merchants.marketLockStatus,
+        marketLockStatusUpdatedAt: merchants.marketLockStatusUpdatedAt,
         updatedAt: merchants.updatedAt,
       })
       .from(merchants)
@@ -100,23 +101,6 @@ export async function GET() {
         { status: 404 },
       );
     }
-
-    const [merchantTrialInvite] = await db
-      .select({
-        usedAt: merchantInvites.usedAt,
-      })
-      .from(merchantInvites)
-      .where(
-        and(
-          eq(merchantInvites.usedByUserId, session.user.id),
-          isNotNull(merchantInvites.usedAt),
-        ),
-      )
-      .orderBy(desc(merchantInvites.usedAt))
-      .limit(1);
-    const trialStartedAt =
-      merchantTrialInvite?.usedAt ||
-      (session.user.role === "admin" ? merchant.updatedAt : null);
 
     const [reviewStats] = await db
       .select({
@@ -176,6 +160,7 @@ export async function GET() {
         website: merchant.website,
         photoCount: merchant.photos?.length || 0,
         campaignAudio: merchant.campaignAudio,
+        marketLockStatus: merchant.marketLockStatus,
         updatedAt: merchant.updatedAt.toISOString(),
       },
       campaignTrack: getCampaignAudioAsset(
@@ -188,7 +173,10 @@ export async function GET() {
         merchant.businessName,
         "radioSpot",
       ),
-      merchantTrial: getMerchantTrialProgress(trialStartedAt),
+      merchantTrial:
+        merchant.marketLockStatus === "trial"
+          ? getMerchantTrialProgress(merchant.marketLockStatusUpdatedAt)
+          : null,
       pageManagement: {
         completionPercentage: completion.percentage,
         completedFields: completion.completed,

@@ -19,6 +19,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { DashboardLayout } from "@/components/layout";
+import { MarketLockStatusBadge } from "@/components/market-lock-status-badge";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -50,6 +51,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useUser } from "@/hooks/use-user";
+import type { MarketLockStatus } from "@/lib/market-lock-status";
 import { cn, formatPhoneNumber } from "@/lib/utils";
 import { adminNavItems } from "../nav";
 
@@ -80,6 +82,7 @@ interface MerchantPageData {
   completionPercentage: number;
   reviewCount: number;
   isPublicPage: boolean;
+  marketLockStatus: MarketLockStatus;
   owners: MerchantOwner[];
   urls: {
     full: string | null;
@@ -626,20 +629,25 @@ export default function MerchantPagesPage() {
                             .join(", ")}
                         </p>
                       </div>
-                      <span
-                        className={cn(
-                          "inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium flex-shrink-0",
-                          merchant.completionPercentage === 100 &&
-                            "bg-green-100 text-green-700",
-                          merchant.completionPercentage >= 50 &&
-                            merchant.completionPercentage < 100 &&
-                            "bg-yellow-100 text-yellow-700",
-                          merchant.completionPercentage < 50 &&
-                            "bg-red-100 text-red-700",
-                        )}
-                      >
-                        {merchant.completionPercentage}%
-                      </span>
+                      <div className="flex shrink-0 flex-col items-end gap-2">
+                        <MarketLockStatusBadge
+                          status={merchant.marketLockStatus}
+                        />
+                        <span
+                          className={cn(
+                            "inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium",
+                            merchant.completionPercentage === 100 &&
+                              "bg-green-100 text-green-700",
+                            merchant.completionPercentage >= 50 &&
+                              merchant.completionPercentage < 100 &&
+                              "bg-yellow-100 text-yellow-700",
+                            merchant.completionPercentage < 50 &&
+                              "bg-red-100 text-red-700",
+                          )}
+                        >
+                          {merchant.completionPercentage}%
+                        </span>
+                      </div>
                     </div>
 
                     <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
@@ -771,6 +779,7 @@ export default function MerchantPagesPage() {
                       <TableHead>Business</TableHead>
                       <TableHead className="w-[180px]">Managers</TableHead>
                       <TableHead className="w-[105px]">Public</TableHead>
+                      <TableHead className="w-[105px]">MarketLock</TableHead>
                       <TableHead className="w-[80px] text-center">
                         Complete
                       </TableHead>
@@ -789,7 +798,7 @@ export default function MerchantPagesPage() {
                     {!isLoading && merchants.length === 0 ? (
                       <TableRow>
                         <TableCell
-                          colSpan={9}
+                          colSpan={10}
                           className="px-4 py-8 text-center text-muted-foreground"
                         >
                           No merchant pages found
@@ -858,6 +867,11 @@ export default function MerchantPagesPage() {
                                 {merchant.isPublicPage ? "On" : "Off"}
                               </span>
                             </div>
+                          </TableCell>
+                          <TableCell>
+                            <MarketLockStatusBadge
+                              status={merchant.marketLockStatus}
+                            />
                           </TableCell>
                           <TableCell className="text-center">
                             <span

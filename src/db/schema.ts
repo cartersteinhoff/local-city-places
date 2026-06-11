@@ -13,6 +13,7 @@ import {
   uuid,
   varchar,
 } from "drizzle-orm/pg-core";
+import type { MarketLockStatus } from "@/lib/market-lock-status";
 
 // Enums
 export const userRoleEnum = pgEnum("user_role", [
@@ -419,6 +420,13 @@ export const merchants = pgTable("merchants", {
     >(), // Services/menu items
   aboutStory: text("about_story"), // Longer about/history section
   campaignAudio: jsonb("campaign_audio").$type<MerchantCampaignAudio>(),
+  marketLockStatus: varchar("market_lock_status", { length: 20 })
+    .$type<MarketLockStatus>()
+    .default("basic")
+    .notNull(),
+  marketLockStatusUpdatedAt: timestamp("market_lock_status_updated_at")
+    .defaultNow()
+    .notNull(),
   featuredOnHomepage: boolean("featured_on_homepage").default(false).notNull(),
   googleRating: decimal("google_rating", { precision: 2, scale: 1 }),
   googleReviewCount: integer("google_review_count"),

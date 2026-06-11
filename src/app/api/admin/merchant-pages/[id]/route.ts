@@ -3,6 +3,7 @@ import { type NextRequest, NextResponse } from "next/server";
 import { db } from "@/db";
 import { categories, merchantOwners, merchants, users } from "@/db/schema";
 import { getSession } from "@/lib/auth";
+import { isMarketLockStatus } from "@/lib/market-lock-status";
 import { calculateCompletion } from "@/lib/merchant-completion";
 import { revalidateMerchantPublicPaths } from "@/lib/merchant-public-revalidation";
 import {
@@ -44,6 +45,8 @@ export async function GET(
         logoUrl: merchants.logoUrl,
         googlePlaceId: merchants.googlePlaceId,
         isPublicPage: merchants.isPublicPage,
+        marketLockStatus: merchants.marketLockStatus,
+        marketLockStatusUpdatedAt: merchants.marketLockStatusUpdatedAt,
         featuredOnHomepage: merchants.featuredOnHomepage,
         verified: merchants.verified,
         // Extended fields
@@ -231,6 +234,7 @@ export async function PATCH(
       aboutStory,
       featuredOnHomepage,
       isPublicPage,
+      marketLockStatus,
     } = body;
 
     // Build update object
@@ -374,6 +378,20 @@ export async function PATCH(
       updates.featuredOnHomepage = Boolean(featuredOnHomepage);
     }
 
+    if (marketLockStatus !== undefined) {
+      if (!isMarketLockStatus(marketLockStatus)) {
+        return NextResponse.json(
+          { error: "Invalid MarketLock status" },
+          { status: 400 },
+        );
+      }
+
+      updates.marketLockStatus = marketLockStatus;
+      if (marketLockStatus !== existing.marketLockStatus) {
+        updates.marketLockStatusUpdatedAt = new Date();
+      }
+    }
+
     if (isPublicPage !== undefined) {
       const nextIsPublicPage = Boolean(isPublicPage);
       const nextCity = updates.city ?? existing.city;
@@ -468,6 +486,7 @@ export async function PATCH(
         businessName: updated.businessName,
         slug: updated.slug,
         isPublicPage: Boolean(updated.isPublicPage),
+        marketLockStatus: updated.marketLockStatus,
       },
       urls: {
         full: updated.isPublicPage ? fullUrl : null,

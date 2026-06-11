@@ -7,6 +7,7 @@ import {
   FileText,
   Globe2,
   ImageIcon,
+  LockKeyhole,
   type LucideIcon,
   MapPin,
   PlusCircle,
@@ -14,8 +15,13 @@ import {
   UserCircle,
 } from "lucide-react";
 import Link from "next/link";
+import { MarketLockStatusBadge } from "@/components/market-lock-status-badge";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import {
+  getMarketLockStatusLabel,
+  type MarketLockStatus,
+} from "@/lib/market-lock-status";
 import { cn, formatPhoneNumber } from "@/lib/utils";
 
 export interface MerchantPageManagementMerchant {
@@ -33,6 +39,7 @@ export interface MerchantPageManagementMerchant {
   phone: string | null;
   website: string | null;
   photoCount: number;
+  marketLockStatus: MarketLockStatus;
   updatedAt: string;
 }
 
@@ -86,6 +93,12 @@ export function MerchantPageManagementPanel({
     complete: boolean;
   }> = [
     {
+      label: "MarketLock",
+      value: getMarketLockStatusLabel(merchant.marketLockStatus),
+      icon: LockKeyhole,
+      complete: merchant.marketLockStatus !== "basic",
+    },
+    {
       label: "Location",
       value: locationLabel || "Missing",
       icon: MapPin,
@@ -134,6 +147,7 @@ export function MerchantPageManagementPanel({
               >
                 {merchant.categoryName ? "Selected" : "Needs selection"}
               </Badge>
+              <MarketLockStatusBadge status={merchant.marketLockStatus} />
             </div>
             <p className="mt-2 text-sm text-muted-foreground">
               {summaryLabel}{" "}

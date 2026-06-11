@@ -29,6 +29,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useUser } from "@/hooks/use-user";
+import { getMarketLockStatusLabel } from "@/lib/market-lock-status";
 import { cn } from "@/lib/utils";
 import type { NavItem } from "./types";
 
@@ -244,7 +245,7 @@ function MarketLock360Mark({
   statusLabel,
 }: {
   isActive: boolean;
-  statusLabel: "Trial" | "Pro";
+  statusLabel: string;
 }) {
   return (
     <span
@@ -275,7 +276,9 @@ function MarketLock360Mark({
             "flex shrink-0 items-center rounded-full px-2 py-0.5 text-[10px] font-black leading-none ring-1",
             statusLabel === "Trial"
               ? "bg-orange-500/10 text-orange-500 ring-orange-500/20"
-              : "bg-emerald-500/10 text-emerald-500 ring-emerald-500/20",
+              : statusLabel === "Pro"
+                ? "bg-emerald-500/10 text-emerald-500 ring-emerald-500/20"
+                : "bg-slate-500/10 text-slate-500 ring-slate-500/20 dark:text-slate-300 dark:ring-slate-300/20",
           )}
         >
           {statusLabel}
@@ -348,8 +351,9 @@ export function Sidebar({
   const hasSections = navItems.some((item) => item.section);
   const navGroups = groupNavItems(navItems);
   const nextTheme = theme === "dark" ? "light" : "dark";
-  const marketLockStatusLabel =
-    merchant?.marketLockStatus === "trial" ? "Trial" : "Pro";
+  const marketLockStatusLabel = getMarketLockStatusLabel(
+    merchant?.marketLockStatus,
+  );
 
   const handleToggleCollapse = () => {
     if (onToggleCollapse) {

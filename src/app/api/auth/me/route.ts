@@ -1,8 +1,6 @@
-import { and, desc, eq, isNotNull } from "drizzle-orm";
 import { NextResponse } from "next/server";
-import { db, merchantInvites } from "@/db";
 import { getSession } from "@/lib/auth";
-import { getMerchantTrialProgress } from "@/lib/merchant-trial";
+import { normalizeMarketLockStatus } from "@/lib/market-lock-status";
 
 export async function GET() {
   const session = await getSession();
@@ -19,31 +17,6 @@ export async function GET() {
         },
       },
     );
-  }
-
-  let marketLockStatus: "trial" | "pro" = "pro";
-
-  if (session.merchant) {
-    const [merchantTrialInvite] = await db
-      .select({
-        usedAt: merchantInvites.usedAt,
-      })
-      .from(merchantInvites)
-      .where(
-        and(
-          eq(merchantInvites.usedByUserId, session.user.id),
-          isNotNull(merchantInvites.usedAt),
-        ),
-      )
-      .orderBy(desc(merchantInvites.usedAt))
-      .limit(1);
-    const trialStartedAt =
-      merchantTrialInvite?.usedAt ||
-      (session.user.role === "admin" ? session.merchant.updatedAt : null);
-
-    marketLockStatus = getMerchantTrialProgress(trialStartedAt)
-      ? "trial"
-      : "pro";
   }
 
   return NextResponse.json(
@@ -65,7 +38,9 @@ export async function GET() {
         ? {
             id: session.merchant.id,
             businessName: session.merchant.businessName,
-            marketLockStatus,
+            marketLockStatus: normalizeMarketLockStatus(
+              session.merchant.marketLockStatus,
+            ),
           }
         : null,
     },

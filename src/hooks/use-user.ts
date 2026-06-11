@@ -1,4 +1,5 @@
 import useSWR from "swr";
+import type { MarketLockStatus } from "@/lib/market-lock-status";
 
 interface User {
   email: string;
@@ -15,7 +16,7 @@ interface Member {
 interface Merchant {
   id: string;
   businessName: string;
-  marketLockStatus?: "trial" | "pro";
+  marketLockStatus?: MarketLockStatus;
 }
 
 interface AuthData {

@@ -24,6 +24,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { DashboardLayout } from "@/components/layout";
+import { MarketLockStatusBadge } from "@/components/market-lock-status-badge";
 import { CityTerritoryMap } from "@/components/merchant/city-territory-map";
 import {
   type MerchantPageManagementData,
@@ -32,6 +33,7 @@ import {
 } from "@/components/merchant/merchant-page-management-panel";
 import { Button } from "@/components/ui/button";
 import { useUser } from "@/hooks/use-user";
+import { getMarketLockStatusLabel } from "@/lib/market-lock-status";
 import { cn, getMerchantPageUrl } from "@/lib/utils";
 import { merchantNavItems } from "./nav";
 
@@ -456,6 +458,8 @@ function MerchantActivationBanner({
   const marketLabel =
     [merchant?.city, merchant?.state].filter(Boolean).join(", ") ||
     "Your market";
+  const marketLockStatus = merchant?.marketLockStatus ?? "basic";
+  const marketLockStatusLabel = getMarketLockStatusLabel(marketLockStatus);
   const totalTools = activationItems.length + marketLockProAdds.length;
   const toolSegments = [
     ...activationItems.map((item) => ({ key: item.label, active: true })),
@@ -487,13 +491,12 @@ function MerchantActivationBanner({
               <h2 className="truncate text-lg font-bold tracking-tight md:text-xl">
                 {categoryName} &middot; {marketLabel}
               </h2>
-              <span className="inline-flex shrink-0 items-center gap-1 rounded-full border border-emerald-500/40 bg-emerald-500/10 px-2.5 py-0.5 text-xs font-semibold text-emerald-700 dark:text-emerald-300">
-                <LockKeyhole className="h-3 w-3" />
-                Lock active
-              </span>
+              <MarketLockStatusBadge status={marketLockStatus} />
             </div>
             <p className="mt-0.5 text-xs text-muted-foreground md:text-sm">
-              {`No other ${categoryName} business in ${marketLabel} can hold this position — it's yours.`}
+              {marketLockStatus === "basic"
+                ? "MarketLock360 trial access is ready when you request it."
+                : `No other ${categoryName} business in ${marketLabel} can hold this position — it's yours.`}
             </p>
           </div>
         </div>
@@ -552,13 +555,18 @@ function MerchantActivationBanner({
               const isSignatureSoundtrack =
                 item.label === "Signature soundtrack";
               const itemValue =
-                isSignatureSoundtrack && track?.title
-                  ? track.title
-                  : item.value;
+                item.label === "MarketLock status"
+                  ? marketLockStatusLabel
+                  : isSignatureSoundtrack && track?.title
+                    ? track.title
+                    : item.value;
               const itemStatus =
-                isSignatureSoundtrack && track?.audioSrc
-                  ? "Ready"
-                  : item.status;
+                item.label === "MarketLock status" &&
+                marketLockStatus === "basic"
+                  ? "Waiting"
+                  : isSignatureSoundtrack && track?.audioSrc
+                    ? "Ready"
+                    : item.status;
               const meta = activationStatusMeta[itemStatus];
 
               return (
