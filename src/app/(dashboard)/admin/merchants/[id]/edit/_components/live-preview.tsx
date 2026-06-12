@@ -163,6 +163,7 @@ function PreviewContent({
 }) {
   const rootRef = useRef<HTMLDivElement>(null);
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: Preview data changes can alter rendered iframe height before ResizeObserver fires.
   useEffect(() => {
     const root = rootRef.current;
     if (!root) return;
@@ -206,7 +207,7 @@ function PreviewContent({
       });
       if (timeoutId) frameWindow?.clearTimeout(timeoutId);
     };
-  }, [minHeight, onHeightChange]);
+  }, [data, minHeight, onHeightChange]);
 
   return (
     <div id="merchant-preview-root" ref={rootRef}>
