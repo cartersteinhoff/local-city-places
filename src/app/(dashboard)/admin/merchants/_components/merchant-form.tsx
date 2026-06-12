@@ -1052,7 +1052,7 @@ export function MerchantForm({
             )
           }
           placeholder="url-slug"
-          className="h-7 min-w-0 flex-1 border-0 bg-background px-2 text-xs font-mono shadow-none focus-visible:ring-1"
+          className="h-7 min-w-0 flex-1 border-0 bg-background px-2 text-[11px] font-mono shadow-none focus-visible:ring-1 md:text-[11px]"
           title={displayFullUrl}
         />
         <Button
