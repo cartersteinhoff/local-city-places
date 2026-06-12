@@ -9,7 +9,7 @@ import {
 
 export const merchantNavItems = [
   { label: "Dashboard", href: "/merchant", icon: LayoutDashboard },
-  { label: "Page Editor", href: "/merchant/page-editor", icon: FileText },
+  { label: "Merchant Page", href: "/merchant/page-editor", icon: FileText },
   { label: "Reviews", href: "/merchant/reviews", icon: Star },
   { label: "Profile", href: "/merchant/profile", icon: UserCircle },
   {
