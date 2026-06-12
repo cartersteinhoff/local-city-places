@@ -3,14 +3,7 @@ import { type NextRequest, NextResponse } from "next/server";
 import { db, merchantRequests } from "@/db";
 import { getSession } from "@/lib/auth";
 
-const statuses = [
-  "new",
-  "in_review",
-  "waitlisted",
-  "fulfilled",
-  "invited",
-  "rejected",
-] as const;
+const statuses = ["new", "fulfilled"] as const;
 
 function serializeRequest(request: typeof merchantRequests.$inferSelect) {
   return {
@@ -36,7 +29,12 @@ export async function GET(request: NextRequest) {
       Math.max(1, parseInt(searchParams.get("limit") || "20", 10)),
     );
     const offset = (page - 1) * limit;
-    const status = searchParams.get("status") || "new";
+    const requestedStatus = searchParams.get("status") || "new";
+    const status =
+      requestedStatus === "all" ||
+      statuses.includes(requestedStatus as (typeof statuses)[number])
+        ? requestedStatus
+        : "new";
     const search = searchParams.get("search")?.trim() || "";
 
     const conditions: SQL[] = [];

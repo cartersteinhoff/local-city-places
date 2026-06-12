@@ -28,6 +28,12 @@ export async function POST(
       ),
     );
     const shouldSendEmail = body.sendEmail !== false;
+    const requestedEmail =
+      typeof body.email === "string" ? body.email.trim().toLowerCase() : "";
+    const subject =
+      typeof body.subject === "string" ? body.subject.trim() : undefined;
+    const message =
+      typeof body.message === "string" ? body.message.trim() : undefined;
 
     const [merchantRequest] = await db
       .select()
@@ -39,9 +45,13 @@ export async function POST(
       return NextResponse.json({ error: "Request not found" }, { status: 404 });
     }
 
-    const validationError = await validateEmailForMerchant(
-      merchantRequest.email,
-    );
+    const inviteEmail = requestedEmail || merchantRequest.email;
+
+    if (!inviteEmail) {
+      return NextResponse.json({ error: "Email is required" }, { status: 400 });
+    }
+
+    const validationError = await validateEmailForMerchant(inviteEmail);
     if (validationError) {
       return NextResponse.json(
         { error: validationError.message, errorType: validationError.type },
@@ -59,7 +69,7 @@ export async function POST(
       .insert(merchantInvites)
       .values({
         token: hashedToken,
-        email: merchantRequest.email,
+        email: inviteEmail,
         expiresAt,
         createdBy: session.user.id,
       })
@@ -70,9 +80,11 @@ export async function POST(
     const inviteUrl = `${appUrl}/onboard/merchant?token=${token}`;
     const emailSent = shouldSendEmail
       ? await sendMerchantInviteEmail({
-          email: merchantRequest.email,
+          email: inviteEmail,
           inviteUrl,
           expiresInDays,
+          subject,
+          message,
         })
       : false;
 
@@ -80,7 +92,7 @@ export async function POST(
     const [updatedRequest] = await db
       .update(merchantRequests)
       .set({
-        status: "invited",
+        status: "fulfilled",
         categoryStatus: "assigned",
         merchantInviteId: invite.id,
         inviteSentAt: now,

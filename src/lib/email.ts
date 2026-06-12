@@ -741,27 +741,43 @@ interface MerchantInviteEmailOptions {
   email: string;
   inviteUrl: string;
   expiresInDays: number;
+  subject?: string;
+  message?: string;
 }
 
 export async function sendMerchantInviteEmail({
   email,
   inviteUrl,
   expiresInDays,
+  subject: customSubject,
+  message,
 }: MerchantInviteEmailOptions): Promise<boolean> {
-  const subject = "You're invited to join Local City Places as a merchant";
+  const subject =
+    customSubject?.trim() ||
+    "You're invited to join Local City Places as a merchant";
+  const customMessage = message?.trim();
+  const messageHtml = customMessage
+    ? customMessage
+        .split(/\n{2,}/)
+        .map(
+          (paragraph) =>
+            `<p style="color: #444; line-height: 1.6;">${escapeHtml(paragraph).replace(/\n/g, "<br />")}</p>`,
+        )
+        .join("\n")
+    : `<p>You've been invited to join Local City Places as a merchant partner.</p>
+
+      <p><strong>What happens next?</strong></p>
+      <p style="color: #444;">
+        Complete your registration, set up your business profile, and start
+        getting discovered by local customers.
+      </p>`;
   const html = `
     <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
       <div style="text-align: center; margin-bottom: 24px;">
         <img src="${EMAIL_ASSETS_URL}/images/email-logo.png" alt="Local City Places" width="300" height="134" style="width: 300px; max-width: 100%; height: auto;" />
       </div>
       <h2>Welcome, Partner!</h2>
-      <p>You've been invited to join Local City Places as a merchant partner.</p>
-
-      <p><strong>What happens next?</strong></p>
-      <p style="color: #444;">
-        Complete your registration, set up your business profile, and start
-        getting discovered by local customers.
-      </p>
+      ${messageHtml}
 
       <div style="text-align: center; margin: 32px 0;">
         <a href="${inviteUrl}" style="display: inline-block; background: linear-gradient(135deg, #ff7a3c, #ff9f1c); color: white; padding: 16px 32px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 16px;">
@@ -779,7 +795,15 @@ export async function sendMerchantInviteEmail({
     </div>
   `;
 
-  const text = `Welcome, Partner!
+  const text = customMessage
+    ? `Welcome, Partner!
+
+${customMessage}
+
+Complete your registration: ${inviteUrl}
+
+This invitation expires in ${expiresInDays} day${expiresInDays !== 1 ? "s" : ""}.`
+    : `Welcome, Partner!
 
 You've been invited to join Local City Places as a merchant partner.
 

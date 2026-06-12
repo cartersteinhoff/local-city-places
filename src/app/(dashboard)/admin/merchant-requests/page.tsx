@@ -2,24 +2,34 @@
 
 import type { LucideIcon } from "lucide-react";
 import {
-  Check,
+  Building2,
+  CalendarClock,
   CheckCircle2,
-  ClipboardList,
   Clock,
-  Copy,
   Eye,
+  FileImage,
+  FileText,
+  Globe,
   Loader2,
   Mail,
+  MapPin,
+  Phone,
   RefreshCw,
   Search,
   Send,
   ShieldCheck,
-  XCircle,
+  UserRound,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useState } from "react";
+import {
+  type KeyboardEvent,
+  type ReactNode,
+  useCallback,
+  useEffect,
+  useState,
+} from "react";
 import { DashboardLayout } from "@/components/layout";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -29,15 +39,9 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { PageHeader } from "@/components/ui/page-header";
 import { Pagination } from "@/components/ui/pagination";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { useUser } from "@/hooks/use-user";
 import { cn, formatPhoneNumber } from "@/lib/utils";
@@ -52,7 +56,8 @@ type RequestStatus =
   | "rejected";
 
 type CategoryStatus = "requested" | "assigned" | "waitlisted";
-type RequestFilter = RequestStatus | "all";
+type VisibleRequestStatus = "new" | "fulfilled";
+type RequestFilter = VisibleRequestStatus | "all";
 
 interface MerchantRequest {
   id: string;
@@ -128,6 +133,8 @@ const statusConfig: Record<
   },
 };
 
+const visibleRequestStatuses: VisibleRequestStatus[] = ["new", "fulfilled"];
+
 const categoryStatusLabels: Record<CategoryStatus, string> = {
   requested: "Requested",
   assigned: "Assigned",
@@ -184,6 +191,51 @@ function StatBox({
   );
 }
 
+function DetailItem({
+  label,
+  icon: Icon,
+  children,
+  className,
+}: {
+  label: string;
+  icon: LucideIcon;
+  children: ReactNode;
+  className?: string;
+}) {
+  return (
+    <div
+      className={cn(
+        "grid min-w-0 grid-cols-[20px_minmax(0,1fr)] gap-x-3 rounded-lg border bg-muted/35 px-3 py-2.5 dark:border-sky-300/15 dark:bg-[#082a43]/70 dark:shadow-[inset_0_1px_rgba(255,255,255,0.04)]",
+        className,
+      )}
+    >
+      <div className="pt-0.5 text-muted-foreground dark:text-slate-300">
+        <Icon className="h-3.5 w-3.5" />
+      </div>
+      <div className="min-w-0">
+        <p className="text-[10px] font-semibold uppercase text-muted-foreground dark:text-slate-300">
+          {label}
+        </p>
+        <div className="mt-0.5 text-sm leading-5">{children}</div>
+      </div>
+    </div>
+  );
+}
+
+function EmptyValue({ children = "Not provided" }: { children?: ReactNode }) {
+  return <span className="text-muted-foreground">{children}</span>;
+}
+
+function getFulfillmentEmailDefaults(request: MerchantRequest) {
+  return {
+    email: request.email,
+    subject: `You're invited to join Local City Places, ${request.businessName}`,
+    message: `Hi ${request.ownerName},
+
+Your Local City Places merchant request for ${request.businessName} has been reviewed and fulfilled. Use the registration link below to finish setting up your merchant dashboard.`,
+  };
+}
+
 export default function AdminMerchantRequestsPage() {
   const router = useRouter();
   const { user, isLoading: authLoading, isAuthenticated } = useUser();
@@ -200,15 +252,14 @@ export default function AdminMerchantRequestsPage() {
 
   const [selectedRequest, setSelectedRequest] =
     useState<MerchantRequest | null>(null);
-  const [draftStatus, setDraftStatus] = useState<RequestStatus>("new");
-  const [draftCategoryStatus, setDraftCategoryStatus] =
-    useState<CategoryStatus>("requested");
-  const [draftNotes, setDraftNotes] = useState("");
-  const [isSaving, setIsSaving] = useState(false);
-  const [isSendingInvite, setIsSendingInvite] = useState(false);
-  const [inviteUrl, setInviteUrl] = useState("");
-  const [copiedInvite, setCopiedInvite] = useState(false);
-  const [dialogError, setDialogError] = useState("");
+  const [emailDraftOpen, setEmailDraftOpen] = useState(false);
+  const [fulfillmentEmail, setFulfillmentEmail] = useState("");
+  const [fulfillmentSubject, setFulfillmentSubject] = useState("");
+  const [fulfillmentMessage, setFulfillmentMessage] = useState("");
+  const [isSendingFulfillmentEmail, setIsSendingFulfillmentEmail] =
+    useState(false);
+  const [actionError, setActionError] = useState("");
+  const [actionMessage, setActionMessage] = useState("");
 
   useEffect(() => {
     if (!authLoading && (!isAuthenticated || user?.role !== "admin")) {
@@ -260,35 +311,29 @@ export default function AdminMerchantRequestsPage() {
     }
   }, [authLoading, isAuthenticated, user?.role, fetchRequests]);
 
-  useEffect(() => {
-    if (!selectedRequest) return;
-
-    setDraftStatus(selectedRequest.status);
-    setDraftCategoryStatus(selectedRequest.categoryStatus);
-    setDraftNotes(selectedRequest.adminNotes || "");
-    setInviteUrl("");
-    setCopiedInvite(false);
-    setDialogError("");
-  }, [selectedRequest]);
-
   const handleFilterChange = (newFilter: RequestFilter) => {
     setFilter(newFilter);
     setPage(1);
   };
 
-  const handleDraftStatusChange = (value: string) => {
-    const nextStatus = value as RequestStatus;
-    setDraftStatus(nextStatus);
+  const openRequest = (request: MerchantRequest) => {
+    const defaults = getFulfillmentEmailDefaults(request);
+    setSelectedRequest(request);
+    setEmailDraftOpen(false);
+    setFulfillmentEmail(defaults.email);
+    setFulfillmentSubject(defaults.subject);
+    setFulfillmentMessage(defaults.message);
+    setActionError("");
+    setActionMessage("");
+  };
 
-    if (nextStatus === "fulfilled" || nextStatus === "invited") {
-      setDraftCategoryStatus("assigned");
-    } else if (nextStatus === "waitlisted") {
-      setDraftCategoryStatus("waitlisted");
-    } else if (
-      (nextStatus === "new" || nextStatus === "in_review") &&
-      draftCategoryStatus !== "waitlisted"
-    ) {
-      setDraftCategoryStatus("requested");
+  const openRequestFromKeyboard = (
+    event: KeyboardEvent<HTMLElement>,
+    request: MerchantRequest,
+  ) => {
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      openRequest(request);
     }
   };
 
@@ -301,47 +346,29 @@ export default function AdminMerchantRequestsPage() {
     setSelectedRequest(updatedRequest);
   };
 
-  const saveRequest = async () => {
+  const sendEmailAndMarkFulfilled = async () => {
     if (!selectedRequest) return;
 
-    setIsSaving(true);
-    setDialogError("");
+    setActionError("");
+    setActionMessage("");
 
-    try {
-      const res = await fetch(
-        `/api/admin/merchant-requests/${selectedRequest.id}`,
-        {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            status: draftStatus,
-            categoryStatus: draftCategoryStatus,
-            adminNotes: draftNotes,
-          }),
-        },
-      );
-      const data = await res.json();
-
-      if (!res.ok) {
-        throw new Error(data.error || "Failed to save request");
-      }
-
-      mergeUpdatedRequest(data.request);
-      fetchRequests();
-    } catch (error) {
-      setDialogError(
-        error instanceof Error ? error.message : "Failed to save request",
-      );
-    } finally {
-      setIsSaving(false);
+    if (!emailDraftOpen) {
+      setEmailDraftOpen(true);
+      return;
     }
-  };
 
-  const sendInvite = async () => {
-    if (!selectedRequest) return;
+    const email = fulfillmentEmail.trim().toLowerCase();
+    const subject = fulfillmentSubject.trim();
+    const message = fulfillmentMessage.trim();
 
-    setIsSendingInvite(true);
-    setDialogError("");
+    if (!email || !subject || !message) {
+      setActionError(
+        "Email, subject, and message are required before sending.",
+      );
+      return;
+    }
+
+    setIsSendingFulfillmentEmail(true);
 
     try {
       const res = await fetch(
@@ -349,33 +376,32 @@ export default function AdminMerchantRequestsPage() {
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ sendEmail: true, expiresInDays: 7 }),
+          body: JSON.stringify({
+            sendEmail: true,
+            expiresInDays: 7,
+            email,
+            subject,
+            message,
+          }),
         },
       );
       const data = await res.json();
 
       if (!res.ok) {
-        throw new Error(data.error || "Failed to send invite");
+        throw new Error(data.error || "Failed to send email");
       }
 
-      setInviteUrl(data.inviteUrl);
       mergeUpdatedRequest(data.request);
+      setEmailDraftOpen(false);
+      setActionMessage(`Email sent to ${email} and request marked fulfilled.`);
       fetchRequests();
     } catch (error) {
-      setDialogError(
-        error instanceof Error ? error.message : "Failed to send invite",
+      setActionError(
+        error instanceof Error ? error.message : "Failed to send email",
       );
     } finally {
-      setIsSendingInvite(false);
+      setIsSendingFulfillmentEmail(false);
     }
-  };
-
-  const copyInviteUrl = async () => {
-    if (!inviteUrl) return;
-
-    await navigator.clipboard.writeText(inviteUrl);
-    setCopiedInvite(true);
-    setTimeout(() => setCopiedInvite(false), 2000);
   };
 
   return (
@@ -399,28 +425,10 @@ export default function AdminMerchantRequestsPage() {
               icon={Clock}
             />
             <StatBox
-              label="In Review"
-              value={stats?.in_review ?? 0}
-              subtext="Being checked"
-              icon={ClipboardList}
-            />
-            <StatBox
-              label="Waitlisted"
-              value={stats?.waitlisted ?? 0}
-              subtext="Category held"
-              icon={XCircle}
-            />
-            <StatBox
               label="Fulfilled"
               value={stats?.fulfilled ?? 0}
               subtext="Ready to invite"
               icon={ShieldCheck}
-            />
-            <StatBox
-              label="Invited"
-              value={stats?.invited ?? 0}
-              subtext="Invite sent"
-              icon={Mail}
             />
           </div>
 
@@ -435,38 +443,24 @@ export default function AdminMerchantRequestsPage() {
           </div>
 
           <div className="mb-6 flex flex-wrap gap-2">
-            {(
-              [
-                "new",
-                "in_review",
-                "waitlisted",
-                "fulfilled",
-                "invited",
-                "all",
-              ] as RequestFilter[]
-            ).map((status) => (
-              <Button
-                key={status}
-                variant={filter === status ? "default" : "outline"}
-                size="sm"
-                onClick={() => handleFilterChange(status)}
-              >
-                {status === "new" && <Clock className="mr-1 h-4 w-4" />}
-                {status === "in_review" && (
-                  <ClipboardList className="mr-1 h-4 w-4" />
-                )}
-                {status === "waitlisted" && (
-                  <XCircle className="mr-1 h-4 w-4" />
-                )}
-                {status === "fulfilled" && (
-                  <CheckCircle2 className="mr-1 h-4 w-4" />
-                )}
-                {status === "invited" && <Mail className="mr-1 h-4 w-4" />}
-                {status === "all"
-                  ? "All"
-                  : statusConfig[status as RequestStatus].label}
-              </Button>
-            ))}
+            {([...visibleRequestStatuses, "all"] as RequestFilter[]).map(
+              (status) => (
+                <Button
+                  key={status}
+                  variant={filter === status ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => handleFilterChange(status)}
+                >
+                  {status === "new" && <Clock className="mr-1 h-4 w-4" />}
+                  {status === "fulfilled" && (
+                    <CheckCircle2 className="mr-1 h-4 w-4" />
+                  )}
+                  {status === "all"
+                    ? "All"
+                    : statusConfig[status as RequestStatus].label}
+                </Button>
+              ),
+            )}
 
             <Button
               variant="ghost"
@@ -489,7 +483,12 @@ export default function AdminMerchantRequestsPage() {
                 </div>
               ) : (
                 requests.map((request) => (
-                  <div key={request.id} className="p-4">
+                  <button
+                    type="button"
+                    key={request.id}
+                    className="block w-full cursor-pointer p-4 text-left transition-colors hover:bg-muted/30 focus-visible:bg-muted/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
+                    onClick={() => openRequest(request)}
+                  >
                     <div className="mb-3 flex items-start justify-between gap-3">
                       <div className="min-w-0">
                         <h3 className="truncate font-semibold">
@@ -504,33 +503,31 @@ export default function AdminMerchantRequestsPage() {
                     </div>
 
                     <div className="mb-3 rounded-lg bg-muted/50 p-3">
-                      <div className="flex items-baseline justify-between">
+                      <div className="space-y-1">
                         <span className="text-lg font-bold">
                           {formatDate(request.createdAt)}
                         </span>
-                        <span className="text-sm text-muted-foreground">
-                          {categoryStatusLabels[request.categoryStatus]}
-                        </span>
+                        <p className="text-sm text-muted-foreground">
+                          {formatPhoneNumber(request.mobilePhone)}
+                        </p>
                       </div>
                     </div>
 
                     <div className="mb-3 text-sm text-muted-foreground">
                       <p>{request.ownerName}</p>
-                      <p>
-                        {request.email} -{" "}
-                        {formatPhoneNumber(request.mobilePhone)}
-                      </p>
+                      <p>{request.email}</p>
                     </div>
 
-                    <Button
-                      variant="outline"
-                      className="w-full"
-                      onClick={() => setSelectedRequest(request)}
+                    <span
+                      className={buttonVariants({
+                        variant: "outline",
+                        className: "w-full",
+                      })}
                     >
                       <Eye className="mr-2 h-4 w-4" />
                       Review
-                    </Button>
-                  </div>
+                    </span>
+                  </button>
                 ))
               )}
             </div>
@@ -538,10 +535,10 @@ export default function AdminMerchantRequestsPage() {
             <table className="hidden w-full table-fixed md:table">
               <colgroup>
                 <col className="w-[24%]" />
-                <col className="w-[16%]" />
-                <col className="w-[15%]" />
-                <col className="w-[14%]" />
+                <col className="w-[17%]" />
                 <col className="w-[13%]" />
+                <col className="w-[14%]" />
+                <col className="w-[14%]" />
                 <col className="w-[10%]" />
                 <col className="w-[8%]" />
               </colgroup>
@@ -554,13 +551,13 @@ export default function AdminMerchantRequestsPage() {
                     Owner
                   </th>
                   <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                    Phone
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-muted-foreground">
                     Category
                   </th>
                   <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-muted-foreground">
                     Submitted
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-muted-foreground">
-                    Category Status
                   </th>
                   <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-muted-foreground">
                     Status
@@ -582,7 +579,15 @@ export default function AdminMerchantRequestsPage() {
                   </tr>
                 ) : (
                   requests.map((request) => (
-                    <tr key={request.id} className="hover:bg-muted/30">
+                    <tr
+                      key={request.id}
+                      className="cursor-pointer transition-colors hover:bg-muted/30 focus-visible:bg-muted/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
+                      tabIndex={0}
+                      onClick={() => openRequest(request)}
+                      onKeyDown={(event) =>
+                        openRequestFromKeyboard(event, request)
+                      }
+                    >
                       <td className="px-4 py-3">
                         <div className="truncate font-medium">
                           {request.businessName}
@@ -599,6 +604,9 @@ export default function AdminMerchantRequestsPage() {
                           {request.email}
                         </div>
                       </td>
+                      <td className="px-4 py-3 text-sm text-muted-foreground">
+                        {formatPhoneNumber(request.mobilePhone)}
+                      </td>
                       <td className="px-4 py-3 text-sm">
                         <div className="truncate">
                           {request.requestedCategory}
@@ -607,9 +615,6 @@ export default function AdminMerchantRequestsPage() {
                       <td className="px-4 py-3 text-sm text-muted-foreground">
                         {formatDate(request.createdAt)}
                       </td>
-                      <td className="px-4 py-3 text-sm">
-                        {categoryStatusLabels[request.categoryStatus]}
-                      </td>
                       <td className="px-4 py-3">
                         <StatusBadge status={request.status} />
                       </td>
@@ -617,7 +622,10 @@ export default function AdminMerchantRequestsPage() {
                         <Button
                           variant="ghost"
                           size="icon"
-                          onClick={() => setSelectedRequest(request)}
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            openRequest(request);
+                          }}
                           title="Review"
                         >
                           <Eye className="h-4 w-4" />
@@ -643,42 +651,69 @@ export default function AdminMerchantRequestsPage() {
             open={Boolean(selectedRequest)}
             onOpenChange={(open) => !open && setSelectedRequest(null)}
           >
-            <DialogContent className="max-h-[90vh] max-w-3xl overflow-y-auto">
+            <DialogContent className="flex max-h-[92vh] w-[calc(100vw-1.5rem)] max-w-none flex-col overflow-hidden bg-card p-0 sm:max-w-[760px] dark:border-sky-300/20 dark:bg-[#061f33] dark:text-slate-50 dark:shadow-[0_24px_80px_rgba(0,0,0,0.58)]">
               {selectedRequest && (
                 <>
-                  <DialogHeader>
-                    <DialogTitle>{selectedRequest.businessName}</DialogTitle>
-                    <DialogDescription>
-                      Submitted {formatDate(selectedRequest.createdAt)} for{" "}
-                      {selectedRequest.requestedCategory} in{" "}
-                      {selectedRequest.city}, {selectedRequest.state}
-                    </DialogDescription>
+                  <DialogHeader className="border-b bg-muted/25 px-5 py-4 pr-12 text-left dark:border-sky-300/15 dark:bg-[#041827]">
+                    <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                      <div className="min-w-0">
+                        <DialogTitle className="truncate text-xl leading-tight dark:text-slate-50">
+                          {selectedRequest.businessName}
+                        </DialogTitle>
+                        <DialogDescription className="mt-1.5 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs dark:text-slate-300">
+                          <span className="inline-flex items-center gap-1.5">
+                            <CalendarClock className="h-3.5 w-3.5" />
+                            {formatDate(selectedRequest.createdAt)}
+                          </span>
+                          <span className="inline-flex items-center gap-1.5">
+                            <Building2 className="h-3.5 w-3.5" />
+                            {selectedRequest.requestedCategory}
+                          </span>
+                          <span className="inline-flex items-center gap-1.5">
+                            <MapPin className="h-3.5 w-3.5" />
+                            {selectedRequest.city}, {selectedRequest.state}
+                          </span>
+                        </DialogDescription>
+                      </div>
+                      <div className="flex shrink-0 flex-wrap items-center gap-2">
+                        <StatusBadge status={selectedRequest.status} />
+                        <span className="inline-flex rounded-full bg-background px-2.5 py-1 text-xs font-semibold text-muted-foreground ring-1 ring-border dark:bg-sky-300/10 dark:text-slate-200 dark:ring-sky-300/25">
+                          {categoryStatusLabels[selectedRequest.categoryStatus]}
+                        </span>
+                      </div>
+                    </div>
                   </DialogHeader>
 
-                  <div className="grid gap-6 md:grid-cols-[1fr_240px]">
-                    <div className="space-y-5">
-                      <div className="grid gap-3 text-sm sm:grid-cols-2">
-                        <div>
-                          <p className="text-xs font-medium uppercase text-muted-foreground">
-                            Owner
-                          </p>
+                  <div className="max-h-[calc(92vh-146px)] min-h-0 space-y-4 overflow-y-auto px-5 py-4 dark:bg-[#061f33]">
+                    <section className="space-y-3">
+                      <h3 className="text-sm font-semibold dark:text-slate-100">
+                        Request details
+                      </h3>
+
+                      <div className="grid gap-3 sm:grid-cols-2">
+                        <DetailItem label="Owner" icon={UserRound}>
                           <p className="font-medium">
                             {selectedRequest.ownerName}
                           </p>
-                        </div>
-                        <div>
-                          <p className="text-xs font-medium uppercase text-muted-foreground">
-                            Contact
-                          </p>
-                          <p className="font-medium">{selectedRequest.email}</p>
-                          <p className="text-muted-foreground">
+                        </DetailItem>
+
+                        <DetailItem label="Contact" icon={Mail}>
+                          <a
+                            href={`mailto:${selectedRequest.email}`}
+                            className="block truncate font-medium text-primary hover:underline dark:text-orange-300"
+                          >
+                            {selectedRequest.email}
+                          </a>
+                          <a
+                            href={`tel:${selectedRequest.mobilePhone}`}
+                            className="mt-0.5 inline-flex items-center gap-1.5 text-muted-foreground hover:text-foreground"
+                          >
+                            <Phone className="h-3.5 w-3.5" />
                             {formatPhoneNumber(selectedRequest.mobilePhone)}
-                          </p>
-                        </div>
-                        <div>
-                          <p className="text-xs font-medium uppercase text-muted-foreground">
-                            Address
-                          </p>
+                          </a>
+                        </DetailItem>
+
+                        <DetailItem label="Location" icon={MapPin}>
                           <p className="font-medium">
                             {selectedRequest.businessAddress1}
                           </p>
@@ -686,79 +721,71 @@ export default function AdminMerchantRequestsPage() {
                             {selectedRequest.city}, {selectedRequest.state}{" "}
                             {selectedRequest.zipCode}
                           </p>
-                        </div>
-                        <div>
-                          <p className="text-xs font-medium uppercase text-muted-foreground">
-                            Website
-                          </p>
+                        </DetailItem>
+
+                        <DetailItem label="Website" icon={Globe}>
                           {selectedRequest.website ? (
                             <a
                               href={selectedRequest.website}
                               target="_blank"
                               rel="noreferrer"
-                              className="font-medium text-primary hover:underline"
+                              className="block truncate font-medium text-primary hover:underline dark:text-orange-300"
                             >
                               {selectedRequest.website}
                             </a>
                           ) : (
-                            <p className="text-muted-foreground">
-                              Not provided
-                            </p>
+                            <EmptyValue />
                           )}
-                        </div>
-                        <div>
-                          <p className="text-xs font-medium uppercase text-muted-foreground">
-                            Years in Business
-                          </p>
+                        </DetailItem>
+
+                        <DetailItem label="Category" icon={Building2}>
                           <p className="font-medium">
-                            {selectedRequest.yearsInBusiness ?? "Not provided"}
+                            {selectedRequest.requestedCategory}
                           </p>
-                        </div>
-                        <div>
-                          <p className="text-xs font-medium uppercase text-muted-foreground">
-                            Permission
+                          <p className="text-muted-foreground">
+                            {selectedRequest.yearsInBusiness !== null
+                              ? `${selectedRequest.yearsInBusiness} years in business`
+                              : "Years not provided"}
                           </p>
+                        </DetailItem>
+
+                        <DetailItem label="Permission" icon={ShieldCheck}>
                           <p className="font-medium">
                             {selectedRequest.permissionGranted
                               ? "Granted"
                               : "Missing"}
                           </p>
-                        </div>
-                      </div>
-
-                      <div>
-                        <p className="mb-2 text-xs font-medium uppercase text-muted-foreground">
-                          Description
-                        </p>
-                        <p className="rounded-lg bg-muted/50 p-3 text-sm leading-6">
-                          {selectedRequest.shortDescription}
-                        </p>
-                      </div>
-
-                      <div className="grid gap-3 sm:grid-cols-2">
-                        <div>
-                          <p className="mb-2 text-xs font-medium uppercase text-muted-foreground">
-                            Logo
+                          <p className="text-muted-foreground">
+                            Review and fulfillment permission
                           </p>
+                        </DetailItem>
+
+                        <DetailItem
+                          label="Description"
+                          icon={FileText}
+                          className="sm:col-span-2"
+                        >
+                          <p>{selectedRequest.shortDescription}</p>
+                        </DetailItem>
+
+                        <DetailItem label="Logo" icon={FileImage}>
                           {selectedRequest.logoUrl ? (
                             <a
                               href={selectedRequest.logoUrl}
                               target="_blank"
                               rel="noreferrer"
-                              className="text-sm font-medium text-primary hover:underline"
+                              className="font-medium text-primary hover:underline dark:text-orange-300"
                             >
                               View uploaded logo
                             </a>
                           ) : (
-                            <p className="text-sm text-muted-foreground">
+                            <EmptyValue>
                               {selectedRequest.logoFileName || "No logo"}
-                            </p>
+                            </EmptyValue>
                           )}
-                        </div>
-                        <div>
-                          <p className="mb-2 text-xs font-medium uppercase text-muted-foreground">
-                            Photos
-                          </p>
+                        </DetailItem>
+
+                        <DetailItem label="Photos" icon={FileImage}>
                           {selectedRequest.photoUrls?.length ? (
                             <div className="flex flex-wrap gap-2">
                               {selectedRequest.photoUrls.map((url, index) => (
@@ -767,177 +794,117 @@ export default function AdminMerchantRequestsPage() {
                                   href={url}
                                   target="_blank"
                                   rel="noreferrer"
-                                  className="text-sm font-medium text-primary hover:underline"
+                                  className="rounded-md border bg-background px-2 py-1 text-xs font-medium text-primary hover:bg-muted dark:border-sky-300/20 dark:bg-[#041827] dark:text-orange-300 dark:hover:bg-sky-300/10"
                                 >
                                   Photo {index + 1}
                                 </a>
                               ))}
                             </div>
                           ) : (
-                            <p className="text-sm text-muted-foreground">
+                            <EmptyValue>
                               {selectedRequest.photoFileNames?.join(", ") ||
                                 "No photos"}
-                            </p>
+                            </EmptyValue>
                           )}
+                        </DetailItem>
+                      </div>
+                    </section>
+
+                    {emailDraftOpen && (
+                      <section className="space-y-3 rounded-lg border bg-background p-3 dark:border-sky-300/15 dark:bg-[#082a43]/70 dark:shadow-[inset_0_1px_rgba(255,255,255,0.04)]">
+                        <div className="flex flex-wrap items-center justify-between gap-2">
+                          <h3 className="text-sm font-semibold dark:text-slate-100">
+                            Email
+                          </h3>
+                          <span className="text-xs text-muted-foreground dark:text-slate-300">
+                            Click the button again to send
+                          </span>
                         </div>
-                      </div>
-                    </div>
 
-                    <div className="space-y-4 rounded-lg border bg-muted/20 p-4">
-                      <div>
-                        <p className="mb-2 text-xs font-medium uppercase text-muted-foreground">
-                          Request Status
-                        </p>
-                        <Select
-                          value={draftStatus}
-                          onValueChange={handleDraftStatusChange}
-                        >
-                          <SelectTrigger className="w-full">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {Object.entries(statusConfig).map(
-                              ([status, config]) => (
-                                <SelectItem key={status} value={status}>
-                                  {config.label}
-                                </SelectItem>
-                              ),
-                            )}
-                          </SelectContent>
-                        </Select>
-                      </div>
-
-                      <div>
-                        <p className="mb-2 text-xs font-medium uppercase text-muted-foreground">
-                          Category Status
-                        </p>
-                        <Select
-                          value={draftCategoryStatus}
-                          onValueChange={(value) =>
-                            setDraftCategoryStatus(value as CategoryStatus)
-                          }
-                        >
-                          <SelectTrigger className="w-full">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {Object.entries(categoryStatusLabels).map(
-                              ([status, label]) => (
-                                <SelectItem key={status} value={status}>
-                                  {label}
-                                </SelectItem>
-                              ),
-                            )}
-                          </SelectContent>
-                        </Select>
-                      </div>
-
-                      <div>
-                        <p className="mb-2 text-xs font-medium uppercase text-muted-foreground">
-                          Admin Notes
-                        </p>
-                        <Textarea
-                          value={draftNotes}
-                          onChange={(event) =>
-                            setDraftNotes(event.target.value)
-                          }
-                          rows={5}
-                          placeholder="Fulfillment notes, category checks, assets produced..."
-                        />
-                      </div>
-
-                      {selectedRequest.inviteSentAt && (
-                        <div className="rounded-lg bg-green-50 p-3 text-sm text-green-800 dark:bg-green-950 dark:text-green-200">
-                          Invite sent {formatDate(selectedRequest.inviteSentAt)}
-                        </div>
-                      )}
-
-                      {selectedRequest.merchantId && (
-                        <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-800 dark:border-emerald-900 dark:bg-emerald-950 dark:text-emerald-200">
-                          <p className="font-medium">
-                            Merchant dashboard created
-                          </p>
-                          <a
-                            href={`/admin/merchants/${selectedRequest.merchantId}/edit`}
-                            className="mt-1 inline-flex font-medium text-primary hover:underline"
-                          >
-                            Open merchant profile
-                          </a>
-                        </div>
-                      )}
-
-                      {inviteUrl && (
-                        <div className="rounded-lg border bg-background p-3">
-                          <p className="mb-2 text-xs font-medium uppercase text-muted-foreground">
-                            Invite Link
-                          </p>
-                          <div className="flex items-center gap-2">
-                            <code className="min-w-0 flex-1 truncate rounded bg-muted px-2 py-1 text-xs">
-                              {inviteUrl}
-                            </code>
-                            <Button
-                              type="button"
-                              variant="outline"
-                              size="icon"
-                              onClick={copyInviteUrl}
+                        <div className="grid gap-3 sm:grid-cols-2">
+                          <div>
+                            <Label
+                              htmlFor="fulfillmentEmail"
+                              className="dark:text-slate-100"
                             >
-                              {copiedInvite ? (
-                                <Check className="h-4 w-4 text-green-600" />
-                              ) : (
-                                <Copy className="h-4 w-4" />
-                              )}
-                            </Button>
+                              To *
+                            </Label>
+                            <Input
+                              id="fulfillmentEmail"
+                              type="email"
+                              value={fulfillmentEmail}
+                              onChange={(event) =>
+                                setFulfillmentEmail(event.target.value)
+                              }
+                              placeholder="owner@example.com"
+                              className="dark:border-sky-300/20 dark:bg-[#041827] dark:text-slate-50 dark:placeholder:text-slate-400 dark:focus-visible:border-sky-300/55 dark:focus-visible:ring-sky-400/25"
+                            />
+                          </div>
+                          <div>
+                            <Label
+                              htmlFor="fulfillmentSubject"
+                              className="dark:text-slate-100"
+                            >
+                              Subject *
+                            </Label>
+                            <Input
+                              id="fulfillmentSubject"
+                              value={fulfillmentSubject}
+                              onChange={(event) =>
+                                setFulfillmentSubject(event.target.value)
+                              }
+                              className="dark:border-sky-300/20 dark:bg-[#041827] dark:text-slate-50 dark:placeholder:text-slate-400 dark:focus-visible:border-sky-300/55 dark:focus-visible:ring-sky-400/25"
+                            />
+                          </div>
+                          <div className="sm:col-span-2">
+                            <Label
+                              htmlFor="fulfillmentMessage"
+                              className="dark:text-slate-100"
+                            >
+                              Message *
+                            </Label>
+                            <Textarea
+                              id="fulfillmentMessage"
+                              value={fulfillmentMessage}
+                              onChange={(event) =>
+                                setFulfillmentMessage(event.target.value)
+                              }
+                              rows={3}
+                              className="min-h-[78px] resize-none dark:border-sky-300/20 dark:bg-[#041827] dark:text-slate-50 dark:placeholder:text-slate-400 dark:focus-visible:border-sky-300/55 dark:focus-visible:ring-sky-400/25"
+                            />
                           </div>
                         </div>
-                      )}
+                      </section>
+                    )}
 
-                      {dialogError && (
-                        <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
-                          {dialogError}
-                        </div>
-                      )}
-                    </div>
+                    {actionError && (
+                      <div className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700 dark:border-rose-300/25 dark:bg-rose-400/10 dark:text-rose-100">
+                        {actionError}
+                      </div>
+                    )}
+
+                    {actionMessage && (
+                      <div className="rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-800 dark:border-emerald-300/25 dark:bg-emerald-400/10 dark:text-emerald-100">
+                        {actionMessage}
+                      </div>
+                    )}
                   </div>
 
-                  <DialogFooter className="gap-2 sm:justify-between">
+                  <DialogFooter className="border-t bg-background px-5 py-3 dark:border-sky-300/15 dark:bg-[#041827]">
                     <Button
                       type="button"
-                      variant="outline"
-                      onClick={() => setSelectedRequest(null)}
+                      size="sm"
+                      className="w-full sm:w-auto"
+                      onClick={sendEmailAndMarkFulfilled}
+                      disabled={isSendingFulfillmentEmail}
                     >
-                      Close
+                      {isSendingFulfillmentEmail ? (
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      ) : (
+                        <Send className="mr-2 h-4 w-4" />
+                      )}
+                      Send email and mark as fulfilled
                     </Button>
-                    <div className="flex flex-col gap-2 sm:flex-row">
-                      <Button
-                        type="button"
-                        variant="outline"
-                        onClick={saveRequest}
-                        disabled={isSaving}
-                      >
-                        {isSaving && (
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        )}
-                        Save Status
-                      </Button>
-                      <Button
-                        type="button"
-                        onClick={sendInvite}
-                        disabled={
-                          isSendingInvite ||
-                          !["fulfilled", "invited"].includes(draftStatus)
-                        }
-                      >
-                        {isSendingInvite ? (
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        ) : (
-                          <Send className="mr-2 h-4 w-4" />
-                        )}
-                        {draftStatus === "fulfilled" ||
-                        draftStatus === "invited"
-                          ? "Send Invite"
-                          : "Mark Fulfilled First"}
-                      </Button>
-                    </div>
                   </DialogFooter>
                 </>
               )}

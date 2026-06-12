@@ -3,14 +3,7 @@ import { type NextRequest, NextResponse } from "next/server";
 import { db, merchantRequests } from "@/db";
 import { getSession } from "@/lib/auth";
 
-const statuses = [
-  "new",
-  "in_review",
-  "waitlisted",
-  "fulfilled",
-  "invited",
-  "rejected",
-] as const;
+const statuses = ["new", "fulfilled"] as const;
 
 const categoryStatuses = ["requested", "assigned", "waitlisted"] as const;
 
@@ -37,7 +30,7 @@ export async function PATCH(
 
       updateValues.status = body.status as (typeof statuses)[number];
 
-      if (body.status === "fulfilled" || body.status === "invited") {
+      if (body.status === "fulfilled") {
         updateValues.fulfilledAt = new Date();
       }
     }
