@@ -1027,10 +1027,10 @@ export function MerchantForm({
                 className={cn(
                   "h-8 rounded-md border px-3 text-sm font-semibold",
                   completion.percentage === 100
-                    ? "border-green-200 bg-green-50 text-green-700"
+                    ? "border-green-200 bg-green-50 text-green-700 dark:border-emerald-400/35 dark:bg-emerald-400/10 dark:text-emerald-100"
                     : completion.percentage === 0
-                      ? "border-red-200 bg-red-50 text-red-700"
-                      : "border-yellow-200 bg-yellow-50 text-yellow-800",
+                      ? "border-red-200 bg-red-50 text-red-700 dark:border-rose-400/35 dark:bg-rose-400/10 dark:text-rose-100"
+                      : "border-sky-200 bg-sky-50 text-sky-700 dark:border-blue-300/40 dark:bg-blue-400/10 dark:text-blue-100",
                 )}
               >
                 {completion.percentage}% complete
