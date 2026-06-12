@@ -458,6 +458,7 @@ function MerchantActivationBanner({
   const marketLabel =
     [merchant?.city, merchant?.state].filter(Boolean).join(", ") ||
     "Your market";
+  const businessName = merchant?.businessName || "Your business";
   const marketLockStatus = merchant?.marketLockStatus ?? "basic";
   const marketLockStatusLabel = getMarketLockStatusLabel(marketLockStatus);
   const totalTools = activationItems.length + marketLockProAdds.length;
@@ -468,8 +469,8 @@ function MerchantActivationBanner({
 
   return (
     <section className="mb-5 overflow-hidden rounded-xl border bg-card p-4 md:p-5">
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-        <div className="flex min-w-0 items-center gap-3">
+      <div className="flex min-w-0 items-start gap-3">
+        <div className="shrink-0 pt-1">
           {merchant?.logoUrl ? (
             <Image
               src={merchant.logoUrl}
@@ -483,40 +484,34 @@ function MerchantActivationBanner({
               <ShieldCheck className="h-5 w-5" />
             </span>
           )}
-          <div className="min-w-0">
-            <p className="text-xs font-semibold uppercase text-muted-foreground">
-              Activated market package
-            </p>
-            <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1">
-              <h2 className="truncate text-lg font-bold tracking-tight md:text-xl">
-                {categoryName} &middot; {marketLabel}
-              </h2>
-              <MarketLockStatusBadge status={marketLockStatus} />
-            </div>
-            <p className="mt-0.5 text-xs text-muted-foreground md:text-sm">
-              {marketLockStatus === "basic"
-                ? "MarketLock360 trial access is ready when you request it."
-                : `No other ${categoryName} business in ${marketLabel} can hold this position — it's yours.`}
-            </p>
-          </div>
         </div>
 
-        <div className="min-w-0 shrink-0 lg:max-w-sm lg:text-right">
-          <div className="flex flex-wrap items-center gap-2 lg:justify-end">
-            <h1 className="text-2xl font-bold tracking-tight text-foreground md:text-3xl">
-              Dashboard
+        <div className="min-w-0 flex-1">
+          <p className="text-xs font-semibold uppercase text-muted-foreground">
+            Activated market package
+          </p>
+          <div className="mt-1 flex min-w-0 flex-wrap items-center gap-x-3 gap-y-2 xl:flex-nowrap">
+            <h1 className="min-w-0 truncate text-2xl font-bold tracking-tight text-foreground md:text-3xl">
+              {businessName}
             </h1>
+            <span className="hidden h-7 w-px shrink-0 bg-border sm:block" />
+            <p className="shrink-0 text-base font-bold tracking-tight text-foreground md:text-xl">
+              {categoryName} in {marketLabel}
+            </p>
+            {!merchantTrial && (
+              <MarketLockStatusBadge status={marketLockStatus} />
+            )}
             {merchantTrial && (
-              <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-primary/30 bg-primary/10 px-3 py-1.5 text-sm font-semibold text-primary">
+              <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-primary/30 bg-primary/10 px-3 py-1.5 text-sm font-semibold text-primary xl:ml-auto">
                 <CalendarClock className="h-4 w-4" />
                 {`Trial day ${merchantTrial.day} of ${merchantTrial.totalDays}`}
               </span>
             )}
           </div>
-          <p className="mt-1 text-sm text-muted-foreground">
-            {merchant?.businessName
-              ? `Welcome back, ${merchant.businessName}`
-              : "Manage your merchant page, campaign media, and customer reviews"}
+          <p className="mt-1.5 text-xs text-muted-foreground md:text-sm">
+            {marketLockStatus === "basic"
+              ? "MarketLock360 trial access is ready when you request it."
+              : `No other ${categoryName} business in ${marketLabel} can hold this position while your ${marketLockStatusLabel.toLowerCase()} is active.`}
           </p>
         </div>
       </div>
