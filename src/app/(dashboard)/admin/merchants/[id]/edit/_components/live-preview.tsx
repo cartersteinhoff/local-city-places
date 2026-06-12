@@ -77,14 +77,33 @@ interface MerchantPreviewData {
 interface LivePreviewProps {
   data: MerchantPreviewData;
   className?: string;
+  device?: DeviceType;
+  onDeviceChange?: (device: DeviceType) => void;
+  showHeader?: boolean;
 }
 
-export function LivePreview({ data, className }: LivePreviewProps) {
-  const [device, setDevice] = useState<DeviceType>("desktop");
+export function LivePreview({
+  data,
+  className,
+  device: controlledDevice,
+  onDeviceChange,
+  showHeader = true,
+}: LivePreviewProps) {
+  const [internalDevice, setInternalDevice] = useState<DeviceType>("desktop");
   const viewportRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
   const [viewportWidth, setViewportWidth] = useState(0);
   const [contentHeight, setContentHeight] = useState(0);
+
+  const device = controlledDevice ?? internalDevice;
+  const handleDeviceChange = (nextDevice: DeviceType) => {
+    if (onDeviceChange) {
+      onDeviceChange(nextDevice);
+      return;
+    }
+
+    setInternalDevice(nextDevice);
+  };
 
   const deviceConfig = DEVICES.find((d) => d.id === device) || DEVICES[0];
   const availableWidth = Math.max(0, viewportWidth - 16);
@@ -125,29 +144,15 @@ export function LivePreview({ data, className }: LivePreviewProps) {
   return (
     <div className={className}>
       {/* Header with device selector */}
-      <div className="flex items-center justify-between mb-3 px-1">
-        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-          <Eye className="w-4 h-4" />
-          <span>Live Preview</span>
+      {showHeader && (
+        <div className="flex items-center justify-between mb-3 px-1">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <Eye className="w-4 h-4" />
+            <span>Live Preview</span>
+          </div>
+          <DeviceSelector value={device} onChange={handleDeviceChange} />
         </div>
-        <div className="flex items-center border rounded-md p-0.5 bg-muted/50">
-          {DEVICES.map((d) => (
-            <Button
-              key={d.id}
-              variant="ghost"
-              size="sm"
-              onClick={() => setDevice(d.id)}
-              className={cn(
-                "h-7 w-7 p-0",
-                device === d.id && "bg-background shadow-sm",
-              )}
-              title={d.label}
-            >
-              <d.icon className="w-4 h-4" />
-            </Button>
-          ))}
-        </div>
-      </div>
+      )}
 
       {/* Preview container */}
       <div className="border rounded-lg overflow-hidden bg-muted/30 shadow-sm">

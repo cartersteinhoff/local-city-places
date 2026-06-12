@@ -315,6 +315,8 @@ export function MerchantForm({
   const [urls, setUrls] = useState(initialUrls);
   const [copiedUrl, setCopiedUrl] = useState<string | null>(null);
   const [activeSection, setActiveSection] = useState("business");
+  const [desktopPreviewDevice, setDesktopPreviewDevice] =
+    useState<DeviceType>("desktop");
   const [previewDevice, setPreviewDevice] = useState<DeviceType>("mobile");
   const [previewOpen, setPreviewOpen] = useState(false);
   const [categoryName, setCategoryName] = useState(initialCategoryName);
@@ -1007,89 +1009,96 @@ export function MerchantForm({
   const shortUrlPath = urls.short || "";
 
   return (
-    <div className="grid grid-cols-1 gap-6 overflow-x-hidden lg:grid-cols-[minmax(0,1fr)_minmax(340px,420px)] xl:grid-cols-[minmax(0,1fr)_minmax(380px,460px)]">
-      {/* Form Panel */}
-      <div className="min-w-0">
-        {/* Header */}
-        <div className="mb-6">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-2">
-              <Button variant="ghost" size="sm" asChild>
-                <Link href={backHref}>
-                  <ArrowLeft className="w-4 h-4 mr-2" />
-                  {backLabel}
-                </Link>
-              </Button>
-            </div>
-            <div className="flex items-center gap-2">
-              <Badge
-                variant="outline"
-                className={cn(
-                  "h-8 rounded-md border px-3 text-sm font-semibold",
-                  completion.percentage === 100
-                    ? "border-green-200 bg-green-50 text-green-700 dark:border-emerald-400/35 dark:bg-emerald-400/10 dark:text-emerald-100"
-                    : completion.percentage === 0
-                      ? "border-red-200 bg-red-50 text-red-700 dark:border-rose-400/35 dark:bg-rose-400/10 dark:text-rose-100"
-                      : "border-sky-200 bg-sky-50 text-sky-700 dark:border-blue-300/40 dark:bg-blue-400/10 dark:text-blue-100",
-                )}
-              >
-                {completion.percentage}% complete
-              </Badge>
-              {mode === "edit" &&
-                linksBarSections.map((section) => {
-                  const isActive = activeSection === section.id;
-
-                  return (
-                    <Button
-                      key={section.id}
-                      type="button"
-                      variant={isActive ? "default" : "outline"}
-                      size="sm"
-                      onClick={() => setActiveSection(section.id)}
-                      className="h-8 px-2.5 text-xs"
-                    >
-                      {section.icon && <section.icon className="h-3.5 w-3.5" />}
-                      {section.label}
-                    </Button>
-                  );
-                })}
-              {mode === "create" ? (
-                <Button
-                  size="sm"
-                  onClick={handleCreate}
-                  disabled={isSubmitting}
-                >
-                  {isSubmitting ? (
-                    <Loader2 className="w-4 h-4 mr-1 animate-spin" />
-                  ) : (
-                    <Save className="w-4 h-4 mr-1" />
-                  )}
-                  Create Page
-                </Button>
-              ) : (
-                <>
-                  {urls.full && (
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={handleRebuild}
-                      disabled={isRebuilding}
-                      title="Refresh the cached public page"
-                    >
-                      {isRebuilding ? (
-                        <Loader2 className="w-4 h-4 mr-1 animate-spin" />
-                      ) : (
-                        <RefreshCw className="w-4 h-4 mr-1" />
-                      )}
-                      Refresh Live
-                    </Button>
-                  )}
-                </>
+    <div className="overflow-x-hidden">
+      {/* Header */}
+      <div className="mb-6 grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(340px,420px)] xl:grid-cols-[minmax(0,1fr)_minmax(380px,460px)]">
+        <div className="flex min-w-0 items-center justify-between gap-3">
+          <div className="flex items-center gap-2">
+            <Button variant="ghost" size="sm" asChild>
+              <Link href={backHref}>
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                {backLabel}
+              </Link>
+            </Button>
+          </div>
+          <div className="flex items-center gap-2">
+            <Badge
+              variant="outline"
+              className={cn(
+                "h-8 rounded-md border px-3 text-sm font-semibold",
+                completion.percentage === 100
+                  ? "border-green-200 bg-green-50 text-green-700 dark:border-emerald-400/35 dark:bg-emerald-400/10 dark:text-emerald-100"
+                  : completion.percentage === 0
+                    ? "border-red-200 bg-red-50 text-red-700 dark:border-rose-400/35 dark:bg-rose-400/10 dark:text-rose-100"
+                    : "border-sky-200 bg-sky-50 text-sky-700 dark:border-blue-300/40 dark:bg-blue-400/10 dark:text-blue-100",
               )}
-            </div>
+            >
+              {completion.percentage}% complete
+            </Badge>
+            {mode === "edit" &&
+              linksBarSections.map((section) => {
+                const isActive = activeSection === section.id;
+
+                return (
+                  <Button
+                    key={section.id}
+                    type="button"
+                    variant={isActive ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setActiveSection(section.id)}
+                    className="h-8 px-2.5 text-xs"
+                  >
+                    {section.icon && <section.icon className="h-3.5 w-3.5" />}
+                    {section.label}
+                  </Button>
+                );
+              })}
+            {mode === "create" ? (
+              <Button size="sm" onClick={handleCreate} disabled={isSubmitting}>
+                {isSubmitting ? (
+                  <Loader2 className="w-4 h-4 mr-1 animate-spin" />
+                ) : (
+                  <Save className="w-4 h-4 mr-1" />
+                )}
+                Create Page
+              </Button>
+            ) : (
+              <>
+                {urls.full && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={handleRebuild}
+                    disabled={isRebuilding}
+                    title="Refresh the cached public page"
+                  >
+                    {isRebuilding ? (
+                      <Loader2 className="w-4 h-4 mr-1 animate-spin" />
+                    ) : (
+                      <RefreshCw className="w-4 h-4 mr-1" />
+                    )}
+                    Refresh Live
+                  </Button>
+                )}
+              </>
+            )}
           </div>
         </div>
+        <div className="hidden min-w-0 items-center justify-between gap-3 px-1 lg:flex">
+          <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+            <Eye className="w-4 h-4" />
+            <span>Live Preview</span>
+          </div>
+          <DeviceSelector
+            value={desktopPreviewDevice}
+            onChange={setDesktopPreviewDevice}
+          />
+        </div>
+      </div>
 
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(340px,420px)] xl:grid-cols-[minmax(0,1fr)_minmax(380px,460px)]">
+        {/* Form Panel */}
+        <div className="min-w-0">
         {/* Error */}
         {error && (
           <div className="bg-destructive/10 text-destructive text-sm px-4 py-3 rounded-lg mb-6">
@@ -2096,7 +2105,12 @@ export function MerchantForm({
 
       {/* Preview Panel - Desktop */}
       <div className="hidden min-w-0 lg:block sticky top-4 self-start">
-        <LivePreview data={previewData} />
+        <LivePreview
+          data={previewData}
+          device={desktopPreviewDevice}
+          onDeviceChange={setDesktopPreviewDevice}
+          showHeader={false}
+        />
         {mode === "edit" && (
           <div className="mt-3 rounded-lg border bg-card p-2">
             <div className="space-y-2">
@@ -2227,6 +2241,7 @@ export function MerchantForm({
           </SheetContent>
         </Sheet>
       </div>
+    </div>
     </div>
   );
 }
