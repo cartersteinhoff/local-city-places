@@ -13,6 +13,7 @@ import {
   FileAudio,
   FileText,
   Globe,
+  Link2,
   Loader2,
   MapPin,
   Mic2,
@@ -173,11 +174,17 @@ const sections = [
   { id: "media", label: "Media", icon: Camera },
   { id: "services", label: "Services", icon: FileText },
   { id: "tracks", label: "Tracks", icon: RadioTower },
+  { id: "links", label: "Links", icon: Link2 },
   { id: "visibility", label: "Visibility", icon: Eye },
   { id: "managers", label: "Managers", icon: Users },
 ];
 
-const editOnlySectionIds = new Set(["visibility", "managers", "tracks"]);
+const editOnlySectionIds = new Set([
+  "visibility",
+  "managers",
+  "tracks",
+  "links",
+]);
 const linksBarSectionIds = new Set(["visibility", "managers"]);
 
 const merchantTrackSlots: Array<{
@@ -912,6 +919,7 @@ export function MerchantForm({
         }
         if (section.id === "managers") return canManageOwners;
         if (section.id === "tracks") return canViewTracks;
+        if (section.id === "links") return mode === "edit";
         return true;
       }),
     [canManageOwners, canViewTracks, mode],
@@ -963,8 +971,43 @@ export function MerchantForm({
   );
 
   const completionBySection = useMemo(() => {
-    return new Map(completion.sections.map((section) => [section.id, section]));
-  }, [completion]);
+    const sectionMap = new Map(
+      completion.sections.map((section) => [section.id, section]),
+    );
+
+    if (mode === "edit") {
+      const linkFields = [
+        {
+          label: "Full link",
+          value: formData.city && formData.state && formData.slug,
+        },
+        { label: "Short URL", value: urls.short },
+      ];
+      const linksCompleted = linkFields.filter((field) =>
+        Boolean(field.value),
+      ).length;
+
+      sectionMap.set("links", {
+        id: "links",
+        label: "Links",
+        completed: linksCompleted,
+        total: 2,
+        percentage: Math.round((linksCompleted / 2) * 100),
+        missingFields: linkFields
+          .filter((field) => !field.value)
+          .map((field) => field.label),
+      });
+    }
+
+    return sectionMap;
+  }, [
+    completion,
+    formData.city,
+    formData.slug,
+    formData.state,
+    mode,
+    urls.short,
+  ]);
 
   // Preview data for live preview
   const previewData = useMemo(
@@ -1013,6 +1056,44 @@ export function MerchantForm({
   const displayFullUrl = `${displayHost}${fullUrlPath}`;
   const displayShortUrl = shortUrlPath ? `${displayHost}${shortUrlPath}` : "";
 
+  const renderPublicLinkActions = (
+    path: string,
+    type: string,
+    label: string,
+    buttonClassName = "h-8 w-8",
+    iconClassName = "h-3.5 w-3.5",
+  ) => (
+    <>
+      <Button
+        type="button"
+        variant="ghost"
+        size="icon"
+        className={cn("shrink-0", buttonClassName)}
+        onClick={() => copyToClipboard(path, type)}
+        title={`Copy ${getFullUrl(path)}`}
+      >
+        {copiedUrl === type ? (
+          <Check className={cn(iconClassName, "text-green-600")} />
+        ) : (
+          <Copy className={iconClassName} />
+        )}
+        <span className="sr-only">Copy {label}</span>
+      </Button>
+      <Button
+        variant="ghost"
+        size="icon"
+        className={cn("shrink-0", buttonClassName)}
+        asChild
+        title={`Open ${getFullUrl(path)}`}
+      >
+        <a href={getFullUrl(path)} target="_blank" rel="noopener noreferrer">
+          <ExternalLink className={iconClassName} />
+          <span className="sr-only">Open {label}</span>
+        </a>
+      </Button>
+    </>
+  );
+
   const renderPageLinksPanel = () => (
     <div className="mt-3 rounded-lg border bg-card/75 p-2.5 shadow-sm">
       <div className="mb-2 flex items-center justify-between gap-2">
@@ -1038,54 +1119,18 @@ export function MerchantForm({
 
       <div className="flex min-w-0 items-center gap-1 rounded-md border bg-muted/30 p-1.5">
         <code
-          className="min-w-0 max-w-[165px] truncate text-[11px] text-muted-foreground"
+          className="min-w-0 flex-1 truncate px-1 text-[11px] font-mono text-foreground"
           title={displayFullUrl}
         >
-          {`${displayHost}${fullUrlPrefix}`}
+          {displayFullUrl}
         </code>
-        <Input
-          value={formData.slug}
-          onChange={(e) =>
-            updateField(
-              "slug",
-              e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, "-"),
-            )
-          }
-          placeholder="url-slug"
-          className="h-7 min-w-0 flex-1 border-0 bg-background px-2 text-[11px] font-mono shadow-none focus-visible:ring-1 md:text-[11px]"
-          title={displayFullUrl}
-        />
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon"
-          className="h-7 w-7 shrink-0"
-          onClick={() => copyToClipboard(fullUrlPath, "full")}
-          title={`Copy ${getFullUrl(fullUrlPath)}`}
-        >
-          {copiedUrl === "full" ? (
-            <Check className="w-3 h-3 text-green-600" />
-          ) : (
-            <Copy className="w-3 h-3" />
-          )}
-          <span className="sr-only">Copy public page URL</span>
-        </Button>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-7 w-7 shrink-0"
-          asChild
-          title={`Open ${getFullUrl(fullUrlPath)}`}
-        >
-          <a
-            href={getFullUrl(fullUrlPath)}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <ExternalLink className="w-3 h-3" />
-            <span className="sr-only">Open public page URL</span>
-          </a>
-        </Button>
+        {renderPublicLinkActions(
+          fullUrlPath,
+          "full",
+          "public page URL",
+          "h-7 w-7",
+          "h-3 w-3",
+        )}
       </div>
 
       {showShortUrl && (
@@ -1098,37 +1143,13 @@ export function MerchantForm({
               >
                 {displayShortUrl}
               </code>
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                className="h-7 w-7 shrink-0"
-                onClick={() => copyToClipboard(shortUrlPath, "short")}
-                title={`Copy ${getFullUrl(shortUrlPath)}`}
-              >
-                {copiedUrl === "short" ? (
-                  <Check className="w-3 h-3 text-green-600" />
-                ) : (
-                  <Copy className="w-3 h-3" />
-                )}
-                <span className="sr-only">Copy short URL</span>
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-7 w-7 shrink-0"
-                asChild
-                title={`Open ${getFullUrl(shortUrlPath)}`}
-              >
-                <a
-                  href={getFullUrl(shortUrlPath)}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  <ExternalLink className="w-3 h-3" />
-                  <span className="sr-only">Open short URL</span>
-                </a>
-              </Button>
+              {renderPublicLinkActions(
+                shortUrlPath,
+                "short",
+                "short URL",
+                "h-7 w-7",
+                "h-3 w-3",
+              )}
             </>
           ) : (
             <span className="min-w-0 flex-1 truncate px-1 text-xs text-muted-foreground">
@@ -2185,6 +2206,97 @@ export function MerchantForm({
             {tracksError && (
               <p className="text-sm text-destructive">{tracksError}</p>
             )}
+          </div>
+        )}
+
+        {/* Public Links Section */}
+        {activeSection === "links" && mode === "edit" && (
+          <div className="space-y-6 bg-card border rounded-lg p-6">
+            <div className="flex items-center justify-between gap-3">
+              <h3 className="font-semibold flex items-center gap-2">
+                <Link2 className="w-5 h-5" />
+                Public Links
+              </h3>
+              {renderStepSaveButton()}
+            </div>
+
+            <div className="space-y-4">
+              <div className="rounded-lg border bg-muted/25 p-4">
+                <Label htmlFor="publicSlug">Page slug</Label>
+                <div className="mt-2 flex min-w-0 overflow-hidden rounded-md border bg-background">
+                  <code
+                    className="min-w-0 max-w-[46%] truncate border-r bg-muted/40 px-3 py-2 text-xs font-mono text-muted-foreground"
+                    title={`${displayHost}${fullUrlPrefix}`}
+                  >
+                    {`${displayHost}${fullUrlPrefix}`}
+                  </code>
+                  <Input
+                    id="publicSlug"
+                    value={formData.slug}
+                    onChange={(e) =>
+                      updateField(
+                        "slug",
+                        e.target.value
+                          .toLowerCase()
+                          .replace(/[^a-z0-9-]/g, "-"),
+                      )
+                    }
+                    placeholder="url-slug"
+                    className="h-9 min-w-0 flex-1 rounded-none border-0 bg-transparent px-3 text-xs font-mono shadow-none focus-visible:ring-0 md:text-xs"
+                  />
+                </div>
+              </div>
+
+              <div className="grid gap-3 xl:grid-cols-2">
+                <div className="rounded-lg border bg-muted/20 p-3">
+                  <div className="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                    <Link2 className="h-3.5 w-3.5" />
+                    Full link
+                  </div>
+                  <div className="flex min-w-0 items-center gap-1 rounded-md border bg-background p-1.5">
+                    <code
+                      className="min-w-0 flex-1 truncate px-1 text-xs font-mono"
+                      title={displayFullUrl}
+                    >
+                      {displayFullUrl}
+                    </code>
+                    {renderPublicLinkActions(
+                      fullUrlPath,
+                      "full",
+                      "public page URL",
+                    )}
+                  </div>
+                </div>
+
+                <div className="rounded-lg border bg-muted/20 p-3">
+                  <div className="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                    <Phone className="h-3.5 w-3.5" />
+                    Short URL
+                  </div>
+                  <div className="flex min-w-0 items-center gap-1 rounded-md border bg-background p-1.5">
+                    {shortUrlPath ? (
+                      <>
+                        <code
+                          className="min-w-0 flex-1 truncate px-1 text-xs font-mono"
+                          title={displayShortUrl}
+                        >
+                          {displayShortUrl}
+                        </code>
+                        {renderPublicLinkActions(
+                          shortUrlPath,
+                          "short",
+                          "short URL",
+                        )}
+                      </>
+                    ) : (
+                      <span className="min-h-8 min-w-0 flex-1 px-1 py-2 text-xs text-muted-foreground">
+                        Add phone to generate
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         )}
 
