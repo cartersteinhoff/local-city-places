@@ -1,7 +1,7 @@
 "use client";
 
 import { Eye, Monitor, Smartphone, Tablet } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { PhotoStripDesign } from "@/components/merchant-page/designs/photo-strip";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -57,8 +57,46 @@ interface LivePreviewProps {
 
 export function LivePreview({ data, className }: LivePreviewProps) {
   const [device, setDevice] = useState<DeviceType>("desktop");
+  const viewportRef = useRef<HTMLDivElement>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
+  const [viewportWidth, setViewportWidth] = useState(0);
+  const [contentHeight, setContentHeight] = useState(0);
 
   const deviceConfig = DEVICES.find((d) => d.id === device) || DEVICES[0];
+  const availableWidth = Math.max(0, viewportWidth - 16);
+  const previewScale =
+    viewportWidth > 0
+      ? Math.min(deviceConfig.scale, availableWidth / deviceConfig.width)
+      : deviceConfig.scale;
+  const safePreviewScale = Number.isFinite(previewScale)
+    ? Math.max(0.2, previewScale)
+    : deviceConfig.scale;
+
+  useEffect(() => {
+    const viewport = viewportRef.current;
+    if (!viewport) return;
+
+    const updateWidth = () => setViewportWidth(viewport.clientWidth);
+    updateWidth();
+
+    const resizeObserver = new ResizeObserver(updateWidth);
+    resizeObserver.observe(viewport);
+
+    return () => resizeObserver.disconnect();
+  }, []);
+
+  useEffect(() => {
+    const content = contentRef.current;
+    if (!content) return;
+
+    const updateHeight = () => setContentHeight(content.scrollHeight);
+    updateHeight();
+
+    const resizeObserver = new ResizeObserver(updateHeight);
+    resizeObserver.observe(content);
+
+    return () => resizeObserver.disconnect();
+  }, []);
 
   return (
     <div className={className}>
@@ -89,19 +127,25 @@ export function LivePreview({ data, className }: LivePreviewProps) {
 
       {/* Preview container */}
       <div className="border rounded-lg overflow-hidden bg-muted/30 shadow-sm">
-        <div className="h-[calc(100vh-280px)] min-h-[400px] overflow-y-auto overflow-x-hidden flex justify-center">
+        <div
+          ref={viewportRef}
+          className="h-[calc(100vh-280px)] min-h-[400px] overflow-y-auto overflow-x-hidden flex justify-center px-2 py-3"
+        >
           <div
             className="transition-all duration-300 origin-top shrink-0"
             style={{
-              width: deviceConfig.width * deviceConfig.scale,
-              height: "fit-content",
+              width: deviceConfig.width * safePreviewScale,
+              height: contentHeight
+                ? contentHeight * safePreviewScale
+                : undefined,
             }}
           >
             <div
+              ref={contentRef}
               className="bg-white shadow-lg origin-top-left"
               style={{
                 width: deviceConfig.width,
-                transform: `scale(${deviceConfig.scale})`,
+                transform: `scale(${safePreviewScale})`,
               }}
             >
               <PhotoStripDesign

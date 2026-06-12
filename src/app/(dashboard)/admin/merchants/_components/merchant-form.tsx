@@ -12,11 +12,11 @@ import {
   FileAudio,
   FileText,
   Globe,
+  Link2,
   Loader2,
   MapPin,
   Mic2,
   Music2,
-  Paintbrush,
   Phone,
   Plus,
   RadioTower,
@@ -61,10 +61,12 @@ import { SortableImageGrid, SortableList } from "@/components/ui/sortable-list";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { useManualSave } from "@/hooks/use-manual-save";
-import type { MerchantData } from "@/lib/merchant-completion";
+import {
+  calculateCompletion,
+  type MerchantData,
+} from "@/lib/merchant-completion";
 import { cn, formatPhoneNumber, stripPhoneNumber } from "@/lib/utils";
 import { isValidVimeoUrl } from "@/lib/vimeo";
-import { CompletionIndicator } from "../[id]/edit/_components/completion-indicator";
 import {
   type Hours,
   HoursSection,
@@ -175,12 +177,13 @@ const sections = [
   { id: "hours", label: "Hours", icon: null },
   { id: "media", label: "Media", icon: Camera },
   { id: "services", label: "Services", icon: FileText },
+  { id: "tracks", label: "Tracks", icon: RadioTower },
   { id: "visibility", label: "Visibility", icon: Eye },
   { id: "managers", label: "Managers", icon: Users },
-  { id: "tracks", label: "Tracks", icon: RadioTower },
 ];
 
 const editOnlySectionIds = new Set(["visibility", "managers", "tracks"]);
+const linksBarSectionIds = new Set(["visibility", "managers"]);
 
 const merchantTrackSlots: Array<{
   kind: CampaignAudioKind;
@@ -442,6 +445,27 @@ export function MerchantForm({
     onSave: handleSave,
     enabled: mode === "edit",
   });
+
+  const renderStepSaveButton = () => {
+    if (mode !== "edit") return null;
+
+    return (
+      <Button
+        type="button"
+        size="sm"
+        onClick={save}
+        disabled={isSaving || !isDirty}
+        className="shrink-0"
+      >
+        {isSaving ? (
+          <Loader2 className="w-4 h-4 mr-1 animate-spin" />
+        ) : (
+          <Save className="w-4 h-4 mr-1" />
+        )}
+        Save
+      </Button>
+    );
+  };
 
   // Handle create submit
   const handleCreate = async () => {
@@ -856,8 +880,18 @@ export function MerchantForm({
       ),
     [mode],
   );
+  const mainSections = useMemo(
+    () =>
+      visibleSections.filter((section) => !linksBarSectionIds.has(section.id)),
+    [visibleSections],
+  );
+  const linksBarSections = useMemo(
+    () =>
+      visibleSections.filter((section) => linksBarSectionIds.has(section.id)),
+    [visibleSections],
+  );
 
-  // Completion data for indicator
+  // Completion data for the header badge and section tabs.
   const completionData: MerchantData = useMemo(() => {
     const data: MerchantData = {
       businessName: formData.businessName,
@@ -886,6 +920,15 @@ export function MerchantForm({
 
     return data;
   }, [formData, mode]);
+
+  const completion = useMemo(
+    () => calculateCompletion(completionData),
+    [completionData],
+  );
+
+  const completionBySection = useMemo(() => {
+    return new Map(completion.sections.map((section) => [section.id, section]));
+  }, [completion]);
 
   // Preview data for live preview
   const previewData = useMemo(
@@ -924,10 +967,16 @@ export function MerchantForm({
     [formData, categoryName],
   );
 
+  const fullUrlPrefix = `/business/${formData.city.toLowerCase() || "city"}/${
+    formData.state.toLowerCase() || "st"
+  }/`;
+  const fullUrlPath = `${fullUrlPrefix}${formData.slug || "url-slug"}`;
+  const shortUrlPath = urls.short || "";
+
   return (
-    <div className="flex flex-col lg:flex-row gap-6 overflow-x-hidden">
+    <div className="grid grid-cols-1 gap-6 overflow-x-hidden lg:grid-cols-[minmax(0,1fr)_minmax(340px,420px)] xl:grid-cols-[minmax(0,1fr)_minmax(380px,460px)]">
       {/* Form Panel */}
-      <div className="flex-1 lg:max-w-[60%]">
+      <div className="min-w-0">
         {/* Header */}
         <div className="mb-6">
           <div className="flex items-center justify-between mb-4">
@@ -938,24 +987,21 @@ export function MerchantForm({
                   Back
                 </Link>
               </Button>
-              {mode === "edit" && merchantId && (
-                <>
-                  <Button variant="outline" size="sm" asChild>
-                    <Link href={`/admin/merchants/${merchantId}/visual`}>
-                      <Paintbrush className="w-4 h-4 mr-2" />
-                      Visual Editor
-                    </Link>
-                  </Button>
-                  <Button variant="outline" size="sm" asChild>
-                    <Link href={`/admin/merchants/${merchantId}/on-air-studio`}>
-                      <RadioTower className="w-4 h-4 mr-2" />
-                      On-Air Studio
-                    </Link>
-                  </Button>
-                </>
-              )}
             </div>
             <div className="flex items-center gap-2">
+              <Badge
+                variant="outline"
+                className={cn(
+                  "h-8 rounded-md border px-3 text-sm font-semibold",
+                  completion.percentage === 100
+                    ? "border-green-200 bg-green-50 text-green-700"
+                    : completion.percentage === 0
+                      ? "border-red-200 bg-red-50 text-red-700"
+                      : "border-yellow-200 bg-yellow-50 text-yellow-800",
+                )}
+              >
+                {completion.percentage}% complete
+              </Badge>
               {mode === "create" ? (
                 <Button
                   size="sm"
@@ -1005,15 +1051,6 @@ export function MerchantForm({
           </div>
         </div>
 
-        {/* Completion Indicator */}
-        <div className="mb-6">
-          <CompletionIndicator
-            data={completionData}
-            activeSection={activeSection}
-            onSectionSelect={setActiveSection}
-          />
-        </div>
-
         {/* Error */}
         {error && (
           <div className="bg-destructive/10 text-destructive text-sm px-4 py-3 rounded-lg mb-6">
@@ -1023,100 +1060,210 @@ export function MerchantForm({
 
         {/* URLs (edit mode) */}
         {mode === "edit" && (
-          <div className="grid gap-3 sm:grid-cols-2 mb-6">
-            <div className="bg-card border rounded-lg p-3">
-              <Label className="text-xs text-muted-foreground">Full URL</Label>
-              <div className="flex items-center gap-1 mt-1">
-                <code className="text-xs bg-muted px-2 py-1 rounded text-muted-foreground whitespace-nowrap">
-                  /business/{formData.city.toLowerCase() || "city"}/
-                  {formData.state.toLowerCase() || "st"}/
-                </code>
-                <Input
-                  value={formData.slug}
-                  onChange={(e) =>
-                    updateField(
-                      "slug",
-                      e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, "-"),
-                    )
-                  }
-                  placeholder="url-slug"
-                  className="h-7 text-xs font-mono flex-1 min-w-0"
-                />
-                {urls.full && (
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-7 w-7 flex-shrink-0"
-                    asChild
-                  >
-                    <a
-                      href={urls.full}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      <ExternalLink className="w-3 h-3" />
-                    </a>
-                  </Button>
-                )}
+          <div className="mb-6 rounded-lg border bg-card px-3 py-2">
+            <div className="flex flex-col gap-2 xl:flex-row xl:items-center">
+              <div className="flex shrink-0 items-center text-muted-foreground">
+                <Link2 className="h-3.5 w-3.5" />
+                <span className="sr-only">Links</span>
               </div>
-            </div>
 
-            <div className="bg-card border rounded-lg p-3">
-              <Label className="text-xs text-muted-foreground">Short URL</Label>
-              {urls.short ? (
-                <div className="flex items-center gap-2 mt-1">
-                  <code className="flex-1 text-xs bg-muted px-2 py-1 rounded truncate">
-                    {getFullUrl(urls.short)}
+              <div className="grid min-w-0 flex-1 gap-2 xl:grid-cols-[minmax(0,1.35fr)_minmax(220px,0.65fr)]">
+                <div className="flex min-w-0 items-center gap-1 rounded-md border bg-muted/35 p-1.5">
+                  <code
+                    className="hidden min-w-0 max-w-[190px] truncate text-xs text-muted-foreground sm:block"
+                    title={fullUrlPrefix}
+                  >
+                    {fullUrlPrefix}
                   </code>
+                  <Input
+                    value={formData.slug}
+                    onChange={(e) =>
+                      updateField(
+                        "slug",
+                        e.target.value
+                          .toLowerCase()
+                          .replace(/[^a-z0-9-]/g, "-"),
+                      )
+                    }
+                    placeholder="url-slug"
+                    className="h-7 min-w-[120px] flex-1 border-0 bg-background px-2 text-xs font-mono shadow-none focus-visible:ring-1"
+                  />
                   <Button
+                    type="button"
                     variant="ghost"
                     size="icon"
-                    className="h-7 w-7 flex-shrink-0"
-                    onClick={() => copyToClipboard(urls.short!, "short")}
+                    className="h-7 w-7 shrink-0"
+                    onClick={() => copyToClipboard(fullUrlPath, "full")}
+                    title={`Copy ${getFullUrl(fullUrlPath)}`}
                   >
-                    {copiedUrl === "short" ? (
+                    {copiedUrl === "full" ? (
                       <Check className="w-3 h-3 text-green-600" />
                     ) : (
                       <Copy className="w-3 h-3" />
                     )}
+                    <span className="sr-only">Copy full URL</span>
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-7 w-7 shrink-0"
+                    asChild
+                    title={`Open ${getFullUrl(fullUrlPath)}`}
+                  >
+                    <a
+                      href={getFullUrl(fullUrlPath)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      <ExternalLink className="w-3 h-3" />
+                      <span className="sr-only">Open full URL</span>
+                    </a>
                   </Button>
                 </div>
-              ) : (
-                <p className="text-xs text-muted-foreground mt-1">
-                  Add phone number to generate short URL
-                </p>
+
+                <div className="flex min-w-0 items-center gap-1 rounded-md border bg-muted/35 p-1.5">
+                  {shortUrlPath ? (
+                    <>
+                      <code
+                        className="min-w-0 flex-1 truncate text-xs font-mono"
+                        title={getFullUrl(shortUrlPath)}
+                      >
+                        {shortUrlPath}
+                      </code>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7 shrink-0"
+                        onClick={() => copyToClipboard(shortUrlPath, "short")}
+                        title={`Copy ${getFullUrl(shortUrlPath)}`}
+                      >
+                        {copiedUrl === "short" ? (
+                          <Check className="w-3 h-3 text-green-600" />
+                        ) : (
+                          <Copy className="w-3 h-3" />
+                        )}
+                        <span className="sr-only">Copy short URL</span>
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7 shrink-0"
+                        asChild
+                        title={`Open ${getFullUrl(shortUrlPath)}`}
+                      >
+                        <a
+                          href={getFullUrl(shortUrlPath)}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          <ExternalLink className="w-3 h-3" />
+                          <span className="sr-only">Open short URL</span>
+                        </a>
+                      </Button>
+                    </>
+                  ) : (
+                    <span className="min-w-0 flex-1 truncate text-xs text-muted-foreground">
+                      Add phone to generate
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              {linksBarSections.length > 0 && (
+                <div className="flex shrink-0 items-center justify-end gap-1">
+                  {linksBarSections.map((section) => {
+                    const isActive = activeSection === section.id;
+
+                    return (
+                      <Button
+                        key={section.id}
+                        type="button"
+                        variant={isActive ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => setActiveSection(section.id)}
+                        className="h-8 px-2.5 text-xs"
+                      >
+                        {section.icon && (
+                          <section.icon className="h-3.5 w-3.5" />
+                        )}
+                        {section.label}
+                      </Button>
+                    );
+                  })}
+                </div>
               )}
             </div>
           </div>
         )}
 
         {/* Section Navigation */}
-        <div className="scrollbar-x-site flex gap-1 mb-6 overflow-x-auto pb-2">
-          {visibleSections.map((section) => (
-            <button
-              key={section.id}
-              type="button"
-              onClick={() => setActiveSection(section.id)}
-              className={cn(
-                "flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors cursor-pointer",
-                activeSection === section.id
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-muted hover:bg-muted/80 text-muted-foreground",
-              )}
-            >
-              {section.icon && <section.icon className="w-4 h-4" />}
-              {section.label}
-            </button>
-          ))}
+        <div className="scrollbar-x-site flex gap-1 mb-6 overflow-x-auto pl-1 pr-3 pt-3 pb-2">
+          {mainSections.map((section) => {
+            const progress = completionBySection.get(section.id);
+            const isComplete = progress?.percentage === 100;
+            const hasPartial =
+              !!progress && progress.completed > 0 && !isComplete;
+            const isEmpty = !!progress && progress.completed === 0;
+            const isActive = activeSection === section.id;
+
+            return (
+              <button
+                key={section.id}
+                type="button"
+                onClick={() => setActiveSection(section.id)}
+                className={cn(
+                  "relative flex min-h-[42px] min-w-[76px] flex-1 items-center justify-center gap-1 overflow-visible rounded-lg border px-1.5 py-1.5 text-[11px] font-semibold whitespace-nowrap transition-colors cursor-pointer",
+                  "border-sky-200 bg-sky-50 text-sky-800 hover:bg-sky-100 dark:border-blue-800 dark:bg-blue-950/80 dark:text-blue-100 dark:hover:bg-blue-900/80",
+                  isActive &&
+                    "border-sky-400 bg-sky-100 text-sky-950 ring-2 ring-sky-200 ring-offset-1 dark:border-blue-400 dark:bg-blue-900 dark:text-white dark:ring-blue-700/60",
+                )}
+              >
+                <span
+                  className={cn(
+                    "pointer-events-none absolute -right-2 -top-2 z-10 flex h-4 items-center gap-1 rounded-full border px-1.5 text-[9px] font-semibold leading-none tabular-nums shadow-sm ring-2 ring-background",
+                    isComplete &&
+                      "border-green-200 bg-white text-green-700 dark:border-green-400/40 dark:bg-green-950 dark:text-green-200",
+                    hasPartial &&
+                      "border-yellow-200 bg-white text-yellow-800 dark:border-yellow-400/40 dark:bg-yellow-950 dark:text-yellow-200",
+                    isEmpty &&
+                      "border-red-200 bg-white text-red-700 dark:border-red-400/40 dark:bg-red-950 dark:text-red-200",
+                    !progress &&
+                      "border-slate-200 bg-white text-slate-600 dark:border-blue-400/30 dark:bg-blue-950 dark:text-blue-200",
+                  )}
+                >
+                  {isComplete ? (
+                    <Check className="w-3 h-3" />
+                  ) : (
+                    <span
+                      className={cn(
+                        "h-1.5 w-1.5 rounded-full",
+                        hasPartial && "bg-yellow-500",
+                        isEmpty && "bg-red-500",
+                        !progress && "bg-slate-400",
+                      )}
+                      aria-hidden="true"
+                    />
+                  )}
+                  {progress ? `${progress.percentage}%` : "Edit"}
+                </span>
+                {section.icon && <section.icon className="w-3 h-3" />}
+                <span>{section.label}</span>
+              </button>
+            );
+          })}
         </div>
 
         {/* Business Info Section */}
         {activeSection === "business" && (
           <div className="space-y-6 bg-card border rounded-lg p-6">
-            <h3 className="font-semibold flex items-center gap-2">
-              <Building2 className="w-5 h-5" />
-              Business Information
-            </h3>
+            <div className="flex items-center justify-between gap-3">
+              <h3 className="font-semibold flex items-center gap-2">
+                <Building2 className="w-5 h-5" />
+                Business Information
+              </h3>
+              {renderStepSaveButton()}
+            </div>
 
             <div>
               <Label>Search Google Places</Label>
@@ -1193,10 +1340,13 @@ export function MerchantForm({
         {/* Location Section */}
         {activeSection === "location" && (
           <div className="space-y-6 bg-card border rounded-lg p-6">
-            <h3 className="font-semibold flex items-center gap-2">
-              <MapPin className="w-5 h-5" />
-              Location
-            </h3>
+            <div className="flex items-center justify-between gap-3">
+              <h3 className="font-semibold flex items-center gap-2">
+                <MapPin className="w-5 h-5" />
+                Location
+              </h3>
+              {renderStepSaveButton()}
+            </div>
 
             <div className="space-y-4">
               <div>
@@ -1279,10 +1429,13 @@ export function MerchantForm({
         {/* Contact Section */}
         {activeSection === "contact" && (
           <div className="space-y-6 bg-card border rounded-lg p-6">
-            <h3 className="font-semibold flex items-center gap-2">
-              <Phone className="w-5 h-5" />
-              Contact & Social
-            </h3>
+            <div className="flex items-center justify-between gap-3">
+              <h3 className="font-semibold flex items-center gap-2">
+                <Phone className="w-5 h-5" />
+                Contact & Social
+              </h3>
+              {renderStepSaveButton()}
+            </div>
 
             <div className="space-y-4">
               <div>
@@ -1367,16 +1520,20 @@ export function MerchantForm({
           <HoursSection
             value={formData.hours}
             onChange={(hours) => updateField("hours", hours)}
+            headerAction={renderStepSaveButton()}
           />
         )}
 
         {/* Media Section */}
         {activeSection === "media" && (
           <div className="space-y-6 bg-card border rounded-lg p-6">
-            <h3 className="font-semibold flex items-center gap-2">
-              <Camera className="w-5 h-5" />
-              Media
-            </h3>
+            <div className="flex items-center justify-between gap-3">
+              <h3 className="font-semibold flex items-center gap-2">
+                <Camera className="w-5 h-5" />
+                Media
+              </h3>
+              {renderStepSaveButton()}
+            </div>
 
             <div className="space-y-6">
               {/* Logo */}
@@ -1532,15 +1689,18 @@ export function MerchantForm({
                 <FileText className="w-5 h-5" />
                 Services / Menu Items
               </h3>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={addService}
-              >
-                <Plus className="w-4 h-4 mr-1" />
-                Add Service
-              </Button>
+              <div className="flex items-center gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={addService}
+                >
+                  <Plus className="w-4 h-4 mr-1" />
+                  Add Service
+                </Button>
+                {renderStepSaveButton()}
+              </div>
             </div>
 
             {formData.services.length === 0 ? (
@@ -1675,10 +1835,13 @@ export function MerchantForm({
         {/* Visibility Section */}
         {activeSection === "visibility" && mode === "edit" && (
           <div className="space-y-6 bg-card border rounded-lg p-6">
-            <h3 className="font-semibold flex items-center gap-2">
-              <Eye className="w-5 h-5" />
-              Public Visibility
-            </h3>
+            <div className="flex items-center justify-between gap-3">
+              <h3 className="font-semibold flex items-center gap-2">
+                <Eye className="w-5 h-5" />
+                Public Visibility
+              </h3>
+              {renderStepSaveButton()}
+            </div>
 
             <div className="flex items-center justify-between gap-4 rounded-lg border bg-muted/25 p-4">
               <div>
@@ -1714,12 +1877,15 @@ export function MerchantForm({
                   shared profile.
                 </p>
               </div>
-              {isOwnerSaving && (
-                <span className="inline-flex items-center gap-1.5 text-sm text-muted-foreground">
-                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                  Saving
-                </span>
-              )}
+              <div className="flex items-center gap-2">
+                {isOwnerSaving && (
+                  <span className="inline-flex items-center gap-1.5 text-sm text-muted-foreground">
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                    Saving
+                  </span>
+                )}
+                {renderStepSaveButton()}
+              </div>
             </div>
 
             <div className="space-y-2">
@@ -1820,14 +1986,7 @@ export function MerchantForm({
                   Radio spot and signature soundtrack files for this merchant.
                 </p>
               </div>
-              {mode === "edit" && merchantId && (
-                <Button variant="outline" size="sm" asChild>
-                  <Link href={`/admin/merchants/${merchantId}/on-air-studio`}>
-                    <ExternalLink className="w-4 h-4" />
-                    On-Air Studio
-                  </Link>
-                </Button>
-              )}
+              {renderStepSaveButton()}
             </div>
 
             {mode !== "edit" || !merchantId ? (
@@ -2003,7 +2162,7 @@ export function MerchantForm({
       </div>
 
       {/* Preview Panel - Desktop */}
-      <div className="hidden lg:block w-[40%] sticky top-4 self-start">
+      <div className="hidden min-w-0 lg:block sticky top-4 self-start">
         <LivePreview data={previewData} />
       </div>
 

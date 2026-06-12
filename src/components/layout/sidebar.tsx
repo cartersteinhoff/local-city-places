@@ -29,7 +29,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useUser } from "@/hooks/use-user";
-import { getMarketLockStatusLabel } from "@/lib/market-lock-status";
 import { cn } from "@/lib/utils";
 import type { NavItem } from "./types";
 
@@ -351,9 +350,8 @@ export function Sidebar({
   const hasSections = navItems.some((item) => item.section);
   const navGroups = groupNavItems(navItems);
   const nextTheme = theme === "dark" ? "light" : "dark";
-  const marketLockStatusLabel = getMarketLockStatusLabel(
-    merchant?.marketLockStatus,
-  );
+  const marketLockStatusLabel =
+    merchant?.marketLockStatus === "pro" ? "Pro" : "Trial";
 
   const handleToggleCollapse = () => {
     if (onToggleCollapse) {

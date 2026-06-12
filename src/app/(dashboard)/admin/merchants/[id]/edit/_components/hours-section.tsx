@@ -1,7 +1,7 @@
 "use client";
 
 import { Calendar, ChevronDown, Clock, Copy } from "lucide-react";
-import { useCallback } from "react";
+import { type ReactNode, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -172,9 +172,14 @@ function formatHours(
 interface HoursSectionProps {
   value: Hours;
   onChange: (hours: Hours) => void;
+  headerAction?: ReactNode;
 }
 
-export function HoursSection({ value, onChange }: HoursSectionProps) {
+export function HoursSection({
+  value,
+  onChange,
+  headerAction,
+}: HoursSectionProps) {
   const updateDay = useCallback(
     (day: Day, isOpen: boolean, open: string, close: string) => {
       onChange({
@@ -239,6 +244,8 @@ export function HoursSection({ value, onChange }: HoursSectionProps) {
 
         {/* Quick fill buttons */}
         <div className="flex flex-wrap gap-2">
+          {headerAction}
+
           <Button
             type="button"
             variant="outline"

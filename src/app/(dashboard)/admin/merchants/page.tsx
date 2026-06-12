@@ -8,7 +8,6 @@ import {
   Loader2,
   Pencil,
   Plus,
-  RadioTower,
   RefreshCw,
   Search,
   Store,
@@ -963,19 +962,6 @@ export default function MerchantPagesPage() {
                                   title="Merchant Page"
                                 >
                                   <FileText className="w-4 h-4" />
-                                </Link>
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-8 w-8"
-                                asChild
-                              >
-                                <Link
-                                  href={`/admin/merchants/${merchant.id}/on-air-studio`}
-                                  title="On-Air Studio"
-                                >
-                                  <RadioTower className="w-4 h-4" />
                                 </Link>
                               </Button>
                               <Button
