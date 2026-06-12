@@ -48,6 +48,30 @@ interface MerchantPreviewData {
   photos?: string[];
   services?: { name: string; description?: string; price?: string }[];
   aboutStory?: string;
+  campaignAudio?: {
+    radioSpot?: {
+      title: string;
+      description?: string;
+      url: string;
+      fileName?: string;
+      contentType?: string;
+      sizeBytes?: number;
+      uploadedAt?: string;
+      status?: "ready" | "in_production" | "pending";
+    } | null;
+    soundtrack?: {
+      title: string;
+      description?: string;
+      url: string;
+      fileName?: string;
+      contentType?: string;
+      sizeBytes?: number;
+      uploadedAt?: string;
+      status?: "ready" | "in_production" | "pending";
+    } | null;
+    showOnProfile?: boolean;
+    updatedAt?: string;
+  } | null;
 }
 
 interface LivePreviewProps {
@@ -168,6 +192,7 @@ export function LivePreview({ data, className }: LivePreviewProps) {
                 photos={data.photos}
                 services={data.services}
                 aboutStory={data.aboutStory}
+                campaignAudio={data.campaignAudio}
               />
             </div>
           </div>

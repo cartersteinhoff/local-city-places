@@ -995,6 +995,7 @@ export function MerchantForm({
             }))
           : undefined,
       aboutStory: formData.aboutStory || undefined,
+      campaignAudio: formData.campaignAudio || undefined,
     }),
     [formData, categoryName],
   );
