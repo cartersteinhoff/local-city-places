@@ -12,6 +12,7 @@ import {
   FileAudio,
   FileText,
   Globe,
+  Link2,
   Loader2,
   MapPin,
   Mic2,
@@ -48,6 +49,11 @@ import {
 import { GalleryUploader, ImageUploader } from "@/components/ui/image-uploader";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { SortableImageGrid, SortableList } from "@/components/ui/sortable-list";
 import { Switch } from "@/components/ui/switch";
@@ -1008,6 +1014,146 @@ export function MerchantForm({
   const fullUrlPath = `${fullUrlPrefix}${formData.slug || "url-slug"}`;
   const shortUrlPath = urls.short || "";
 
+  const renderPageLinksPopover = () => (
+    <Popover>
+      <PopoverTrigger asChild>
+        <Button
+          type="button"
+          variant="outline"
+          size="icon"
+          className="h-8 w-8"
+          title="Page links"
+        >
+          <Link2 className="h-4 w-4" />
+          <span className="sr-only">Page links</span>
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent
+        align="end"
+        onOpenAutoFocus={(event) => event.preventDefault()}
+        sideOffset={8}
+        className="z-[1000] w-[360px] border-border !bg-white p-3 text-card-foreground shadow-xl dark:!bg-slate-950"
+      >
+        <div className="mb-3 flex items-center justify-between gap-3 border-b pb-2">
+          <div>
+            <p className="text-sm font-semibold">Page links</p>
+          </div>
+        </div>
+
+        <div className="space-y-3">
+          <div className="space-y-1.5">
+            <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+              Public page
+            </p>
+            <div className="flex min-w-0 items-center gap-1 rounded-md border bg-muted/35 p-1.5">
+              <code
+                className="min-w-0 max-w-[138px] truncate text-xs text-muted-foreground"
+                title={fullUrlPrefix}
+              >
+                {fullUrlPrefix}
+              </code>
+              <Input
+                value={formData.slug}
+                onChange={(e) =>
+                  updateField(
+                    "slug",
+                    e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, "-"),
+                  )
+                }
+                placeholder="url-slug"
+                className="h-7 min-w-0 flex-1 border-0 bg-background px-2 text-xs font-mono shadow-none focus-visible:ring-1"
+              />
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="h-7 w-7 shrink-0"
+                onClick={() => copyToClipboard(fullUrlPath, "full")}
+                title={`Copy ${getFullUrl(fullUrlPath)}`}
+              >
+                {copiedUrl === "full" ? (
+                  <Check className="w-3 h-3 text-green-600" />
+                ) : (
+                  <Copy className="w-3 h-3" />
+                )}
+                <span className="sr-only">Copy public page URL</span>
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-7 w-7 shrink-0"
+                asChild
+                title={`Open ${getFullUrl(fullUrlPath)}`}
+              >
+                <a
+                  href={getFullUrl(fullUrlPath)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <ExternalLink className="w-3 h-3" />
+                  <span className="sr-only">Open public page URL</span>
+                </a>
+              </Button>
+            </div>
+          </div>
+
+          <div className="space-y-1.5">
+            <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+              Short link
+            </p>
+            <div className="flex min-w-0 items-center gap-1 rounded-md border bg-muted/35 p-1.5">
+              {shortUrlPath ? (
+                <>
+                  <code
+                    className="min-w-0 flex-1 truncate px-1 text-xs font-mono"
+                    title={getFullUrl(shortUrlPath)}
+                  >
+                    {shortUrlPath}
+                  </code>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="h-7 w-7 shrink-0"
+                    onClick={() => copyToClipboard(shortUrlPath, "short")}
+                    title={`Copy ${getFullUrl(shortUrlPath)}`}
+                  >
+                    {copiedUrl === "short" ? (
+                      <Check className="w-3 h-3 text-green-600" />
+                    ) : (
+                      <Copy className="w-3 h-3" />
+                    )}
+                    <span className="sr-only">Copy short URL</span>
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-7 w-7 shrink-0"
+                    asChild
+                    title={`Open ${getFullUrl(shortUrlPath)}`}
+                  >
+                    <a
+                      href={getFullUrl(shortUrlPath)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      <ExternalLink className="w-3 h-3" />
+                      <span className="sr-only">Open short URL</span>
+                    </a>
+                  </Button>
+                </>
+              ) : (
+                <span className="min-w-0 flex-1 truncate px-1 text-xs text-muted-foreground">
+                  Add phone to generate
+                </span>
+              )}
+            </div>
+          </div>
+        </div>
+      </PopoverContent>
+    </Popover>
+  );
+
   return (
     <div className="overflow-x-hidden">
       {/* Header */}
@@ -1062,26 +1208,22 @@ export function MerchantForm({
                 )}
                 Create Page
               </Button>
-            ) : (
-              <>
-                {urls.full && (
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={handleRebuild}
-                    disabled={isRebuilding}
-                    title="Refresh the cached public page"
-                  >
-                    {isRebuilding ? (
-                      <Loader2 className="w-4 h-4 mr-1 animate-spin" />
-                    ) : (
-                      <RefreshCw className="w-4 h-4 mr-1" />
-                    )}
-                    Refresh Live
-                  </Button>
+            ) : urls.full ? (
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={handleRebuild}
+                disabled={isRebuilding}
+                title="Refresh the cached public page"
+              >
+                {isRebuilding ? (
+                  <Loader2 className="w-4 h-4 mr-1 animate-spin" />
+                ) : (
+                  <RefreshCw className="w-4 h-4 mr-1" />
                 )}
-              </>
-            )}
+                Refresh Live
+              </Button>
+            ) : null}
           </div>
         </div>
         <div className="hidden min-w-0 items-center justify-between gap-3 px-1 lg:flex">
@@ -1089,10 +1231,13 @@ export function MerchantForm({
             <Eye className="w-4 h-4" />
             <span>Live Preview</span>
           </div>
-          <DeviceSelector
-            value={desktopPreviewDevice}
-            onChange={setDesktopPreviewDevice}
-          />
+          <div className="flex items-center gap-2">
+            <DeviceSelector
+              value={desktopPreviewDevice}
+              onChange={setDesktopPreviewDevice}
+            />
+            {mode === "edit" && renderPageLinksPopover()}
+          </div>
         </div>
       </div>
 
@@ -2111,110 +2256,6 @@ export function MerchantForm({
           onDeviceChange={setDesktopPreviewDevice}
           showHeader={false}
         />
-        {mode === "edit" && (
-          <div className="mt-3 rounded-lg border bg-card p-2">
-            <div className="space-y-2">
-              <div className="flex min-w-0 items-center gap-1 rounded-md border bg-muted/35 p-1.5">
-                <code
-                  className="min-w-0 max-w-[150px] truncate text-xs text-muted-foreground"
-                  title={fullUrlPrefix}
-                >
-                  {fullUrlPrefix}
-                </code>
-                <Input
-                  value={formData.slug}
-                  onChange={(e) =>
-                    updateField(
-                      "slug",
-                      e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, "-"),
-                    )
-                  }
-                  placeholder="url-slug"
-                  className="h-7 min-w-0 flex-1 border-0 bg-background px-2 text-xs font-mono shadow-none focus-visible:ring-1"
-                />
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  className="h-7 w-7 shrink-0"
-                  onClick={() => copyToClipboard(fullUrlPath, "full")}
-                  title={`Copy ${getFullUrl(fullUrlPath)}`}
-                >
-                  {copiedUrl === "full" ? (
-                    <Check className="w-3 h-3 text-green-600" />
-                  ) : (
-                    <Copy className="w-3 h-3" />
-                  )}
-                  <span className="sr-only">Copy full URL</span>
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-7 w-7 shrink-0"
-                  asChild
-                  title={`Open ${getFullUrl(fullUrlPath)}`}
-                >
-                  <a
-                    href={getFullUrl(fullUrlPath)}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    <ExternalLink className="w-3 h-3" />
-                    <span className="sr-only">Open full URL</span>
-                  </a>
-                </Button>
-              </div>
-
-              <div className="flex min-w-0 items-center gap-1 rounded-md border bg-muted/35 p-1.5">
-                {shortUrlPath ? (
-                  <>
-                    <code
-                      className="min-w-0 flex-1 truncate text-xs font-mono"
-                      title={getFullUrl(shortUrlPath)}
-                    >
-                      {shortUrlPath}
-                    </code>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      className="h-7 w-7 shrink-0"
-                      onClick={() => copyToClipboard(shortUrlPath, "short")}
-                      title={`Copy ${getFullUrl(shortUrlPath)}`}
-                    >
-                      {copiedUrl === "short" ? (
-                        <Check className="w-3 h-3 text-green-600" />
-                      ) : (
-                        <Copy className="w-3 h-3" />
-                      )}
-                      <span className="sr-only">Copy short URL</span>
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-7 w-7 shrink-0"
-                      asChild
-                      title={`Open ${getFullUrl(shortUrlPath)}`}
-                    >
-                      <a
-                        href={getFullUrl(shortUrlPath)}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
-                        <ExternalLink className="w-3 h-3" />
-                        <span className="sr-only">Open short URL</span>
-                      </a>
-                    </Button>
-                  </>
-                ) : (
-                  <span className="min-w-0 flex-1 truncate text-xs text-muted-foreground">
-                    Add phone to generate
-                  </span>
-                )}
-              </div>
-            </div>
-          </div>
-        )}
       </div>
 
       {/* Preview Button - Mobile */}
