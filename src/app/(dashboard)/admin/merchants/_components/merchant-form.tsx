@@ -1110,71 +1110,61 @@ export function MerchantForm({
         )}
 
         {/* Section Navigation */}
-        <div className="sticky top-0 z-20 -mx-1 mb-6 bg-background/90 py-2 backdrop-blur-md">
-          <div className="relative">
-            <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-7 bg-gradient-to-r from-background to-transparent" />
-            <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-7 bg-gradient-to-l from-background to-transparent" />
-            <div className="scrollbar-x-site flex gap-1.5 overflow-x-auto px-1 py-1">
-              {mainSections.map((section) => {
-                const progress = completionBySection.get(section.id);
-                const isComplete = progress?.percentage === 100;
-                const hasPartial =
-                  !!progress && progress.completed > 0 && !isComplete;
-                const isEmpty = !!progress && progress.completed === 0;
-                const isActive = activeSection === section.id;
+        <div className="scrollbar-x-site flex gap-1.5 mb-6 overflow-x-auto pl-1 pr-3 pt-3 pb-2">
+          {mainSections.map((section) => {
+            const progress = completionBySection.get(section.id);
+            const isComplete = progress?.percentage === 100;
+            const hasPartial =
+              !!progress && progress.completed > 0 && !isComplete;
+            const isEmpty = !!progress && progress.completed === 0;
+            const isActive = activeSection === section.id;
 
-                return (
-                  <button
-                    key={section.id}
-                    type="button"
-                    onClick={() => setActiveSection(section.id)}
-                    className={cn(
-                      "flex h-[42px] min-w-[132px] shrink-0 items-center justify-between gap-2 rounded-md border px-2.5 text-xs font-semibold whitespace-nowrap transition-colors cursor-pointer",
-                      "border-border/60 bg-card/65 text-muted-foreground hover:border-sky-400/50 hover:bg-sky-500/10 hover:text-foreground",
-                      "dark:border-white/10 dark:bg-white/[0.035] dark:text-blue-100/80 dark:hover:border-blue-300/40 dark:hover:bg-blue-500/10 dark:hover:text-white",
-                      isActive &&
-                        "border-sky-400/80 bg-sky-500/15 text-sky-950 shadow-sm dark:border-blue-300/60 dark:bg-blue-500/20 dark:text-white",
-                    )}
-                  >
-                    <span className="flex min-w-0 items-center gap-1.5">
-                      {section.icon && (
-                        <section.icon className="h-3.5 w-3.5 shrink-0" />
-                      )}
-                      <span className="truncate">{section.label}</span>
-                    </span>
+            return (
+              <button
+                key={section.id}
+                type="button"
+                onClick={() => setActiveSection(section.id)}
+                className={cn(
+                  "relative flex min-h-[46px] min-w-[92px] flex-1 items-center justify-center gap-1.5 overflow-visible rounded-lg border px-2 py-2 text-xs font-semibold whitespace-nowrap transition-colors cursor-pointer",
+                  "border-border/60 bg-card/65 text-muted-foreground hover:border-sky-400/50 hover:bg-sky-500/10 hover:text-foreground",
+                  "dark:border-white/10 dark:bg-white/[0.035] dark:text-blue-100/80 dark:hover:border-blue-300/40 dark:hover:bg-blue-500/10 dark:hover:text-white",
+                  isActive &&
+                    "border-sky-400/80 bg-sky-500/15 text-sky-950 shadow-sm dark:border-blue-300/60 dark:bg-blue-500/20 dark:text-white",
+                )}
+              >
+                <span
+                  className={cn(
+                    "pointer-events-none absolute -right-2 -top-2 z-10 flex h-5 items-center gap-1 rounded-full border px-1.5 text-[10px] font-bold leading-none tabular-nums shadow-sm ring-2 ring-background",
+                    isComplete &&
+                      "border-green-500/25 bg-green-500/10 text-green-700 dark:border-green-400/30 dark:bg-green-950 dark:text-green-200",
+                    hasPartial &&
+                      "border-amber-500/25 bg-amber-500/10 text-amber-700 dark:border-amber-400/30 dark:bg-amber-950 dark:text-amber-200",
+                    isEmpty &&
+                      "border-red-500/25 bg-red-500/10 text-red-700 dark:border-red-400/30 dark:bg-red-950 dark:text-red-200",
+                    !progress &&
+                      "border-muted-foreground/20 bg-muted text-muted-foreground",
+                  )}
+                >
+                  {isComplete ? (
+                    <Check className="h-3 w-3" />
+                  ) : (
                     <span
                       className={cn(
-                        "ml-auto flex h-5 min-w-11 shrink-0 items-center justify-center gap-1 rounded-full border px-1.5 text-[10px] font-bold leading-none tabular-nums",
-                        isComplete &&
-                          "border-green-500/25 bg-green-500/10 text-green-700 dark:border-green-400/30 dark:bg-green-400/10 dark:text-green-200",
-                        hasPartial &&
-                          "border-amber-500/25 bg-amber-500/10 text-amber-700 dark:border-amber-400/30 dark:bg-amber-400/10 dark:text-amber-200",
-                        isEmpty &&
-                          "border-red-500/25 bg-red-500/10 text-red-700 dark:border-red-400/30 dark:bg-red-400/10 dark:text-red-200",
-                        !progress &&
-                          "border-muted-foreground/20 bg-muted/50 text-muted-foreground",
+                        "h-1.5 w-1.5 rounded-full",
+                        hasPartial && "bg-amber-500",
+                        isEmpty && "bg-red-500",
+                        !progress && "bg-slate-400",
                       )}
-                    >
-                      {isComplete ? (
-                        <Check className="h-3 w-3" />
-                      ) : (
-                        <span
-                          className={cn(
-                            "h-1.5 w-1.5 rounded-full",
-                            hasPartial && "bg-amber-500",
-                            isEmpty && "bg-red-500",
-                            !progress && "bg-slate-400",
-                          )}
-                          aria-hidden="true"
-                        />
-                      )}
-                      {progress ? `${progress.percentage}%` : "Edit"}
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
+                      aria-hidden="true"
+                    />
+                  )}
+                  {progress ? `${progress.percentage}%` : "Edit"}
+                </span>
+                {section.icon && <section.icon className="h-3.5 w-3.5" />}
+                <span>{section.label}</span>
+              </button>
+            );
+          })}
         </div>
 
         {/* Business Info Section */}
