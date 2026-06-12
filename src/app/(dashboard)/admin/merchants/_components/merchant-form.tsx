@@ -38,8 +38,6 @@ import {
   useState,
 } from "react";
 import { Facebook, Instagram } from "@/components/icons/social-icons";
-// Preview components
-import { PhotoStripDesign } from "@/components/merchant-page/designs/photo-strip";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -68,8 +66,8 @@ import {
 import {
   DeviceSelector,
   type DeviceType,
-  getDeviceConfig,
   LivePreview,
+  PreviewDeviceCanvas,
 } from "../[id]/edit/_components/live-preview";
 
 interface Category {
@@ -2375,41 +2373,16 @@ export function MerchantForm({
               </div>
             </div>
             <div className="h-[calc(100%-60px)] overflow-auto bg-muted/30 flex justify-center">
-              <MobilePreviewContent device={previewDevice} data={previewData} />
+              <PreviewDeviceCanvas
+                data={previewData}
+                device={previewDevice}
+                className="h-full px-3 py-4"
+              />
             </div>
           </SheetContent>
         </Sheet>
       </div>
     </div>
-    </div>
-  );
-}
-
-function MobilePreviewContent({
-  device,
-  data,
-}: {
-  device: DeviceType;
-  data: any;
-}) {
-  const deviceConfig = getDeviceConfig(device);
-
-  return (
-    <div
-      className="transition-all duration-300 my-4 shrink-0"
-      style={{
-        width: deviceConfig.width * deviceConfig.scale,
-      }}
-    >
-      <div
-        className="bg-white shadow-lg origin-top-left"
-        style={{
-          width: deviceConfig.width,
-          transform: `scale(${deviceConfig.scale})`,
-        }}
-      >
-        <PhotoStripDesign {...data} />
-      </div>
     </div>
   );
 }
