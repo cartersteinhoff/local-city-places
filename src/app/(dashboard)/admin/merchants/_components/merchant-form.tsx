@@ -1002,6 +1002,24 @@ export function MerchantForm({
               >
                 {completion.percentage}% complete
               </Badge>
+              {mode === "edit" &&
+                linksBarSections.map((section) => {
+                  const isActive = activeSection === section.id;
+
+                  return (
+                    <Button
+                      key={section.id}
+                      type="button"
+                      variant={isActive ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setActiveSection(section.id)}
+                      className="h-8 px-2.5 text-xs"
+                    >
+                      {section.icon && <section.icon className="h-3.5 w-3.5" />}
+                      {section.label}
+                    </Button>
+                  );
+                })}
               {mode === "create" ? (
                 <Button
                   size="sm"
@@ -1055,145 +1073,6 @@ export function MerchantForm({
         {error && (
           <div className="bg-destructive/10 text-destructive text-sm px-4 py-3 rounded-lg mb-6">
             {error}
-          </div>
-        )}
-
-        {/* URLs (edit mode) */}
-        {mode === "edit" && (
-          <div className="mb-6 rounded-lg border bg-card px-3 py-2">
-            <div className="flex flex-col gap-2 xl:flex-row xl:items-center">
-              <div className="flex shrink-0 items-center text-muted-foreground">
-                <Link2 className="h-3.5 w-3.5" />
-                <span className="sr-only">Links</span>
-              </div>
-
-              <div className="grid min-w-0 flex-1 gap-2 xl:grid-cols-[minmax(0,1.35fr)_minmax(220px,0.65fr)]">
-                <div className="flex min-w-0 items-center gap-1 rounded-md border bg-muted/35 p-1.5">
-                  <code
-                    className="hidden min-w-0 max-w-[190px] truncate text-xs text-muted-foreground sm:block"
-                    title={fullUrlPrefix}
-                  >
-                    {fullUrlPrefix}
-                  </code>
-                  <Input
-                    value={formData.slug}
-                    onChange={(e) =>
-                      updateField(
-                        "slug",
-                        e.target.value
-                          .toLowerCase()
-                          .replace(/[^a-z0-9-]/g, "-"),
-                      )
-                    }
-                    placeholder="url-slug"
-                    className="h-7 min-w-[120px] flex-1 border-0 bg-background px-2 text-xs font-mono shadow-none focus-visible:ring-1"
-                  />
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    className="h-7 w-7 shrink-0"
-                    onClick={() => copyToClipboard(fullUrlPath, "full")}
-                    title={`Copy ${getFullUrl(fullUrlPath)}`}
-                  >
-                    {copiedUrl === "full" ? (
-                      <Check className="w-3 h-3 text-green-600" />
-                    ) : (
-                      <Copy className="w-3 h-3" />
-                    )}
-                    <span className="sr-only">Copy full URL</span>
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-7 w-7 shrink-0"
-                    asChild
-                    title={`Open ${getFullUrl(fullUrlPath)}`}
-                  >
-                    <a
-                      href={getFullUrl(fullUrlPath)}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      <ExternalLink className="w-3 h-3" />
-                      <span className="sr-only">Open full URL</span>
-                    </a>
-                  </Button>
-                </div>
-
-                <div className="flex min-w-0 items-center gap-1 rounded-md border bg-muted/35 p-1.5">
-                  {shortUrlPath ? (
-                    <>
-                      <code
-                        className="min-w-0 flex-1 truncate text-xs font-mono"
-                        title={getFullUrl(shortUrlPath)}
-                      >
-                        {shortUrlPath}
-                      </code>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        className="h-7 w-7 shrink-0"
-                        onClick={() => copyToClipboard(shortUrlPath, "short")}
-                        title={`Copy ${getFullUrl(shortUrlPath)}`}
-                      >
-                        {copiedUrl === "short" ? (
-                          <Check className="w-3 h-3 text-green-600" />
-                        ) : (
-                          <Copy className="w-3 h-3" />
-                        )}
-                        <span className="sr-only">Copy short URL</span>
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-7 w-7 shrink-0"
-                        asChild
-                        title={`Open ${getFullUrl(shortUrlPath)}`}
-                      >
-                        <a
-                          href={getFullUrl(shortUrlPath)}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                        >
-                          <ExternalLink className="w-3 h-3" />
-                          <span className="sr-only">Open short URL</span>
-                        </a>
-                      </Button>
-                    </>
-                  ) : (
-                    <span className="min-w-0 flex-1 truncate text-xs text-muted-foreground">
-                      Add phone to generate
-                    </span>
-                  )}
-                </div>
-              </div>
-
-              {linksBarSections.length > 0 && (
-                <div className="flex shrink-0 items-center justify-end gap-1">
-                  {linksBarSections.map((section) => {
-                    const isActive = activeSection === section.id;
-
-                    return (
-                      <Button
-                        key={section.id}
-                        type="button"
-                        variant={isActive ? "default" : "outline"}
-                        size="sm"
-                        onClick={() => setActiveSection(section.id)}
-                        className="h-8 px-2.5 text-xs"
-                      >
-                        {section.icon && (
-                          <section.icon className="h-3.5 w-3.5" />
-                        )}
-                        {section.label}
-                      </Button>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
           </div>
         )}
 
@@ -2164,6 +2043,115 @@ export function MerchantForm({
       {/* Preview Panel - Desktop */}
       <div className="hidden min-w-0 lg:block sticky top-4 self-start">
         <LivePreview data={previewData} />
+        {mode === "edit" && (
+          <div className="mt-3 rounded-lg border bg-card p-2">
+            <div className="mb-2 flex items-center gap-2 text-muted-foreground">
+              <Link2 className="h-3.5 w-3.5" />
+              <span className="sr-only">Links</span>
+            </div>
+
+            <div className="space-y-2">
+              <div className="flex min-w-0 items-center gap-1 rounded-md border bg-muted/35 p-1.5">
+                <code
+                  className="min-w-0 max-w-[150px] truncate text-xs text-muted-foreground"
+                  title={fullUrlPrefix}
+                >
+                  {fullUrlPrefix}
+                </code>
+                <Input
+                  value={formData.slug}
+                  onChange={(e) =>
+                    updateField(
+                      "slug",
+                      e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, "-"),
+                    )
+                  }
+                  placeholder="url-slug"
+                  className="h-7 min-w-0 flex-1 border-0 bg-background px-2 text-xs font-mono shadow-none focus-visible:ring-1"
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="h-7 w-7 shrink-0"
+                  onClick={() => copyToClipboard(fullUrlPath, "full")}
+                  title={`Copy ${getFullUrl(fullUrlPath)}`}
+                >
+                  {copiedUrl === "full" ? (
+                    <Check className="w-3 h-3 text-green-600" />
+                  ) : (
+                    <Copy className="w-3 h-3" />
+                  )}
+                  <span className="sr-only">Copy full URL</span>
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-7 w-7 shrink-0"
+                  asChild
+                  title={`Open ${getFullUrl(fullUrlPath)}`}
+                >
+                  <a
+                    href={getFullUrl(fullUrlPath)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    <ExternalLink className="w-3 h-3" />
+                    <span className="sr-only">Open full URL</span>
+                  </a>
+                </Button>
+              </div>
+
+              <div className="flex min-w-0 items-center gap-1 rounded-md border bg-muted/35 p-1.5">
+                {shortUrlPath ? (
+                  <>
+                    <code
+                      className="min-w-0 flex-1 truncate text-xs font-mono"
+                      title={getFullUrl(shortUrlPath)}
+                    >
+                      {shortUrlPath}
+                    </code>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="h-7 w-7 shrink-0"
+                      onClick={() => copyToClipboard(shortUrlPath, "short")}
+                      title={`Copy ${getFullUrl(shortUrlPath)}`}
+                    >
+                      {copiedUrl === "short" ? (
+                        <Check className="w-3 h-3 text-green-600" />
+                      ) : (
+                        <Copy className="w-3 h-3" />
+                      )}
+                      <span className="sr-only">Copy short URL</span>
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-7 w-7 shrink-0"
+                      asChild
+                      title={`Open ${getFullUrl(shortUrlPath)}`}
+                    >
+                      <a
+                        href={getFullUrl(shortUrlPath)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        <ExternalLink className="w-3 h-3" />
+                        <span className="sr-only">Open short URL</span>
+                      </a>
+                    </Button>
+                  </>
+                ) : (
+                  <span className="min-w-0 flex-1 truncate text-xs text-muted-foreground">
+                    Add phone to generate
+                  </span>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Preview Button - Mobile */}
