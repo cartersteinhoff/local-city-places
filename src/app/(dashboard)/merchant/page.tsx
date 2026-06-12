@@ -829,7 +829,8 @@ export default function MerchantDashboard() {
               merchant={merchant}
               pageManagement={pageManagement}
               publicPageHref={publicPageHref}
-              editHref="/merchant/profile"
+              editHref="/merchant/page-editor"
+              editLabel="Edit Merchant Page"
               className="mb-6"
               queueTone="opportunity"
             />

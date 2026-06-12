@@ -12,7 +12,6 @@ import {
   FileAudio,
   FileText,
   Globe,
-  Link2,
   Loader2,
   MapPin,
   Mic2,
@@ -49,13 +48,6 @@ import {
 import { GalleryUploader, ImageUploader } from "@/components/ui/image-uploader";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { SortableImageGrid, SortableList } from "@/components/ui/sortable-list";
 import { Switch } from "@/components/ui/switch";
@@ -169,6 +161,7 @@ export const INITIAL_FORM_DATA: FormData = {
 };
 
 const INITIAL_URLS = { full: null, short: null } as const;
+const INITIAL_OWNERS: MerchantOwner[] = [];
 
 const sections = [
   { id: "business", label: "Business", icon: Building2 },
@@ -287,6 +280,7 @@ function TrackUploadButton({
 
 interface MerchantFormProps {
   mode: "create" | "edit";
+  surface?: "admin" | "merchant";
   merchantId?: string;
   initialData?: FormData;
   initialUrls?: { full: string | null; short: string | null };
@@ -301,10 +295,11 @@ interface MerchantFormProps {
 
 export function MerchantForm({
   mode,
+  surface = "admin",
   merchantId,
   initialData = INITIAL_FORM_DATA,
   initialUrls = INITIAL_URLS,
-  initialOwners = [],
+  initialOwners = INITIAL_OWNERS,
   initialCategoryName = "",
   categories,
   onSuccess,
@@ -332,6 +327,12 @@ export function MerchantForm({
   const [uploadingTrack, setUploadingTrack] =
     useState<CampaignAudioKind | null>(null);
   const [tracksError, setTracksError] = useState("");
+  const isAdminSurface = surface === "admin";
+  const canManageOwners = isAdminSurface && mode === "edit";
+  const canManageTracks = isAdminSurface && mode === "edit";
+  const canManageHomepageFeature = isAdminSurface;
+  const backHref = isAdminSurface ? "/admin/merchants" : "/merchant";
+  const backLabel = isAdminSurface ? "Back" : "Dashboard";
 
   // Sync initial data changes (for edit mode when data loads)
   useEffect(() => {
@@ -362,7 +363,7 @@ export function MerchantForm({
   // Auto-save for edit mode
   const handleSave = useCallback(
     async (data: FormData) => {
-      if (mode !== "edit" || !merchantId) return;
+      if (mode !== "edit" || (isAdminSurface && !merchantId)) return;
 
       // Validation
       if (!data.businessName?.trim()) {
@@ -382,43 +383,50 @@ export function MerchantForm({
         throw new Error("Invalid Vimeo URL");
       }
 
-      const res = await fetch(`/api/admin/merchant-pages/${merchantId}`, {
+      const payload: Record<string, unknown> = {
+        businessName: data.businessName?.trim() || "",
+        streetAddress: data.streetAddress?.trim() || null,
+        city: data.city?.trim() || "",
+        state: data.state?.trim()?.toUpperCase() || "",
+        zipCode: data.zipCode?.trim() || null,
+        phone: strippedPhone,
+        website: data.website?.trim() || null,
+        categoryId: data.categoryId || null,
+        description: data.description?.trim() || null,
+        vimeoUrl: data.vimeoUrl?.trim() || null,
+        googlePlaceId: data.googlePlaceId || null,
+        logoUrl: data.logoUrl?.trim() || null,
+        slug: data.slug?.trim() || null,
+        hours:
+          data.hours && Object.keys(data.hours).length > 0 ? data.hours : null,
+        instagramUrl: data.instagramUrl?.trim() || null,
+        facebookUrl: data.facebookUrl?.trim() || null,
+        tiktokUrl: data.tiktokUrl?.trim() || null,
+        photos: data.photos?.length > 0 ? data.photos : null,
+        services:
+          data.services?.length > 0
+            ? data.services.map(({ name, description, price }) => ({
+                name,
+                description,
+                price,
+              }))
+            : null,
+        aboutStory: data.aboutStory?.trim() || null,
+        isPublicPage: data.isPublicPage,
+      };
+
+      if (isAdminSurface) {
+        payload.featuredOnHomepage = data.featuredOnHomepage;
+      }
+
+      const endpoint = isAdminSurface
+        ? `/api/admin/merchant-pages/${merchantId}`
+        : "/api/merchant/page";
+
+      const res = await fetch(endpoint, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          businessName: data.businessName?.trim() || "",
-          streetAddress: data.streetAddress?.trim() || null,
-          city: data.city?.trim() || "",
-          state: data.state?.trim()?.toUpperCase() || "",
-          zipCode: data.zipCode?.trim() || null,
-          phone: strippedPhone,
-          website: data.website?.trim() || null,
-          categoryId: data.categoryId || null,
-          description: data.description?.trim() || null,
-          vimeoUrl: data.vimeoUrl?.trim() || null,
-          googlePlaceId: data.googlePlaceId || null,
-          logoUrl: data.logoUrl?.trim() || null,
-          slug: data.slug?.trim() || null,
-          hours:
-            data.hours && Object.keys(data.hours).length > 0
-              ? data.hours
-              : null,
-          instagramUrl: data.instagramUrl?.trim() || null,
-          facebookUrl: data.facebookUrl?.trim() || null,
-          tiktokUrl: data.tiktokUrl?.trim() || null,
-          photos: data.photos?.length > 0 ? data.photos : null,
-          services:
-            data.services?.length > 0
-              ? data.services.map(({ name, description, price }) => ({
-                  name,
-                  description,
-                  price,
-                }))
-              : null,
-          aboutStory: data.aboutStory?.trim() || null,
-          featuredOnHomepage: data.featuredOnHomepage,
-          isPublicPage: data.isPublicPage,
-        }),
+        body: JSON.stringify(payload),
       });
 
       const result = await res.json();
@@ -428,7 +436,7 @@ export function MerchantForm({
       setUrls(result.urls);
       setOriginalData(data);
     },
-    [mode, merchantId],
+    [isAdminSurface, mode, merchantId],
   );
 
   const {
@@ -546,10 +554,13 @@ export function MerchantForm({
 
   // Handle rebuild page (edit mode only)
   const handleRebuild = useCallback(async () => {
-    if (!merchantId) return;
+    if (mode !== "edit" || (isAdminSurface && !merchantId)) return;
     setIsRebuilding(true);
     try {
-      await fetch(`/api/admin/merchant-pages/${merchantId}/revalidate`, {
+      const endpoint = isAdminSurface
+        ? `/api/admin/merchant-pages/${merchantId}/revalidate`
+        : "/api/merchant/page/revalidate";
+      await fetch(endpoint, {
         method: "POST",
       });
     } catch (err) {
@@ -557,10 +568,10 @@ export function MerchantForm({
     } finally {
       setIsRebuilding(false);
     }
-  }, [merchantId]);
+  }, [isAdminSurface, merchantId, mode]);
 
   useEffect(() => {
-    if (mode !== "edit" || ownerSearch.trim().length < 2) {
+    if (!canManageOwners || ownerSearch.trim().length < 2) {
       setOwnerResults([]);
       setIsOwnerSearchLoading(false);
       return;
@@ -607,11 +618,11 @@ export function MerchantForm({
       controller.abort();
       window.clearTimeout(timer);
     };
-  }, [mode, ownerSearch, owners]);
+  }, [canManageOwners, ownerSearch, owners]);
 
   const saveOwners = useCallback(
     async (nextOwners: MerchantOwner[]) => {
-      if (mode !== "edit" || !merchantId) return;
+      if (!canManageOwners || !merchantId) return;
 
       setOwnerError("");
       setIsOwnerSaving(true);
@@ -644,7 +655,7 @@ export function MerchantForm({
         setIsOwnerSaving(false);
       }
     },
-    [merchantId, mode],
+    [canManageOwners, merchantId],
   );
 
   const addOwner = useCallback(
@@ -767,19 +778,21 @@ export function MerchantForm({
   // Photo upload handler (edit mode only)
   const handlePhotoUpload = useCallback(
     async (file: File): Promise<string> => {
-      if (!merchantId) throw new Error("Cannot upload without merchant ID");
+      if (isAdminSurface && !merchantId) {
+        throw new Error("Cannot upload without merchant ID");
+      }
 
       const formDataUpload = new FormData();
       formDataUpload.append("file", file);
       formDataUpload.append("type", "photo");
 
-      const res = await fetch(
-        `/api/admin/merchant-pages/${merchantId}/upload-photo`,
-        {
-          method: "POST",
-          body: formDataUpload,
-        },
-      );
+      const endpoint = isAdminSurface
+        ? `/api/admin/merchant-pages/${merchantId}/upload-photo`
+        : "/api/merchant/page/upload-photo";
+      const res = await fetch(endpoint, {
+        method: "POST",
+        body: formDataUpload,
+      });
 
       if (!res.ok) {
         const data = await res.json();
@@ -789,25 +802,27 @@ export function MerchantForm({
       const { url } = await res.json();
       return url;
     },
-    [merchantId],
+    [isAdminSurface, merchantId],
   );
 
   // Logo upload handler (edit mode only)
   const handleLogoUpload = useCallback(
     async (file: File): Promise<string> => {
-      if (!merchantId) throw new Error("Cannot upload without merchant ID");
+      if (isAdminSurface && !merchantId) {
+        throw new Error("Cannot upload without merchant ID");
+      }
 
       const formDataUpload = new FormData();
       formDataUpload.append("file", file);
       formDataUpload.append("type", "logo");
 
-      const res = await fetch(
-        `/api/admin/merchant-pages/${merchantId}/upload-photo`,
-        {
-          method: "POST",
-          body: formDataUpload,
-        },
-      );
+      const endpoint = isAdminSurface
+        ? `/api/admin/merchant-pages/${merchantId}/upload-photo`
+        : "/api/merchant/page/upload-photo";
+      const res = await fetch(endpoint, {
+        method: "POST",
+        body: formDataUpload,
+      });
 
       if (!res.ok) {
         const data = await res.json();
@@ -817,7 +832,7 @@ export function MerchantForm({
       const { url } = await res.json();
       return url;
     },
-    [merchantId],
+    [isAdminSurface, merchantId],
   );
 
   const handleCampaignAudioUploaded = useCallback(
@@ -830,7 +845,7 @@ export function MerchantForm({
 
   const handleTrackUpload = useCallback(
     async (kind: CampaignAudioKind, file: File) => {
-      if (mode !== "edit" || !merchantId) return;
+      if (!canManageTracks || !merchantId) return;
 
       setTracksError("");
       setUploadingTrack(kind);
@@ -870,15 +885,25 @@ export function MerchantForm({
         setUploadingTrack(null);
       }
     },
-    [formData.businessName, handleCampaignAudioUploaded, merchantId, mode],
+    [
+      canManageTracks,
+      formData.businessName,
+      handleCampaignAudioUploaded,
+      merchantId,
+    ],
   );
 
   const visibleSections = useMemo(
     () =>
-      sections.filter(
-        (section) => mode === "edit" || !editOnlySectionIds.has(section.id),
-      ),
-    [mode],
+      sections.filter((section) => {
+        if (mode !== "edit" && editOnlySectionIds.has(section.id)) {
+          return false;
+        }
+        if (section.id === "managers") return canManageOwners;
+        if (section.id === "tracks") return canManageTracks;
+        return true;
+      }),
+    [canManageOwners, canManageTracks, mode],
   );
   const mainSections = useMemo(
     () =>
@@ -914,12 +939,12 @@ export function MerchantForm({
       services: formData.services,
     };
 
-    if (mode === "edit") {
+    if (canManageTracks) {
       data.campaignAudio = formData.campaignAudio;
     }
 
     return data;
-  }, [formData, mode]);
+  }, [canManageTracks, formData]);
 
   const completion = useMemo(
     () => calculateCompletion(completionData),
@@ -982,9 +1007,9 @@ export function MerchantForm({
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
               <Button variant="ghost" size="sm" asChild>
-                <Link href="/admin/merchants">
+                <Link href={backHref}>
                   <ArrowLeft className="w-4 h-4 mr-2" />
-                  Back
+                  {backLabel}
                 </Link>
               </Button>
             </div>
@@ -1171,24 +1196,23 @@ export function MerchantForm({
 
               <div>
                 <Label htmlFor="category">Category</Label>
-                <Select
-                  value={formData.categoryId || "none"}
-                  onValueChange={(v) =>
-                    updateField("categoryId", v === "none" ? "" : v)
+                <select
+                  id="category"
+                  value={formData.categoryId}
+                  onChange={(event) =>
+                    updateField("categoryId", event.target.value)
                   }
+                  className="border-input bg-background text-foreground focus-visible:border-ring focus-visible:ring-ring/50 flex h-9 w-full rounded-md border px-3 py-2 text-sm shadow-xs outline-none transition-[color,box-shadow] focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50"
                 >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select a category" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="none">No category</SelectItem>
-                    {categories.map((cat) => (
-                      <SelectItem key={cat.id} value={cat.id}>
+                  <option value="">No category</option>
+                  {categories
+                    .filter((cat) => Boolean(cat.id))
+                    .map((cat) => (
+                      <option key={cat.id} value={cat.id}>
                         {cat.name}
-                      </SelectItem>
+                      </option>
                     ))}
-                  </SelectContent>
-                </Select>
+                </select>
               </div>
 
               <div>
@@ -1536,26 +1560,28 @@ export function MerchantForm({
               </div>
 
               {/* Feature on Homepage */}
-              <div className="border-t pt-4">
-                <div className="flex items-center gap-3">
-                  <Checkbox
-                    id="featuredOnHomepage"
-                    checked={formData.featuredOnHomepage}
-                    onCheckedChange={(checked) =>
-                      updateField("featuredOnHomepage", Boolean(checked))
-                    }
-                  />
-                  <Label
-                    htmlFor="featuredOnHomepage"
-                    className="mb-0 cursor-pointer"
-                  >
-                    Feature on Homepage
-                  </Label>
+              {canManageHomepageFeature && (
+                <div className="border-t pt-4">
+                  <div className="flex items-center gap-3">
+                    <Checkbox
+                      id="featuredOnHomepage"
+                      checked={formData.featuredOnHomepage}
+                      onCheckedChange={(checked) =>
+                        updateField("featuredOnHomepage", Boolean(checked))
+                      }
+                    />
+                    <Label
+                      htmlFor="featuredOnHomepage"
+                      className="mb-0 cursor-pointer"
+                    >
+                      Feature on Homepage
+                    </Label>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1 ml-7">
+                    Show this merchant in the homepage slider
+                  </p>
                 </div>
-                <p className="text-xs text-muted-foreground mt-1 ml-7">
-                  Show this merchant in the homepage slider
-                </p>
-              </div>
+              )}
             </div>
           </div>
         )}
@@ -1743,7 +1769,9 @@ export function MerchantForm({
         )}
 
         {/* Managers Section */}
-        {activeSection === "managers" && mode === "edit" && merchantId && (
+        {activeSection === "managers" &&
+          canManageOwners &&
+          merchantId && (
           <div className="space-y-6 bg-card border rounded-lg p-6">
             <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
               <div>
@@ -1853,7 +1881,7 @@ export function MerchantForm({
         )}
 
         {/* Tracks Section */}
-        {activeSection === "tracks" && (
+        {activeSection === "tracks" && canManageTracks && (
           <div className="space-y-6 bg-card border rounded-lg p-6">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
               <div>
@@ -2045,11 +2073,6 @@ export function MerchantForm({
         <LivePreview data={previewData} />
         {mode === "edit" && (
           <div className="mt-3 rounded-lg border bg-card p-2">
-            <div className="mb-2 flex items-center gap-2 text-muted-foreground">
-              <Link2 className="h-3.5 w-3.5" />
-              <span className="sr-only">Links</span>
-            </div>
-
             <div className="space-y-2">
               <div className="flex min-w-0 items-center gap-1 rounded-md border bg-muted/35 p-1.5">
                 <code
