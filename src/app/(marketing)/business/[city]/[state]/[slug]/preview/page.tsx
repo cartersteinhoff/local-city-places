@@ -48,6 +48,7 @@ interface MerchantData {
       url: string;
       uploadedAt?: string;
     } | null;
+    showOnProfile?: boolean;
   } | null;
 }
 

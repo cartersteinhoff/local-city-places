@@ -198,6 +198,7 @@ export async function PATCH(request: NextRequest) {
       services,
       aboutStory,
       isPublicPage,
+      signatureTracksEnabled,
     } = body;
 
     const updates: Partial<typeof merchants.$inferInsert> = {};
@@ -333,6 +334,13 @@ export async function PATCH(request: NextRequest) {
 
     if (aboutStory !== undefined) {
       updates.aboutStory = aboutStory?.trim() || null;
+    }
+
+    if (signatureTracksEnabled !== undefined) {
+      updates.campaignAudio = {
+        ...(existing.campaignAudio || {}),
+        showOnProfile: Boolean(signatureTracksEnabled),
+      };
     }
 
     if (slug !== undefined) {

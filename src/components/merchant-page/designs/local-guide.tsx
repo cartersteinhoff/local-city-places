@@ -17,13 +17,17 @@ import {
   ChevronRight,
   Clock,
   Copy,
+  Download,
   ExternalLink,
+  FileAudio,
   Globe,
   Heart,
   Image as ImageIcon,
   MapPin,
+  Music2,
   Navigation,
   Phone,
+  RadioTower,
   Share2,
   Sparkles,
   Star,
@@ -92,6 +96,7 @@ interface CampaignAudioAsset {
 interface CampaignAudio {
   radioSpot?: CampaignAudioAsset | null;
   soundtrack?: CampaignAudioAsset | null;
+  showOnProfile?: boolean;
   updatedAt?: string;
 }
 
@@ -131,6 +136,23 @@ const dayRows: { key: keyof Hours; short: string; label: string }[] = [
   { key: "saturday", short: "Sat", label: "Saturday" },
   { key: "sunday", short: "Sun", label: "Sunday" },
 ];
+
+const publicAudioTrackSlots = [
+  {
+    kind: "radioSpot" as const,
+    label: "Radio Spot",
+    description: "Hear the produced KLCP campaign spot.",
+    icon: RadioTower,
+  },
+  {
+    kind: "soundtrack" as const,
+    label: "Signature Soundtrack",
+    description: "Listen to the custom campaign sound.",
+    icon: Music2,
+  },
+];
+
+const emptyAudioCaptionsTrack = "data:text/vtt,WEBVTT%0A%0A";
 
 function formatWebsiteLabel(website: string) {
   return website.replace(/^https?:\/\//, "").replace(/\/$/, "");
@@ -490,6 +512,7 @@ export function LocalGuideDesign({
   photos,
   services,
   aboutStory,
+  campaignAudio,
   reviews,
   favoriteMerchantTestimonials,
   heroVariant = "standard",
@@ -511,6 +534,10 @@ export function LocalGuideDesign({
   const galleryPhotos = cleanPhotos.slice(0, 5);
   const serviceItems = (services || []).filter((service) =>
     service.name?.trim(),
+  );
+  const hasPublicAudioTracks = Boolean(
+    campaignAudio?.showOnProfile &&
+      publicAudioTrackSlots.some((track) => campaignAudio?.[track.kind]?.url),
   );
   const hoursRows = dayRows
     .map((day) => ({
@@ -927,6 +954,78 @@ export function LocalGuideDesign({
               </div>
             )}
           </section>
+
+          {hasPublicAudioTracks && (
+            <section
+              id="tracks"
+              className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm"
+            >
+              <div className="mb-4 flex items-center justify-between gap-4">
+                <div>
+                  <h2 className="text-2xl font-black tracking-normal text-slate-950">
+                    Merchant Tracks
+                  </h2>
+                  <p className="mt-1 text-sm text-slate-500">
+                    Campaign audio from this local merchant.
+                  </p>
+                </div>
+                <FileAudio className="h-5 w-5 shrink-0 text-[#2563EB]" />
+              </div>
+
+              <div className="grid gap-4 md:grid-cols-2">
+                {publicAudioTrackSlots.map((track) => {
+                  const asset = campaignAudio?.[track.kind] || null;
+                  if (!asset?.url) return null;
+
+                  const Icon = track.icon;
+
+                  return (
+                    <article
+                      key={track.kind}
+                      className="rounded-md border border-slate-200 bg-slate-50 p-4"
+                    >
+                      <div className="flex items-start gap-3">
+                        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-white text-[#2563EB] shadow-sm">
+                          <Icon className="h-5 w-5" />
+                        </span>
+                        <div className="min-w-0">
+                          <h3 className="font-black text-slate-950">
+                            {asset.title || track.label}
+                          </h3>
+                          <p className="mt-1 text-sm leading-6 text-slate-600">
+                            {asset.description || track.description}
+                          </p>
+                        </div>
+                      </div>
+
+                      <audio
+                        className="mt-4 w-full"
+                        controls
+                        preload="metadata"
+                        src={asset.url}
+                      >
+                        <track
+                          default
+                          kind="captions"
+                          label="Captions"
+                          src={emptyAudioCaptionsTrack}
+                        />
+                      </audio>
+
+                      <a
+                        href={asset.url}
+                        download
+                        className="mt-3 inline-flex min-h-9 items-center justify-center gap-2 rounded-md border border-slate-200 bg-white px-3 text-sm font-bold text-slate-700 transition hover:border-[#2563EB] hover:text-[#2563EB]"
+                      >
+                        <Download className="h-4 w-4" />
+                        Download
+                      </a>
+                    </article>
+                  );
+                })}
+              </div>
+            </section>
+          )}
 
           {hasPhotos && (
             <section

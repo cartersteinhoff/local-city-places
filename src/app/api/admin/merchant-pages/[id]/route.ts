@@ -235,6 +235,7 @@ export async function PATCH(
       featuredOnHomepage,
       isPublicPage,
       marketLockStatus,
+      signatureTracksEnabled,
     } = body;
 
     // Build update object
@@ -390,6 +391,13 @@ export async function PATCH(
       if (marketLockStatus !== existing.marketLockStatus) {
         updates.marketLockStatusUpdatedAt = new Date();
       }
+    }
+
+    if (signatureTracksEnabled !== undefined) {
+      updates.campaignAudio = {
+        ...(existing.campaignAudio || {}),
+        showOnProfile: Boolean(signatureTracksEnabled),
+      };
     }
 
     if (isPublicPage !== undefined) {

@@ -105,6 +105,7 @@ interface CampaignAudioAsset {
 interface CampaignAudio {
   radioSpot?: CampaignAudioAsset | null;
   soundtrack?: CampaignAudioAsset | null;
+  showOnProfile?: boolean;
   updatedAt?: string;
 }
 
@@ -329,7 +330,8 @@ export function MerchantForm({
   const [tracksError, setTracksError] = useState("");
   const isAdminSurface = surface === "admin";
   const canManageOwners = isAdminSurface && mode === "edit";
-  const canManageTracks = isAdminSurface && mode === "edit";
+  const canViewTracks = mode === "edit";
+  const canUploadTracks = isAdminSurface && mode === "edit";
   const canManageHomepageFeature = isAdminSurface;
   const backHref = isAdminSurface ? "/admin/merchants" : "/merchant";
   const backLabel = isAdminSurface ? "Back" : "Dashboard";
@@ -418,6 +420,11 @@ export function MerchantForm({
       if (isAdminSurface) {
         payload.featuredOnHomepage = data.featuredOnHomepage;
       }
+      if (canViewTracks) {
+        payload.signatureTracksEnabled = Boolean(
+          data.campaignAudio?.showOnProfile,
+        );
+      }
 
       const endpoint = isAdminSurface
         ? `/api/admin/merchant-pages/${merchantId}`
@@ -436,7 +443,7 @@ export function MerchantForm({
       setUrls(result.urls);
       setOriginalData(data);
     },
-    [isAdminSurface, mode, merchantId],
+    [canViewTracks, isAdminSurface, mode, merchantId],
   );
 
   const {
@@ -845,7 +852,7 @@ export function MerchantForm({
 
   const handleTrackUpload = useCallback(
     async (kind: CampaignAudioKind, file: File) => {
-      if (!canManageTracks || !merchantId) return;
+      if (!canUploadTracks || !merchantId) return;
 
       setTracksError("");
       setUploadingTrack(kind);
@@ -886,7 +893,7 @@ export function MerchantForm({
       }
     },
     [
-      canManageTracks,
+      canUploadTracks,
       formData.businessName,
       handleCampaignAudioUploaded,
       merchantId,
@@ -900,10 +907,10 @@ export function MerchantForm({
           return false;
         }
         if (section.id === "managers") return canManageOwners;
-        if (section.id === "tracks") return canManageTracks;
+        if (section.id === "tracks") return canViewTracks;
         return true;
       }),
-    [canManageOwners, canManageTracks, mode],
+    [canManageOwners, canViewTracks, mode],
   );
   const mainSections = useMemo(
     () =>
@@ -939,12 +946,12 @@ export function MerchantForm({
       services: formData.services,
     };
 
-    if (canManageTracks) {
+    if (canViewTracks) {
       data.campaignAudio = formData.campaignAudio;
     }
 
     return data;
-  }, [canManageTracks, formData]);
+  }, [canViewTracks, formData]);
 
   const completion = useMemo(
     () => calculateCompletion(completionData),
@@ -1881,7 +1888,7 @@ export function MerchantForm({
         )}
 
         {/* Tracks Section */}
-        {activeSection === "tracks" && canManageTracks && (
+        {activeSection === "tracks" && canViewTracks && (
           <div className="space-y-6 bg-card border rounded-lg p-6">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
               <div>
@@ -1901,119 +1908,148 @@ export function MerchantForm({
                 Tracks can be added after the merchant page is created.
               </div>
             ) : (
-              <div className="grid gap-4 xl:grid-cols-2">
-                {merchantTrackSlots.map((track) => {
-                  const Icon = track.icon;
-                  const asset = formData.campaignAudio?.[track.kind] || null;
-                  const isUploading = uploadingTrack === track.kind;
-                  const fileSize = formatFileSize(asset?.sizeBytes);
-                  const uploadedAt = formatUploadedAt(asset?.uploadedAt);
+              <div className="space-y-4">
+                <div className="flex items-center justify-between gap-4 rounded-lg border bg-muted/25 p-4">
+                  <div>
+                    <Label htmlFor="signatureTracksEnabled">
+                      Show tracks on public profile
+                    </Label>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      Off by default. Turn on to display uploaded radio and
+                      signature tracks on the public merchant page.
+                    </p>
+                  </div>
+                  <Switch
+                    id="signatureTracksEnabled"
+                    checked={Boolean(formData.campaignAudio?.showOnProfile)}
+                    onCheckedChange={(checked) =>
+                      updateField("campaignAudio", {
+                        ...(formData.campaignAudio || {}),
+                        showOnProfile: Boolean(checked),
+                      })
+                    }
+                  />
+                </div>
 
-                  return (
-                    <article
-                      key={track.kind}
-                      className="flex min-h-[320px] flex-col rounded-lg border bg-background p-4"
-                    >
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="flex min-w-0 items-start gap-3">
-                          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary">
-                            <Icon className="w-5 h-5" />
-                          </span>
-                          <div className="min-w-0">
-                            <h4 className="font-semibold">
-                              {asset?.title || track.label}
-                            </h4>
-                            <p className="mt-1 text-sm leading-6 text-muted-foreground">
-                              {asset?.description || track.fallbackDescription}
-                            </p>
-                          </div>
-                        </div>
-                        <Badge
-                          variant="outline"
-                          className={cn(
-                            "border",
-                            asset?.url
-                              ? "border-green-200 bg-green-50 text-green-700"
-                              : "border-muted-foreground/25 bg-muted text-muted-foreground",
-                          )}
-                        >
-                          {asset?.url ? "Ready" : "Pending"}
-                        </Badge>
-                      </div>
+                <div className="grid gap-4 xl:grid-cols-2">
+                  {merchantTrackSlots.map((track) => {
+                    const Icon = track.icon;
+                    const asset = formData.campaignAudio?.[track.kind] || null;
+                    const isUploading = uploadingTrack === track.kind;
+                    const fileSize = formatFileSize(asset?.sizeBytes);
+                    const uploadedAt = formatUploadedAt(asset?.uploadedAt);
 
-                      <div className="mt-4 flex-1 rounded-lg border bg-muted/25 p-3">
-                        {asset?.url ? (
-                          <div className="space-y-3">
-                            <audio
-                              className="w-full"
-                              controls
-                              preload="metadata"
-                              src={asset.url}
-                            >
-                              <track
-                                default
-                                kind="captions"
-                                label="Captions"
-                                src={emptyAudioCaptionsTrack}
-                              />
-                            </audio>
-                            <div className="grid gap-2 text-xs text-muted-foreground sm:grid-cols-2">
-                              {asset.fileName && (
-                                <div className="flex min-w-0 items-center gap-2">
-                                  <FileAudio className="w-4 h-4 shrink-0" />
-                                  <span className="truncate">
-                                    {asset.fileName}
-                                  </span>
-                                </div>
-                              )}
-                              {fileSize && (
-                                <div className="flex items-center gap-2">
-                                  <FileAudio className="w-4 h-4 shrink-0" />
-                                  <span>{fileSize}</span>
-                                </div>
-                              )}
-                              {uploadedAt && (
-                                <div className="sm:col-span-2">
-                                  Uploaded {uploadedAt}
-                                </div>
-                              )}
+                    return (
+                      <article
+                        key={track.kind}
+                        className="flex min-h-[320px] flex-col rounded-lg border bg-background p-4"
+                      >
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="flex min-w-0 items-start gap-3">
+                            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary">
+                              <Icon className="w-5 h-5" />
+                            </span>
+                            <div className="min-w-0">
+                              <h4 className="font-semibold">
+                                {asset?.title || track.label}
+                              </h4>
+                              <p className="mt-1 text-sm leading-6 text-muted-foreground">
+                                {asset?.description ||
+                                  track.fallbackDescription}
+                              </p>
                             </div>
                           </div>
-                        ) : (
-                          <div className="flex h-full min-h-[132px] flex-col items-center justify-center text-center text-sm text-muted-foreground">
-                            <FileAudio className="mb-2 w-8 h-8 opacity-50" />
-                            <p>No track uploaded yet</p>
-                          </div>
-                        )}
-                      </div>
-
-                      <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                        <TrackUploadButton
-                          inputId={`merchant-track-${track.kind}`}
-                          label={asset?.url ? "Replace Track" : "Upload Track"}
-                          isUploading={isUploading}
-                          disabled={uploadingTrack !== null}
-                          onFileSelect={(file) =>
-                            handleTrackUpload(track.kind, file)
-                          }
-                        />
-                        {asset?.url && (
-                          <Button
-                            type="button"
+                          <Badge
                             variant="outline"
-                            size="sm"
-                            asChild
+                            className={cn(
+                              "border",
+                              asset?.url
+                                ? "border-green-200 bg-green-50 text-green-700"
+                                : "border-muted-foreground/25 bg-muted text-muted-foreground",
+                            )}
                           >
-                            <a href={asset.url} download>
-                              <Download className="w-4 h-4" />
-                              Download
-                            </a>
-                          </Button>
-                        )}
-                      </div>
-                    </article>
-                  );
-                })}
+                            {asset?.url ? "Ready" : "Pending"}
+                          </Badge>
+                        </div>
+
+                        <div className="mt-4 flex-1 rounded-lg border bg-muted/25 p-3">
+                          {asset?.url ? (
+                            <div className="space-y-3">
+                              <audio
+                                className="w-full"
+                                controls
+                                preload="metadata"
+                                src={asset.url}
+                              >
+                                <track
+                                  default
+                                  kind="captions"
+                                  label="Captions"
+                                  src={emptyAudioCaptionsTrack}
+                                />
+                              </audio>
+                              <div className="grid gap-2 text-xs text-muted-foreground sm:grid-cols-2">
+                                {asset.fileName && (
+                                  <div className="flex min-w-0 items-center gap-2">
+                                    <FileAudio className="w-4 h-4 shrink-0" />
+                                    <span className="truncate">
+                                      {asset.fileName}
+                                    </span>
+                                  </div>
+                                )}
+                                {fileSize && (
+                                  <div className="flex items-center gap-2">
+                                    <FileAudio className="w-4 h-4 shrink-0" />
+                                    <span>{fileSize}</span>
+                                  </div>
+                                )}
+                                {uploadedAt && (
+                                  <div className="sm:col-span-2">
+                                    Uploaded {uploadedAt}
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="flex h-full min-h-[132px] flex-col items-center justify-center text-center text-sm text-muted-foreground">
+                              <FileAudio className="mb-2 w-8 h-8 opacity-50" />
+                              <p>No track uploaded yet</p>
+                            </div>
+                          )}
+                        </div>
+
+                        <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                          {canUploadTracks && (
+                            <TrackUploadButton
+                              inputId={`merchant-track-${track.kind}`}
+                              label={
+                                asset?.url ? "Replace Track" : "Upload Track"
+                              }
+                              isUploading={isUploading}
+                              disabled={uploadingTrack !== null}
+                              onFileSelect={(file) =>
+                                handleTrackUpload(track.kind, file)
+                              }
+                            />
+                          )}
+                          {asset?.url && (
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              asChild
+                            >
+                              <a href={asset.url} download>
+                                <Download className="w-4 h-4" />
+                                Download
+                              </a>
+                            </Button>
+                          )}
+                        </div>
+                      </article>
+                    );
+                  })}
+                </div>
               </div>
             )}
 

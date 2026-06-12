@@ -379,6 +379,7 @@ export interface MerchantCampaignAudioAsset {
 export interface MerchantCampaignAudio {
   radioSpot?: MerchantCampaignAudioAsset | null;
   soundtrack?: MerchantCampaignAudioAsset | null;
+  showOnProfile?: boolean;
   updatedAt?: string;
 }
 
