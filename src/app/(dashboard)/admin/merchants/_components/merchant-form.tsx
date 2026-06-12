@@ -1068,18 +1068,6 @@ export function MerchantForm({
                 </Button>
               ) : (
                 <>
-                  <Button
-                    size="sm"
-                    onClick={save}
-                    disabled={isSaving || !isDirty}
-                  >
-                    {isSaving ? (
-                      <Loader2 className="w-4 h-4 mr-1 animate-spin" />
-                    ) : (
-                      <Save className="w-4 h-4 mr-1" />
-                    )}
-                    Save
-                  </Button>
                   {urls.full && (
                     <Button
                       size="sm"
