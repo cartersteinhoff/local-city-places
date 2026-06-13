@@ -411,6 +411,7 @@ export async function POST(request: NextRequest) {
       vimeoUrl,
       googlePlaceId,
       logoUrl,
+      slug,
       hours,
       instagramUrl,
       facebookUrl,
@@ -419,6 +420,7 @@ export async function POST(request: NextRequest) {
       services,
       aboutStory,
       featuredOnHomepage,
+      isPublicPage,
     } = body;
 
     // Validate required fields
@@ -485,6 +487,35 @@ export async function POST(request: NextRequest) {
 
     const normalizedCity = city.trim();
     const normalizedState = state.trim().toUpperCase();
+    const nextIsPublicPage =
+      isPublicPage === undefined ? true : Boolean(isPublicPage);
+    const requestedSlug =
+      typeof slug === "string"
+        ? slug
+            .trim()
+            .toLowerCase()
+            .replace(/[^a-z0-9-]/g, "-")
+            .replace(/-+/g, "-")
+            .replace(/^-|-$/g, "")
+        : "";
+
+    if (requestedSlug) {
+      const [existingSlug] = await db
+        .select({ id: merchants.id })
+        .from(merchants)
+        .where(eq(merchants.slug, requestedSlug))
+        .limit(1);
+
+      if (existingSlug) {
+        return NextResponse.json(
+          {
+            error:
+              "This URL slug is already taken. Please choose a different one.",
+          },
+          { status: 400 },
+        );
+      }
+    }
 
     // Create the merchant
     const [newMerchant] = await db
@@ -510,37 +541,45 @@ export async function POST(request: NextRequest) {
         services: Array.isArray(services) ? services : null,
         aboutStory: aboutStory?.trim() || null,
         featuredOnHomepage: Boolean(featuredOnHomepage),
-        isPublicPage: true,
+        isPublicPage: nextIsPublicPage,
         verified: false,
       })
       .returning();
 
     // Generate and update slug (needs ID)
-    const slug = generateMerchantSlug(newMerchant.businessName, newMerchant.id);
+    const finalSlug =
+      requestedSlug ||
+      generateMerchantSlug(newMerchant.businessName, newMerchant.id);
     await db
       .update(merchants)
-      .set({ slug })
+      .set({ slug: finalSlug })
       .where(eq(merchants.id, newMerchant.id));
 
-    const fullUrl = getMerchantPageUrl(normalizedCity, normalizedState, slug);
+    const fullUrl = getMerchantPageUrl(
+      normalizedCity,
+      normalizedState,
+      finalSlug,
+    );
     const shortUrl = getMerchantShortUrl(strippedPhone);
 
-    revalidateMerchantPublicPaths({
-      city: normalizedCity,
-      state: normalizedState,
-      slug,
-    });
+    if (nextIsPublicPage) {
+      revalidateMerchantPublicPaths({
+        city: normalizedCity,
+        state: normalizedState,
+        slug: finalSlug,
+      });
+    }
 
     return NextResponse.json({
       success: true,
       merchant: {
         id: newMerchant.id,
         businessName: newMerchant.businessName,
-        slug,
+        slug: finalSlug,
       },
       urls: {
-        full: fullUrl,
-        short: shortUrl,
+        full: nextIsPublicPage ? fullUrl : null,
+        short: nextIsPublicPage ? shortUrl : null,
       },
     });
   } catch (error) {

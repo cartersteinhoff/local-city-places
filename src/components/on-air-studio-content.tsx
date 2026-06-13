@@ -14,10 +14,11 @@ import {
   Music2,
   Pause,
   Play,
+  Radio,
   RadioTower,
   UploadCloud,
-  Volume2,
 } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import { type ChangeEvent, useEffect, useRef, useState } from "react";
 import { useRadioPlayback } from "@/components/radio-playback-provider";
@@ -443,11 +444,8 @@ function StationSignalCard() {
 function LiveRadioStudioPlayer() {
   const { isPlaying, nowPlaying, playerStatus, streamError, togglePlayback } =
     useRadioPlayback();
-  const isLoading = playerStatus === "loading";
-  const shouldPause = isPlaying || isLoading;
-  const playbackLabel = shouldPause
-    ? "Pause KLCP 96.5 FM"
-    : "Play KLCP 96.5 FM";
+  const [failedArtworkUrl, setFailedArtworkUrl] = useState<string | null>(null);
+  const playbackLabel = isPlaying ? "Pause KLCP Radio" : "Play KLCP Radio";
   const statusText = {
     idle: "Ready",
     loading: "Connecting",
@@ -455,93 +453,140 @@ function LiveRadioStudioPlayer() {
     paused: "Paused",
     error: "Stream unavailable",
   }[playerStatus];
+  const hasTrackArtwork = Boolean(
+    nowPlaying.artworkUrl && failedArtworkUrl !== nowPlaying.artworkUrl,
+  );
 
   return (
-    <section className="rounded-lg border bg-card p-4 sm:p-5">
-      <div className="flex flex-col gap-4 md:flex-row md:items-center">
-        <div className="flex min-w-0 items-center gap-3 md:w-[240px]">
-          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary">
-            {isPlaying ? (
-              <span aria-hidden="true" className="flex h-4 items-end gap-[3px]">
-                {[0, 1, 2].map((bar) => (
-                  <span
-                    key={bar}
-                    className="h-full w-[3px] animate-audio-eq rounded-full bg-current"
-                    style={{ animationDelay: `${bar * 0.16}s` }}
-                  />
-                ))}
-              </span>
-            ) : (
-              <RadioTower className="h-5 w-5" />
-            )}
-          </span>
-          <div className="min-w-0">
-            <div className="flex items-center gap-2 text-xs font-medium uppercase text-muted-foreground">
-              <span
-                className={cn(
-                  "h-2 w-2 shrink-0 rounded-full",
-                  playerStatus === "playing" &&
-                    "bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.75)]",
-                  playerStatus === "loading" && "animate-pulse bg-primary",
-                  (playerStatus === "idle" || playerStatus === "paused") &&
-                    "bg-muted-foreground/45",
-                  playerStatus === "error" && "bg-destructive",
-                )}
-                aria-hidden="true"
-              />
-              <span>KLCP 96.5 FM</span>
-            </div>
-            <h2 className="mt-1 truncate text-base font-semibold">
-              Live radio player
-            </h2>
-          </div>
-        </div>
-
-        <div
-          className="min-w-0 flex-1 rounded-md bg-muted/45 px-3 py-2"
-          aria-live="polite"
-          aria-atomic="true"
-        >
-          <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
-            Now playing
-          </p>
-          <div className="mt-1 flex min-w-0 flex-col gap-1 sm:flex-row sm:items-baseline sm:gap-2">
-            <p className="truncate text-sm font-semibold text-foreground">
-              {nowPlaying.title}
+    <section className="overflow-hidden rounded-lg border border-sky-200/15 bg-[#031624] p-4 text-white shadow-xl shadow-black/15 sm:p-5">
+      <div className="mb-4 flex items-center justify-between gap-3">
+        <div className="min-w-0">
+          <div className="flex items-center gap-2">
+            <Radio className="h-4 w-4 text-orange-500" />
+            <p className="text-xl font-black uppercase italic leading-none">
+              KLCP <span className="text-orange-500">Radio</span>
             </p>
-            <p className="truncate text-xs text-muted-foreground">
+          </div>
+          <p className="mt-1 text-xs font-medium text-white/72">
+            The Soundtrack of the Phoenix Metro
+          </p>
+        </div>
+        <div className="flex shrink-0 flex-col items-end gap-1.5">
+          <span className="rounded-[4px] border border-red-300/70 bg-red-600 px-2.5 py-1 text-xs font-black uppercase tracking-wide text-white shadow-[0_0_14px_rgba(239,68,68,0.5)]">
+            On Air
+          </span>
+          <span className="rounded-full border border-sky-300/20 bg-sky-300/10 px-2.5 py-1 text-xs font-black uppercase text-sky-100">
+            96.5 FM
+          </span>
+        </div>
+      </div>
+
+      <div className="rounded-[8px] bg-[#031b2d] p-3 ring-1 ring-sky-200/15">
+        <div className="grid min-w-0 gap-4 sm:grid-cols-[120px_minmax(0,1fr)] xl:grid-cols-1">
+          <div className="relative mx-auto aspect-square w-full max-w-[180px] overflow-hidden rounded-[8px] bg-[#07131d] ring-1 ring-white/15 sm:max-w-[120px] xl:max-w-[210px]">
+            {hasTrackArtwork ? (
+              <Image
+                src={nowPlaying.artworkUrl ?? ""}
+                alt={`Artwork for ${nowPlaying.title}`}
+                fill
+                className="object-cover"
+                sizes="(min-width: 1280px) 210px, 180px"
+                onError={() => setFailedArtworkUrl(nowPlaying.artworkUrl)}
+              />
+            ) : (
+              <span className="flex h-full w-full flex-col items-center justify-center bg-[linear-gradient(135deg,#0b4f80_0%,#01233f_58%,#07131d_100%)] p-5 text-center text-white">
+                <Radio className="mb-3 h-10 w-10 text-orange-400" />
+                <span className="text-lg font-black uppercase leading-tight">
+                  KLCP Radio
+                </span>
+                <span className="mt-1 text-sm font-bold text-white/75">
+                  96.5 FM
+                </span>
+              </span>
+            )}
+          </div>
+
+          <div
+            className="min-w-0 text-center sm:text-left xl:text-center"
+            aria-live="polite"
+          >
+            <p className="mb-1.5 text-xs font-black uppercase tracking-wide text-orange-400">
+              Now Playing
+            </p>
+            <h2 className="line-clamp-2 text-base font-black leading-tight text-white [overflow-wrap:anywhere] sm:text-lg xl:text-xl">
+              {nowPlaying.title}
+            </h2>
+            <p className="mt-2 line-clamp-2 text-sm font-medium text-white/78 sm:text-base">
               {nowPlaying.subtitle}
             </p>
           </div>
         </div>
 
-        <div className="flex shrink-0 items-center justify-between gap-3 md:justify-end">
-          <div className="flex min-h-[20px] items-center gap-2 text-xs text-muted-foreground">
-            <Volume2 className="h-4 w-4 shrink-0" />
-            <span>{statusText}</span>
-          </div>
+        <div className="my-4 h-px bg-white/15" />
 
-          <Button
+        <div className="grid gap-3 sm:grid-cols-[auto_minmax(0,1fr)] sm:items-center xl:grid-cols-1">
+          <button
             type="button"
-            size="icon"
             onClick={togglePlayback}
-            disabled={isLoading}
+            disabled={playerStatus === "loading"}
+            className="mx-auto flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-sky-400 text-slate-950 shadow-lg shadow-black/25 transition hover:scale-[1.03] hover:bg-sky-300 disabled:cursor-wait disabled:opacity-75 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white sm:h-16 sm:w-16"
             aria-label={playbackLabel}
             aria-pressed={isPlaying}
-            className="h-11 w-11 shrink-0 rounded-full"
           >
-            {shouldPause ? (
-              <Pause className="h-4 w-4" fill="currentColor" />
+            {isPlaying ? (
+              <Pause className="h-6 w-6 sm:h-7 sm:w-7" fill="currentColor" />
             ) : (
-              <Play className="ml-0.5 h-4 w-4" fill="currentColor" />
+              <Play
+                className="ml-1 h-6 w-6 sm:h-7 sm:w-7"
+                fill="currentColor"
+              />
             )}
-          </Button>
-        </div>
-      </div>
+          </button>
 
-      {streamError && (
-        <p className="mt-3 text-xs text-destructive">{streamError}</p>
-      )}
+          <div className="min-w-0">
+            <div className="flex min-h-5 items-center justify-center gap-2">
+              <span
+                className={cn(
+                  "h-3 w-3 rounded-full",
+                  playerStatus === "playing" &&
+                    "bg-red-500 shadow-[0_0_10px_rgba(239,68,68,0.85)]",
+                  playerStatus === "loading" && "animate-pulse bg-sky-300",
+                  (playerStatus === "idle" || playerStatus === "paused") &&
+                    "bg-white/45",
+                  playerStatus === "error" && "bg-orange-500",
+                )}
+              />
+              <span className="text-base font-black text-white">
+                {statusText}
+              </span>
+            </div>
+
+            <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-white/25">
+              <span
+                className={cn(
+                  "block h-full rounded-full bg-sky-400 transition-all duration-300",
+                  playerStatus === "playing" && "w-full",
+                  playerStatus === "loading" && "w-full animate-pulse",
+                  playerStatus !== "playing" &&
+                    playerStatus !== "loading" &&
+                    "w-0",
+                )}
+              />
+            </div>
+          </div>
+        </div>
+
+        {streamError && (
+          <p className="mt-3 truncate whitespace-nowrap text-xs text-orange-200">
+            {streamError}
+          </p>
+        )}
+
+        <p className="mt-5 text-center text-sm font-bold text-white/75">
+          Powered by <span className="font-black text-orange-500">KLCP</span>{" "}
+          96.5 FM
+        </p>
+      </div>
     </section>
   );
 }
@@ -753,25 +798,6 @@ function MerchantServicesOverview({
               Follow the spot, soundtrack, and airplay schedule from production
               through approval.
             </p>
-
-            <div className="mt-6 grid max-w-md grid-cols-2 gap-x-6 gap-y-4 border-t pt-5">
-              <div>
-                <p className="text-2xl font-black leading-none">
-                  {audioServices.length}
-                </p>
-                <p className="mt-2 text-[11px] font-black uppercase tracking-[0.14em] text-muted-foreground">
-                  Audio assets
-                </p>
-              </div>
-              <div>
-                <p className="text-2xl font-black leading-none">
-                  {airplayServices.length}
-                </p>
-                <p className="mt-2 text-[11px] font-black uppercase tracking-[0.14em] text-muted-foreground">
-                  Airplay schedule
-                </p>
-              </div>
-            </div>
           </div>
 
           <StationSignalCard />
@@ -827,8 +853,14 @@ function MerchantServicesOverview({
             </div>
           </div>
 
-          <div className="border-t lg:border-t-0">
-            <div className="p-5 pb-0 sm:p-6 sm:pb-0">
+          <div className="border-t p-5 sm:p-6 lg:border-t-0">
+            <LiveRadioStudioPlayer />
+          </div>
+        </div>
+
+        <div className="border-t p-5 sm:p-6">
+          <div className="mb-5 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+            <div>
               <p className="text-xs font-black uppercase tracking-[0.2em] text-primary">
                 Path to airplay
               </p>
@@ -837,16 +869,18 @@ function MerchantServicesOverview({
                 KLCP placement unlocks after the final spot is approved.
               </p>
             </div>
+          </div>
 
-            <ol className="m-5 space-y-7 sm:m-6">
-              {airplayServices.map((service) => {
-                const Icon = service.icon;
+          <ol className="grid gap-4 lg:grid-cols-3">
+            {airplayServices.map((service) => {
+              const Icon = service.icon;
 
-                return (
-                  <li
-                    key={service.key}
-                    className="relative flex items-start gap-4 before:absolute before:-bottom-6 before:left-[17px] before:top-10 before:w-px before:bg-border"
-                  >
+              return (
+                <li
+                  key={service.key}
+                  className="rounded-lg border bg-background/40 p-4"
+                >
+                  <div className="flex items-start gap-3">
                     <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-primary/40 bg-primary/10 text-primary">
                       <Icon className="h-4 w-4" />
                     </span>
@@ -867,26 +901,30 @@ function MerchantServicesOverview({
                         {service.description}
                       </p>
                     </div>
-                  </li>
-                );
-              })}
-              <li className="relative flex items-start gap-4 before:absolute before:-bottom-6 before:left-[17px] before:top-10 before:w-px before:bg-border">
+                  </div>
+                </li>
+              );
+            })}
+            <li className="rounded-lg border bg-background/40 p-4">
+              <div className="flex items-start gap-3">
                 <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border bg-card text-muted-foreground">
                   <CheckCircle2 className="h-4 w-4" />
                 </span>
-                <div className="min-w-0 flex-1 pt-1">
+                <div className="min-w-0 flex-1">
                   <h3 className="text-sm font-semibold">Approval gate</h3>
                   <p className="mt-1 text-sm leading-5 text-muted-foreground">
                     The final radio spot is reviewed before airplay dates are
                     confirmed.
                   </p>
                 </div>
-              </li>
-              <li className="relative flex items-start gap-4">
+              </div>
+            </li>
+            <li className="rounded-lg border bg-background/40 p-4">
+              <div className="flex items-start gap-3">
                 <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border bg-card text-muted-foreground">
                   <RadioTower className="h-4 w-4" />
                 </span>
-                <div className="min-w-0 flex-1 pt-1">
+                <div className="min-w-0 flex-1">
                   <h3 className="text-sm font-semibold">
                     Broadcast confirmation
                   </h3>
@@ -894,13 +932,11 @@ function MerchantServicesOverview({
                     Airplay details will appear here when the schedule is ready.
                   </p>
                 </div>
-              </li>
-            </ol>
-          </div>
+              </div>
+            </li>
+          </ol>
         </div>
       </section>
-
-      <LiveRadioStudioPlayer />
     </div>
   );
 }

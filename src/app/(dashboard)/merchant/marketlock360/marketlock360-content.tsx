@@ -256,7 +256,7 @@ export function MarketLock360Content({
               <div className="absolute inset-x-0 bottom-0 h-28 bg-[linear-gradient(180deg,rgba(4,19,31,0)_0%,#061b2d_100%)]" />
             </div>
 
-            <div className="relative mx-auto grid max-w-[1500px] gap-8 px-6 py-10 sm:px-8 lg:min-h-[560px] lg:grid-cols-[minmax(0,1fr)_minmax(320px,440px)] lg:items-center lg:px-9 lg:py-12 xl:grid-cols-[minmax(0,1fr)_minmax(460px,600px)]">
+            <div className="relative mx-auto grid max-w-[1500px] gap-8 px-6 py-10 sm:px-8 lg:min-h-[560px] lg:grid-cols-[minmax(0,1fr)_320px] lg:items-center lg:px-9 lg:py-12">
               <div className="animate-rise-in max-w-4xl">
                 <div className="mb-4 flex flex-wrap items-center gap-3 text-xs font-black uppercase tracking-[0.22em] text-white/78">
                   <span className="rounded-full border border-orange-300/35 bg-orange-500/18 px-3 py-1.5 text-orange-100">
@@ -306,7 +306,7 @@ export function MarketLock360Content({
               </div>
 
               <div
-                className="animate-rise-in relative mx-auto hidden w-full max-w-[480px] lg:ml-auto lg:block xl:max-w-[650px]"
+                className="animate-rise-in relative mx-auto hidden w-full max-w-[320px] lg:ml-auto lg:block"
                 style={{ animationDelay: "120ms" }}
               >
                 <div className="absolute -inset-4 rounded-full bg-sky-400/12 blur-3xl" />
@@ -317,7 +317,7 @@ export function MarketLock360Content({
                   height={702}
                   priority
                   className="relative h-auto w-full rounded-[8px] drop-shadow-[0_28px_65px_rgba(0,0,0,0.42)]"
-                  sizes="(min-width: 1280px) 600px, (min-width: 1024px) 440px, 80vw"
+                  sizes="(min-width: 1024px) 320px, 80vw"
                 />
               </div>
             </div>

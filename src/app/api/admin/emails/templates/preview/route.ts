@@ -269,15 +269,32 @@ function generateMerchantWelcomePreview(params: {
   businessName: string;
   loginUrl: string;
 }) {
+  const siteUrl = getSiteUrlFromLoginUrl(params.loginUrl);
+
   return emailShell(
     "Welcome to Local City Places",
     `<h2 style="margin:0 0 16px;color:#1e293b;">Welcome to Local City Places!</h2>
-    <p style="color:#334155;line-height:1.6;">Your merchant account for <strong>${params.businessName}</strong> has been created and is ready to go.</p>
-    <ol style="color:#334155;line-height:1.8;">
-      <li>Access your dashboard</li>
-      <li>Complete your business profile</li>
-      <li>Review your public business page</li>
-    </ol>
-    ${cta(params.loginUrl, "Access Your Dashboard")}`,
+    <p style="color:#334155;line-height:1.6;">Your Merchant Dashboard for <strong>${params.businessName}</strong> has been created and is ready to go.</p>
+    <p style="color:#334155;line-height:1.6;">Go to <a href="${siteUrl}" style="color:#f97316;font-weight:700;">${siteUrl}</a> and click the LOGIN button in the top right of the home page. Your email address is already authorized to receive a MAGIC Link by Email and there is no password necessary.</p>
+    <p style="color:#334155;line-height:1.6;"><strong>Once in your Merchant Dashboard be sure to check out:</strong></p>
+    <ul style="color:#334155;line-height:1.8;">
+      <li>Your On-Air Studio where you will find both your first radio spot and your Signature Soundtrack</li>
+      <li>Your Merchant Page (where you can edit the details 24/7)</li>
+      <li>Your RESERVED Category for your city (NO COMPETITORS ALLOWED)</li>
+    </ul>
+    <p style="color:#334155;line-height:1.6;">Once you're settled in, take a look at MarketLOCK360 which enables you to LOCK IN benefits you will not find anywhere else in the advertising world and INCREASE your revenues exponentially while DECREASING your costs to the floor.</p>
+    <p style="color:#334155;line-height:1.6;">I will be in touch soon to help you get settled and acclimated.</p>
+    <p style="color:#334155;line-height:1.6;">Oh and don't forget to start listening to KLCP Radio because your radio spot and your Signature Soundtrack have already started playing on there.</p>
+    <p style="color:#334155;line-height:1.6;">We look forward to serving your NEEDS NOW and in the FUTURE.</p>
+    <p style="color:#334155;line-height:1.6;">Now go make it a GREAT Day! 🚀</p>
+    <p style="color:#334155;line-height:1.6;">Troy &quot;<strong style="color:#ff7a3c;">LOVES to Increase Business</strong>&quot; Warren</p>`,
   );
+}
+
+function getSiteUrlFromLoginUrl(loginUrl: string) {
+  try {
+    return new URL(loginUrl).origin;
+  } catch {
+    return "https://localcityplaces.com";
+  }
 }

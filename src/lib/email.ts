@@ -822,58 +822,75 @@ interface MerchantWelcomeEmailOptions {
   loginUrl: string;
 }
 
+function getSiteUrlFromLoginUrl(loginUrl: string) {
+  try {
+    return new URL(loginUrl).origin;
+  } catch {
+    return "https://localcityplaces.com";
+  }
+}
+
 export async function sendMerchantWelcomeEmail({
   email,
   businessName,
   loginUrl,
 }: MerchantWelcomeEmailOptions): Promise<boolean> {
   const subject = `Welcome to Local City Places, ${businessName}!`;
+  const siteUrl = getSiteUrlFromLoginUrl(loginUrl);
   const html = `
     <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
       <div style="text-align: center; margin-bottom: 24px;">
         <img src="${EMAIL_ASSETS_URL}/images/email-logo.png" alt="Local City Places" width="300" height="134" style="width: 300px; max-width: 100%; height: auto;" />
       </div>
       <h1 style="color: #ff7a3c;">Welcome to Local City Places!</h1>
-      <p>Hi there,</p>
-      <p>Your merchant account for <strong>${businessName}</strong> has been created and is ready to go!</p>
+      <p>Your Merchant Dashboard for <strong>${businessName}</strong> has been created and is ready to go.</p>
 
-      <p><strong>Getting Started:</strong></p>
-      <ol style="color: #444; line-height: 1.8;">
-        <li>Click the button below to access your dashboard</li>
-        <li>Complete your business profile</li>
-        <li>Review your public business page</li>
-      </ol>
+      <p>Go to <a href="${siteUrl}" style="color:#ff7a3c;font-weight:bold;">${siteUrl}</a> and click the LOGIN button in the top right of the home page. Your email address is already authorized to receive a MAGIC Link by Email and there is no password necessary.</p>
 
-      <div style="text-align: center; margin: 32px 0;">
-        <a href="${loginUrl}" style="display: inline-block; background: linear-gradient(135deg, #ff7a3c, #ff9f1c); color: white; padding: 16px 32px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 16px;">
-          Access Your Dashboard
-        </a>
-      </div>
+      <p><strong>Once in your Merchant Dashboard be sure to check out:</strong></p>
+      <ul style="color: #444; line-height: 1.8;">
+        <li>Your On-Air Studio where you will find both your first radio spot and your Signature Soundtrack</li>
+        <li>Your Merchant Page (where you can edit the details 24/7)</li>
+        <li>Your RESERVED Category for your city (NO COMPETITORS ALLOWED)</li>
+      </ul>
 
-      <p style="color: #666; font-size: 14px;">
-        Or copy and paste this link: <a href="${loginUrl}" style="color: #ff7a3c;">${loginUrl}</a>
-      </p>
+      <p>Once you're settled in, take a look at MarketLOCK360 which enables you to LOCK IN benefits you will not find anywhere else in the advertising world and INCREASE your revenues exponentially while DECREASING your costs to the floor.</p>
 
-      <hr style="border: none; border-top: 1px solid #eee; margin: 24px 0;" />
+      <p>I will be in touch soon to help you get settled and acclimated.</p>
 
-      <p style="color: #666; font-size: 14px;">
-        Need help getting started? Reply to this email and our team will be happy to assist.
-      </p>
+      <p>Oh and don't forget to start listening to KLCP Radio because your radio spot and your Signature Soundtrack have already started playing on there.</p>
+
+      <p>We look forward to serving your NEEDS NOW and in the FUTURE.</p>
+
+      <p>Now go make it a GREAT Day! 🚀</p>
+
+      <p>Troy &quot;<strong style="color:#ff7a3c;">LOVES to Increase Business</strong>&quot; Warren</p>
     </div>
   `;
 
   const text = `Welcome to Local City Places!
 
-Your merchant account for ${businessName} has been created and is ready to go!
+Your Merchant Dashboard for ${businessName} has been created and is ready to go.
 
-Getting Started:
-1. Click the link below to access your dashboard
-2. Complete your business profile
-3. Review your public business page
+Go to ${siteUrl} and click the LOGIN button in the top right of the home page. Your email address is already authorized to receive a MAGIC Link by Email and there is no password necessary.
 
-Access your dashboard: ${loginUrl}
+Once in your Merchant Dashboard be sure to check out:
 
-Need help getting started? Reply to this email and our team will be happy to assist.`;
+Your On-Air Studio where you will find both your first radio spot and your Signature Soundtrack
+Your Merchant Page (where you can edit the details 24/7)
+Your RESERVED Category for your city (NO COMPETITORS ALLOWED)
+
+Once you're settled in, take a look at MarketLOCK360 which enables you to LOCK IN benefits you will not find anywhere else in the advertising world and INCREASE your revenues exponentially while DECREASING your costs to the floor.
+
+I will be in touch soon to help you get settled and acclimated.
+
+Oh and don't forget to start listening to KLCP Radio because your radio spot and your Signature Soundtrack have already started playing on there.
+
+We look forward to serving your NEEDS NOW and in the FUTURE.
+
+Now go make it a GREAT Day! 🚀
+
+Troy "LOVES to Increase Business" Warren`;
 
   return sendEmail({ to: email, subject, html, text });
 }
