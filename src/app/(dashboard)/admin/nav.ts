@@ -46,7 +46,7 @@ export const adminNavItems = [
     section: "Merchants",
   },
   {
-    label: "Trial Queue",
+    label: "Trial Requests",
     href: "/admin/marketlock-trials",
     icon: LockKeyhole,
     section: "Merchants",

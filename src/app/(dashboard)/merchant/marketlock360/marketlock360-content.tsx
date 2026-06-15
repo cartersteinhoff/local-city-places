@@ -29,6 +29,7 @@ import {
   MarketLock360TrialRequestProvider,
   StartTrialButton,
   TrialRequestedBanner,
+  TrialUpgradePanel,
 } from "./marketlock360-trial-request";
 
 const includedFeatures = [
@@ -232,13 +233,18 @@ function OptionalUpgradesSection() {
 
 interface MarketLock360ContentProps {
   initialStatus?: MarketLockStatus;
+  monthlyPaymentLabel?: string;
 }
 
 export function MarketLock360Content({
   initialStatus = "basic",
+  monthlyPaymentLabel,
 }: MarketLock360ContentProps) {
   return (
-    <MarketLock360TrialRequestProvider initialStatus={initialStatus}>
+    <MarketLock360TrialRequestProvider
+      initialStatus={initialStatus}
+      monthlyPaymentLabel={monthlyPaymentLabel}
+    >
       <div className="min-h-full overflow-x-clip bg-[#061b2d] text-white">
         <TrialRequestedBanner />
         <main>
@@ -417,6 +423,7 @@ export function MarketLock360Content({
                     exclusive leader in your category, increase visibility, and
                     drive more customers to your business.
                   </p>
+                  <TrialUpgradePanel />
                   <div className="mt-6 grid gap-3 sm:grid-cols-2">
                     {trialHighlights.map((item) => (
                       <div

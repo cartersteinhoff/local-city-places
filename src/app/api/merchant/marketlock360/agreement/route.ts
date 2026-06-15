@@ -1,13 +1,17 @@
-import { createHash } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
+import { and, desc, eq, gt, lte } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { db, merchantServiceAgreementAcceptances } from "@/db";
 import { getSession } from "@/lib/auth";
 import {
+  generateMerchantAgreementPdf,
+  getMerchantAgreementPdfHref,
+} from "@/lib/legal/merchant-agreement-pdf";
+import { getMerchantAgreementServicePeriod } from "@/lib/legal/merchant-service-period";
+import {
   getMerchantServicesAgreementText,
   merchantServicesAgreement,
 } from "@/lib/legal/merchant-services-agreement";
-
-const fallbackCheckoutUrl = "/merchant?agreement=accepted";
 
 function getClientIp(request: Request) {
   const forwardedFor = request.headers.get("x-forwarded-for");
@@ -17,8 +21,11 @@ function getClientIp(request: Request) {
   return ipAddress ? ipAddress.slice(0, 45) : null;
 }
 
-function getCheckoutUrl() {
-  return process.env.MARKETLOCK360_STRIPE_CHECKOUT_URL || fallbackCheckoutUrl;
+function getCheckoutUrl(agreementAcceptanceId: string) {
+  return (
+    process.env.MARKETLOCK360_STRIPE_CHECKOUT_URL ||
+    `/merchant/marketlock360/checkout?agreementAcceptanceId=${encodeURIComponent(agreementAcceptanceId)}`
+  );
 }
 
 export async function POST(request: Request) {
@@ -36,6 +43,16 @@ export async function POST(request: Request) {
       return NextResponse.json(
         { error: "Merchant not found" },
         { status: 404 },
+      );
+    }
+
+    if (
+      session.merchant.marketLockStatus !== "trial" &&
+      session.merchant.marketLockStatus !== "pro"
+    ) {
+      return NextResponse.json(
+        { error: "Trial request must be accepted before signing." },
+        { status: 403 },
       );
     }
 
@@ -68,33 +85,95 @@ export async function POST(request: Request) {
       );
     }
 
-    const agreementTextSnapshot = getMerchantServicesAgreementText();
+    const now = new Date();
+    const servicePeriod = getMerchantAgreementServicePeriod(now);
+    const [existingAcceptance] = await db
+      .select({
+        id: merchantServiceAgreementAcceptances.id,
+      })
+      .from(merchantServiceAgreementAcceptances)
+      .where(
+        and(
+          eq(
+            merchantServiceAgreementAcceptances.merchantId,
+            session.merchant.id,
+          ),
+          eq(
+            merchantServiceAgreementAcceptances.agreementVersion,
+            merchantServicesAgreement.version,
+          ),
+          lte(merchantServiceAgreementAcceptances.servicePeriodStart, now),
+          gt(merchantServiceAgreementAcceptances.servicePeriodEnd, now),
+        ),
+      )
+      .orderBy(desc(merchantServiceAgreementAcceptances.acceptedAt))
+      .limit(1);
+
+    if (existingAcceptance) {
+      return NextResponse.json({
+        success: true,
+        alreadyAccepted: true,
+        agreementAcceptanceId: existingAcceptance.id,
+        agreementPdfUrl: getMerchantAgreementPdfHref(existingAcceptance.id),
+        redirectUrl: getCheckoutUrl(existingAcceptance.id),
+      });
+    }
+
+    const ipAddress = getClientIp(request);
+    const userAgent = request.headers.get("user-agent");
+    const legalAgreementText = getMerchantServicesAgreementText();
+    const agreementTextSnapshot = [
+      legalAgreementText,
+      "EXECUTION RECORD",
+      `Merchant: ${session.merchant.businessName}`,
+      `Service period: ${servicePeriod.label}`,
+      `Accepted by electronic signature: ${typedName}`,
+      `Accepted at: ${now.toISOString()}`,
+    ].join("\n\n");
     const agreementContentHash = createHash("sha256")
       .update(agreementTextSnapshot)
       .digest("hex");
-    const now = new Date();
+    const acceptanceId = randomUUID();
+    generateMerchantAgreementPdf({
+      acceptanceId,
+      merchantName: session.merchant.businessName,
+      typedName,
+      agreementVersion: merchantServicesAgreement.version,
+      agreementTitle: merchantServicesAgreement.title,
+      agreementText: legalAgreementText,
+      servicePeriodLabel: servicePeriod.label,
+      acceptedAt: now,
+      agreementContentHash,
+      ipAddress,
+      userAgent,
+    });
 
-    const [acceptance] = await db
-      .insert(merchantServiceAgreementAcceptances)
-      .values({
-        merchantId: session.merchant.id,
-        userId: session.user.id,
-        agreementVersion: merchantServicesAgreement.version,
-        agreementTitle: merchantServicesAgreement.title,
-        agreementContentHash,
-        agreementTextSnapshot,
-        typedName,
-        ipAddress: getClientIp(request),
-        userAgent: request.headers.get("user-agent"),
-        acceptedAt: now,
-        createdAt: now,
-      })
-      .returning({ id: merchantServiceAgreementAcceptances.id });
+    await db.insert(merchantServiceAgreementAcceptances).values({
+      id: acceptanceId,
+      merchantId: session.merchant.id,
+      userId: session.user.id,
+      agreementVersion: merchantServicesAgreement.version,
+      agreementTitle: merchantServicesAgreement.title,
+      agreementContentHash,
+      agreementTextSnapshot,
+      typedName,
+      servicePeriodStart: servicePeriod.startsAt,
+      servicePeriodEnd: servicePeriod.endsAt,
+      servicePeriodLabel: servicePeriod.label,
+      agreementPdfUrl: null,
+      agreementPdfPath: null,
+      agreementPdfGeneratedAt: now,
+      ipAddress,
+      userAgent,
+      acceptedAt: now,
+      createdAt: now,
+    });
 
     return NextResponse.json({
       success: true,
-      agreementAcceptanceId: acceptance.id,
-      redirectUrl: getCheckoutUrl(),
+      agreementAcceptanceId: acceptanceId,
+      agreementPdfUrl: getMerchantAgreementPdfHref(acceptanceId),
+      redirectUrl: getCheckoutUrl(acceptanceId),
     });
   } catch (error) {
     console.error("MarketLock360 agreement acceptance error:", error);

@@ -16,7 +16,7 @@ export interface AgreementSection {
 
 export const merchantServicesAgreement = {
   title: "MARKETLOCK360™ Merchant Services Agreement",
-  subtitle: "Monthly Subscription Services Agreement",
+  subtitle: "Monthly Service Period Agreement",
   version: "1.0",
   company:
     'LOCAL City Places LLC ("LOCAL City Places," "Company," "we," "our," or "us")',
@@ -29,7 +29,7 @@ export const merchantServicesAgreement = {
       blocks: [
         {
           kind: "paragraph",
-          text: 'This Merchant Services Agreement ("Agreement") governs the monthly subscription relationship between LOCAL City Places LLC and Merchant for participation in the MARKETLOCK360™ program and any associated services, media, marketing, advertising, promotional, technology, and business support services provided by LOCAL City Places.',
+          text: 'This Merchant Services Agreement ("Agreement") governs the current monthly service period between LOCAL City Places LLC and Merchant for participation in the MARKETLOCK360™ program and any associated services, media, marketing, advertising, promotional, technology, and business support services provided by LOCAL City Places.',
         },
         {
           kind: "paragraph",
@@ -47,7 +47,7 @@ export const merchantServicesAgreement = {
         },
         {
           kind: "paragraph",
-          text: "This Agreement is renewed on a month-to-month basis only upon Merchant's payment and electronic acceptance of a new Agreement for the next service period.",
+          text: "A new monthly service period begins only upon Merchant's payment and electronic acceptance of a new Agreement for that next service period.",
         },
         {
           kind: "paragraph",
@@ -87,7 +87,7 @@ export const merchantServicesAgreement = {
       blocks: [
         {
           kind: "paragraph",
-          text: "Merchant agrees to pay the monthly subscription fee associated with the selected MARKETLOCK360™ plan.",
+          text: "Merchant agrees to pay the one-time monthly service period fee associated with the selected MARKETLOCK360™ plan.",
         },
         {
           kind: "paragraph",
@@ -124,7 +124,7 @@ export const merchantServicesAgreement = {
         },
         {
           kind: "paragraph",
-          text: "Merchant understands that LOCAL City Places allocates resources, personnel, technology, media inventory, advertising opportunities, category availability, and business support resources upon activation and renewal.",
+          text: "Merchant understands that LOCAL City Places allocates resources, personnel, technology, media inventory, advertising opportunities, category availability, and business support resources upon activation of each monthly service period.",
         },
         {
           kind: "paragraph",
@@ -138,7 +138,7 @@ export const merchantServicesAgreement = {
       blocks: [
         {
           kind: "paragraph",
-          text: "Where category exclusivity is included as part of Merchant's MARKETLOCK360™ benefits, such exclusivity shall remain active only while Merchant remains in good standing and maintains an active paid subscription.",
+          text: "Where category exclusivity is included as part of Merchant's MARKETLOCK360™ benefits, such exclusivity shall remain active only while Merchant remains in good standing and maintains an active paid service period.",
         },
         {
           kind: "paragraph",

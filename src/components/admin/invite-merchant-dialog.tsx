@@ -26,7 +26,11 @@ import {
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
-import { formatPhoneNumber, stripPhoneNumber } from "@/lib/utils";
+import {
+  formatPhoneNumber,
+  parseCityState,
+  stripPhoneNumber,
+} from "@/lib/utils";
 
 interface Category {
   id: string;
@@ -157,17 +161,6 @@ export function InviteMerchantDialog({
     await navigator.clipboard.writeText(generatedLink);
     setLinkCopied(true);
     setTimeout(() => setLinkCopied(false), 2000);
-  };
-
-  // Parse cityState into separate city and state values
-  const parseCityState = (value: string): { city: string; state: string } => {
-    const parts = value.split(",").map((p) => p.trim());
-    if (parts.length >= 2) {
-      const state = parts[parts.length - 1].toUpperCase().slice(0, 2);
-      const city = parts.slice(0, -1).join(", ");
-      return { city, state };
-    }
-    return { city: value.trim(), state: "" };
   };
 
   const handleGooglePlaceSelect = (

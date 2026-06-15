@@ -92,6 +92,7 @@ function MemberRegisterContent() {
           <h1 className="text-2xl font-bold text-destructive">Error</h1>
           <p className="text-muted-foreground">{error}</p>
           <button
+            type="button"
             onClick={() => router.push("/")}
             className="text-primary underline"
           >

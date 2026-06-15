@@ -5,7 +5,9 @@ import {
   Bot,
   CalendarClock,
   Check,
+  CreditCard,
   Download,
+  FileText,
   Globe2,
   LifeBuoy,
   Loader2,
@@ -44,6 +46,7 @@ interface DashboardData {
   campaignTrack?: CampaignTrackData;
   radioSpot?: CampaignTrackData;
   merchantTrial?: MerchantTrialData | null;
+  marketLockPaymentHistory?: MarketLockPaymentHistoryItem[];
 }
 
 interface CampaignTrackData {
@@ -59,6 +62,20 @@ interface MerchantTrialData {
   totalDays: number;
   startedAt: string;
   endsAt: string;
+}
+
+interface MarketLockPaymentHistoryItem {
+  id: string;
+  agreementPdfUrl: string | null;
+  agreementTitle: string;
+  agreementVersion: string;
+  paidAt: string | null;
+  paymentAmountCents: number | null;
+  paymentCurrency: string | null;
+  paymentStatus: string;
+  servicePeriodLabel: string;
+  signedAt: string;
+  typedName: string;
 }
 
 const activationStatusMeta = {
@@ -172,6 +189,58 @@ function formatTrackTime(seconds: number) {
     .padStart(2, "0");
 
   return `${minutes}:${remainingSeconds}`;
+}
+
+function formatDashboardDate(value: string | null | undefined) {
+  if (!value) return "Not recorded";
+
+  return new Intl.DateTimeFormat("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  }).format(new Date(value));
+}
+
+function formatPaymentAmount(
+  amountCents: number | null,
+  currency: string | null,
+) {
+  if (!amountCents) return "Amount pending";
+
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: (currency || "usd").toUpperCase(),
+    maximumFractionDigits: amountCents % 100 === 0 ? 0 : 2,
+  }).format(amountCents / 100);
+}
+
+function getPaymentStatusMeta(status: string) {
+  switch (status) {
+    case "paid":
+    case "no_payment_required":
+      return {
+        label: "Paid",
+        className:
+          "border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300",
+      };
+    case "unpaid":
+      return {
+        label: "Awaiting payment",
+        className:
+          "border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-300",
+      };
+    case "agreement_signed":
+      return {
+        label: "Agreement signed",
+        className:
+          "border-blue-500/30 bg-blue-500/10 text-blue-700 dark:text-blue-300",
+      };
+    default:
+      return {
+        label: status.replace(/_/g, " "),
+        className: "border-muted-foreground/25 bg-muted text-muted-foreground",
+      };
+  }
 }
 
 // Deterministic pseudo-random bar heights so the waveform renders
@@ -446,6 +515,116 @@ function CampaignAudioPanel({
   );
 }
 
+function MarketLockPaymentHistoryPanel({
+  items,
+}: {
+  items: MarketLockPaymentHistoryItem[];
+}) {
+  if (items.length === 0) {
+    return null;
+  }
+
+  return (
+    <section className="mb-6 rounded-xl border bg-card p-4 md:p-5">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div>
+          <p className="text-xs font-semibold uppercase text-muted-foreground">
+            MarketLock360 history
+          </p>
+          <h2 className="mt-1 text-base font-bold tracking-tight">
+            Payments and signed agreements
+          </h2>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Monthly service-period payments with the signed agreement attached.
+          </p>
+        </div>
+        <Button asChild variant="outline" size="sm">
+          <Link href="/merchant/marketlock360/agreement">
+            <CreditCard className="h-4 w-4" />
+            New monthly payment
+          </Link>
+        </Button>
+      </div>
+
+      <div className="mt-4 overflow-hidden rounded-lg border">
+        <div className="hidden grid-cols-[1.25fr_0.85fr_0.9fr_0.9fr] gap-4 border-b bg-muted/50 px-4 py-2 text-xs font-semibold uppercase text-muted-foreground md:grid">
+          <span>Service period</span>
+          <span>Status</span>
+          <span>Amount</span>
+          <span>Agreement</span>
+        </div>
+        <div className="divide-y">
+          {items.map((item) => {
+            const statusMeta = getPaymentStatusMeta(item.paymentStatus);
+            const amountLabel = formatPaymentAmount(
+              item.paymentAmountCents,
+              item.paymentCurrency,
+            );
+
+            return (
+              <div
+                key={item.id}
+                className="grid gap-3 px-4 py-4 md:grid-cols-[1.25fr_0.85fr_0.9fr_0.9fr] md:items-center md:gap-4"
+              >
+                <div className="min-w-0">
+                  <p className="font-semibold leading-5">
+                    {item.servicePeriodLabel}
+                  </p>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Signed {formatDashboardDate(item.signedAt)} by{" "}
+                    {item.typedName}
+                  </p>
+                </div>
+                <div>
+                  <span
+                    className={cn(
+                      "inline-flex rounded-full border px-2.5 py-1 text-xs font-semibold capitalize",
+                      statusMeta.className,
+                    )}
+                  >
+                    {statusMeta.label}
+                  </span>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    {item.paidAt
+                      ? `Paid ${formatDashboardDate(item.paidAt)}`
+                      : "Payment date pending"}
+                  </p>
+                </div>
+                <div>
+                  <p className="font-semibold">{amountLabel}</p>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    {item.paidAt
+                      ? "One-time payment recorded"
+                      : "One-time payment pending"}
+                  </p>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {item.agreementPdfUrl ? (
+                    <Button asChild variant="outline" size="sm">
+                      <a
+                        href={item.agreementPdfUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                      >
+                        <FileText className="h-4 w-4" />
+                        Signed PDF
+                      </a>
+                    </Button>
+                  ) : (
+                    <span className="text-sm text-muted-foreground">
+                      PDF pending
+                    </span>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </section>
+  );
+}
+
 function MerchantActivationBanner({
   merchant,
   merchantTrial,
@@ -462,11 +641,38 @@ function MerchantActivationBanner({
   const businessName = merchant?.businessName || "Your business";
   const marketLockStatus = merchant?.marketLockStatus ?? "basic";
   const marketLockStatusLabel = getMarketLockStatusLabel(marketLockStatus);
+  const canRequestTrial = marketLockStatus === "basic";
+  const hasTrialRequestPending = marketLockStatus === "trial_requested";
+  const isMarketLockActive =
+    marketLockStatus === "trial" || marketLockStatus === "pro";
   const totalTools = activationItems.length + marketLockProAdds.length;
   const toolSegments = [
-    ...activationItems.map((item) => ({ key: item.label, active: true })),
+    ...activationItems.map((item) => ({
+      key: item.label,
+      active: item.label === "MarketLock status" ? isMarketLockActive : true,
+    })),
     ...marketLockProAdds.map((item) => ({ key: item.label, active: false })),
   ];
+  const activeToolCount = toolSegments.filter(
+    (segment) => segment.active,
+  ).length;
+  const packageEyebrow = canRequestTrial
+    ? "Market package preview"
+    : hasTrialRequestPending
+      ? "Trial request pending"
+      : "Activated market package";
+  const packageProgressLabel =
+    canRequestTrial || hasTrialRequestPending
+      ? "Trial access"
+      : "Package status";
+  const packageProgressText =
+    canRequestTrial || hasTrialRequestPending
+      ? `${activeToolCount} of ${totalTools} market tools ready`
+      : `${activeToolCount} of ${totalTools} market tools active`;
+  const lockedToolsText =
+    canRequestTrial || hasTrialRequestPending
+      ? "MarketLock360 tools unlock after the trial is accepted."
+      : `${marketLockProAdds.length} tools locked - MarketLock360 Pro turns them on.`;
 
   return (
     <section className="mb-5 overflow-hidden rounded-xl border bg-card p-4 md:p-5">
@@ -489,7 +695,7 @@ function MerchantActivationBanner({
 
         <div className="min-w-0 flex-1">
           <p className="text-xs font-semibold uppercase text-muted-foreground">
-            Activated market package
+            {packageEyebrow}
           </p>
           <div className="mt-1 flex min-w-0 flex-wrap items-center gap-x-3 gap-y-2 xl:flex-nowrap">
             <h1 className="min-w-0 truncate text-2xl font-bold tracking-tight text-foreground md:text-3xl">
@@ -499,7 +705,7 @@ function MerchantActivationBanner({
             <p className="shrink-0 text-base font-bold tracking-tight text-foreground md:text-xl">
               {categoryName} in {marketLabel}
             </p>
-            {!merchantTrial && (
+            {!merchantTrial && !canRequestTrial && (
               <MarketLockStatusBadge status={marketLockStatus} />
             )}
             {merchantTrial && (
@@ -510,11 +716,38 @@ function MerchantActivationBanner({
             )}
           </div>
           <p className="mt-1.5 text-xs text-muted-foreground md:text-sm">
-            {marketLockStatus === "basic"
+            {canRequestTrial
               ? "MarketLock360 trial access is ready when you request it."
-              : `No other ${categoryName} business in ${marketLabel} can hold this position while your ${marketLockStatusLabel.toLowerCase()} is active.`}
+              : hasTrialRequestPending
+                ? "Your MarketLock360 trial request is in the admin queue and is not active yet."
+                : `No other ${categoryName} business in ${marketLabel} can hold this position while your ${marketLockStatusLabel.toLowerCase()} is active.`}
           </p>
+          {canRequestTrial && (
+            <Button
+              asChild
+              size="sm"
+              className="mt-3 h-10 rounded-lg px-4 text-sm font-semibold md:hidden"
+            >
+              <Link href="/merchant/marketlock360#trial">
+                <ArrowUpRight className="h-4 w-4" />
+                Request MarketLock360 trial
+              </Link>
+            </Button>
+          )}
         </div>
+
+        {canRequestTrial && (
+          <Button
+            asChild
+            size="sm"
+            className="ml-auto hidden h-10 shrink-0 rounded-lg px-4 text-sm font-semibold md:inline-flex"
+          >
+            <Link href="/merchant/marketlock360#trial">
+              <ArrowUpRight className="h-4 w-4" />
+              Request MarketLock360 trial
+            </Link>
+          </Button>
+        )}
       </div>
 
       <div className="mt-4 grid gap-4 border-t pt-4 xl:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
@@ -523,10 +756,10 @@ function MerchantActivationBanner({
         <div className="xl:border-l xl:pl-4">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <p className="text-xs font-semibold uppercase text-muted-foreground">
-              Package status
+              {packageProgressLabel}
             </p>
             <p className="text-xs font-semibold text-muted-foreground">
-              {`${activationItems.length} of ${totalTools} market tools active`}
+              {packageProgressText}
             </p>
           </div>
           <div className="mt-3 flex gap-1">
@@ -543,7 +776,7 @@ function MerchantActivationBanner({
           </div>
           <p className="mt-2 flex items-center gap-1.5 text-xs text-muted-foreground">
             <LockKeyhole className="h-3 w-3 shrink-0" />
-            {`${marketLockProAdds.length} tools locked - MarketLock360 Pro turns them on.`}
+            {lockedToolsText}
           </p>
           <ol className="mt-4 grid gap-x-4 gap-y-4 sm:grid-cols-2 2xl:grid-cols-3">
             {activationItems.map((item) => {
@@ -552,13 +785,17 @@ function MerchantActivationBanner({
                 item.label === "Signature soundtrack";
               const itemValue =
                 item.label === "MarketLock status"
-                  ? marketLockStatusLabel
+                  ? canRequestTrial
+                    ? "Trial ready"
+                    : hasTrialRequestPending
+                      ? "Request pending"
+                      : marketLockStatusLabel
                   : isSignatureSoundtrack && track?.title
                     ? track.title
                     : item.value;
               const itemStatus =
                 item.label === "MarketLock status" &&
-                marketLockStatus === "basic"
+                (marketLockStatus === "basic" || hasTrialRequestPending)
                   ? "Waiting"
                   : isSignatureSoundtrack && track?.audioSrc
                     ? "Ready"
@@ -761,6 +998,134 @@ function MarketLockProUpsellCard({
   );
 }
 
+function MarketLockTrialCtaCard({
+  merchant,
+}: {
+  merchant: MerchantPageManagementMerchant | undefined;
+}) {
+  const categoryName = merchant?.categoryName || "your category";
+  const marketLabel =
+    [merchant?.city, merchant?.state].filter(Boolean).join(", ") ||
+    "your market";
+
+  return (
+    <section className="mb-6 overflow-hidden rounded-xl border border-orange-300/30 bg-card shadow-sm">
+      <div className="grid gap-0 lg:grid-cols-[minmax(0,1fr)_340px]">
+        <div className="min-w-0 p-5 md:p-6">
+          <div className="flex items-start gap-3">
+            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-orange-500/10 text-orange-500 ring-1 ring-orange-500/20">
+              <LockKeyhole className="h-5 w-5" />
+            </span>
+            <div className="min-w-0">
+              <p className="text-xs font-semibold uppercase text-muted-foreground">
+                MarketLock360 trial
+              </p>
+              <h2 className="mt-1 text-2xl font-bold tracking-tight">
+                Request your protected-market trial
+              </h2>
+              <p className="mt-3 max-w-3xl text-sm leading-6 text-muted-foreground">
+                {`Request trial access for ${categoryName} in ${marketLabel}. You can review the trial offer and start from the MarketLock360 page.`}
+              </p>
+            </div>
+          </div>
+
+          <div className="mt-5 grid gap-3 sm:grid-cols-3">
+            {[
+              "14-day trial",
+              "Category lock preview",
+              "Upgrade when ready",
+            ].map((item) => (
+              <div
+                key={item}
+                className="flex min-h-11 items-center gap-2 rounded-lg border bg-background/45 px-3 py-2 text-sm font-semibold"
+              >
+                <Check className="h-4 w-4 shrink-0 text-orange-500" />
+                <span>{item}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="flex flex-col justify-center gap-3 border-t bg-orange-500/[0.04] p-5 lg:border-l lg:border-t-0 md:p-6">
+          <p className="text-sm font-semibold leading-6 text-muted-foreground">
+            Not in trial yet. Jump straight to the trial section and request
+            access.
+          </p>
+          <Button
+            asChild
+            className="h-11 rounded-lg px-4 text-sm font-semibold"
+          >
+            <Link href="/merchant/marketlock360#trial">
+              <ArrowUpRight className="h-4 w-4" />
+              Request MarketLock360 trial
+            </Link>
+          </Button>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function MarketLockTrialPendingCard({
+  merchant,
+}: {
+  merchant: MerchantPageManagementMerchant | undefined;
+}) {
+  const categoryName = merchant?.categoryName || "your category";
+  const marketLabel =
+    [merchant?.city, merchant?.state].filter(Boolean).join(", ") ||
+    "your market";
+
+  return (
+    <section className="mb-6 overflow-hidden rounded-xl border border-amber-300/30 bg-card shadow-sm">
+      <div className="flex flex-col gap-4 p-5 md:p-6 lg:flex-row lg:items-center lg:justify-between">
+        <div className="flex min-w-0 items-start gap-3">
+          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-amber-500/10 text-amber-600 ring-1 ring-amber-500/20 dark:text-amber-300">
+            <LockKeyhole className="h-5 w-5" />
+          </span>
+          <div className="min-w-0">
+            <p className="text-xs font-semibold uppercase text-muted-foreground">
+              MarketLock360 trial request
+            </p>
+            <h2 className="mt-1 text-2xl font-bold tracking-tight">
+              Waiting for admin acceptance
+            </h2>
+            <p className="mt-3 max-w-3xl text-sm leading-6 text-muted-foreground">
+              {`Your request for ${categoryName} in ${marketLabel} is in the admin queue. Trial access starts after it is accepted.`}
+            </p>
+          </div>
+        </div>
+        <div className="flex items-center gap-2 rounded-lg border border-amber-500/25 bg-amber-500/10 px-3 py-2 text-sm font-semibold text-amber-700 dark:text-amber-300">
+          <CalendarClock className="h-4 w-4" />
+          Request pending
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function MarketLockDashboardBottomCta({
+  merchant,
+}: {
+  merchant: MerchantPageManagementMerchant | undefined;
+}) {
+  const marketLockStatus = merchant?.marketLockStatus ?? "basic";
+
+  if (marketLockStatus === "pro") {
+    return null;
+  }
+
+  if (marketLockStatus === "trial") {
+    return <MarketLockProUpsellCard merchant={merchant} />;
+  }
+
+  if (marketLockStatus === "trial_requested") {
+    return <MarketLockTrialPendingCard merchant={merchant} />;
+  }
+
+  return <MarketLockTrialCtaCard merchant={merchant} />;
+}
+
 export default function MerchantDashboard() {
   const router = useRouter();
   const { user, isLoading: authLoading, isAuthenticated } = useUser();
@@ -821,6 +1186,10 @@ export default function MerchantDashboard() {
             soundtrack={dashboardData?.campaignTrack}
           />
 
+          <MarketLockPaymentHistoryPanel
+            items={dashboardData?.marketLockPaymentHistory || []}
+          />
+
           {merchant && pageManagement && (
             <MerchantPageManagementPanel
               merchant={merchant}
@@ -833,7 +1202,7 @@ export default function MerchantDashboard() {
             />
           )}
 
-          <MarketLockProUpsellCard merchant={merchant} />
+          <MarketLockDashboardBottomCta merchant={merchant} />
         </>
       )}
     </DashboardLayout>

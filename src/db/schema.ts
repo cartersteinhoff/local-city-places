@@ -495,7 +495,22 @@ export const merchantServiceAgreementAcceptances = pgTable(
     }).notNull(),
     agreementTextSnapshot: text("agreement_text_snapshot").notNull(),
     typedName: varchar("typed_name", { length: 255 }).notNull(),
+    servicePeriodStart: timestamp("service_period_start").notNull(),
+    servicePeriodEnd: timestamp("service_period_end").notNull(),
+    servicePeriodLabel: varchar("service_period_label", {
+      length: 120,
+    }).notNull(),
+    agreementPdfUrl: text("agreement_pdf_url"),
+    agreementPdfPath: text("agreement_pdf_path"),
+    agreementPdfGeneratedAt: timestamp("agreement_pdf_generated_at"),
     checkoutSessionId: varchar("checkout_session_id", { length: 255 }),
+    stripePaymentIntentId: varchar("stripe_payment_intent_id", {
+      length: 255,
+    }),
+    paymentStatus: varchar("payment_status", { length: 32 }),
+    paymentAmountCents: integer("payment_amount_cents"),
+    paymentCurrency: varchar("payment_currency", { length: 3 }),
+    paidAt: timestamp("paid_at"),
     ipAddress: varchar("ip_address", { length: 45 }),
     userAgent: text("user_agent"),
     acceptedAt: timestamp("accepted_at").defaultNow().notNull(),
@@ -508,6 +523,10 @@ export const merchantServiceAgreementAcceptances = pgTable(
     index("merchant_service_agreement_acceptances_user_idx").on(table.userId),
     index("merchant_service_agreement_acceptances_version_idx").on(
       table.agreementVersion,
+    ),
+    index("merchant_service_agreement_acceptances_period_idx").on(
+      table.merchantId,
+      table.servicePeriodStart,
     ),
   ],
 );
