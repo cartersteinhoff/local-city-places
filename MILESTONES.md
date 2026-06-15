@@ -190,7 +190,7 @@
 - `GET /api/merchant/grcs` - List issued GRCs
 - `POST /api/merchant/surveys` - Create/update survey
 - `GET /api/merchant/reviews` - List reviews
-- `POST /api/merchant/bank-account` - Save bank info
+- `POST /api/merchant/profile` - Save profile and bank info
 
 ---
 

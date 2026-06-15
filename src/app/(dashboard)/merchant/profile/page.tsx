@@ -41,7 +41,11 @@ import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { useUser } from "@/hooks/use-user";
-import { formatPhoneNumber, stripPhoneNumber } from "@/lib/utils";
+import {
+  formatPhoneNumber,
+  parseCityState,
+  stripPhoneNumber,
+} from "@/lib/utils";
 import { merchantNavItems } from "../nav";
 
 interface Category {
@@ -151,17 +155,6 @@ export default function MerchantProfilePage() {
       fetchProfile();
     }
   }, [authLoading, isAuthenticated, fetchProfile]);
-
-  // Parse cityState into separate city and state values
-  function parseCityState(value: string): { city: string; state: string } {
-    const parts = value.split(",").map((p) => p.trim());
-    if (parts.length >= 2) {
-      const state = parts[parts.length - 1].toUpperCase().slice(0, 2);
-      const city = parts.slice(0, -1).join(", ");
-      return { city, state };
-    }
-    return { city: value.trim(), state: "" };
-  }
 
   async function handleSave() {
     if (!profile) return;

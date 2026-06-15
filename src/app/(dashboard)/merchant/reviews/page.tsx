@@ -166,12 +166,9 @@ export default function ReviewsPage() {
                           <p className="font-medium">{review.memberName}</p>
                           <p className="text-sm text-muted-foreground">
                             {review.timeLabel ||
-                              formatDistanceToNow(
-                                new Date(review.createdAt),
-                                {
-                                  addSuffix: true,
-                                },
-                              )}
+                              formatDistanceToNow(new Date(review.createdAt), {
+                                addSuffix: true,
+                              })}
                           </p>
                         </div>
                       </div>

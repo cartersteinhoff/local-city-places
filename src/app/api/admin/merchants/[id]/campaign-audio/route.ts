@@ -15,8 +15,12 @@ type CampaignAudioKind = "radioSpot" | "soundtrack";
 const audioKinds = ["radioSpot", "soundtrack"] satisfies CampaignAudioKind[];
 const maxAudioSize = 60 * 1024 * 1024;
 
-function isCampaignAudioKind(value: FormDataEntryValue | null): value is CampaignAudioKind {
-  return typeof value === "string" && audioKinds.includes(value as CampaignAudioKind);
+function isCampaignAudioKind(
+  value: FormDataEntryValue | null,
+): value is CampaignAudioKind {
+  return (
+    typeof value === "string" && audioKinds.includes(value as CampaignAudioKind)
+  );
 }
 
 function safeFileSegment(value: string) {
@@ -54,8 +58,7 @@ function getContentType(file: File) {
 
 function isAudioFile(file: File) {
   return (
-    file.type.startsWith("audio/") ||
-    /\.(mp3|wav|m4a|aac)$/i.test(file.name)
+    file.type.startsWith("audio/") || /\.(mp3|wav|m4a|aac)$/i.test(file.name)
   );
 }
 
@@ -111,7 +114,10 @@ export async function POST(
     const kindValue = formData.get("kind");
 
     if (!(file instanceof File)) {
-      return NextResponse.json({ error: "No audio file provided" }, { status: 400 });
+      return NextResponse.json(
+        { error: "No audio file provided" },
+        { status: 400 },
+      );
     }
 
     if (!isCampaignAudioKind(kindValue)) {

@@ -129,7 +129,9 @@ export async function GET(request: NextRequest) {
     const offset = (page - 1) * limit;
     const search = searchParams.get("search")?.trim() || "";
 
-    const conditions: SQL[] = [eq(merchants.marketLockStatus, "trial")];
+    const conditions: SQL[] = [
+      eq(merchants.marketLockStatus, "trial_requested"),
+    ];
 
     if (search) {
       const phoneSearch = search.replace(/\D/g, "");
@@ -221,9 +223,92 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error("Error fetching MarketLOCK trial queue:", error);
+    console.error("Error fetching MarketLOCK trial request queue:", error);
     return NextResponse.json(
-      { error: "Failed to fetch trial queue" },
+      { error: "Failed to fetch trial request queue" },
+      { status: 500 },
+    );
+  }
+}
+
+export async function POST(request: NextRequest) {
+  try {
+    const session = await getSession();
+    if (session?.user.role !== "admin") {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
+    }
+
+    const body = await request.json().catch(() => ({}));
+    const merchantId =
+      typeof body?.merchantId === "string" ? body.merchantId : "";
+    const action = typeof body?.action === "string" ? body.action : "accept";
+
+    if (action !== "accept") {
+      return NextResponse.json(
+        { error: "Unsupported trial queue action" },
+        { status: 400 },
+      );
+    }
+
+    if (!merchantId) {
+      return NextResponse.json(
+        { error: "Merchant ID is required" },
+        { status: 400 },
+      );
+    }
+
+    const [merchant] = await db
+      .select({
+        id: merchants.id,
+        marketLockStatus: merchants.marketLockStatus,
+      })
+      .from(merchants)
+      .where(eq(merchants.id, merchantId))
+      .limit(1);
+
+    if (!merchant) {
+      return NextResponse.json(
+        { error: "Merchant not found" },
+        { status: 404 },
+      );
+    }
+
+    if (merchant.marketLockStatus === "trial") {
+      return NextResponse.json({
+        success: true,
+        merchantId,
+        marketLockStatus: "trial",
+      });
+    }
+
+    if (merchant.marketLockStatus !== "trial_requested") {
+      return NextResponse.json(
+        { error: "Merchant does not have a pending trial request" },
+        { status: 409 },
+      );
+    }
+
+    const now = new Date();
+
+    await db
+      .update(merchants)
+      .set({
+        marketLockStatus: "trial",
+        marketLockStatusUpdatedAt: now,
+        updatedAt: now,
+      })
+      .where(eq(merchants.id, merchantId));
+
+    return NextResponse.json({
+      success: true,
+      merchantId,
+      marketLockStatus: "trial",
+      acceptedAt: now.toISOString(),
+    });
+  } catch (error) {
+    console.error("Error accepting MarketLOCK trial request:", error);
+    return NextResponse.json(
+      { error: "Failed to accept trial request" },
       { status: 500 },
     );
   }

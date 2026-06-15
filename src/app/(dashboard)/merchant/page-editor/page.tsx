@@ -41,7 +41,11 @@ interface MerchantPagePayload {
   logoUrl: string | null;
   vimeoUrl: string | null;
   photos: string[] | null;
-  services: Array<{ name: string; description?: string; price?: string }> | null;
+  services: Array<{
+    name: string;
+    description?: string;
+    price?: string;
+  }> | null;
   campaignAudio: FormData["campaignAudio"];
   slug: string | null;
   featuredOnHomepage: boolean | null;

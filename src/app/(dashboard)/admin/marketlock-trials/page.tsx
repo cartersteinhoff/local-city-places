@@ -2,6 +2,7 @@
 
 import {
   CalendarClock,
+  CheckCircle2,
   Edit,
   ExternalLink,
   Loader2,
@@ -139,6 +140,8 @@ export default function AdminMarketLockTrialsPage() {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [total, setTotal] = useState(0);
+  const [acceptingId, setAcceptingId] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!authLoading && (!isAuthenticated || user?.role !== "admin")) {
@@ -183,6 +186,37 @@ export default function AdminMarketLockTrialsPage() {
     }
   }, [debouncedSearch, page]);
 
+  const acceptTrial = useCallback(
+    async (merchantId: string) => {
+      setAcceptingId(merchantId);
+      setActionError(null);
+
+      try {
+        const res = await fetch("/api/admin/marketlock-trials", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ merchantId, action: "accept" }),
+        });
+        const data = await res.json().catch(() => ({}));
+
+        if (!res.ok) {
+          throw new Error(data.error || "Failed to accept trial request");
+        }
+
+        await fetchTrials();
+      } catch (error) {
+        setActionError(
+          error instanceof Error
+            ? error.message
+            : "Failed to accept trial request",
+        );
+      } finally {
+        setAcceptingId(null);
+      }
+    },
+    [fetchTrials],
+  );
+
   useEffect(() => {
     if (!authLoading && isAuthenticated && user?.role === "admin") {
       fetchTrials();
@@ -198,8 +232,8 @@ export default function AdminMarketLockTrialsPage() {
       ) : (
         <>
           <PageHeader
-            title="MarketLOCK Trial Queue"
-            description="Merchants that requested a MarketLOCK360 trial and need follow-up."
+            title="MarketLOCK Trial Requests"
+            description="Merchants waiting for admin acceptance before trial access starts."
             actions={
               <Button
                 variant="outline"
@@ -217,9 +251,9 @@ export default function AdminMarketLockTrialsPage() {
 
           <div className="mb-6 grid grid-cols-2 gap-2 sm:gap-4 lg:grid-cols-4">
             <StatBox
-              label="Open Trials"
+              label="Pending Requests"
               value={stats?.total ?? total}
-              subtext="Awaiting follow-up"
+              subtext="Awaiting acceptance"
               icon={LockKeyhole}
             />
             <StatBox
@@ -240,11 +274,17 @@ export default function AdminMarketLockTrialsPage() {
             />
           </div>
 
+          {actionError ? (
+            <div className="mb-4 rounded-lg border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm font-medium text-destructive">
+              {actionError}
+            </div>
+          ) : null}
+
           <div className="overflow-hidden rounded-lg border bg-card">
             <div className="divide-y divide-border md:hidden">
               {!isLoading && trials.length === 0 ? (
                 <div className="p-8 text-center text-muted-foreground">
-                  No trial requests found.
+                  No pending trial requests found.
                 </div>
               ) : (
                 trials.map((trial) => (
@@ -258,7 +298,7 @@ export default function AdminMarketLockTrialsPage() {
                           {trial.categoryName || "No category"}
                         </p>
                       </div>
-                      <MarketLockStatusBadge status="trial" />
+                      <MarketLockStatusBadge status="trial_requested" />
                     </div>
 
                     <div className="mb-3 rounded-lg bg-muted/50 p-3">
@@ -292,8 +332,20 @@ export default function AdminMarketLockTrialsPage() {
                       ) : null}
                     </div>
 
-                    <div className="flex gap-2">
-                      <Button asChild className="flex-1">
+                    <div className="grid grid-cols-2 gap-2">
+                      <Button
+                        className="col-span-2"
+                        onClick={() => acceptTrial(trial.id)}
+                        disabled={acceptingId === trial.id || isLoading}
+                      >
+                        {acceptingId === trial.id ? (
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        ) : (
+                          <CheckCircle2 className="mr-2 h-4 w-4" />
+                        )}
+                        Accept request
+                      </Button>
+                      <Button asChild variant="outline">
                         <Link
                           href={`/admin/merchants/${trial.id}/merchant-page`}
                         >
@@ -301,7 +353,7 @@ export default function AdminMarketLockTrialsPage() {
                           Open
                         </Link>
                       </Button>
-                      <Button asChild variant="outline" className="flex-1">
+                      <Button asChild variant="outline">
                         <Link href={`/admin/merchants/${trial.id}/edit`}>
                           <Edit className="mr-2 h-4 w-4" />
                           Edit
@@ -315,12 +367,12 @@ export default function AdminMarketLockTrialsPage() {
 
             <table className="hidden w-full table-fixed md:table">
               <colgroup>
-                <col className="w-[26%]" />
-                <col className="w-[22%]" />
-                <col className="w-[17%]" />
+                <col className="w-[24%]" />
+                <col className="w-[20%]" />
                 <col className="w-[16%]" />
-                <col className="w-[11%]" />
-                <col className="w-[8%]" />
+                <col className="w-[16%]" />
+                <col className="w-[10%]" />
+                <col className="w-[14%]" />
               </colgroup>
               <thead className="border-b bg-muted/50">
                 <tr>
@@ -351,7 +403,7 @@ export default function AdminMarketLockTrialsPage() {
                       colSpan={6}
                       className="px-4 py-8 text-center text-muted-foreground"
                     >
-                      No trial requests found.
+                      No pending trial requests found.
                     </td>
                   </tr>
                 ) : (
@@ -402,10 +454,22 @@ export default function AdminMarketLockTrialsPage() {
                         </div>
                       </td>
                       <td className="px-4 py-4 align-top">
-                        <MarketLockStatusBadge status="trial" />
+                        <MarketLockStatusBadge status="trial_requested" />
                       </td>
                       <td className="px-4 py-4 text-right align-top">
-                        <div className="flex justify-end gap-2">
+                        <div className="flex flex-wrap justify-end gap-2">
+                          <Button
+                            size="sm"
+                            onClick={() => acceptTrial(trial.id)}
+                            disabled={acceptingId === trial.id || isLoading}
+                          >
+                            {acceptingId === trial.id ? (
+                              <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
+                            ) : (
+                              <CheckCircle2 className="mr-1.5 h-4 w-4" />
+                            )}
+                            Accept
+                          </Button>
                           <Button asChild variant="outline" size="sm">
                             <Link
                               href={`/admin/merchants/${trial.id}/merchant-page`}

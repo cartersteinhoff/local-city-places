@@ -163,7 +163,9 @@ function ComposeEmailContent() {
     setIsLoadingCount(true);
     try {
       const params = new URLSearchParams();
-      selectedLists.forEach((list) => params.append("lists", list));
+      selectedLists.forEach((list) => {
+        params.append("lists", list);
+      });
       const res = await fetch(`/api/admin/emails/recipient-count?${params}`);
       if (res.ok) {
         const data = await res.json();
@@ -707,24 +709,26 @@ function ComposeEmailContent() {
                     <ScrollArea className="h-[120px]">
                       <div className="space-y-1">
                         {searchResults.map((user) => (
-                          <div
+                          <Button
                             key={user.id}
-                            className="flex items-center space-x-2 rounded-md border p-2 hover:bg-muted/50 cursor-pointer"
+                            type="button"
+                            variant="ghost"
+                            className="h-auto w-full justify-start rounded-md border p-2 text-left whitespace-normal hover:bg-muted/50"
                             onClick={() => selectUser(user)}
                           >
                             <UserCheck className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                            <div className="flex-1 min-w-0">
-                              <p className="text-sm font-medium truncate">
+                            <span className="flex-1 min-w-0">
+                              <span className="block text-sm font-medium truncate">
                                 {user.name || user.email}
-                              </p>
-                              <p className="text-xs text-muted-foreground truncate">
+                              </span>
+                              <span className="block text-xs text-muted-foreground truncate">
                                 {user.email}
-                              </p>
-                            </div>
+                              </span>
+                            </span>
                             <Badge variant="outline" className="text-xs">
                               {user.role}
                             </Badge>
-                          </div>
+                          </Button>
                         ))}
                       </div>
                     </ScrollArea>

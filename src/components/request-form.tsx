@@ -27,7 +27,12 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { cn, formatPhoneNumber, stripPhoneNumber } from "@/lib/utils";
+import {
+  cn,
+  formatPhoneNumber,
+  parseCityState,
+  stripPhoneNumber,
+} from "@/lib/utils";
 
 interface RequestFormState {
   businessName: string;
@@ -160,18 +165,6 @@ const requiredFields: Array<keyof RequestFormState> = [
 
 const requestFieldClassName =
   "border-slate-300 bg-white text-slate-950 placeholder:text-slate-400 dark:border-slate-300 dark:bg-white dark:text-slate-950 dark:placeholder:text-slate-400 focus-visible:border-[#ff6a00] focus-visible:ring-[#ff6a00]/20";
-
-function parseCityState(value: string): { city: string; state: string } {
-  const parts = value.split(",").map((part) => part.trim());
-
-  if (parts.length >= 2) {
-    const state = parts[parts.length - 1].toUpperCase().slice(0, 2);
-    const city = parts.slice(0, -1).join(", ");
-    return { city, state };
-  }
-
-  return { city: value.trim(), state: "" };
-}
 
 function formatStreetAddress(
   details: PlaceDetails | undefined,
