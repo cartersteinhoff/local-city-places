@@ -21,6 +21,7 @@ import {
   Sparkles,
 } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { DashboardLayout } from "@/components/layout";
@@ -706,13 +707,14 @@ function MarketLockProUpsellCard({
 
           <div className="flex shrink-0 flex-col items-start gap-2 sm:flex-row xl:flex-col xl:items-end">
             <Button
-              type="button"
+              asChild
               size="sm"
               className="h-10 rounded-lg px-4 text-sm font-semibold"
-              aria-label="Upgrade today"
             >
-              <ArrowUpRight className="h-4 w-4" />
-              Upgrade today
+              <Link href="/merchant/marketlock360/agreement">
+                <ArrowUpRight className="h-4 w-4" />
+                Upgrade today
+              </Link>
             </Button>
             <div className="flex items-center gap-2 rounded-lg border border-primary/25 bg-primary/10 px-3 py-2 text-sm font-semibold text-primary">
               <Check className="h-4 w-4" />4 Pro tools ready to unlock
