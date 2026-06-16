@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import type Stripe from "stripe";
 import { db, merchantServiceAgreementAcceptances } from "@/db";
 import { getSession } from "@/lib/auth";
+import { isPaidMarketLock360Agreement } from "@/lib/marketlock360-checkout";
 import {
   getMarketLock360Currency,
   getMarketLock360MonthlyAmountCents,
@@ -126,6 +127,8 @@ export async function POST(request: Request) {
         checkoutSessionId:
           merchantServiceAgreementAcceptances.checkoutSessionId,
         id: merchantServiceAgreementAcceptances.id,
+        paidAt: merchantServiceAgreementAcceptances.paidAt,
+        paymentStatus: merchantServiceAgreementAcceptances.paymentStatus,
         servicePeriodLabel:
           merchantServiceAgreementAcceptances.servicePeriodLabel,
       })
@@ -142,6 +145,13 @@ export async function POST(request: Request) {
       return NextResponse.json(
         { error: "Signed agreement was not found for this merchant." },
         { status: 404 },
+      );
+    }
+
+    if (isPaidMarketLock360Agreement(agreementAcceptance)) {
+      return NextResponse.json(
+        { error: "This service period has already been paid." },
+        { status: 409 },
       );
     }
 

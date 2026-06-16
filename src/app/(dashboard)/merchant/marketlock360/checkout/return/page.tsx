@@ -1,4 +1,11 @@
-import { AlertCircle, ArrowLeft, CheckCircle2, CreditCard } from "lucide-react";
+import {
+  AlertCircle,
+  ArrowLeft,
+  CheckCircle2,
+  CreditCard,
+  FileText,
+  ShieldCheck,
+} from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
@@ -6,6 +13,7 @@ import type Stripe from "stripe";
 import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/ui/page-header";
 import { getSession } from "@/lib/auth";
+import { getMerchantAgreementPdfHref } from "@/lib/legal/merchant-agreement-pdf";
 import {
   isMarketLock360CheckoutSession,
   isPaidMarketLock360CheckoutSession,
@@ -15,8 +23,8 @@ import { getStripe } from "@/lib/stripe";
 import { MerchantDashboardShell } from "../../../merchant-dashboard-shell";
 
 export const metadata: Metadata = {
-  title: "Payment Status | LOCAL City Places",
-  description: "Review the MarketLock360 payment status.",
+  title: "MarketLock360 Payment Complete | LOCAL City Places",
+  description: "Review the MarketLock360 payment confirmation.",
 };
 
 interface CheckoutReturnPageProps {
@@ -50,6 +58,21 @@ function getDisplayStatus(
   }
 
   return "Payment status unavailable";
+}
+
+function formatCheckoutAmount(
+  amountCents?: number | null,
+  currency?: string | null,
+) {
+  if (!amountCents) {
+    return "Recorded by Stripe";
+  }
+
+  return new Intl.NumberFormat("en-US", {
+    currency: (currency || "usd").toUpperCase(),
+    maximumFractionDigits: 0,
+    style: "currency",
+  }).format(amountCents / 100);
 }
 
 export default async function MerchantMarketLockCheckoutReturnPage({
@@ -110,105 +133,177 @@ export default async function MerchantMarketLockCheckoutReturnPage({
     checkoutSession?.customer_details?.email ||
     checkoutSession?.customer_email ||
     null;
+  const agreementAcceptanceId =
+    checkoutSession?.metadata?.agreementAcceptanceId || null;
+  const servicePeriodLabel =
+    checkoutSession?.metadata?.servicePeriod || "Current service period";
+  const amountLabel = formatCheckoutAmount(
+    checkoutSession?.amount_total,
+    checkoutSession?.currency,
+  );
 
   return (
     <MerchantDashboardShell>
-      <div className="mx-auto max-w-[860px] pb-8">
+      <div className="mx-auto max-w-[960px] pb-8">
         <PageHeader
-          title={statusLabel}
+          title={isComplete ? "Payment complete" : statusLabel}
           description={
             isComplete
-              ? `MarketLock360 is active for ${merchant.businessName}.`
-              : "Review the payment status below."
+              ? `MarketLock360 is active for ${merchant.businessName} for ${servicePeriodLabel}.`
+              : "The payment did not finish. Review the status and return to checkout if needed."
           }
         />
 
-        <section className="rounded-lg border bg-card p-6">
-          <div className="flex items-start gap-4">
-            <span
-              className={
-                isComplete
-                  ? "flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-green-500/10 text-green-500"
-                  : "flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-orange-500/10 text-orange-500"
-              }
-            >
-              {isComplete ? (
-                <CheckCircle2 className="h-7 w-7" />
-              ) : (
-                <AlertCircle className="h-7 w-7" />
-              )}
-            </span>
-            <div className="min-w-0 flex-1">
-              <h2 className="text-xl font-semibold">{statusLabel}</h2>
-              <p className="mt-1 text-sm text-muted-foreground">
-                {error ||
-                  (isComplete
-                    ? "Stripe confirmed the checkout session and the merchant status has been updated."
-                    : "The checkout session did not complete. You can return to payment and try again.")}
-              </p>
-
-              {checkoutSession && (
-                <dl className="mt-5 grid gap-4 border-t pt-5 text-sm sm:grid-cols-2">
-                  <div>
-                    <dt className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                      Checkout session
-                    </dt>
-                    <dd className="mt-1 truncate font-semibold">
-                      {checkoutSession.id}
-                    </dd>
-                  </div>
-                  <div>
-                    <dt className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                      Payment status
-                    </dt>
-                    <dd className="mt-1 font-semibold">
-                      {checkoutSession.payment_status}
-                    </dd>
-                  </div>
-                  <div>
-                    <dt className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                      Merchant
-                    </dt>
-                    <dd className="mt-1 font-semibold">
-                      {merchant.businessName}
-                    </dd>
-                  </div>
-                  <div>
-                    <dt className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                      Customer email
-                    </dt>
-                    <dd className="mt-1 truncate font-semibold">
-                      {customerEmail || "Not provided"}
-                    </dd>
-                  </div>
-                </dl>
-              )}
-
-              <div className="mt-6 flex flex-col gap-2 sm:flex-row">
-                <Button asChild>
-                  <Link href="/merchant/marketlock360">
-                    <CreditCard className="h-4 w-4" />
-                    MarketLock360 dashboard
-                  </Link>
-                </Button>
-                {!isComplete &&
-                  checkoutSession?.metadata?.agreementAcceptanceId && (
-                    <Button asChild variant="outline">
-                      <Link
-                        href={`/merchant/marketlock360/checkout?agreementAcceptanceId=${encodeURIComponent(checkoutSession.metadata.agreementAcceptanceId)}`}
-                      >
-                        Return to payment
-                      </Link>
-                    </Button>
+        <section className="overflow-hidden rounded-lg border bg-card text-card-foreground shadow-sm dark:border-[#21475d] dark:bg-[#08283a] dark:text-slate-100">
+          <div
+            className={
+              isComplete
+                ? "border-b bg-emerald-50 px-5 py-6 dark:border-[#21475d] dark:bg-emerald-400/10 sm:px-6"
+                : "border-b bg-orange-50 px-5 py-6 dark:border-[#21475d] dark:bg-orange-500/10 sm:px-6"
+            }
+          >
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+              <div className="flex min-w-0 items-start gap-4">
+                <span
+                  className={
+                    isComplete
+                      ? "flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-emerald-100 text-emerald-700 ring-1 ring-emerald-200 dark:bg-emerald-400/10 dark:text-emerald-300 dark:ring-emerald-300/25"
+                      : "flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-orange-100 text-orange-700 ring-1 ring-orange-200 dark:bg-orange-500/10 dark:text-orange-300 dark:ring-orange-300/25"
+                  }
+                >
+                  {isComplete ? (
+                    <CheckCircle2 className="h-7 w-7" />
+                  ) : (
+                    <AlertCircle className="h-7 w-7" />
                   )}
-                <Button asChild variant="outline">
-                  <Link href="/merchant">
-                    <ArrowLeft className="h-4 w-4" />
-                    Back to dashboard
-                  </Link>
-                </Button>
+                </span>
+                <div>
+                  <p
+                    className={
+                      isComplete
+                        ? "text-xs font-bold uppercase tracking-wide text-emerald-700 dark:text-emerald-300"
+                        : "text-xs font-bold uppercase tracking-wide text-orange-700 dark:text-orange-300"
+                    }
+                  >
+                    {isComplete ? "Receipt" : "Action needed"}
+                  </p>
+                  <h2 className="mt-1 text-2xl font-bold tracking-tight">
+                    {isComplete
+                      ? "MarketLock360 is active"
+                      : "Payment was not completed"}
+                  </h2>
+                  <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground dark:text-slate-300">
+                    {error ||
+                      (isComplete
+                        ? "The signed agreement and one-time payment are recorded for this monthly service period."
+                        : "You can return to payment and finish the one-time charge for this service period.")}
+                  </p>
+                </div>
+              </div>
+              {isComplete && (
+                <div className="rounded-lg border border-emerald-200 bg-white px-4 py-3 text-left shadow-sm dark:border-emerald-300/20 dark:bg-[#061f2e] sm:text-right">
+                  <p className="text-xs font-bold uppercase tracking-wide text-emerald-700 dark:text-emerald-300">
+                    Paid
+                  </p>
+                  <p className="mt-1 text-3xl font-bold leading-none text-emerald-700 dark:text-emerald-300">
+                    {amountLabel}
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {checkoutSession && (
+            <dl className="grid gap-0 border-b text-sm md:grid-cols-2 dark:border-[#21475d]">
+              {[
+                ["Merchant", merchant.businessName],
+                ["Service period", servicePeriodLabel],
+                ["Amount", amountLabel],
+                ["Payment status", checkoutSession.payment_status],
+                ["Customer email", customerEmail || "Not provided"],
+                [
+                  "Record status",
+                  isComplete ? "Agreement and payment saved" : statusLabel,
+                ],
+              ].map(([label, value]) => (
+                <div
+                  key={label}
+                  className="border-b px-5 py-4 last:border-b-0 dark:border-[#21475d]"
+                >
+                  <dt className="text-xs font-semibold uppercase tracking-wide text-muted-foreground dark:text-slate-400">
+                    {label}
+                  </dt>
+                  <dd className="mt-1 font-semibold">{value}</dd>
+                </div>
+              ))}
+            </dl>
+          )}
+
+          {isComplete && (
+            <div className="border-b bg-muted/25 px-5 py-5 dark:border-[#21475d] dark:bg-[#061f2e] sm:px-6">
+              <div className="grid gap-4 text-sm md:grid-cols-3">
+                {[
+                  [
+                    "Signed agreement saved",
+                    "The executed agreement remains available as a PDF.",
+                  ],
+                  [
+                    "Payment history updated",
+                    "The dashboard lists the payment and signed agreement together.",
+                  ],
+                  [
+                    "Monthly renewal is manual",
+                    "Next month requires a new agreement and one-time payment.",
+                  ],
+                ].map(([title, description]) => (
+                  <div key={title} className="flex gap-3">
+                    <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600 dark:text-emerald-300" />
+                    <div>
+                      <p className="font-semibold">{title}</p>
+                      <p className="mt-1 text-xs leading-5 text-muted-foreground dark:text-slate-400">
+                        {description}
+                      </p>
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
+          )}
+
+          <div className="flex flex-col gap-2 px-5 py-5 sm:flex-row sm:px-6">
+            <Button asChild>
+              <Link href="/merchant/marketlock360">
+                <CreditCard className="h-4 w-4" />
+                MarketLock360 dashboard
+              </Link>
+            </Button>
+            {isComplete && agreementAcceptanceId && (
+              <Button asChild variant="outline">
+                <Link
+                  href={getMerchantAgreementPdfHref(agreementAcceptanceId)}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  <FileText className="h-4 w-4" />
+                  View signed PDF
+                </Link>
+              </Button>
+            )}
+            {!isComplete && agreementAcceptanceId && (
+              <Button asChild variant="outline">
+                <Link
+                  href={`/merchant/marketlock360/checkout?agreementAcceptanceId=${encodeURIComponent(agreementAcceptanceId)}`}
+                >
+                  Return to payment
+                </Link>
+              </Button>
+            )}
+            <Button asChild variant="outline">
+              <Link href="/merchant">
+                <ArrowLeft className="h-4 w-4" />
+                Back to dashboard
+              </Link>
+            </Button>
           </div>
         </section>
       </div>

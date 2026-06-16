@@ -46,6 +46,9 @@ interface AgreementSignedStatusPanelProps {
   agreementPdfUrl: string | null;
   agreementVersion: string;
   merchantName: string;
+  monthlyPaymentLabel: string | null;
+  paidAtIso: string | null;
+  paymentCompleted: boolean;
   servicePeriodLabel: string;
   typedName: string;
 }
@@ -79,11 +82,15 @@ export function AgreementSignedStatusPanel({
   agreementPdfUrl,
   agreementVersion,
   merchantName,
+  monthlyPaymentLabel,
+  paidAtIso,
+  paymentCompleted,
   servicePeriodLabel,
   typedName,
 }: AgreementSignedStatusPanelProps) {
   const checkoutHref = `/merchant/marketlock360/checkout?agreementAcceptanceId=${encodeURIComponent(agreementAcceptanceId)}`;
   const acceptedAtLabel = formatAcceptedAt(acceptedAtIso);
+  const paidAtLabel = paidAtIso ? formatAcceptedAt(paidAtIso) : null;
 
   return (
     <>
@@ -97,9 +104,15 @@ export function AgreementSignedStatusPanel({
               <CheckCircle2 className="h-5 w-5" />
             </span>
             <div>
-              <CardTitle>Already signed</CardTitle>
+              <CardTitle>
+                {paymentCompleted
+                  ? "Agreement and payment complete"
+                  : "Already signed"}
+              </CardTitle>
               <CardDescription>
-                This agreement is recorded for the current service period.
+                {paymentCompleted
+                  ? "This service period is active."
+                  : "This agreement is recorded for the current service period."}
               </CardDescription>
             </div>
           </div>
@@ -108,10 +121,14 @@ export function AgreementSignedStatusPanel({
         <CardContent className="space-y-4 px-5">
           <div className="rounded-lg border border-emerald-500/25 bg-emerald-500/10 px-4 py-3 text-sm">
             <p className="font-semibold text-emerald-700 dark:text-emerald-300">
-              Agreement signed and saved
+              {paymentCompleted
+                ? "Agreement signed and payment recorded"
+                : "Agreement signed and saved"}
             </p>
             <p className="mt-1 text-xs leading-5 text-muted-foreground">
-              The merchant does not need to sign again for this service period.
+              {paymentCompleted
+                ? "The merchant does not need to sign or pay again for this service period."
+                : "The merchant does not need to sign again for this service period."}
             </p>
           </div>
 
@@ -137,6 +154,21 @@ export function AgreementSignedStatusPanel({
               <p className="mt-1 font-semibold">{typedName}</p>
               <p className="text-xs text-muted-foreground">{acceptedAtLabel}</p>
             </div>
+            {paymentCompleted && (
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  Payment
+                </p>
+                <p className="mt-1 font-semibold">
+                  {monthlyPaymentLabel
+                    ? `${monthlyPaymentLabel} recorded`
+                    : "Recorded"}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  {paidAtLabel ?? "Confirmed by Stripe"}
+                </p>
+              </div>
+            )}
             <div>
               <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                 Agreement version
@@ -146,15 +178,24 @@ export function AgreementSignedStatusPanel({
           </div>
 
           <div className="grid gap-2">
-            <Button
-              asChild
-              className="h-auto min-h-10 w-full whitespace-normal bg-orange-600 py-2 text-center leading-5 text-white hover:bg-orange-500"
-            >
-              <Link href={checkoutHref}>
-                <ArrowRight className="h-4 w-4" />
-                Continue to payment
-              </Link>
-            </Button>
+            {paymentCompleted ? (
+              <Button asChild className="w-full">
+                <Link href="/merchant/marketlock360">
+                  <CheckCircle2 className="h-4 w-4" />
+                  MarketLock360 dashboard
+                </Link>
+              </Button>
+            ) : (
+              <Button
+                asChild
+                className="h-auto min-h-10 w-full whitespace-normal bg-orange-600 py-2 text-center leading-5 text-white hover:bg-orange-500"
+              >
+                <Link href={checkoutHref}>
+                  <ArrowRight className="h-4 w-4" />
+                  Continue to payment
+                </Link>
+              </Button>
+            )}
             {agreementPdfUrl && (
               <Button asChild variant="outline" className="w-full">
                 <Link href={agreementPdfUrl} target="_blank" rel="noreferrer">
@@ -176,7 +217,9 @@ export function AgreementSignedStatusPanel({
       <div className="fixed inset-x-0 bottom-0 z-40 border-t bg-background/95 p-3 shadow-lg backdrop-blur lg:hidden">
         <div className="mx-auto flex max-w-[1180px] items-center gap-3">
           <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-semibold">Agreement signed</p>
+            <p className="truncate text-sm font-semibold">
+              {paymentCompleted ? "Service period active" : "Agreement signed"}
+            </p>
             <p className="truncate text-xs text-muted-foreground">
               {servicePeriodLabel}
             </p>
@@ -185,7 +228,11 @@ export function AgreementSignedStatusPanel({
             asChild
             className="shrink-0 bg-orange-600 text-white hover:bg-orange-500"
           >
-            <Link href={checkoutHref}>Payment</Link>
+            <Link
+              href={paymentCompleted ? "/merchant/marketlock360" : checkoutHref}
+            >
+              {paymentCompleted ? "Dashboard" : "Payment"}
+            </Link>
           </Button>
         </div>
       </div>

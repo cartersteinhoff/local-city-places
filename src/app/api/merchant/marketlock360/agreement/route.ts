@@ -12,6 +12,8 @@ import {
   getMerchantServicesAgreementText,
   merchantServicesAgreement,
 } from "@/lib/legal/merchant-services-agreement";
+import { isPaidMarketLock360Agreement } from "@/lib/marketlock360-checkout";
+import { uploadPrivateMerchantAgreementPdf } from "@/lib/storage";
 
 function getClientIp(request: Request) {
   const forwardedFor = request.headers.get("x-forwarded-for");
@@ -90,6 +92,8 @@ export async function POST(request: Request) {
     const [existingAcceptance] = await db
       .select({
         id: merchantServiceAgreementAcceptances.id,
+        paidAt: merchantServiceAgreementAcceptances.paidAt,
+        paymentStatus: merchantServiceAgreementAcceptances.paymentStatus,
       })
       .from(merchantServiceAgreementAcceptances)
       .where(
@@ -115,7 +119,9 @@ export async function POST(request: Request) {
         alreadyAccepted: true,
         agreementAcceptanceId: existingAcceptance.id,
         agreementPdfUrl: getMerchantAgreementPdfHref(existingAcceptance.id),
-        redirectUrl: getCheckoutUrl(existingAcceptance.id),
+        redirectUrl: isPaidMarketLock360Agreement(existingAcceptance)
+          ? "/merchant/marketlock360"
+          : getCheckoutUrl(existingAcceptance.id),
       });
     }
 
@@ -134,7 +140,7 @@ export async function POST(request: Request) {
       .update(agreementTextSnapshot)
       .digest("hex");
     const acceptanceId = randomUUID();
-    generateMerchantAgreementPdf({
+    const agreementPdfBuffer = generateMerchantAgreementPdf({
       acceptanceId,
       merchantName: session.merchant.businessName,
       typedName,
@@ -147,6 +153,15 @@ export async function POST(request: Request) {
       ipAddress,
       userAgent,
     });
+    const agreementPdf = await uploadPrivateMerchantAgreementPdf(
+      agreementPdfBuffer,
+      session.merchant.id,
+      `${acceptanceId}.pdf`,
+    );
+
+    if (!agreementPdf && process.env.NODE_ENV === "production") {
+      throw new Error("Agreement PDF private storage is not configured");
+    }
 
     await db.insert(merchantServiceAgreementAcceptances).values({
       id: acceptanceId,
@@ -160,8 +175,8 @@ export async function POST(request: Request) {
       servicePeriodStart: servicePeriod.startsAt,
       servicePeriodEnd: servicePeriod.endsAt,
       servicePeriodLabel: servicePeriod.label,
-      agreementPdfUrl: null,
-      agreementPdfPath: null,
+      agreementPdfUrl: agreementPdf?.url ?? null,
+      agreementPdfPath: agreementPdf?.pathname ?? null,
       agreementPdfGeneratedAt: now,
       ipAddress,
       userAgent,

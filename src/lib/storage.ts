@@ -1,5 +1,10 @@
 import { put } from "@vercel/blob";
 
+interface UploadedBlobRecord {
+  pathname: string;
+  url: string;
+}
+
 /**
  * Validate that the base64 data is a supported image format
  */
@@ -275,4 +280,37 @@ export async function uploadFavoriteMerchantTestimonialPhoto(
   });
 
   return blob.url;
+}
+
+/**
+ * Store an executed merchant agreement PDF as a private blob.
+ * The file is served only through authenticated application routes.
+ */
+export async function uploadPrivateMerchantAgreementPdf(
+  pdfBuffer: Buffer,
+  merchantId: string,
+  fileName: string,
+): Promise<UploadedBlobRecord | null> {
+  if (!process.env.BLOB_READ_WRITE_TOKEN) {
+    console.warn(
+      "BLOB_READ_WRITE_TOKEN not configured, skipping private agreement PDF upload",
+    );
+    return null;
+  }
+
+  const safeFileName =
+    fileName
+      .replace(/[^a-z0-9.-]/gi, "-")
+      .replace(/-+/g, "-")
+      .toLowerCase() || "agreement.pdf";
+  const pathname = `merchant-agreements/${merchantId}/${safeFileName}`;
+  const blob = await put(pathname, pdfBuffer, {
+    access: "private",
+    contentType: "application/pdf",
+  });
+
+  return {
+    pathname: blob.pathname,
+    url: blob.url,
+  };
 }
