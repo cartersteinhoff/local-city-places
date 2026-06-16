@@ -3,15 +3,11 @@
 import {
   CalendarClock,
   CheckCircle2,
-  Edit,
-  ExternalLink,
   Loader2,
-  LockKeyhole,
   MapPin,
   Phone,
   RefreshCw,
   Search,
-  Store,
   UserRound,
 } from "lucide-react";
 import Link from "next/link";
@@ -24,6 +20,7 @@ import { Input } from "@/components/ui/input";
 import { PageHeader } from "@/components/ui/page-header";
 import { Pagination } from "@/components/ui/pagination";
 import { useUser } from "@/hooks/use-user";
+import type { MarketLockStatus } from "@/lib/market-lock-status";
 import { cn, formatPhoneNumber } from "@/lib/utils";
 import { adminNavItems } from "../nav";
 
@@ -42,6 +39,7 @@ interface TrialQueueItem {
   state: string | null;
   phone: string | null;
   website: string | null;
+  marketLockStatus: MarketLockStatus;
   requestedAt: string;
   updatedAt: string;
   createdAt: string;
@@ -50,8 +48,12 @@ interface TrialQueueItem {
 }
 
 interface TrialQueueStats {
+  accepted: number;
+  pending: number;
   total: number;
 }
+
+type TrialStatusFilter = "all" | "pending" | "accepted";
 
 function formatDate(dateStr: string | null) {
   if (!dateStr) return "-";
@@ -75,6 +77,10 @@ function getRequestedAge(dateStr: string) {
   return `${elapsedDays} days ago`;
 }
 
+function getStatusDateLabel(trial: TrialQueueItem) {
+  return trial.marketLockStatus === "trial" ? "Accepted" : "Requested";
+}
+
 function getOwnerDisplay(owner: TrialOwner | undefined) {
   if (!owner) return "No owner assigned";
   return owner.name || owner.email;
@@ -82,14 +88,23 @@ function getOwnerDisplay(owner: TrialOwner | undefined) {
 
 function TrialOwners({ owners }: { owners: TrialOwner[] }) {
   const primaryOwner = owners[0];
+  const ownerDisplay = getOwnerDisplay(primaryOwner);
 
   return (
     <div className="min-w-0">
       <div className="flex items-center gap-2">
         <UserRound className="h-4 w-4 shrink-0 text-muted-foreground" />
-        <span className="truncate text-sm font-medium">
-          {getOwnerDisplay(primaryOwner)}
-        </span>
+        {primaryOwner ? (
+          <Link
+            href={`/admin/users/${primaryOwner.id}`}
+            className="truncate text-sm font-medium text-orange-600 dark:text-orange-400"
+            title={`Edit user ${ownerDisplay}`}
+          >
+            {ownerDisplay}
+          </Link>
+        ) : (
+          <span className="truncate text-sm font-medium">{ownerDisplay}</span>
+        )}
       </div>
       {primaryOwner?.email ? (
         <p className="mt-1 truncate text-xs text-muted-foreground">
@@ -105,29 +120,6 @@ function TrialOwners({ owners }: { owners: TrialOwner[] }) {
   );
 }
 
-function StatBox({
-  label,
-  value,
-  subtext,
-  icon: Icon,
-}: {
-  label: string;
-  value: number;
-  subtext: string;
-  icon: typeof LockKeyhole;
-}) {
-  return (
-    <div className="rounded-lg border bg-card p-3 sm:p-4">
-      <div className="mb-1 flex items-center gap-2 text-muted-foreground">
-        <Icon className="h-4 w-4" />
-        <span className="text-xs sm:text-sm">{label}</span>
-      </div>
-      <div className="text-lg font-bold sm:text-2xl">{value}</div>
-      <div className="text-xs text-muted-foreground sm:text-sm">{subtext}</div>
-    </div>
-  );
-}
-
 export default function AdminMarketLockTrialsPage() {
   const router = useRouter();
   const { user, isLoading: authLoading, isAuthenticated } = useUser();
@@ -137,6 +129,8 @@ export default function AdminMarketLockTrialsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [statusFilter, setStatusFilter] =
+    useState<TrialStatusFilter>("pending");
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [total, setTotal] = useState(0);
@@ -171,6 +165,10 @@ export default function AdminMarketLockTrialsPage() {
         params.set("search", debouncedSearch);
       }
 
+      if (statusFilter !== "all") {
+        params.set("status", statusFilter);
+      }
+
       const res = await fetch(`/api/admin/marketlock-trials?${params}`);
       if (res.ok) {
         const data = await res.json();
@@ -184,7 +182,15 @@ export default function AdminMarketLockTrialsPage() {
     } finally {
       setIsLoading(false);
     }
-  }, [debouncedSearch, page]);
+  }, [debouncedSearch, page, statusFilter]);
+
+  const handleStatusFilterChange = useCallback(
+    (nextFilter: TrialStatusFilter) => {
+      setStatusFilter(nextFilter);
+      setPage(1);
+    },
+    [],
+  );
 
   const acceptTrial = useCallback(
     async (merchantId: string) => {
@@ -233,7 +239,7 @@ export default function AdminMarketLockTrialsPage() {
         <>
           <PageHeader
             title="MarketLOCK Trial Requests"
-            description="Merchants waiting for admin acceptance before trial access starts."
+            description="Pending and accepted MarketLOCK trial requests."
             actions={
               <Button
                 variant="outline"
@@ -249,21 +255,6 @@ export default function AdminMarketLockTrialsPage() {
             }
           />
 
-          <div className="mb-6 grid grid-cols-2 gap-2 sm:gap-4 lg:grid-cols-4">
-            <StatBox
-              label="Pending Requests"
-              value={stats?.total ?? total}
-              subtext="Awaiting acceptance"
-              icon={LockKeyhole}
-            />
-            <StatBox
-              label="Visible"
-              value={trials.length}
-              subtext="On this page"
-              icon={Store}
-            />
-          </div>
-
           <div className="relative mb-4">
             <Search className="-translate-y-1/2 absolute top-1/2 left-3 h-4 w-4 text-muted-foreground" />
             <Input
@@ -272,6 +263,38 @@ export default function AdminMarketLockTrialsPage() {
               onChange={(event) => setSearchQuery(event.target.value)}
               className="max-w-md pl-9"
             />
+          </div>
+
+          <div className="mb-6 flex flex-wrap gap-2">
+            {[
+              {
+                count: stats?.pending ?? 0,
+                label: "Pending",
+                value: "pending" as const,
+              },
+              {
+                count: stats?.accepted ?? 0,
+                label: "Accepted",
+                value: "accepted" as const,
+              },
+              {
+                count: stats?.total ?? total,
+                label: "All",
+                value: "all" as const,
+              },
+            ].map((filter) => (
+              <Button
+                key={filter.value}
+                type="button"
+                variant={statusFilter === filter.value ? "default" : "outline"}
+                size="sm"
+                onClick={() => handleStatusFilterChange(filter.value)}
+                disabled={isLoading && statusFilter === filter.value}
+              >
+                {filter.label}
+                <span className="ml-1 text-xs opacity-75">{filter.count}</span>
+              </Button>
+            ))}
           </div>
 
           {actionError ? (
@@ -284,28 +307,37 @@ export default function AdminMarketLockTrialsPage() {
             <div className="divide-y divide-border md:hidden">
               {!isLoading && trials.length === 0 ? (
                 <div className="p-8 text-center text-muted-foreground">
-                  No pending trial requests found.
+                  No trial requests found.
                 </div>
               ) : (
                 trials.map((trial) => (
                   <div key={trial.id} className="p-4">
                     <div className="mb-3 flex items-start justify-between gap-3">
                       <div className="min-w-0">
-                        <h3 className="truncate font-semibold">
+                        <Link
+                          href={`/admin/merchants/${trial.id}/edit`}
+                          className="block truncate font-semibold text-orange-600 dark:text-orange-400"
+                          title={`Edit merchant ${trial.businessName}`}
+                        >
                           {trial.businessName}
-                        </h3>
+                        </Link>
                         <p className="truncate text-sm text-muted-foreground">
                           {trial.categoryName || "No category"}
                         </p>
                       </div>
-                      <MarketLockStatusBadge status="trial_requested" />
+                      <MarketLockStatusBadge status={trial.marketLockStatus} />
                     </div>
 
                     <div className="mb-3 rounded-lg bg-muted/50 p-3">
                       <div className="flex items-baseline justify-between gap-3">
-                        <span className="text-lg font-bold">
-                          {getRequestedAge(trial.requestedAt)}
-                        </span>
+                        <div className="min-w-0">
+                          <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                            {getStatusDateLabel(trial)}
+                          </p>
+                          <p className="text-lg font-bold">
+                            {getRequestedAge(trial.requestedAt)}
+                          </p>
+                        </div>
                         <span className="text-sm text-muted-foreground">
                           {formatDate(trial.requestedAt)}
                         </span>
@@ -332,34 +364,21 @@ export default function AdminMarketLockTrialsPage() {
                       ) : null}
                     </div>
 
-                    <div className="grid grid-cols-2 gap-2">
-                      <Button
-                        className="col-span-2"
-                        onClick={() => acceptTrial(trial.id)}
-                        disabled={acceptingId === trial.id || isLoading}
-                      >
-                        {acceptingId === trial.id ? (
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        ) : (
-                          <CheckCircle2 className="mr-2 h-4 w-4" />
-                        )}
-                        Accept request
-                      </Button>
-                      <Button asChild variant="outline">
-                        <Link
-                          href={`/admin/merchants/${trial.id}/merchant-page`}
+                    {trial.marketLockStatus === "trial_requested" ? (
+                      <div className="grid gap-2">
+                        <Button
+                          onClick={() => acceptTrial(trial.id)}
+                          disabled={acceptingId === trial.id || isLoading}
                         >
-                          <ExternalLink className="mr-2 h-4 w-4" />
-                          Open
-                        </Link>
-                      </Button>
-                      <Button asChild variant="outline">
-                        <Link href={`/admin/merchants/${trial.id}/edit`}>
-                          <Edit className="mr-2 h-4 w-4" />
-                          Edit
-                        </Link>
-                      </Button>
-                    </div>
+                          {acceptingId === trial.id ? (
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          ) : (
+                            <CheckCircle2 className="mr-2 h-4 w-4" />
+                          )}
+                          Accept request
+                        </Button>
+                      </div>
+                    ) : null}
                   </div>
                 ))
               )}
@@ -386,7 +405,7 @@ export default function AdminMarketLockTrialsPage() {
                     Market
                   </th>
                   <th className="px-4 py-3 text-left text-sm font-semibold">
-                    Requested
+                    Timeline
                   </th>
                   <th className="px-4 py-3 text-left text-sm font-semibold">
                     Status
@@ -411,9 +430,13 @@ export default function AdminMarketLockTrialsPage() {
                     <tr key={trial.id} className="hover:bg-muted/35">
                       <td className="px-4 py-4 align-top">
                         <div className="min-w-0">
-                          <p className="truncate font-medium">
+                          <Link
+                            href={`/admin/merchants/${trial.id}/edit`}
+                            className="block truncate font-medium text-orange-600 dark:text-orange-400"
+                            title={`Edit merchant ${trial.businessName}`}
+                          >
                             {trial.businessName}
-                          </p>
+                          </Link>
                           <p className="mt-1 truncate text-sm text-muted-foreground">
                             {trial.categoryName || "No category"}
                           </p>
@@ -444,6 +467,9 @@ export default function AdminMarketLockTrialsPage() {
                         <div className="flex items-start gap-2">
                           <CalendarClock className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
                           <div>
+                            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                              {getStatusDateLabel(trial)}
+                            </p>
                             <p className="text-sm font-medium">
                               {getRequestedAge(trial.requestedAt)}
                             </p>
@@ -454,36 +480,30 @@ export default function AdminMarketLockTrialsPage() {
                         </div>
                       </td>
                       <td className="px-4 py-4 align-top">
-                        <MarketLockStatusBadge status="trial_requested" />
+                        <MarketLockStatusBadge
+                          status={trial.marketLockStatus}
+                        />
                       </td>
                       <td className="px-4 py-4 text-right align-top">
-                        <div className="flex flex-wrap justify-end gap-2">
-                          <Button
-                            size="sm"
-                            onClick={() => acceptTrial(trial.id)}
-                            disabled={acceptingId === trial.id || isLoading}
-                          >
-                            {acceptingId === trial.id ? (
-                              <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
-                            ) : (
-                              <CheckCircle2 className="mr-1.5 h-4 w-4" />
-                            )}
-                            Accept
-                          </Button>
-                          <Button asChild variant="outline" size="sm">
-                            <Link
-                              href={`/admin/merchants/${trial.id}/merchant-page`}
+                        <div className="flex justify-end">
+                          {trial.marketLockStatus === "trial_requested" ? (
+                            <Button
+                              size="sm"
+                              onClick={() => acceptTrial(trial.id)}
+                              disabled={acceptingId === trial.id || isLoading}
                             >
-                              <ExternalLink className="h-4 w-4" />
-                              <span className="sr-only">Open merchant</span>
-                            </Link>
-                          </Button>
-                          <Button asChild variant="outline" size="sm">
-                            <Link href={`/admin/merchants/${trial.id}/edit`}>
-                              <Edit className="h-4 w-4" />
-                              <span className="sr-only">Edit merchant</span>
-                            </Link>
-                          </Button>
+                              {acceptingId === trial.id ? (
+                                <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
+                              ) : (
+                                <CheckCircle2 className="mr-1.5 h-4 w-4" />
+                              )}
+                              Accept
+                            </Button>
+                          ) : (
+                            <span className="text-sm text-muted-foreground">
+                              Accepted
+                            </span>
+                          )}
                         </div>
                       </td>
                     </tr>
