@@ -34,12 +34,6 @@ export const adminNavItems = [
     section: "Merchants",
   },
   {
-    label: "Categories",
-    href: "/admin/categories",
-    icon: FolderOpen,
-    section: "Merchants",
-  },
-  {
     label: "Merchant Requests",
     href: "/admin/merchant-requests",
     icon: ClipboardList,
@@ -52,15 +46,21 @@ export const adminNavItems = [
     section: "Merchants",
   },
   {
-    label: "Reviews",
-    href: "/admin/reviews",
-    icon: MessageSquare,
-    section: "Merchants",
-  },
-  {
     label: "Trial Invites",
     href: "/admin/invites",
     icon: Mail,
+    section: "Merchants",
+  },
+  {
+    label: "Categories",
+    href: "/admin/categories",
+    icon: FolderOpen,
+    section: "Merchants",
+  },
+  {
+    label: "Reviews",
+    href: "/admin/reviews",
+    icon: MessageSquare,
     section: "Merchants",
   },
   {
