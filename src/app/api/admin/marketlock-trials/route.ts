@@ -128,10 +128,12 @@ export async function GET(request: NextRequest) {
     );
     const offset = (page - 1) * limit;
     const search = searchParams.get("search")?.trim() || "";
+    const status = searchParams.get("status")?.trim() || "all";
 
-    const conditions: SQL[] = [
-      eq(merchants.marketLockStatus, "trial_requested"),
+    const baseConditions: SQL[] = [
+      inArray(merchants.marketLockStatus, ["trial_requested", "trial"]),
     ];
+    const conditions: SQL[] = [...baseConditions];
 
     if (search) {
       const phoneSearch = search.replace(/\D/g, "");
@@ -149,16 +151,38 @@ export async function GET(request: NextRequest) {
       const searchClause = or(...searchConditions);
       if (searchClause) {
         conditions.push(searchClause);
+        baseConditions.push(searchClause);
       }
+    }
+
+    if (status === "pending") {
+      conditions.push(eq(merchants.marketLockStatus, "trial_requested"));
+    } else if (status === "accepted") {
+      conditions.push(eq(merchants.marketLockStatus, "trial"));
     }
 
     const whereClause =
       conditions.length > 1 ? and(...conditions) : conditions[0];
+    const statsWhereClause =
+      baseConditions.length > 1 ? and(...baseConditions) : baseConditions[0];
 
     const [{ count }] = await db
       .select({ count: sql<number>`count(*)` })
       .from(merchants)
       .where(whereClause);
+
+    const statusCounts = await db
+      .select({
+        count: sql<number>`count(*)`,
+        marketLockStatus: merchants.marketLockStatus,
+      })
+      .from(merchants)
+      .where(statsWhereClause)
+      .groupBy(merchants.marketLockStatus);
+    const statsTotal = statusCounts.reduce(
+      (sum, row) => sum + Number(row.count),
+      0,
+    );
 
     const trialRows = await db
       .select({
@@ -172,6 +196,7 @@ export async function GET(request: NextRequest) {
         website: merchants.website,
         slug: merchants.slug,
         isPublicPage: merchants.isPublicPage,
+        marketLockStatus: merchants.marketLockStatus,
         marketLockStatusUpdatedAt: merchants.marketLockStatusUpdatedAt,
         updatedAt: merchants.updatedAt,
         createdAt: merchants.createdAt,
@@ -200,6 +225,7 @@ export async function GET(request: NextRequest) {
         state: merchant.state,
         phone: merchant.phone,
         website: merchant.website,
+        marketLockStatus: merchant.marketLockStatus,
         requestedAt: merchant.marketLockStatusUpdatedAt.toISOString(),
         updatedAt: merchant.updatedAt.toISOString(),
         createdAt: merchant.createdAt.toISOString(),
@@ -219,7 +245,15 @@ export async function GET(request: NextRequest) {
         totalPages: Math.ceil(Number(count) / limit),
       },
       stats: {
-        total: Number(count),
+        total: statsTotal,
+        accepted: Number(
+          statusCounts.find((row) => row.marketLockStatus === "trial")?.count ??
+            0,
+        ),
+        pending: Number(
+          statusCounts.find((row) => row.marketLockStatus === "trial_requested")
+            ?.count ?? 0,
+        ),
       },
     });
   } catch (error) {

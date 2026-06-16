@@ -40,15 +40,15 @@ export const adminNavItems = [
     section: "Merchants",
   },
   {
-    label: "Trial Requests",
-    href: "/admin/marketlock-trials",
-    icon: LockKeyhole,
+    label: "Merchant Invites",
+    href: "/admin/invites",
+    icon: Mail,
     section: "Merchants",
   },
   {
-    label: "Trial Invites",
-    href: "/admin/invites",
-    icon: Mail,
+    label: "Trial Requests",
+    href: "/admin/marketlock-trials",
+    icon: LockKeyhole,
     section: "Merchants",
   },
   {
