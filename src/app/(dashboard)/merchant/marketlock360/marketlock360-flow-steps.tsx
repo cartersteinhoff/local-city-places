@@ -9,6 +9,7 @@ interface MarketLock360FlowStepsProps {
   amountLabel: string | null;
   currentStep: MarketLock360FlowStep;
   merchantName: string;
+  paymentCompleted?: boolean;
   servicePeriodLabel: string;
 }
 
@@ -33,12 +34,20 @@ export function MarketLock360FlowSteps({
   amountLabel,
   currentStep,
   merchantName,
+  paymentCompleted = false,
   servicePeriodLabel,
 }: MarketLock360FlowStepsProps) {
   const isPaymentStep = currentStep === "payment";
   const agreementIsSigned = isPaymentStep || agreementCompleted;
-  const current =
-    agreementCompleted && !isPaymentStep
+  const paymentIsComplete = paymentCompleted;
+  const current = paymentIsComplete
+    ? {
+        eyebrow: "Payment complete",
+        title: "Service period active",
+        description:
+          "The signed agreement and one-time payment are recorded for this monthly service period.",
+      }
+    : agreementCompleted && !isPaymentStep
       ? {
           eyebrow: "Agreement signed",
           title: "Agreement already signed",
@@ -150,38 +159,56 @@ export function MarketLock360FlowSteps({
 
         <li
           className={
-            isPaymentStep
-              ? "bg-orange-50 px-4 py-4 sm:px-5 dark:bg-orange-500/10"
-              : "px-4 py-4 sm:px-5"
+            paymentIsComplete
+              ? "bg-emerald-50 px-4 py-4 sm:px-5 dark:bg-emerald-400/10"
+              : isPaymentStep
+                ? "bg-orange-50 px-4 py-4 sm:px-5 dark:bg-orange-500/10"
+                : "px-4 py-4 sm:px-5"
           }
         >
           <div className="flex items-start gap-3">
             <span
               className={
-                isPaymentStep
-                  ? "mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-orange-600 text-white ring-1 ring-orange-600 dark:bg-orange-500 dark:ring-orange-400/45"
-                  : "mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground ring-1 ring-border dark:bg-sky-300/10 dark:text-slate-300 dark:ring-sky-300/20"
+                paymentIsComplete
+                  ? "mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-emerald-700 ring-1 ring-emerald-200 dark:bg-emerald-400/10 dark:text-emerald-300 dark:ring-emerald-300/25"
+                  : isPaymentStep
+                    ? "mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-orange-600 text-white ring-1 ring-orange-600 dark:bg-orange-500 dark:ring-orange-400/45"
+                    : "mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground ring-1 ring-border dark:bg-sky-300/10 dark:text-slate-300 dark:ring-sky-300/20"
               }
             >
-              <CreditCard className="h-4 w-4" />
+              {paymentIsComplete ? (
+                <CheckCircle2 className="h-4 w-4" />
+              ) : (
+                <CreditCard className="h-4 w-4" />
+              )}
             </span>
             <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-2">
                 <p className="font-semibold">Payment</p>
                 <span
                   className={
-                    isPaymentStep
-                      ? "rounded-full bg-orange-600 px-2 py-0.5 text-xs font-bold text-white"
-                      : "rounded-full bg-muted px-2 py-0.5 text-xs font-bold text-muted-foreground ring-1 ring-border dark:bg-sky-300/10 dark:text-slate-300 dark:ring-sky-300/20"
+                    paymentIsComplete
+                      ? "rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-bold text-emerald-700 dark:bg-emerald-400/10 dark:text-emerald-300"
+                      : isPaymentStep
+                        ? "rounded-full bg-orange-600 px-2 py-0.5 text-xs font-bold text-white"
+                        : "rounded-full bg-muted px-2 py-0.5 text-xs font-bold text-muted-foreground ring-1 ring-border dark:bg-sky-300/10 dark:text-slate-300 dark:ring-sky-300/20"
                   }
                 >
-                  {isPaymentStep ? "Current" : "Next"}
+                  {paymentIsComplete
+                    ? "Paid"
+                    : isPaymentStep
+                      ? "Current"
+                      : "Next"}
                 </span>
               </div>
               <p className="mt-1 text-xs leading-5 text-muted-foreground dark:text-slate-300">
-                {amountLabel
-                  ? `${amountLabel} one-time charge for this service period.`
-                  : "One-time charge for this service period."}
+                {paymentIsComplete
+                  ? amountLabel
+                    ? `${amountLabel} one-time payment recorded for this service period.`
+                    : "One-time payment recorded for this service period."
+                  : amountLabel
+                    ? `${amountLabel} one-time charge for this service period.`
+                    : "One-time charge for this service period."}
               </p>
             </div>
           </div>

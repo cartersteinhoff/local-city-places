@@ -7,6 +7,7 @@ import { getSession } from "@/lib/auth";
 import { getMerchantAgreementPdfHref } from "@/lib/legal/merchant-agreement-pdf";
 import { getMerchantAgreementServicePeriod } from "@/lib/legal/merchant-service-period";
 import { merchantServicesAgreement } from "@/lib/legal/merchant-services-agreement";
+import { isPaidMarketLock360Agreement } from "@/lib/marketlock360-checkout";
 import {
   formatMarketLock360Amount,
   getMarketLock360MonthlyAmountCents,
@@ -51,6 +52,8 @@ export default async function MerchantMarketLockAgreementPage() {
       id: merchantServiceAgreementAcceptances.id,
       agreementVersion: merchantServiceAgreementAcceptances.agreementVersion,
       acceptedAt: merchantServiceAgreementAcceptances.acceptedAt,
+      paidAt: merchantServiceAgreementAcceptances.paidAt,
+      paymentStatus: merchantServiceAgreementAcceptances.paymentStatus,
       servicePeriodLabel:
         merchantServiceAgreementAcceptances.servicePeriodLabel,
       typedName: merchantServiceAgreementAcceptances.typedName,
@@ -76,12 +79,17 @@ export default async function MerchantMarketLockAgreementPage() {
   const monthlyPaymentLabel = amountCents
     ? formatMarketLock360Amount(amountCents)
     : null;
+  const paymentCompleted = signedAgreement
+    ? isPaidMarketLock360Agreement(signedAgreement)
+    : false;
   const signedAgreementView = signedAgreement
     ? {
         acceptedAtIso: signedAgreement.acceptedAt.toISOString(),
         agreementPdfUrl: getMerchantAgreementPdfHref(signedAgreement.id),
         agreementVersion: signedAgreement.agreementVersion,
         id: signedAgreement.id,
+        paidAtIso: signedAgreement.paidAt?.toISOString() ?? null,
+        paymentCompleted,
         servicePeriodLabel: signedAgreement.servicePeriodLabel,
         typedName: signedAgreement.typedName,
       }
@@ -92,14 +100,18 @@ export default async function MerchantMarketLockAgreementPage() {
       <div className="mx-auto max-w-[1180px] pb-24 lg:pb-0">
         <PageHeader
           title={
-            signedAgreement
-              ? "Agreement already signed"
-              : "Review and sign your monthly agreement"
+            paymentCompleted
+              ? "Agreement and payment complete"
+              : signedAgreement
+                ? "Agreement already signed"
+                : "Review and sign your monthly agreement"
           }
           description={
-            signedAgreement
-              ? `${merchant.businessName} has already signed the MARKETLOCK360 agreement for ${servicePeriodLabel}. Continue to payment or view the signed PDF copy.`
-              : `This agreement covers ${merchant.businessName} for ${servicePeriodLabel}. A signed PDF copy is saved after acceptance.`
+            paymentCompleted
+              ? `${merchant.businessName} is active for ${servicePeriodLabel}. The signed PDF and payment record are saved for this monthly service period.`
+              : signedAgreement
+                ? `${merchant.businessName} has already signed the MARKETLOCK360 agreement for ${servicePeriodLabel}. Continue to payment or view the signed PDF copy.`
+                : `This agreement covers ${merchant.businessName} for ${servicePeriodLabel}. A signed PDF copy is saved after acceptance.`
           }
         />
 
@@ -108,6 +120,7 @@ export default async function MerchantMarketLockAgreementPage() {
           amountLabel={monthlyPaymentLabel}
           currentStep="agreement"
           merchantName={merchant.businessName}
+          paymentCompleted={paymentCompleted}
           servicePeriodLabel={servicePeriodLabel}
         />
 

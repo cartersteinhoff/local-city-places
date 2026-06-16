@@ -17,6 +17,11 @@ type FulfillmentResult =
         | "not_paid";
     };
 
+type MarketLock360AgreementPaymentState = {
+  paidAt?: Date | null;
+  paymentStatus?: string | null;
+};
+
 function getPaymentIntentId(session: Stripe.Checkout.Session) {
   return typeof session.payment_intent === "string"
     ? session.payment_intent
@@ -45,6 +50,16 @@ export function isPaidMarketLock360CheckoutSession(
     session.status === "complete" &&
     (session.payment_status === "paid" ||
       session.payment_status === "no_payment_required")
+  );
+}
+
+export function isPaidMarketLock360Agreement(
+  agreement: MarketLock360AgreementPaymentState,
+) {
+  return (
+    Boolean(agreement.paidAt) ||
+    agreement.paymentStatus === "paid" ||
+    agreement.paymentStatus === "no_payment_required"
   );
 }
 

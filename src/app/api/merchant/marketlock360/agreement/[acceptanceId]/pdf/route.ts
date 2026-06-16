@@ -1,3 +1,4 @@
+import { get } from "@vercel/blob";
 import { and, eq } from "drizzle-orm";
 import { db, merchantServiceAgreementAcceptances } from "@/db";
 import { getSession } from "@/lib/auth";
@@ -51,6 +52,7 @@ export async function GET(
         merchantServiceAgreementAcceptances.agreementTextSnapshot,
       agreementTitle: merchantServiceAgreementAcceptances.agreementTitle,
       agreementVersion: merchantServiceAgreementAcceptances.agreementVersion,
+      agreementPdfPath: merchantServiceAgreementAcceptances.agreementPdfPath,
       acceptedAt: merchantServiceAgreementAcceptances.acceptedAt,
       ipAddress: merchantServiceAgreementAcceptances.ipAddress,
       servicePeriodLabel:
@@ -71,6 +73,29 @@ export async function GET(
     return Response.json({ error: "Agreement not found" }, { status: 404 });
   }
 
+  const responseHeaders = {
+    "Cache-Control": "private, no-store",
+    "Content-Disposition": `inline; filename="${getPdfFileName(agreementAcceptance.id)}"`,
+    "Content-Type": "application/pdf",
+  };
+
+  if (agreementAcceptance.agreementPdfPath) {
+    try {
+      const storedPdf = await get(agreementAcceptance.agreementPdfPath, {
+        access: "private",
+        useCache: false,
+      });
+
+      if (storedPdf?.statusCode === 200 && storedPdf.stream) {
+        return new Response(storedPdf.stream, {
+          headers: responseHeaders,
+        });
+      }
+    } catch (error) {
+      console.warn("Stored agreement PDF unavailable:", error);
+    }
+  }
+
   const pdfBuffer = generateMerchantAgreementPdf({
     acceptanceId: agreementAcceptance.id,
     merchantName: session.merchant.businessName,
@@ -88,10 +113,6 @@ export async function GET(
   });
 
   return new Response(pdfBuffer, {
-    headers: {
-      "Cache-Control": "private, no-store",
-      "Content-Disposition": `inline; filename="${getPdfFileName(agreementAcceptance.id)}"`,
-      "Content-Type": "application/pdf",
-    },
+    headers: responseHeaders,
   });
 }

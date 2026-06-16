@@ -43,6 +43,8 @@ interface AgreementSigningExperienceProps {
     agreementPdfUrl: string | null;
     agreementVersion: string;
     id: string;
+    paidAtIso: string | null;
+    paymentCompleted: boolean;
     servicePeriodLabel: string;
     typedName: string;
   } | null;
@@ -297,6 +299,9 @@ export function AgreementSigningExperience({
           agreementPdfUrl={signedAgreement.agreementPdfUrl}
           agreementVersion={signedAgreement.agreementVersion}
           merchantName={merchantName}
+          monthlyPaymentLabel={monthlyPaymentLabel}
+          paidAtIso={signedAgreement.paidAtIso}
+          paymentCompleted={signedAgreement.paymentCompleted}
           servicePeriodLabel={signedAgreement.servicePeriodLabel}
           typedName={signedAgreement.typedName}
         />
