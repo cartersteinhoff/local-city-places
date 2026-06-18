@@ -26,7 +26,9 @@ import {
   MapPin,
   Music2,
   Navigation,
+  Pause,
   Phone,
+  Play,
   RadioTower,
   Share2,
   Sparkles,
@@ -36,7 +38,7 @@ import {
   X,
 } from "lucide-react";
 import Image from "next/image";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Facebook, Instagram } from "@/components/icons/social-icons";
 import { formatHoursDisplay, formatPhoneNumber } from "@/lib/utils";
 import {
@@ -190,6 +192,153 @@ function getTestimonialName(testimonial: FavoriteMerchantTestimonial) {
     ? `${testimonial.memberLastName.charAt(0)}.`
     : "";
   return [firstName, lastInitial].filter(Boolean).join(" ") || "Local customer";
+}
+
+function formatAudioTime(seconds: number) {
+  if (!Number.isFinite(seconds) || seconds <= 0) return "0:00";
+
+  const minutes = Math.floor(seconds / 60);
+  const remainingSeconds = Math.floor(seconds % 60)
+    .toString()
+    .padStart(2, "0");
+
+  return `${minutes}:${remainingSeconds}`;
+}
+
+function PublicTrackCard({
+  asset,
+  description,
+  icon: Icon,
+  label,
+}: {
+  asset: CampaignAudioAsset;
+  description: string;
+  icon: typeof Music2;
+  label: string;
+}) {
+  const audioRef = useRef<HTMLAudioElement>(null);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(0);
+  const [isPlaying, setIsPlaying] = useState(false);
+
+  const progressValue = duration > 0 ? currentTime : 0;
+
+  const togglePlayback = async () => {
+    const audio = audioRef.current;
+    if (!audio) return;
+
+    if (audio.paused) {
+      await audio.play();
+      setIsPlaying(true);
+      return;
+    }
+
+    audio.pause();
+    setIsPlaying(false);
+  };
+
+  const handleSeek = (value: string) => {
+    const audio = audioRef.current;
+    if (!audio || !duration) return;
+
+    const nextTime = Number(value);
+    audio.currentTime = nextTime;
+    setCurrentTime(nextTime);
+  };
+
+  return (
+    <article className="rounded-lg border border-slate-200 bg-slate-50/80 p-4 transition hover:border-[#2563EB]/40 hover:bg-white hover:shadow-sm">
+      <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(300px,420px)] lg:items-center">
+        <div className="flex min-w-0 items-start gap-3">
+          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-md border border-slate-200 bg-white text-[#2563EB] shadow-sm">
+            <Icon className="h-5 w-5" />
+          </span>
+          <div className="min-w-0">
+            <div className="flex flex-wrap items-center gap-2">
+              <h3 className="text-base font-black leading-tight text-slate-950">
+                {label}
+              </h3>
+              <span className="rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[11px] font-bold uppercase text-emerald-700">
+                Ready
+              </span>
+            </div>
+            <p className="mt-1 max-w-2xl text-sm leading-6 text-slate-600">
+              {asset.description || description}
+            </p>
+          </div>
+        </div>
+
+        <div className="rounded-md border border-slate-200 bg-white p-3 shadow-sm">
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={togglePlayback}
+              aria-label={isPlaying ? `Pause ${label}` : `Play ${label}`}
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#2563EB] text-white transition hover:bg-[#1D4ED8] active:scale-95"
+            >
+              {isPlaying ? (
+                <Pause className="h-4 w-4" />
+              ) : (
+                <Play className="ml-0.5 h-4 w-4" />
+              )}
+            </button>
+
+            <div className="min-w-0 flex-1">
+              <input
+                type="range"
+                min={0}
+                max={duration || 1}
+                step="0.1"
+                value={progressValue}
+                onChange={(event) => handleSeek(event.target.value)}
+                aria-label={`${label} progress`}
+                className="h-1.5 w-full cursor-pointer accent-[#2563EB]"
+              />
+              <div className="mt-1 flex items-center justify-between text-[11px] font-semibold tabular-nums text-slate-500">
+                <span>{formatAudioTime(currentTime)}</span>
+                <span>
+                  {duration > 0 ? formatAudioTime(duration) : "--:--"}
+                </span>
+              </div>
+            </div>
+
+            <a
+              href={asset.url}
+              download
+              title={`Download ${label}`}
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md border border-slate-200 text-slate-600 transition hover:border-[#2563EB] hover:text-[#2563EB]"
+            >
+              <Download className="h-4 w-4" />
+              <span className="sr-only">Download {label}</span>
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <audio
+        ref={audioRef}
+        className="sr-only"
+        onEnded={() => setIsPlaying(false)}
+        onLoadedMetadata={(event) => {
+          setDuration(event.currentTarget.duration || 0);
+        }}
+        onPause={() => setIsPlaying(false)}
+        onPlay={() => setIsPlaying(true)}
+        onTimeUpdate={(event) => {
+          setCurrentTime(event.currentTarget.currentTime || 0);
+        }}
+        preload="metadata"
+        src={asset.url}
+      >
+        <track
+          default
+          kind="captions"
+          label="Captions"
+          src={emptyAudioCaptionsTrack}
+        />
+      </audio>
+    </article>
+  );
 }
 
 function initialsFor(value: string) {
@@ -965,69 +1114,35 @@ export function LocalGuideDesign({
           {hasPublicAudioTracks && (
             <section
               id="tracks"
-              className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm"
+              className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm sm:p-6"
             >
-              <div className="mb-4 flex items-center justify-between gap-4">
+              <div className="mb-5 flex items-start justify-between gap-4">
                 <div>
                   <h2 className="text-2xl font-black tracking-normal text-slate-950">
                     Merchant Tracks
                   </h2>
-                  <p className="mt-1 text-sm text-slate-500">
+                  <p className="mt-1 max-w-2xl text-sm leading-6 text-slate-500">
                     Campaign audio from this local merchant.
                   </p>
                 </div>
-                <FileAudio className="h-5 w-5 shrink-0 text-[#2563EB]" />
+                <span className="hidden h-10 w-10 shrink-0 items-center justify-center rounded-md bg-blue-50 text-[#2563EB] sm:flex">
+                  <FileAudio className="h-5 w-5" />
+                </span>
               </div>
 
-              <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+              <div className="grid gap-3">
                 {publicAudioTrackSlots.map((track) => {
                   const asset = campaignAudio?.[track.kind] || null;
                   if (!asset?.url) return null;
 
-                  const Icon = track.icon;
-
                   return (
-                    <article
+                    <PublicTrackCard
                       key={track.kind}
-                      className="rounded-md border border-slate-200 bg-slate-50 p-4"
-                    >
-                      <div className="flex items-start gap-3">
-                        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-white text-[#2563EB] shadow-sm">
-                          <Icon className="h-5 w-5" />
-                        </span>
-                        <div className="min-w-0">
-                          <h3 className="font-black text-slate-950">
-                            {asset.title || track.label}
-                          </h3>
-                          <p className="mt-1 text-sm leading-6 text-slate-600">
-                            {asset.description || track.description}
-                          </p>
-                        </div>
-                      </div>
-
-                      <audio
-                        className="mt-4 w-full"
-                        controls
-                        preload="metadata"
-                        src={asset.url}
-                      >
-                        <track
-                          default
-                          kind="captions"
-                          label="Captions"
-                          src={emptyAudioCaptionsTrack}
-                        />
-                      </audio>
-
-                      <a
-                        href={asset.url}
-                        download
-                        className="mt-3 inline-flex min-h-9 items-center justify-center gap-2 rounded-md border border-slate-200 bg-white px-3 text-sm font-bold text-slate-700 transition hover:border-[#2563EB] hover:text-[#2563EB]"
-                      >
-                        <Download className="h-4 w-4" />
-                        Download
-                      </a>
-                    </article>
+                      asset={asset}
+                      description={track.description}
+                      icon={track.icon}
+                      label={track.label}
+                    />
                   );
                 })}
               </div>
