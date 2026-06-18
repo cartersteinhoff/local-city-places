@@ -521,7 +521,7 @@ function CampaignAudioPanel({
         </p>
       </div>
 
-      <div className="mt-4 grid gap-4 xl:grid-cols-3 xl:divide-x xl:divide-border">
+      <div className="mt-4 grid gap-4 xl:grid-cols-3 xl:gap-6">
         {visibleSoundtrackSlots.map((slot) => (
           <CampaignAudioAsset
             key={slot.id}
@@ -533,8 +533,7 @@ function CampaignAudioPanel({
             pendingLabel="In production"
             pendingNote="Waiting on audio"
             className={cn(
-              slot.id !== "soundtrack" &&
-                "border-t pt-4 xl:border-t-0 xl:pl-4 xl:pt-0",
+              slot.id !== "soundtrack" && "border-t pt-4 xl:border-t-0 xl:pt-0",
             )}
           />
         ))}
@@ -551,7 +550,7 @@ function CampaignAudioPanel({
           pendingLabel="Awaiting upload"
           pendingNote="No audio file yet"
           accent="blue"
-          className="border-t pt-4 xl:border-t-0 xl:pl-4 xl:pt-0"
+          className="border-t pt-4 xl:border-t-0 xl:pt-0"
         />
       </div>
     </section>
