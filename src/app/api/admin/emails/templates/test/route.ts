@@ -79,7 +79,7 @@ export async function POST(request: NextRequest) {
             "https://localcityplaces.com/images/phoenix-skyline-section-mobile-v3.webp",
             "https://localcityplaces.com/images/gas-grocery-gift-card.png",
             "https://localcityplaces.com/images/new-year-250-background.jpg",
-            "https://localcityplaces.com/images/morning-buzz-homepage-wide.webp",
+            "https://localcityplaces.com/images/troy-city-living-local-city-places-mogul-desert.webp",
             "https://localcityplaces.com/images/john-heidi-show.jpg",
           ].slice(0, Number(params.photoCount || 0)),
           createdAt: params.createdAt

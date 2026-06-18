@@ -60,6 +60,12 @@ const ON_AIR_GRADIENT =
 const MARKETLOCK360_GRADIENT =
   "linear-gradient(90deg, #10b981 0%, #0f766e 52%, #f97316 100%)";
 
+function getMarketLockSidebarStatusLabel(status: unknown) {
+  if (status === "pro") return "Pro";
+  if (status === "trial_requested") return "Pending";
+  return "Trial";
+}
+
 interface SidebarProps {
   navItems: NavItem[];
   isCollapsed?: boolean;
@@ -275,9 +281,11 @@ function MarketLock360Mark({
             "flex shrink-0 items-center rounded-full px-2 py-0.5 text-[10px] font-black leading-none ring-1",
             statusLabel === "Trial"
               ? "bg-orange-500/10 text-orange-500 ring-orange-500/20"
-              : statusLabel === "Pro"
-                ? "bg-emerald-500/10 text-emerald-500 ring-emerald-500/20"
-                : "bg-slate-500/10 text-slate-500 ring-slate-500/20 dark:text-slate-300 dark:ring-slate-300/20",
+              : statusLabel === "Pending"
+                ? "bg-amber-500/10 text-amber-500 ring-amber-500/20"
+                : statusLabel === "Pro"
+                  ? "bg-emerald-500/10 text-emerald-500 ring-emerald-500/20"
+                  : "bg-slate-500/10 text-slate-500 ring-slate-500/20 dark:text-slate-300 dark:ring-slate-300/20",
           )}
         >
           {statusLabel}
@@ -350,8 +358,9 @@ export function Sidebar({
   const hasSections = navItems.some((item) => item.section);
   const navGroups = groupNavItems(navItems);
   const nextTheme = theme === "dark" ? "light" : "dark";
-  const marketLockStatusLabel =
-    merchant?.marketLockStatus === "pro" ? "Pro" : "Trial";
+  const marketLockStatusLabel = getMarketLockSidebarStatusLabel(
+    merchant?.marketLockStatus,
+  );
 
   const handleToggleCollapse = () => {
     if (onToggleCollapse) {

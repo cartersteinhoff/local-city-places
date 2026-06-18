@@ -25,6 +25,18 @@ export function stripPhoneNumber(value: string): string {
   return value.replace(/\D/g, "").slice(0, 10);
 }
 
+export function parseCityState(value: string): { city: string; state: string } {
+  const parts = value.split(",").map((part) => part.trim());
+
+  if (parts.length >= 2) {
+    const state = parts[parts.length - 1].toUpperCase().slice(0, 2);
+    const city = parts.slice(0, -1).join(", ");
+    return { city, state };
+  }
+
+  return { city: value.trim(), state: "" };
+}
+
 /**
  * Convert a string to a URL-friendly slug
  * @param text - Text to slugify

@@ -104,7 +104,7 @@ function getSamplePhotoUrls(count: number) {
     "/images/phoenix-skyline-section-mobile-v3.webp",
     "/images/gas-grocery-gift-card.png",
     "/images/new-year-250-background.jpg",
-    "/images/morning-buzz-homepage-wide.webp",
+    "/images/troy-city-living-local-city-places-mogul-desert.webp",
     "/images/john-heidi-show.jpg",
   ];
 

@@ -8,6 +8,8 @@ import { cn } from "@/lib/utils";
 const statusClassName: Record<MarketLockStatus, string> = {
   basic:
     "border-slate-300/70 bg-slate-100 text-slate-700 dark:border-slate-500/35 dark:bg-slate-400/10 dark:text-slate-200",
+  trial_requested:
+    "border-amber-300/70 bg-amber-100 text-amber-800 dark:border-amber-400/35 dark:bg-amber-400/10 dark:text-amber-200",
   trial:
     "border-orange-300/70 bg-orange-100 text-orange-800 dark:border-orange-400/35 dark:bg-orange-400/10 dark:text-orange-200",
   pro: "border-emerald-300/70 bg-emerald-100 text-emerald-800 dark:border-emerald-400/35 dark:bg-emerald-400/10 dark:text-emerald-200",

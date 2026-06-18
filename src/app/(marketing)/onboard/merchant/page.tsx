@@ -31,7 +31,11 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { formatPhoneNumber, stripPhoneNumber } from "@/lib/utils";
+import {
+  formatPhoneNumber,
+  parseCityState,
+  stripPhoneNumber,
+} from "@/lib/utils";
 
 interface Category {
   id: string;
@@ -158,19 +162,6 @@ function MerchantOnboardingContent() {
       const mainName = name.split(",")[0];
       setBusinessName(mainName);
     }
-  };
-
-  // Parse cityState into separate city and state values
-  const parseCityState = (value: string): { city: string; state: string } => {
-    const parts = value.split(",").map((p) => p.trim());
-    if (parts.length >= 2) {
-      // Last part is state, rest is city
-      const state = parts[parts.length - 1].toUpperCase().slice(0, 2);
-      const city = parts.slice(0, -1).join(", ");
-      return { city, state };
-    }
-    // No comma - treat whole thing as city
-    return { city: value.trim(), state: "" };
   };
 
   const handleSubmit = async (e: React.FormEvent) => {

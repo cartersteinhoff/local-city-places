@@ -30,27 +30,39 @@ export async function POST() {
       });
     }
 
-    const now = new Date();
-    const nextStatusUpdatedAt =
-      session.merchant.marketLockStatus === "trial"
-        ? session.merchant.marketLockStatusUpdatedAt
-        : now;
-
-    if (session.merchant.marketLockStatus !== "trial") {
-      await db
-        .update(merchants)
-        .set({
-          marketLockStatus: "trial",
-          marketLockStatusUpdatedAt: nextStatusUpdatedAt,
-          updatedAt: now,
-        })
-        .where(eq(merchants.id, session.merchant.id));
+    if (session.merchant.marketLockStatus === "trial") {
+      return NextResponse.json({
+        success: true,
+        marketLockStatus: "trial",
+        marketLockStatusUpdatedAt:
+          session.merchant.marketLockStatusUpdatedAt.toISOString(),
+      });
     }
+
+    if (session.merchant.marketLockStatus === "trial_requested") {
+      return NextResponse.json({
+        success: true,
+        marketLockStatus: "trial_requested",
+        marketLockStatusUpdatedAt:
+          session.merchant.marketLockStatusUpdatedAt.toISOString(),
+      });
+    }
+
+    const now = new Date();
+
+    await db
+      .update(merchants)
+      .set({
+        marketLockStatus: "trial_requested",
+        marketLockStatusUpdatedAt: now,
+        updatedAt: now,
+      })
+      .where(eq(merchants.id, session.merchant.id));
 
     return NextResponse.json({
       success: true,
-      marketLockStatus: "trial",
-      marketLockStatusUpdatedAt: nextStatusUpdatedAt.toISOString(),
+      marketLockStatus: "trial_requested",
+      marketLockStatusUpdatedAt: now.toISOString(),
     });
   } catch (error) {
     console.error("MarketLock360 trial request error:", error);

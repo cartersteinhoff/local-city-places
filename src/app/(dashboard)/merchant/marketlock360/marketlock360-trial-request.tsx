@@ -1,6 +1,7 @@
 "use client";
 
 import { ArrowRight, CheckCircle2, Loader2 } from "lucide-react";
+import Link from "next/link";
 import {
   createContext,
   type ReactNode,
@@ -30,6 +31,7 @@ interface TrialRequestContextValue {
   error: string | null;
   isRequesting: boolean;
   marketLockStatus: MarketLockStatus;
+  monthlyPaymentLabel?: string;
   openTrialDialog: () => void;
 }
 
@@ -52,6 +54,7 @@ function useTrialRequest() {
 interface MarketLock360TrialRequestProviderProps {
   children: ReactNode;
   initialStatus: MarketLockStatus;
+  monthlyPaymentLabel?: string;
 }
 
 const trialIntroItems = [
@@ -75,6 +78,7 @@ const trialIntroItems = [
 export function MarketLock360TrialRequestProvider({
   children,
   initialStatus,
+  monthlyPaymentLabel,
 }: MarketLock360TrialRequestProviderProps) {
   const { mutate } = useUser();
   const [marketLockStatus, setMarketLockStatus] = useState<MarketLockStatus>(
@@ -93,12 +97,16 @@ export function MarketLock360TrialRequestProvider({
     }
 
     setError(null);
-    setDialogState(marketLockStatus === "trial" ? "success" : "intro");
+    setDialogState(
+      marketLockStatus === "trial_requested" || marketLockStatus === "trial"
+        ? "success"
+        : "intro",
+    );
     setDialogOpen(true);
   }, [marketLockStatus]);
 
   const requestTrial = useCallback(async () => {
-    if (marketLockStatus === "pro") {
+    if (marketLockStatus !== "basic") {
       return;
     }
 
@@ -112,14 +120,14 @@ export function MarketLock360TrialRequestProvider({
       const data = await res.json();
 
       if (!res.ok) {
-        throw new Error(data.error || "Failed to start trial");
+        throw new Error(data.error || "Failed to request trial");
       }
 
       setMarketLockStatus(normalizeMarketLockStatus(data.marketLockStatus));
       await mutate();
       setDialogState("success");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to start trial");
+      setError(err instanceof Error ? err.message : "Failed to request trial");
       setDialogState("error");
     } finally {
       setIsRequesting(false);
@@ -131,9 +139,16 @@ export function MarketLock360TrialRequestProvider({
       error,
       isRequesting,
       marketLockStatus,
+      monthlyPaymentLabel,
       openTrialDialog,
     }),
-    [error, isRequesting, marketLockStatus, openTrialDialog],
+    [
+      error,
+      isRequesting,
+      marketLockStatus,
+      monthlyPaymentLabel,
+      openTrialDialog,
+    ],
   );
 
   return (
@@ -192,7 +207,7 @@ export function MarketLock360TrialRequestProvider({
                     14-day trial
                   </span>
                   <DialogTitle className="text-[1.7rem] font-black leading-tight sm:text-3xl">
-                    Start your MarketLOCK360 trial
+                    Request your MarketLOCK360 trial
                   </DialogTitle>
                   <DialogDescription className="text-sm leading-6 text-white/68">
                     See how Local City Places can help your business become the
@@ -232,7 +247,7 @@ export function MarketLock360TrialRequestProvider({
                   {isRequesting ? (
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   ) : null}
-                  Start Trial
+                  Request Trial
                 </button>
               </DialogFooter>
             </>
@@ -244,26 +259,96 @@ export function MarketLock360TrialRequestProvider({
 }
 
 export function TrialRequestedBanner() {
-  const { marketLockStatus } = useTrialRequest();
+  const { marketLockStatus, monthlyPaymentLabel } = useTrialRequest();
+  const isPending = marketLockStatus === "trial_requested";
 
-  if (marketLockStatus !== "trial") {
+  if (!isPending && marketLockStatus !== "trial") {
     return null;
   }
 
   return (
     <div
       id="marketlock-trial-status"
-      className="border-b border-emerald-300/25 bg-emerald-400/12 px-6 py-3 text-white sm:px-8"
+      className={cn(
+        "border-b px-6 py-3 text-white sm:px-8",
+        isPending
+          ? "border-amber-300/25 bg-amber-400/12"
+          : "border-emerald-300/25 bg-emerald-400/12",
+      )}
     >
-      <div className="mx-auto flex max-w-[1500px] flex-wrap items-center gap-3">
-        <CheckCircle2 className="h-5 w-5 shrink-0 text-emerald-300" />
-        <p className="text-sm font-black uppercase tracking-wide">
-          Trial has been requested.
-        </p>
-        <MarketLockStatusBadge
-          status={marketLockStatus}
-          className="border-emerald-300/40 bg-emerald-300/12 text-emerald-100"
-        />
+      <div className="mx-auto flex max-w-[1500px] flex-col gap-3 md:flex-row md:items-center">
+        <div className="flex min-w-0 flex-1 flex-wrap items-center gap-3">
+          <CheckCircle2
+            className={cn(
+              "h-5 w-5 shrink-0",
+              isPending ? "text-amber-300" : "text-emerald-300",
+            )}
+          />
+          <p className="text-sm font-black uppercase tracking-wide">
+            {isPending ? "Trial request pending." : "Trial active."}
+          </p>
+          <MarketLockStatusBadge
+            status={marketLockStatus}
+            className={cn(
+              isPending
+                ? "border-amber-300/40 bg-amber-300/12 text-amber-100"
+                : "border-emerald-300/40 bg-emerald-300/12 text-emerald-100",
+            )}
+          />
+          <p className="text-sm font-semibold text-white/72">
+            {isPending
+              ? "Your request is in the admin queue. Trial access starts after approval."
+              : `Ready to keep MarketLOCK360 going? Sign this month's agreement and pay${monthlyPaymentLabel ? ` ${monthlyPaymentLabel}` : ""}.`}
+          </p>
+        </div>
+        {!isPending && (
+          <Link
+            href="/merchant/marketlock360/agreement"
+            className="inline-flex h-10 shrink-0 items-center justify-center rounded-md bg-orange-500 px-4 text-sm font-black uppercase tracking-wide text-white shadow-[0_12px_24px_rgba(249,115,22,0.22)] transition hover:bg-orange-400"
+          >
+            Upgrade now
+            <ArrowRight className="ml-2 h-4 w-4" />
+          </Link>
+        )}
+      </div>
+    </div>
+  );
+}
+
+export function TrialUpgradePanel() {
+  const { marketLockStatus, monthlyPaymentLabel } = useTrialRequest();
+
+  if (marketLockStatus !== "trial") {
+    return null;
+  }
+
+  return (
+    <div className="mt-6 rounded-2xl border border-orange-300/35 bg-orange-500/12 p-5 shadow-[0_18px_45px_rgba(0,0,0,0.22)]">
+      <p className="text-sm font-black uppercase tracking-[0.2em] text-orange-200">
+        Ready to upgrade?
+      </p>
+      <h3 className="mt-2 text-2xl font-black uppercase leading-tight text-white">
+        Keep MarketLOCK360 active for this month.
+      </h3>
+      <p className="mt-3 text-sm font-semibold leading-6 text-white/72">
+        Sign this month&apos;s agreement and complete a one-time payment
+        {monthlyPaymentLabel ? ` of ${monthlyPaymentLabel}` : ""} for the
+        current service period.
+      </p>
+      <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+        <Link
+          href="/merchant/marketlock360/agreement"
+          className="inline-flex h-12 w-full items-center justify-center rounded-lg bg-orange-500 px-5 text-sm font-black uppercase tracking-wide text-white shadow-[0_14px_30px_rgba(249,115,22,0.28)] transition hover:bg-orange-400 sm:w-auto"
+        >
+          Sign agreement and pay
+          <ArrowRight className="ml-2 h-4 w-4" />
+        </Link>
+        <Link
+          href="/merchant/marketlock360/agreement"
+          className="inline-flex h-12 w-full items-center justify-center rounded-lg border border-white/18 bg-white/10 px-5 text-sm font-black uppercase tracking-wide text-white transition hover:bg-white/16 sm:w-auto"
+        >
+          Review agreement
+        </Link>
       </div>
     </div>
   );
@@ -278,38 +363,60 @@ export function StartTrialButton({
   className,
   variant = "primary",
 }: StartTrialButtonProps) {
-  const { isRequesting, marketLockStatus, openTrialDialog } = useTrialRequest();
+  const {
+    isRequesting,
+    marketLockStatus,
+    monthlyPaymentLabel,
+    openTrialDialog,
+  } = useTrialRequest();
   const isPro = marketLockStatus === "pro";
+  const isPending = marketLockStatus === "trial_requested";
   const isTrial = marketLockStatus === "trial";
-  const isDisabled = isRequesting || isPro || isTrial;
+  const isDisabled = isRequesting || isPro;
   const buttonLabel = isPro
     ? "Pro active"
-    : isTrial
-      ? "Trial started"
-      : isRequesting
-        ? "Starting..."
-        : "Start Trial";
+    : isPending
+      ? "Request pending"
+      : isTrial
+        ? "Upgrade now"
+        : isRequesting
+          ? "Requesting..."
+          : "Request Trial";
+  const baseClassName = cn(
+    "inline-flex h-12 items-center justify-center rounded-lg px-5 text-sm font-black uppercase tracking-wide transition",
+    variant === "primary"
+      ? "bg-orange-500 text-white shadow-[0_14px_30px_rgba(249,115,22,0.28)] hover:bg-orange-400"
+      : "border border-white/20 bg-white/10 text-white hover:bg-white/16",
+    isDisabled &&
+      (variant === "primary"
+        ? "cursor-not-allowed bg-orange-500/65 hover:bg-orange-500/65"
+        : "cursor-not-allowed border-white/12 bg-white/6 text-white/55 hover:bg-white/6"),
+    className,
+  );
+
+  if (isTrial) {
+    return (
+      <Link
+        href="/merchant/marketlock360/agreement"
+        className={baseClassName}
+        aria-label={`Upgrade now${monthlyPaymentLabel ? ` for ${monthlyPaymentLabel}` : ""}`}
+      >
+        {buttonLabel}
+        <ArrowRight className="ml-2 h-4 w-4" />
+      </Link>
+    );
+  }
 
   return (
     <button
       type="button"
       onClick={openTrialDialog}
       disabled={isDisabled}
-      className={cn(
-        "inline-flex h-12 items-center justify-center rounded-lg px-5 text-sm font-black uppercase tracking-wide transition",
-        variant === "primary"
-          ? "bg-orange-500 text-white shadow-[0_14px_30px_rgba(249,115,22,0.28)] hover:bg-orange-400"
-          : "border border-white/20 bg-white/10 text-white hover:bg-white/16",
-        isDisabled &&
-          (variant === "primary"
-            ? "cursor-not-allowed bg-orange-500/65 hover:bg-orange-500/65"
-            : "cursor-not-allowed border-white/12 bg-white/6 text-white/55 hover:bg-white/6"),
-        className,
-      )}
+      className={baseClassName}
     >
       {isRequesting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
       {buttonLabel}
-      {!isRequesting && !isPro && !isTrial ? (
+      {!isRequesting && !isPro && !isPending ? (
         <ArrowRight className="ml-2 h-4 w-4" />
       ) : null}
     </button>

@@ -96,7 +96,9 @@ export function MerchantPageManagementPanel({
       label: "MarketLock",
       value: getMarketLockStatusLabel(merchant.marketLockStatus),
       icon: LockKeyhole,
-      complete: merchant.marketLockStatus !== "basic",
+      complete:
+        merchant.marketLockStatus === "trial" ||
+        merchant.marketLockStatus === "pro",
     },
     {
       label: "Location",

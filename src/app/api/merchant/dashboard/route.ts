@@ -5,10 +5,12 @@ import {
   db,
   type MerchantCampaignAudio,
   merchantOwners,
+  merchantServiceAgreementAcceptances,
   merchants,
   reviews,
 } from "@/db";
 import { getSession } from "@/lib/auth";
+import { getMerchantAgreementPdfHref } from "@/lib/legal/merchant-agreement-pdf";
 import { calculateCompletion } from "@/lib/merchant-completion";
 import {
   merchantOwnerJoin,
@@ -47,6 +49,35 @@ function getCampaignAudioAsset(
     status: asset.status || ("ready" as const),
     updatedAt: asset.uploadedAt || campaignAudio?.updatedAt || null,
   };
+}
+
+async function getMarketLockPaymentHistory(merchantId: string) {
+  try {
+    return await db
+      .select({
+        id: merchantServiceAgreementAcceptances.id,
+        agreementTitle: merchantServiceAgreementAcceptances.agreementTitle,
+        agreementVersion: merchantServiceAgreementAcceptances.agreementVersion,
+        checkoutSessionId:
+          merchantServiceAgreementAcceptances.checkoutSessionId,
+        paidAt: merchantServiceAgreementAcceptances.paidAt,
+        paymentAmountCents:
+          merchantServiceAgreementAcceptances.paymentAmountCents,
+        paymentCurrency: merchantServiceAgreementAcceptances.paymentCurrency,
+        paymentStatus: merchantServiceAgreementAcceptances.paymentStatus,
+        servicePeriodLabel:
+          merchantServiceAgreementAcceptances.servicePeriodLabel,
+        signedAt: merchantServiceAgreementAcceptances.acceptedAt,
+        typedName: merchantServiceAgreementAcceptances.typedName,
+      })
+      .from(merchantServiceAgreementAcceptances)
+      .where(eq(merchantServiceAgreementAcceptances.merchantId, merchantId))
+      .orderBy(desc(merchantServiceAgreementAcceptances.acceptedAt))
+      .limit(12);
+  } catch (error) {
+    console.warn("MarketLock360 payment history unavailable:", error);
+    return [];
+  }
 }
 
 export async function GET() {
@@ -142,6 +173,9 @@ export async function GET() {
       photos: merchant.photos || undefined,
       services: merchant.services || undefined,
     });
+    const marketLockPaymentHistory = await getMarketLockPaymentHistory(
+      merchant.id,
+    );
 
     return NextResponse.json({
       merchant: {
@@ -177,6 +211,21 @@ export async function GET() {
         merchant.marketLockStatus === "trial"
           ? getMerchantTrialProgress(merchant.marketLockStatusUpdatedAt)
           : null,
+      marketLockPaymentHistory: marketLockPaymentHistory.map((item) => ({
+        id: item.id,
+        agreementPdfUrl: getMerchantAgreementPdfHref(item.id),
+        agreementTitle: item.agreementTitle,
+        agreementVersion: item.agreementVersion,
+        paidAt: item.paidAt?.toISOString() ?? null,
+        paymentAmountCents: item.paymentAmountCents,
+        paymentCurrency: item.paymentCurrency,
+        paymentStatus:
+          item.paymentStatus ||
+          (item.checkoutSessionId ? "unpaid" : "agreement_signed"),
+        servicePeriodLabel: item.servicePeriodLabel,
+        signedAt: item.signedAt.toISOString(),
+        typedName: item.typedName,
+      })),
       pageManagement: {
         completionPercentage: completion.percentage,
         completedFields: completion.completed,

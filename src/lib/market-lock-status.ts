@@ -1,9 +1,15 @@
-export const MARKET_LOCK_STATUSES = ["basic", "trial", "pro"] as const;
+export const MARKET_LOCK_STATUSES = [
+  "basic",
+  "trial_requested",
+  "trial",
+  "pro",
+] as const;
 
 export type MarketLockStatus = (typeof MARKET_LOCK_STATUSES)[number];
 
 export const MARKET_LOCK_STATUS_LABELS: Record<MarketLockStatus, string> = {
   basic: "Basic",
+  trial_requested: "Requested",
   trial: "Trial",
   pro: "Pro",
 };

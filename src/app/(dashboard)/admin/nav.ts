@@ -34,33 +34,33 @@ export const adminNavItems = [
     section: "Merchants",
   },
   {
-    label: "Categories",
-    href: "/admin/categories",
-    icon: FolderOpen,
-    section: "Merchants",
-  },
-  {
     label: "Merchant Requests",
     href: "/admin/merchant-requests",
     icon: ClipboardList,
     section: "Merchants",
   },
   {
-    label: "Trial Queue",
+    label: "Merchant Invites",
+    href: "/admin/invites",
+    icon: Mail,
+    section: "Merchants",
+  },
+  {
+    label: "Trial Requests",
     href: "/admin/marketlock-trials",
     icon: LockKeyhole,
+    section: "Merchants",
+  },
+  {
+    label: "Categories",
+    href: "/admin/categories",
+    icon: FolderOpen,
     section: "Merchants",
   },
   {
     label: "Reviews",
     href: "/admin/reviews",
     icon: MessageSquare,
-    section: "Merchants",
-  },
-  {
-    label: "Trial Invites",
-    href: "/admin/invites",
-    icon: Mail,
     section: "Merchants",
   },
   {
