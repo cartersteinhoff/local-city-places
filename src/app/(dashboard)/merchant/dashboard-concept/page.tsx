@@ -99,14 +99,14 @@ const studioAssets: Array<{
   tone: StepTone;
 }> = [
   {
-    label: "Radio spot",
+    label: "Radio Spot",
     detail: "Final KLCP 96.5 FM ad production.",
     status: "In production",
     icon: Mic2,
     tone: "active",
   },
   {
-    label: "Signature soundtrack",
+    label: "Signature Soundtrack",
     detail: "Custom music bed for the merchant campaign.",
     status: "In production",
     icon: Music2,

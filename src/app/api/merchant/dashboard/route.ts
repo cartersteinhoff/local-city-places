@@ -30,10 +30,10 @@ function getCampaignAudioAsset(
   if (!asset?.url) {
     return {
       title: isRadioSpot
-        ? `${businessName} KLCP radio spot`
+        ? `${businessName} KLCP Radio Spot`
         : isSecondSoundtrack
-          ? `${businessName} signature soundtrack 2`
-          : `${businessName} signature soundtrack 1`,
+          ? `${businessName} Signature Soundtrack 2`
+          : `${businessName} Signature Soundtrack 1`,
       description: isRadioSpot
         ? "Radio spot audio appears here after it is uploaded."
         : isSecondSoundtrack

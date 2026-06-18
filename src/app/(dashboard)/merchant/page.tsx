@@ -133,13 +133,13 @@ const activationItems = [
     icon: Globe2,
   },
   {
-    label: "Radio spot",
+    label: "Radio Spot",
     value: "KLCP 96.5 FM ad",
     status: "In production",
     icon: RadioTower,
   },
   {
-    label: "Signature soundtrack",
+    label: "Signature Soundtrack",
     value: "Custom campaign music bed",
     status: "In production",
     icon: Music2,
@@ -475,16 +475,16 @@ function CampaignAudioPanel({
       ? [
           {
             id: "soundtrack",
-            title: "Signature soundtrack 1",
-            playerLabel: "signature soundtrack 1",
+            title: "Signature Soundtrack 1",
+            playerLabel: "Signature Soundtrack 1",
             track: soundtracks[0],
           },
           ...(soundtracks[1]
             ? [
                 {
                   id: "soundtrack2",
-                  title: "Signature soundtrack 2",
-                  playerLabel: "signature soundtrack 2",
+                  title: "Signature Soundtrack 2",
+                  playerLabel: "Signature Soundtrack 2",
                   track: soundtracks[1],
                 },
               ]
@@ -493,10 +493,10 @@ function CampaignAudioPanel({
       : [
           {
             id: "soundtrack",
-            title: "Signature soundtrack 1",
-            playerLabel: "signature soundtrack 1",
+            title: "Signature Soundtrack 1",
+            playerLabel: "Signature Soundtrack 1",
             track: {
-              title: "Signature soundtrack 1",
+              title: "Signature Soundtrack 1",
               description: "A custom audio asset produced for your campaign.",
               audioSrc: null,
               status: "in_production" as const,
@@ -513,7 +513,7 @@ function CampaignAudioPanel({
             Campaign audio
           </p>
           <h2 className="mt-1 text-base font-bold tracking-tight">
-            Soundtracks and KLCP spot
+            Soundtracks and KLCP Spot
           </h2>
         </div>
         <p className="text-xs text-muted-foreground sm:text-right">
@@ -540,13 +540,13 @@ function CampaignAudioPanel({
         ))}
         <CampaignAudioAsset
           icon={Mic2}
-          title="KLCP radio spot"
+          title="KLCP Radio Spot"
           subtitle={
             radioSpot?.audioSrc
               ? radioSpot.title
               : "Radio spot has not been uploaded yet"
           }
-          playerLabel="KLCP radio spot"
+          playerLabel="KLCP Radio Spot"
           track={radioSpot}
           pendingLabel="Awaiting upload"
           pendingNote="No audio file yet"
@@ -825,7 +825,7 @@ function MerchantActivationBanner({
             {activationItems.map((item) => {
               const Icon = item.icon;
               const isSignatureSoundtrack =
-                item.label === "Signature soundtrack";
+                item.label === "Signature Soundtrack";
               const itemValue =
                 item.label === "MarketLock status"
                   ? canRequestTrial
