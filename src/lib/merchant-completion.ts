@@ -32,6 +32,7 @@ export interface MerchantData {
   campaignAudio?: {
     radioSpot?: { url?: string } | null;
     soundtrack?: { url?: string } | null;
+    soundtrack2?: { url?: string } | null;
   } | null;
 }
 
@@ -191,8 +192,13 @@ export function calculateCompletion(data: MerchantData): CompletionResult {
       },
       {
         key: "soundtrack",
-        label: "Signature Soundtrack",
+        label: "Signature Soundtrack 1",
         value: data.campaignAudio?.soundtrack?.url,
+      },
+      {
+        key: "soundtrack2",
+        label: "Signature Soundtrack 2",
+        value: data.campaignAudio?.soundtrack2?.url,
       },
     ];
     const tracksCompleted = trackFields.filter((f) => hasValue(f.value)).length;

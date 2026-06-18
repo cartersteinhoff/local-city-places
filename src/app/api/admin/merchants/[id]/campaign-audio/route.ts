@@ -10,9 +10,13 @@ import {
 import { getSession } from "@/lib/auth";
 import { revalidateMerchantPublicPaths } from "@/lib/merchant-public-revalidation";
 
-type CampaignAudioKind = "radioSpot" | "soundtrack";
+type CampaignAudioKind = "radioSpot" | "soundtrack" | "soundtrack2";
 
-const audioKinds = ["radioSpot", "soundtrack"] satisfies CampaignAudioKind[];
+const audioKinds = [
+  "radioSpot",
+  "soundtrack",
+  "soundtrack2",
+] satisfies CampaignAudioKind[];
 const maxAudioSize = 60 * 1024 * 1024;
 
 function isCampaignAudioKind(
@@ -68,6 +72,14 @@ function defaultAssetText(kind: CampaignAudioKind, businessName: string) {
       title: `${businessName} KLCP Radio Spot`,
       description: `Final produced KLCP radio spot for ${businessName}.`,
       fileLabel: "klcp-radio-spot",
+    };
+  }
+
+  if (kind === "soundtrack2") {
+    return {
+      title: `${businessName} Signature Soundtrack 2`,
+      description: `Second signature campaign soundtrack for ${businessName}.`,
+      fileLabel: "signature-soundtrack-2",
     };
   }
 

@@ -39,7 +39,7 @@ interface OnAirStudioContentProps {
 
 type StatusTone = "active" | "ready" | "waiting";
 type DeliverableType = "audio" | "proof";
-type CampaignAudioKind = "radioSpot" | "soundtrack";
+type CampaignAudioKind = "radioSpot" | "soundtrack" | "soundtrack2";
 
 interface CampaignAudioAsset {
   title: string;
@@ -55,6 +55,7 @@ interface CampaignAudioAsset {
 interface CampaignAudio {
   radioSpot?: CampaignAudioAsset | null;
   soundtrack?: CampaignAudioAsset | null;
+  soundtrack2?: CampaignAudioAsset | null;
   updatedAt?: string;
 }
 
@@ -86,13 +87,25 @@ const deliverables = [
   },
   {
     key: "soundtrack",
-    title: "Signature soundtrack",
+    title: "Signature soundtrack 1",
     status: "In production",
     statusTone: "active",
     description: "Custom music bed for the merchant campaign.",
     icon: Music2,
-    uploadTitle: "Signature soundtrack audio",
+    uploadTitle: "Signature soundtrack 1 audio",
     uploadHint: "Upload the final MP3 or WAV.",
+    type: "audio",
+    audioSrc: null,
+  },
+  {
+    key: "soundtrack-2",
+    title: "Signature soundtrack 2",
+    status: "In production",
+    statusTone: "active",
+    description: "Second custom music bed for the merchant campaign.",
+    icon: Music2,
+    uploadTitle: "Signature soundtrack 2 audio",
+    uploadHint: "Upload the alternate final MP3 or WAV.",
     type: "audio",
     audioSrc: null,
   },
@@ -146,12 +159,24 @@ const merchantServices = [
   },
   {
     key: "soundtrack",
-    title: "Signature soundtrack",
+    title: "Signature soundtrack 1",
     category: "Brand sound",
     status: "In production",
     statusTone: "active",
     description:
       "A custom music bed that gives your Local City Places campaign a recognizable sound.",
+    icon: Music2,
+    hasPreview: true,
+    audioSrc: null,
+  },
+  {
+    key: "soundtrack-2",
+    title: "Signature soundtrack 2",
+    category: "Brand sound",
+    status: "In production",
+    statusTone: "active",
+    description:
+      "An alternate custom music bed produced for your Local City Places campaign.",
     icon: Music2,
     hasPreview: true,
     audioSrc: null,
@@ -229,12 +254,14 @@ function getAudioAssetForKey(
 ) {
   if (key === "radio-spot") return campaignAudio?.radioSpot || null;
   if (key === "soundtrack") return campaignAudio?.soundtrack || null;
+  if (key === "soundtrack-2") return campaignAudio?.soundtrack2 || null;
   return null;
 }
 
 function getAudioKindForKey(key: string): CampaignAudioKind | null {
   if (key === "radio-spot") return "radioSpot";
   if (key === "soundtrack") return "soundtrack";
+  if (key === "soundtrack-2") return "soundtrack2";
   return null;
 }
 
@@ -1037,7 +1064,7 @@ export function OnAirStudioContent({
 
           <div className="grid grid-cols-3 gap-3">
             <div className="border-l-2 border-primary/70 pl-3">
-              <p className="text-2xl font-bold">2</p>
+              <p className="text-2xl font-bold">3</p>
               <p className="text-xs leading-4 text-muted-foreground">
                 audio files
               </p>

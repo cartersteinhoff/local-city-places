@@ -96,6 +96,7 @@ interface CampaignAudioAsset {
 interface CampaignAudio {
   radioSpot?: CampaignAudioAsset | null;
   soundtrack?: CampaignAudioAsset | null;
+  soundtrack2?: CampaignAudioAsset | null;
   showOnProfile?: boolean;
   updatedAt?: string;
 }
@@ -146,8 +147,14 @@ const publicAudioTrackSlots = [
   },
   {
     kind: "soundtrack" as const,
-    label: "Signature Soundtrack",
+    label: "Signature Soundtrack 1",
     description: "Listen to the custom campaign sound.",
+    icon: Music2,
+  },
+  {
+    kind: "soundtrack2" as const,
+    label: "Signature Soundtrack 2",
+    description: "Listen to the alternate custom campaign sound.",
     icon: Music2,
   },
 ];
@@ -972,7 +979,7 @@ export function LocalGuideDesign({
                 <FileAudio className="h-5 w-5 shrink-0 text-[#2563EB]" />
               </div>
 
-              <div className="grid gap-4 md:grid-cols-2">
+              <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
                 {publicAudioTrackSlots.map((track) => {
                   const asset = campaignAudio?.[track.kind] || null;
                   if (!asset?.url) return null;

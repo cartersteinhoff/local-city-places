@@ -89,7 +89,7 @@ interface MerchantOwner {
   name: string | null;
 }
 
-type CampaignAudioKind = "radioSpot" | "soundtrack";
+type CampaignAudioKind = "radioSpot" | "soundtrack" | "soundtrack2";
 
 interface CampaignAudioAsset {
   title: string;
@@ -105,6 +105,7 @@ interface CampaignAudioAsset {
 interface CampaignAudio {
   radioSpot?: CampaignAudioAsset | null;
   soundtrack?: CampaignAudioAsset | null;
+  soundtrack2?: CampaignAudioAsset | null;
   showOnProfile?: boolean;
   updatedAt?: string;
 }
@@ -195,10 +196,17 @@ const merchantTrackSlots: Array<{
   },
   {
     kind: "soundtrack",
-    label: "Signature Soundtrack",
+    label: "Signature Soundtrack 1",
     icon: Music2,
-    fallbackTitle: "Signature Soundtrack",
+    fallbackTitle: "Signature Soundtrack 1",
     fallbackDescription: "Custom music bed for the merchant campaign.",
+  },
+  {
+    kind: "soundtrack2",
+    label: "Signature Soundtrack 2",
+    icon: Music2,
+    fallbackTitle: "Signature Soundtrack 2",
+    fallbackDescription: "Second custom music bed for the merchant campaign.",
   },
 ];
 
@@ -328,6 +336,16 @@ export function MerchantForm({
   const [isOwnerSearchLoading, setIsOwnerSearchLoading] = useState(false);
   const [isOwnerSaving, setIsOwnerSaving] = useState(false);
   const [ownerError, setOwnerError] = useState("");
+  const [newManagerFirstName, setNewManagerFirstName] = useState("");
+  const [newManagerLastName, setNewManagerLastName] = useState("");
+  const [newManagerEmail, setNewManagerEmail] = useState("");
+  const [newManagerPhone, setNewManagerPhone] = useState("");
+  const [sendManagerWelcomeEmail, setSendManagerWelcomeEmail] = useState(true);
+  const [isManagerInviteSaving, setIsManagerInviteSaving] = useState(false);
+  const [managerInviteStatus, setManagerInviteStatus] = useState<{
+    type: "success" | "error";
+    message: string;
+  } | null>(null);
   const [uploadingTrack, setUploadingTrack] =
     useState<CampaignAudioKind | null>(null);
   const [pendingTrackFiles, setPendingTrackFiles] = useState<
@@ -749,6 +767,79 @@ export function MerchantForm({
     },
     [mode, owners, saveOwners],
   );
+
+  const handleCreateManagerInvite = useCallback(async () => {
+    if (!canManageOwners || !merchantId) return;
+
+    const email = newManagerEmail.trim();
+    if (!email) {
+      setManagerInviteStatus({
+        type: "error",
+        message: "Email is required.",
+      });
+      return;
+    }
+
+    setIsManagerInviteSaving(true);
+    setManagerInviteStatus(null);
+    setOwnerError("");
+
+    try {
+      const res = await fetch(
+        `/api/admin/merchant-pages/${merchantId}/owners/invite`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            firstName: newManagerFirstName,
+            lastName: newManagerLastName,
+            email,
+            phone: stripPhoneNumber(newManagerPhone) || null,
+            sendWelcomeEmail: sendManagerWelcomeEmail,
+          }),
+        },
+      );
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || "Failed to create manager");
+      }
+
+      setOwners(data.owners || (data.owner ? [...owners, data.owner] : owners));
+      setOwnerSearch("");
+      setOwnerResults([]);
+      setNewManagerFirstName("");
+      setNewManagerLastName("");
+      setNewManagerEmail("");
+      setNewManagerPhone("");
+      setSendManagerWelcomeEmail(true);
+      setManagerInviteStatus({
+        type: "success",
+        message: data.emailSent
+          ? "Manager added and welcome email sent."
+          : "Manager added. Welcome email was not sent.",
+      });
+    } catch (err) {
+      setManagerInviteStatus({
+        type: "error",
+        message:
+          err instanceof Error
+            ? err.message
+            : "Failed to create manager and send welcome email.",
+      });
+    } finally {
+      setIsManagerInviteSaving(false);
+    }
+  }, [
+    canManageOwners,
+    merchantId,
+    newManagerEmail,
+    newManagerFirstName,
+    newManagerLastName,
+    newManagerPhone,
+    owners,
+    sendManagerWelcomeEmail,
+  ]);
 
   // Update category name when category changes
   useEffect(() => {
@@ -2091,6 +2182,126 @@ export function MerchantForm({
                             <Plus className="h-4 w-4 shrink-0" />
                           </button>
                         ))
+                      )}
+                    </div>
+                  )}
+
+                  {canManageOwners && (
+                    <div className="border-t pt-5">
+                      <div className="flex flex-col gap-1">
+                        <h4 className="text-sm font-semibold">
+                          Create manager and send welcome
+                        </h4>
+                        <p className="text-xs leading-5 text-muted-foreground">
+                          Use this after a merchant page has been prepared
+                          manually and the dashboard is ready to hand off.
+                        </p>
+                      </div>
+
+                      <div className="mt-4 grid gap-4 sm:grid-cols-2">
+                        <div>
+                          <Label htmlFor="newManagerFirstName">
+                            First name
+                          </Label>
+                          <Input
+                            id="newManagerFirstName"
+                            value={newManagerFirstName}
+                            onChange={(event) =>
+                              setNewManagerFirstName(event.target.value)
+                            }
+                            placeholder="Troy"
+                            disabled={isManagerInviteSaving}
+                          />
+                        </div>
+
+                        <div>
+                          <Label htmlFor="newManagerLastName">Last name</Label>
+                          <Input
+                            id="newManagerLastName"
+                            value={newManagerLastName}
+                            onChange={(event) =>
+                              setNewManagerLastName(event.target.value)
+                            }
+                            placeholder="Warren"
+                            disabled={isManagerInviteSaving}
+                          />
+                        </div>
+
+                        <div>
+                          <Label htmlFor="newManagerEmail">Email *</Label>
+                          <Input
+                            id="newManagerEmail"
+                            type="email"
+                            value={newManagerEmail}
+                            onChange={(event) =>
+                              setNewManagerEmail(event.target.value)
+                            }
+                            placeholder="merchant@example.com"
+                            disabled={isManagerInviteSaving}
+                          />
+                        </div>
+
+                        <div>
+                          <Label htmlFor="newManagerPhone">Phone</Label>
+                          <Input
+                            id="newManagerPhone"
+                            type="tel"
+                            value={newManagerPhone}
+                            onChange={(event) =>
+                              setNewManagerPhone(
+                                formatPhoneNumber(event.target.value),
+                              )
+                            }
+                            placeholder="(425) 451-8599"
+                            disabled={isManagerInviteSaving}
+                          />
+                        </div>
+                      </div>
+
+                      <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                        <label
+                          htmlFor="sendManagerWelcomeEmail"
+                          className="flex items-center gap-2 text-sm"
+                        >
+                          <Checkbox
+                            id="sendManagerWelcomeEmail"
+                            checked={sendManagerWelcomeEmail}
+                            onCheckedChange={(checked) =>
+                              setSendManagerWelcomeEmail(Boolean(checked))
+                            }
+                            disabled={isManagerInviteSaving}
+                          />
+                          Send welcome email with login link
+                        </label>
+
+                        <Button
+                          type="button"
+                          size="sm"
+                          onClick={handleCreateManagerInvite}
+                          disabled={
+                            isManagerInviteSaving || !newManagerEmail.trim()
+                          }
+                        >
+                          {isManagerInviteSaving ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <Check className="h-4 w-4" />
+                          )}
+                          Add Manager
+                        </Button>
+                      </div>
+
+                      {managerInviteStatus && (
+                        <p
+                          className={cn(
+                            "mt-3 text-sm",
+                            managerInviteStatus.type === "success"
+                              ? "text-success"
+                              : "text-destructive",
+                          )}
+                        >
+                          {managerInviteStatus.message}
+                        </p>
                       )}
                     </div>
                   )}

@@ -849,7 +849,7 @@ export async function sendMerchantWelcomeEmail({
 
       <p><strong>Once in your Merchant Dashboard be sure to check out:</strong></p>
       <ul style="color: #444; line-height: 1.8;">
-        <li>Your On-Air Studio where you will find both your first radio spot and your Signature Soundtrack</li>
+        <li>Your On-Air Studio where you will find your first radio spot and your Signature Soundtracks</li>
         <li>Your Merchant Page (where you can edit the details 24/7)</li>
         <li>Your RESERVED Category for your city (NO COMPETITORS ALLOWED)</li>
       </ul>
@@ -858,7 +858,7 @@ export async function sendMerchantWelcomeEmail({
 
       <p>I will be in touch soon to help you get settled and acclimated.</p>
 
-      <p>Oh and don't forget to start listening to KLCP Radio because your radio spot and your Signature Soundtrack have already started playing on there.</p>
+      <p>Oh and don't forget to start listening to KLCP Radio because your radio spot and your Signature Soundtracks have already started playing on there.</p>
 
       <p>We look forward to serving your NEEDS NOW and in the FUTURE.</p>
 
@@ -876,7 +876,7 @@ Go to ${siteUrl} and click the LOGIN button in the top right of the home page. Y
 
 Once in your Merchant Dashboard be sure to check out:
 
-Your On-Air Studio where you will find both your first radio spot and your Signature Soundtrack
+Your On-Air Studio where you will find your first radio spot and your Signature Soundtracks
 Your Merchant Page (where you can edit the details 24/7)
 Your RESERVED Category for your city (NO COMPETITORS ALLOWED)
 
@@ -884,7 +884,7 @@ Once you're settled in, take a look at MarketLOCK360 which enables you to LOCK I
 
 I will be in touch soon to help you get settled and acclimated.
 
-Oh and don't forget to start listening to KLCP Radio because your radio spot and your Signature Soundtrack have already started playing on there.
+Oh and don't forget to start listening to KLCP Radio because your radio spot and your Signature Soundtracks have already started playing on there.
 
 We look forward to serving your NEEDS NOW and in the FUTURE.
 

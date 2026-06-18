@@ -92,6 +92,16 @@ export interface MerchantPreviewData {
       uploadedAt?: string;
       status?: "ready" | "in_production" | "pending";
     } | null;
+    soundtrack2?: {
+      title: string;
+      description?: string;
+      url: string;
+      fileName?: string;
+      contentType?: string;
+      sizeBytes?: number;
+      uploadedAt?: string;
+      status?: "ready" | "in_production" | "pending";
+    } | null;
     showOnProfile?: boolean;
     updatedAt?: string;
   } | null;

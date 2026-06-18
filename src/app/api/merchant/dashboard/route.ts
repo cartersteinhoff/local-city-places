@@ -21,19 +21,24 @@ import { getMerchantTrialProgress } from "@/lib/merchant-trial";
 function getCampaignAudioAsset(
   campaignAudio: MerchantCampaignAudio | null,
   businessName: string,
-  kind: "radioSpot" | "soundtrack",
+  kind: "radioSpot" | "soundtrack" | "soundtrack2",
 ) {
   const asset = campaignAudio?.[kind];
   const isRadioSpot = kind === "radioSpot";
+  const isSecondSoundtrack = kind === "soundtrack2";
 
   if (!asset?.url) {
     return {
       title: isRadioSpot
         ? `${businessName} KLCP radio spot`
-        : `${businessName} signature soundtrack`,
+        : isSecondSoundtrack
+          ? `${businessName} signature soundtrack 2`
+          : `${businessName} signature soundtrack 1`,
       description: isRadioSpot
         ? "Radio spot audio appears here after it is uploaded."
-        : "A custom audio asset produced for your local media campaign.",
+        : isSecondSoundtrack
+          ? "An alternate custom audio asset produced for your local media campaign."
+          : "A custom audio asset produced for your local media campaign.",
       audioSrc: null,
       status: "in_production" as const,
       updatedAt: campaignAudio?.updatedAt || null,
@@ -202,6 +207,18 @@ export async function GET() {
         merchant.businessName,
         "soundtrack",
       ),
+      campaignTracks: [
+        getCampaignAudioAsset(
+          merchant.campaignAudio || null,
+          merchant.businessName,
+          "soundtrack",
+        ),
+        getCampaignAudioAsset(
+          merchant.campaignAudio || null,
+          merchant.businessName,
+          "soundtrack2",
+        ),
+      ],
       radioSpot: getCampaignAudioAsset(
         merchant.campaignAudio || null,
         merchant.businessName,

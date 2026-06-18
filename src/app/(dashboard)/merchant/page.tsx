@@ -44,6 +44,7 @@ interface DashboardData {
   merchant: MerchantPageManagementMerchant;
   pageManagement: MerchantPageManagementData;
   campaignTrack?: CampaignTrackData;
+  campaignTracks?: CampaignTrackData[];
   radioSpot?: CampaignTrackData;
   merchantTrial?: MerchantTrialData | null;
   marketLockPaymentHistory?: MarketLockPaymentHistoryItem[];
@@ -463,12 +464,47 @@ function CampaignAudioAsset({
 }
 
 function CampaignAudioPanel({
-  soundtrack,
+  soundtracks,
   radioSpot,
 }: {
-  soundtrack: CampaignTrackData | undefined;
+  soundtracks: CampaignTrackData[];
   radioSpot: CampaignTrackData | undefined;
 }) {
+  const visibleSoundtrackSlots =
+    soundtracks.length > 0
+      ? [
+          {
+            id: "soundtrack",
+            title: "Signature soundtrack 1",
+            playerLabel: "signature soundtrack 1",
+            track: soundtracks[0],
+          },
+          ...(soundtracks[1]
+            ? [
+                {
+                  id: "soundtrack2",
+                  title: "Signature soundtrack 2",
+                  playerLabel: "signature soundtrack 2",
+                  track: soundtracks[1],
+                },
+              ]
+            : []),
+        ]
+      : [
+          {
+            id: "soundtrack",
+            title: "Signature soundtrack 1",
+            playerLabel: "signature soundtrack 1",
+            track: {
+              title: "Signature soundtrack 1",
+              description: "A custom audio asset produced for your campaign.",
+              audioSrc: null,
+              status: "in_production" as const,
+              updatedAt: null,
+            },
+          },
+        ];
+
   return (
     <section className="mb-4 rounded-xl border bg-card p-4 md:p-5">
       <div className="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
@@ -477,7 +513,7 @@ function CampaignAudioPanel({
             Campaign audio
           </p>
           <h2 className="mt-1 text-base font-bold tracking-tight">
-            Soundtrack and KLCP spot
+            Soundtracks and KLCP spot
           </h2>
         </div>
         <p className="text-xs text-muted-foreground sm:text-right">
@@ -485,16 +521,23 @@ function CampaignAudioPanel({
         </p>
       </div>
 
-      <div className="mt-4 grid gap-4 xl:grid-cols-2 xl:divide-x xl:divide-border">
-        <CampaignAudioAsset
-          icon={Music2}
-          title="Signature soundtrack"
-          subtitle={soundtrack?.title || "Custom campaign music bed"}
-          playerLabel="signature soundtrack"
-          track={soundtrack}
-          pendingLabel="In production"
-          pendingNote="Waiting on audio"
-        />
+      <div className="mt-4 grid gap-4 xl:grid-cols-3 xl:divide-x xl:divide-border">
+        {visibleSoundtrackSlots.map((slot) => (
+          <CampaignAudioAsset
+            key={slot.id}
+            icon={Music2}
+            title={slot.title}
+            subtitle={slot.track?.title || "Custom campaign music bed"}
+            playerLabel={slot.playerLabel}
+            track={slot.track}
+            pendingLabel="In production"
+            pendingNote="Waiting on audio"
+            className={cn(
+              slot.id !== "soundtrack" &&
+                "border-t pt-4 xl:border-t-0 xl:pl-4 xl:pt-0",
+            )}
+          />
+        ))}
         <CampaignAudioAsset
           icon={Mic2}
           title="KLCP radio spot"
@@ -1183,7 +1226,12 @@ export default function MerchantDashboard() {
 
           <CampaignAudioPanel
             radioSpot={dashboardData?.radioSpot}
-            soundtrack={dashboardData?.campaignTrack}
+            soundtracks={
+              dashboardData?.campaignTracks ||
+              (dashboardData?.campaignTrack
+                ? [dashboardData.campaignTrack]
+                : [])
+            }
           />
 
           <MarketLockPaymentHistoryPanel

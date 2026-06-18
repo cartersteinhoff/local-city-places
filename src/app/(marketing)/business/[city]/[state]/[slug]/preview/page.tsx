@@ -48,6 +48,12 @@ interface MerchantData {
       url: string;
       uploadedAt?: string;
     } | null;
+    soundtrack2?: {
+      title: string;
+      description?: string;
+      url: string;
+      uploadedAt?: string;
+    } | null;
     showOnProfile?: boolean;
   } | null;
 }
