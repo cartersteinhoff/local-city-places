@@ -161,46 +161,41 @@ function RadioCoPlayer() {
   );
 }
 
-function MorningBuzzArtwork({ className }: { className?: string }) {
+function FeaturedMediaArtwork({ className }: { className?: string }) {
   const [imageAvailable, setImageAvailable] = useState(true);
 
   return (
     <div
       className={cn(
-        "relative mx-auto flex aspect-[1.28/1] h-full w-full overflow-hidden rounded-[8px] border border-orange-200/20 bg-[#180b16] shadow-2xl shadow-black/45 sm:aspect-[16/9] lg:aspect-[1915/821]",
+        "relative mx-auto flex aspect-[1566/1004] w-full overflow-hidden rounded-[8px] border border-orange-200/20 bg-white shadow-2xl shadow-black/45",
         className,
       )}
     >
       {imageAvailable ? (
         <Image
-          src="/images/morning-buzz-homepage-wide.webp"
-          alt="The Morning BUZZ with Teeroy and Michael J"
-          width={1600}
-          height={686}
+          src="/images/troy-city-living-local-city-places-mogul-desert.webp"
+          alt="Troy Warren, Editor in Chief of the cityLIVING Magazine Network and LOCAL City Places"
+          width={1566}
+          height={1004}
           className="h-full w-full object-cover"
-          quality={60}
+          quality={82}
           sizes="(min-width: 1280px) 58vw, (min-width: 1024px) 64vw, 100vw"
           onError={() => setImageAvailable(false)}
         />
       ) : (
-        <div className="relative flex min-h-[330px] w-full items-center justify-center overflow-hidden bg-[radial-gradient(circle_at_50%_10%,rgba(255,182,42,0.45),transparent_38%),linear-gradient(150deg,#fff7e6_0%,#f8a900_42%,#111_43%,#050505_100%)] p-8 text-center">
-          <div className="absolute top-10 left-1/2 h-36 w-36 -translate-x-1/2 rounded-full bg-yellow-300/80" />
-          <div className="absolute inset-x-0 bottom-0 h-24 bg-black/85" />
+        <div className="relative flex min-h-[330px] w-full items-center justify-center overflow-hidden bg-[linear-gradient(135deg,#ffffff_0%,#ffe3cf_45%,#dff0ff_100%)] p-8 text-center">
           <div className="relative">
-            <p className="text-xl font-black text-white drop-shadow-[0_3px_0_rgba(0,0,0,0.8)]">
-              THE
+            <p className="text-sm font-black uppercase tracking-wide text-red-600 sm:text-lg">
+              Editor in Chief
             </p>
-            <p className="text-5xl font-black text-white drop-shadow-[0_4px_0_rgba(0,0,0,0.85)] sm:text-7xl">
-              MORNING
+            <p className="mt-2 text-5xl font-black leading-none text-slate-950 sm:text-7xl">
+              cityLIVING
             </p>
-            <p className="text-6xl font-black text-orange-400 drop-shadow-[0_5px_0_rgba(0,0,0,0.9)] sm:text-8xl">
-              BUZZ
+            <p className="mt-2 text-2xl font-black uppercase tracking-wide text-slate-950 sm:text-4xl">
+              Magazine Network
             </p>
-            <p className="mt-3 text-lg font-black uppercase text-yellow-300">
-              with Teeroy &amp; Michael J
-            </p>
-            <p className="mt-2 text-sm font-bold uppercase text-white">
-              KLCP Phoenix 96.5 FM
+            <p className="mt-5 text-xl font-black uppercase text-red-600 sm:text-3xl">
+              LOCAL City Places
             </p>
           </div>
         </div>
@@ -399,7 +394,7 @@ export function HomeLiveLocalMedia() {
               </div>
             </div>
 
-            <MorningBuzzArtwork className="order-1 lg:order-2 lg:mx-0" />
+            <FeaturedMediaArtwork className="order-1 lg:order-2 lg:mx-auto lg:max-w-[92%]" />
           </div>
         </div>
       </div>
