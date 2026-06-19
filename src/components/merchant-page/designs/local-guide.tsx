@@ -38,7 +38,7 @@ import {
   X,
 } from "lucide-react";
 import Image from "next/image";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Facebook, Instagram } from "@/components/icons/social-icons";
 import { formatHoursDisplay, formatPhoneNumber } from "@/lib/utils";
 import {
@@ -220,6 +220,32 @@ function getAudioDuration(audio: HTMLAudioElement) {
   return 0;
 }
 
+async function getDecodedAudioDuration(url: string, signal: AbortSignal) {
+  const AudioContextConstructor =
+    window.AudioContext ??
+    (
+      window as typeof window & {
+        webkitAudioContext?: typeof AudioContext;
+      }
+    ).webkitAudioContext;
+
+  if (!AudioContextConstructor) return 0;
+
+  const response = await fetch(url, { signal });
+  if (!response.ok) return 0;
+
+  const audioContext = new AudioContextConstructor();
+
+  try {
+    const audioBuffer = await audioContext.decodeAudioData(
+      await response.arrayBuffer(),
+    );
+    return audioBuffer.duration;
+  } finally {
+    await audioContext.close().catch(() => undefined);
+  }
+}
+
 function PublicTrackCard({
   asset,
   description,
@@ -261,12 +287,44 @@ function PublicTrackCard({
     setCurrentTime(nextTime);
   };
 
-  const syncDuration = (audio: HTMLAudioElement) => {
+  const syncDuration = useCallback((audio: HTMLAudioElement) => {
     const nextDuration = getAudioDuration(audio);
     if (nextDuration > 0) {
       setDuration(nextDuration);
+      return true;
     }
-  };
+
+    return false;
+  }, []);
+
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+
+    let cancelled = false;
+    const abortController = new AbortController();
+
+    audio.load();
+    syncDuration(audio);
+
+    const timer = window.setTimeout(() => {
+      if (syncDuration(audio)) return;
+
+      getDecodedAudioDuration(asset.url, abortController.signal)
+        .then((decodedDuration) => {
+          if (!cancelled && decodedDuration > 0) {
+            setDuration(decodedDuration);
+          }
+        })
+        .catch(() => undefined);
+    }, 800);
+
+    return () => {
+      cancelled = true;
+      abortController.abort();
+      window.clearTimeout(timer);
+    };
+  }, [asset.url, syncDuration]);
 
   return (
     <article className="rounded-lg border border-slate-200 bg-slate-50/80 p-4 transition hover:border-[#2563EB]/40 hover:bg-white hover:shadow-sm">
