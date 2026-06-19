@@ -28,6 +28,10 @@ const rowStyle = {
   position: "relative",
   height: "200px",
   overflow: "hidden",
+  maskImage:
+    "linear-gradient(90deg, transparent 0, #000 5%, #000 95%, transparent 100%)",
+  WebkitMaskImage:
+    "linear-gradient(90deg, transparent 0, #000 5%, #000 95%, transparent 100%)",
 } satisfies CSSProperties;
 const trackStyle = {
   display: "flex",

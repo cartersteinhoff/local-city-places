@@ -394,7 +394,7 @@ export function HomeLiveLocalMedia() {
               </div>
             </div>
 
-            <FeaturedMediaArtwork className="order-1 lg:order-2 lg:mx-0 lg:max-w-[80%]" />
+            <FeaturedMediaArtwork className="order-1 lg:order-2 lg:mx-0 lg:max-w-none" />
           </div>
         </div>
       </div>
