@@ -144,19 +144,19 @@ const publicAudioTrackSlots = [
   {
     kind: "radioSpot" as const,
     label: "Radio Spot",
-    description: "Hear the produced KLCP campaign spot.",
+    description: "Listen to this business on KLCP 96.5 FM.",
     icon: RadioTower,
   },
   {
     kind: "soundtrack" as const,
     label: "Signature Soundtrack 1",
-    description: "Listen to the custom campaign sound.",
+    description: "Play the featured Signature Soundtrack.",
     icon: Music2,
   },
   {
     kind: "soundtrack2" as const,
     label: "Signature Soundtrack 2",
-    description: "Listen to the alternate custom campaign sound.",
+    description: "Play the alternate Signature Soundtrack.",
     icon: Music2,
   },
 ];
@@ -205,6 +205,21 @@ function formatAudioTime(seconds: number) {
   return `${minutes}:${remainingSeconds}`;
 }
 
+function getAudioDuration(audio: HTMLAudioElement) {
+  if (Number.isFinite(audio.duration) && audio.duration > 0) {
+    return audio.duration;
+  }
+
+  if (audio.seekable.length > 0) {
+    const seekableEnd = audio.seekable.end(audio.seekable.length - 1);
+    if (Number.isFinite(seekableEnd) && seekableEnd > 0) {
+      return seekableEnd;
+    }
+  }
+
+  return 0;
+}
+
 function PublicTrackCard({
   asset,
   description,
@@ -246,6 +261,13 @@ function PublicTrackCard({
     setCurrentTime(nextTime);
   };
 
+  const syncDuration = (audio: HTMLAudioElement) => {
+    const nextDuration = getAudioDuration(audio);
+    if (nextDuration > 0) {
+      setDuration(nextDuration);
+    }
+  };
+
   return (
     <article className="rounded-lg border border-slate-200 bg-slate-50/80 p-4 transition hover:border-[#2563EB]/40 hover:bg-white hover:shadow-sm">
       <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(300px,420px)] lg:items-center">
@@ -263,7 +285,7 @@ function PublicTrackCard({
               </span>
             </div>
             <p className="mt-1 max-w-2xl text-sm leading-6 text-slate-600">
-              {asset.description || description}
+              {description}
             </p>
           </div>
         </div>
@@ -305,11 +327,11 @@ function PublicTrackCard({
             <a
               href={asset.url}
               download
-              title={`Download ${label}`}
+              aria-label={`Download ${label}`}
+              title="Download"
               className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md border border-slate-200 text-slate-600 transition hover:border-[#2563EB] hover:text-[#2563EB]"
             >
               <Download className="h-4 w-4" />
-              <span className="sr-only">Download {label}</span>
             </a>
           </div>
         </div>
@@ -319,13 +341,20 @@ function PublicTrackCard({
         ref={audioRef}
         className="sr-only"
         onEnded={() => setIsPlaying(false)}
+        onCanPlay={(event) => {
+          syncDuration(event.currentTarget);
+        }}
+        onDurationChange={(event) => {
+          syncDuration(event.currentTarget);
+        }}
         onLoadedMetadata={(event) => {
-          setDuration(event.currentTarget.duration || 0);
+          syncDuration(event.currentTarget);
         }}
         onPause={() => setIsPlaying(false)}
         onPlay={() => setIsPlaying(true)}
         onTimeUpdate={(event) => {
           setCurrentTime(event.currentTarget.currentTime || 0);
+          syncDuration(event.currentTarget);
         }}
         preload="metadata"
         src={asset.url}
@@ -1122,7 +1151,7 @@ export function LocalGuideDesign({
                     Merchant Tracks
                   </h2>
                   <p className="mt-1 max-w-2xl text-sm leading-6 text-slate-500">
-                    Campaign audio from this local merchant.
+                    Listen to audio created for this local business.
                   </p>
                 </div>
                 <span className="hidden h-10 w-10 shrink-0 items-center justify-center rounded-md bg-blue-50 text-[#2563EB] sm:flex">
