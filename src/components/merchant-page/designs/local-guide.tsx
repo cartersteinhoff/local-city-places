@@ -334,14 +334,9 @@ function PublicTrackCard({
             <Icon className="h-5 w-5" />
           </span>
           <div className="min-w-0">
-            <div className="flex flex-wrap items-center gap-2">
-              <h3 className="text-base font-black leading-tight text-slate-950">
-                {label}
-              </h3>
-              <span className="rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[11px] font-bold uppercase text-emerald-700">
-                Ready
-              </span>
-            </div>
+            <h3 className="text-base font-black leading-tight text-slate-950">
+              {label}
+            </h3>
             <p className="mt-1 max-w-2xl text-sm leading-6 text-slate-600">
               {description}
             </p>
