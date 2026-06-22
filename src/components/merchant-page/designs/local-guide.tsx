@@ -777,12 +777,13 @@ export function LocalGuideDesign({
     campaignAudio?.showOnProfile &&
       publicAudioTrackSlots.some((track) => campaignAudio?.[track.kind]?.url),
   );
-  const hoursRows = dayRows
-    .map((day) => ({
-      ...day,
-      value: hours?.[day.key] ? formatHoursDisplay(hours[day.key]) : null,
-    }))
-    .filter((row) => row.value);
+  const hasStoredHours = dayRows.some((day) => Boolean(hours?.[day.key]));
+  const hoursRows = hasStoredHours
+    ? dayRows.map((day) => ({
+        ...day,
+        value: formatHoursDisplay(hours?.[day.key]),
+      }))
+    : [];
   const hasOpenHours = hoursRows.some(
     (row) => row.value && row.value.toLowerCase() !== "closed",
   );
@@ -1566,7 +1567,7 @@ export function LocalGuideDesign({
                     Hours
                   </span>
                   <div className="mt-2 space-y-1.5">
-                    {hoursRows.slice(0, 4).map((row) => (
+                    {hoursRows.map((row) => (
                       <div
                         key={row.key}
                         className="grid grid-cols-[42px_1fr] gap-2 text-xs font-semibold text-slate-700"
