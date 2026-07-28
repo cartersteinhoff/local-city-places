@@ -1,8 +1,11 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  experimental: {
+    useTypeScriptCli: true,
+  },
   images: {
-    qualities: [60, 75],
+    qualities: [60, 75, 82],
     remotePatterns: [
       {
         protocol: "https",
