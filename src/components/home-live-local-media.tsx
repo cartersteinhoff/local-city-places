@@ -1,9 +1,8 @@
 "use client";
 
-import { Pause, Play, Radio, RadioTower } from "lucide-react";
+import { RadioTower } from "lucide-react";
 import Image from "next/image";
 import { useId, useState } from "react";
-import { useRadioPlayback } from "@/components/radio-playback-provider";
 import { cn } from "@/lib/utils";
 
 const cityColumns = [
@@ -35,131 +34,6 @@ const cityColumns = [
 ];
 
 const allCities = cityColumns.flat();
-
-function RadioCoPlayer() {
-  const { isPlaying, nowPlaying, playerStatus, streamError, togglePlayback } =
-    useRadioPlayback();
-  const [failedArtworkUrl, setFailedArtworkUrl] = useState<string | null>(null);
-  const playbackLabel = isPlaying ? "Pause KLCP Radio" : "Play KLCP Radio";
-  const statusText = {
-    idle: "Ready",
-    loading: "Connecting",
-    playing: "Live now",
-    paused: "Paused",
-    error: "Stream unavailable",
-  }[playerStatus];
-  const hasTrackArtwork = Boolean(
-    nowPlaying.artworkUrl && failedArtworkUrl !== nowPlaying.artworkUrl,
-  );
-
-  return (
-    <div className="mx-auto w-full">
-      <div className="min-w-0 rounded-[8px] bg-[#031b2d] p-3 ring-1 ring-sky-200/15 sm:p-4">
-        <div className="grid min-w-0 items-center gap-4 sm:grid-cols-[minmax(150px,190px)_minmax(0,1fr)] xl:grid-cols-[minmax(160px,210px)_minmax(0,1fr)]">
-          <div className="relative mx-auto aspect-square w-full max-w-[190px] overflow-hidden rounded-[8px] bg-[#07131d] ring-1 ring-white/15 xl:max-w-[210px]">
-            {hasTrackArtwork ? (
-              <Image
-                src={nowPlaying.artworkUrl ?? ""}
-                alt={`Artwork for ${nowPlaying.title}`}
-                fill
-                className="object-cover"
-                sizes="(min-width: 1280px) 210px, 190px"
-                onError={() => setFailedArtworkUrl(nowPlaying.artworkUrl)}
-              />
-            ) : (
-              <span className="flex h-full w-full flex-col items-center justify-center bg-[linear-gradient(135deg,#0b4f80_0%,#01233f_58%,#07131d_100%)] p-5 text-center text-white">
-                <Radio className="mb-3 h-10 w-10 text-orange-400" />
-                <span className="text-lg font-black uppercase leading-tight">
-                  KLCP Radio
-                </span>
-                <span className="mt-1 text-sm font-bold text-white/75">
-                  96.5 FM
-                </span>
-              </span>
-            )}
-          </div>
-
-          <div className="min-w-0 text-center sm:text-left" aria-live="polite">
-            <p className="mb-1.5 text-xs font-black uppercase tracking-wide text-orange-400">
-              Now Playing
-            </p>
-            <h3 className="line-clamp-2 text-base font-black leading-tight text-white [overflow-wrap:anywhere] sm:text-lg xl:text-xl">
-              {nowPlaying.title}
-            </h3>
-            <p className="mt-2 line-clamp-2 text-sm font-medium text-white/78 sm:text-base">
-              {nowPlaying.subtitle}
-            </p>
-          </div>
-        </div>
-
-        <div className="my-4 h-px bg-white/15" />
-
-        <div className="grid gap-3 sm:grid-cols-[auto_minmax(0,1fr)] sm:items-center">
-          <button
-            type="button"
-            onClick={togglePlayback}
-            disabled={playerStatus === "loading"}
-            className="mx-auto flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-sky-400 text-slate-950 shadow-lg shadow-black/25 transition hover:scale-[1.03] hover:bg-sky-300 disabled:cursor-wait disabled:opacity-75 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white sm:mx-0 sm:h-16 sm:w-16"
-            aria-label={playbackLabel}
-            aria-pressed={isPlaying}
-          >
-            {isPlaying ? (
-              <Pause className="h-6 w-6 sm:h-7 sm:w-7" fill="currentColor" />
-            ) : (
-              <Play
-                className="ml-1 h-6 w-6 sm:h-7 sm:w-7"
-                fill="currentColor"
-              />
-            )}
-          </button>
-
-          <div className="min-w-0">
-            <div className="flex min-h-5 items-center justify-center gap-2 sm:justify-start">
-              <span
-                className={cn(
-                  "h-3 w-3 rounded-full",
-                  playerStatus === "playing" &&
-                    "bg-red-500 shadow-[0_0_10px_rgba(239,68,68,0.85)]",
-                  playerStatus === "loading" && "animate-pulse bg-sky-300",
-                  (playerStatus === "idle" || playerStatus === "paused") &&
-                    "bg-white/45",
-                  playerStatus === "error" && "bg-orange-500",
-                )}
-              />
-              <span className="text-base font-black text-white">
-                {statusText}
-              </span>
-            </div>
-
-            <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-white/25">
-              <span
-                className={cn(
-                  "block h-full rounded-full bg-sky-400 transition-all duration-300",
-                  playerStatus === "playing" && "w-full",
-                  playerStatus === "loading" && "w-full animate-pulse",
-                  playerStatus !== "playing" &&
-                    playerStatus !== "loading" &&
-                    "w-0",
-                )}
-              />
-            </div>
-          </div>
-        </div>
-
-        {streamError && (
-          <p className="mt-3 truncate whitespace-nowrap text-xs text-orange-200">
-            {streamError}
-          </p>
-        )}
-
-        <p className="mt-5 text-center text-sm font-bold text-white/75">
-          Powered by <span className="font-black text-orange-500">KLCP</span>{" "}
-          96.5 FM
-        </p>
-      </div>
-    </div>
-  );
-}
 
 function FeaturedMediaArtwork({ className }: { className?: string }) {
   const [imageAvailable, setImageAvailable] = useState(true);
@@ -337,10 +211,7 @@ function CityListItem({ city }: { city: string }) {
 
 export function HomeLiveLocalMedia() {
   return (
-    <section
-      id="live-radio"
-      className="relative z-10 overflow-hidden bg-[#05090f] text-white"
-    >
+    <section className="relative z-10 overflow-hidden bg-[#05090f] text-white">
       <div className="pointer-events-none absolute inset-0">
         <Image
           src="/images/new-year-250-background.jpg"
@@ -363,39 +234,7 @@ export function HomeLiveLocalMedia() {
             <RadioTower className="h-4 w-4 sm:h-5 sm:w-5" />
           </div>
 
-          <div className="mx-auto grid max-w-[1560px] gap-5 lg:grid-cols-[minmax(320px,0.68fr)_minmax(0,1.32fr)] lg:items-stretch xl:gap-6">
-            <div className="order-2 mx-auto w-full max-w-[1280px] lg:order-1 lg:mx-0 lg:flex lg:h-full lg:max-w-none">
-              <div className="relative flex w-full flex-col justify-center overflow-hidden rounded-[8px] border border-sky-200/15 bg-[#031624] p-4 shadow-2xl shadow-black/45 lg:min-h-full xl:p-5">
-                <div className="relative z-10 mb-3 flex flex-col gap-2.5 sm:mb-4 sm:flex-row sm:items-center sm:justify-between">
-                  <div className="min-w-0 text-center sm:text-left">
-                    <div className="flex items-center justify-center gap-2 sm:justify-start">
-                      <Radio className="h-4 w-4 text-orange-500" />
-                      <p className="text-xl font-black uppercase italic text-white sm:text-2xl">
-                        KLCP <span className="text-orange-500">Radio</span>
-                      </p>
-                    </div>
-                    <p className="mt-1 text-xs font-medium text-white/72 sm:text-sm">
-                      The Soundtrack of the Phoenix Metro
-                    </p>
-                  </div>
-                  <div className="flex shrink-0 flex-wrap items-center justify-center gap-2">
-                    <span className="rounded-[4px] border border-red-300/70 bg-red-600 px-2.5 py-1 text-xs font-black uppercase tracking-wide text-white shadow-[0_0_14px_rgba(239,68,68,0.5)] sm:text-sm">
-                      On Air
-                    </span>
-                    <span className="rounded-full border border-sky-300/20 bg-sky-300/10 px-2.5 py-1 text-xs font-black uppercase text-sky-100 sm:text-sm">
-                      96.5 FM
-                    </span>
-                  </div>
-                </div>
-
-                <div className="relative z-10 w-full">
-                  <RadioCoPlayer />
-                </div>
-              </div>
-            </div>
-
-            <FeaturedMediaArtwork className="order-1 lg:order-2 lg:mx-0 lg:max-w-none" />
-          </div>
+          <FeaturedMediaArtwork className="max-w-[1100px]" />
         </div>
       </div>
 

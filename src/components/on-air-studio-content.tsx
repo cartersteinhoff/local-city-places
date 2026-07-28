@@ -14,14 +14,11 @@ import {
   Music2,
   Pause,
   Play,
-  Radio,
   RadioTower,
   UploadCloud,
 } from "lucide-react";
-import Image from "next/image";
 import Link from "next/link";
 import { type ChangeEvent, useEffect, useRef, useState } from "react";
-import { useRadioPlayback } from "@/components/radio-playback-provider";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -241,11 +238,11 @@ const WAVEFORM_BARS = Array.from({ length: 36 }, (_, index) => ({
 }));
 
 const STATION_EQ_BARS = [
-  { id: "eq-1", height: 55, delay: 0 },
-  { id: "eq-2", height: 90, delay: 0.32 },
-  { id: "eq-3", height: 70, delay: 0.12 },
-  { id: "eq-4", height: 100, delay: 0.44 },
-  { id: "eq-5", height: 48, delay: 0.22 },
+  { id: "eq-1", height: 55 },
+  { id: "eq-2", height: 90 },
+  { id: "eq-3", height: 70 },
+  { id: "eq-4", height: 100 },
+  { id: "eq-5", height: 48 },
 ];
 
 function getAudioAssetForKey(
@@ -410,8 +407,6 @@ function StudioStatusBadge({
 }
 
 function StationSignalCard() {
-  const { isPlaying } = useRadioPlayback();
-
   return (
     <div className="relative overflow-hidden rounded-xl border bg-background/50 p-5">
       <div
@@ -431,15 +426,10 @@ function StationSignalCard() {
           </p>
           <div className="mt-2 flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
             <span
-              className={cn(
-                "h-1.5 w-1.5 shrink-0 rounded-full",
-                isPlaying
-                  ? "bg-red-500 shadow-[0_0_6px_rgba(239,68,68,0.8)]"
-                  : "bg-muted-foreground/40",
-              )}
+              className="h-1.5 w-1.5 shrink-0 rounded-full bg-muted-foreground/40"
               aria-hidden="true"
             />
-            <span>KLCP · {isPlaying ? "On air now" : "Local radio"}</span>
+            <span>KLCP · Local radio</span>
           </div>
         </div>
 
@@ -450,171 +440,15 @@ function StationSignalCard() {
           {STATION_EQ_BARS.map((bar) => (
             <span
               key={bar.id}
-              className={cn(
-                "w-1 rounded-full bg-current",
-                isPlaying
-                  ? "animate-audio-eq"
-                  : "origin-bottom scale-y-[0.45] opacity-50",
-              )}
+              className="w-1 origin-bottom scale-y-[0.45] rounded-full bg-current opacity-50"
               style={{
                 height: `${bar.height}%`,
-                animationDelay: `${bar.delay}s`,
               }}
             />
           ))}
         </span>
       </div>
     </div>
-  );
-}
-
-function LiveRadioStudioPlayer() {
-  const { isPlaying, nowPlaying, playerStatus, streamError, togglePlayback } =
-    useRadioPlayback();
-  const [failedArtworkUrl, setFailedArtworkUrl] = useState<string | null>(null);
-  const playbackLabel = isPlaying ? "Pause KLCP Radio" : "Play KLCP Radio";
-  const statusText = {
-    idle: "Ready",
-    loading: "Connecting",
-    playing: "Live now",
-    paused: "Paused",
-    error: "Stream unavailable",
-  }[playerStatus];
-  const hasTrackArtwork = Boolean(
-    nowPlaying.artworkUrl && failedArtworkUrl !== nowPlaying.artworkUrl,
-  );
-
-  return (
-    <section className="overflow-hidden rounded-lg border border-sky-200/15 bg-[#031624] p-4 text-white shadow-xl shadow-black/15 sm:p-5">
-      <div className="mb-4 flex items-center justify-between gap-3">
-        <div className="min-w-0">
-          <div className="flex items-center gap-2">
-            <Radio className="h-4 w-4 text-orange-500" />
-            <p className="text-xl font-black uppercase italic leading-none">
-              KLCP <span className="text-orange-500">Radio</span>
-            </p>
-          </div>
-          <p className="mt-1 text-xs font-medium text-white/72">
-            The Soundtrack of the Phoenix Metro
-          </p>
-        </div>
-        <div className="flex shrink-0 flex-col items-end gap-1.5">
-          <span className="rounded-[4px] border border-red-300/70 bg-red-600 px-2.5 py-1 text-xs font-black uppercase tracking-wide text-white shadow-[0_0_14px_rgba(239,68,68,0.5)]">
-            On Air
-          </span>
-          <span className="rounded-full border border-sky-300/20 bg-sky-300/10 px-2.5 py-1 text-xs font-black uppercase text-sky-100">
-            96.5 FM
-          </span>
-        </div>
-      </div>
-
-      <div className="rounded-[8px] bg-[#031b2d] p-3 ring-1 ring-sky-200/15">
-        <div className="grid min-w-0 gap-4 sm:grid-cols-[120px_minmax(0,1fr)] xl:grid-cols-1">
-          <div className="relative mx-auto aspect-square w-full max-w-[180px] overflow-hidden rounded-[8px] bg-[#07131d] ring-1 ring-white/15 sm:max-w-[120px] xl:max-w-[210px]">
-            {hasTrackArtwork ? (
-              <Image
-                src={nowPlaying.artworkUrl ?? ""}
-                alt={`Artwork for ${nowPlaying.title}`}
-                fill
-                className="object-cover"
-                sizes="(min-width: 1280px) 210px, 180px"
-                onError={() => setFailedArtworkUrl(nowPlaying.artworkUrl)}
-              />
-            ) : (
-              <span className="flex h-full w-full flex-col items-center justify-center bg-[linear-gradient(135deg,#0b4f80_0%,#01233f_58%,#07131d_100%)] p-5 text-center text-white">
-                <Radio className="mb-3 h-10 w-10 text-orange-400" />
-                <span className="text-lg font-black uppercase leading-tight">
-                  KLCP Radio
-                </span>
-                <span className="mt-1 text-sm font-bold text-white/75">
-                  96.5 FM
-                </span>
-              </span>
-            )}
-          </div>
-
-          <div
-            className="min-w-0 text-center sm:text-left xl:text-center"
-            aria-live="polite"
-          >
-            <p className="mb-1.5 text-xs font-black uppercase tracking-wide text-orange-400">
-              Now Playing
-            </p>
-            <h2 className="line-clamp-2 text-base font-black leading-tight text-white [overflow-wrap:anywhere] sm:text-lg xl:text-xl">
-              {nowPlaying.title}
-            </h2>
-            <p className="mt-2 line-clamp-2 text-sm font-medium text-white/78 sm:text-base">
-              {nowPlaying.subtitle}
-            </p>
-          </div>
-        </div>
-
-        <div className="my-4 h-px bg-white/15" />
-
-        <div className="grid gap-3 sm:grid-cols-[auto_minmax(0,1fr)] sm:items-center xl:grid-cols-1">
-          <button
-            type="button"
-            onClick={togglePlayback}
-            disabled={playerStatus === "loading"}
-            className="mx-auto flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-sky-400 text-slate-950 shadow-lg shadow-black/25 transition hover:scale-[1.03] hover:bg-sky-300 disabled:cursor-wait disabled:opacity-75 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white sm:h-16 sm:w-16"
-            aria-label={playbackLabel}
-            aria-pressed={isPlaying}
-          >
-            {isPlaying ? (
-              <Pause className="h-6 w-6 sm:h-7 sm:w-7" fill="currentColor" />
-            ) : (
-              <Play
-                className="ml-1 h-6 w-6 sm:h-7 sm:w-7"
-                fill="currentColor"
-              />
-            )}
-          </button>
-
-          <div className="min-w-0">
-            <div className="flex min-h-5 items-center justify-center gap-2">
-              <span
-                className={cn(
-                  "h-3 w-3 rounded-full",
-                  playerStatus === "playing" &&
-                    "bg-red-500 shadow-[0_0_10px_rgba(239,68,68,0.85)]",
-                  playerStatus === "loading" && "animate-pulse bg-sky-300",
-                  (playerStatus === "idle" || playerStatus === "paused") &&
-                    "bg-white/45",
-                  playerStatus === "error" && "bg-orange-500",
-                )}
-              />
-              <span className="text-base font-black text-white">
-                {statusText}
-              </span>
-            </div>
-
-            <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-white/25">
-              <span
-                className={cn(
-                  "block h-full rounded-full bg-sky-400 transition-all duration-300",
-                  playerStatus === "playing" && "w-full",
-                  playerStatus === "loading" && "w-full animate-pulse",
-                  playerStatus !== "playing" &&
-                    playerStatus !== "loading" &&
-                    "w-0",
-                )}
-              />
-            </div>
-          </div>
-        </div>
-
-        {streamError && (
-          <p className="mt-3 truncate whitespace-nowrap text-xs text-orange-200">
-            {streamError}
-          </p>
-        )}
-
-        <p className="mt-5 text-center text-sm font-bold text-white/75">
-          Powered by <span className="font-black text-orange-500">KLCP</span>{" "}
-          96.5 FM
-        </p>
-      </div>
-    </section>
   );
 }
 
@@ -830,8 +664,8 @@ function MerchantServicesOverview({
           <StationSignalCard />
         </div>
 
-        <div className="grid border-t lg:grid-cols-[1fr_0.9fr] lg:divide-x">
-          <div className="p-5 sm:p-6">
+        <div className="border-t p-5 sm:p-6">
+          <div>
             <div className="mb-5">
               <p className="text-xs font-black uppercase tracking-[0.2em] text-primary">
                 Studio deliverables
@@ -878,10 +712,6 @@ function MerchantServicesOverview({
                 );
               })}
             </div>
-          </div>
-
-          <div className="border-t p-5 sm:p-6 lg:border-t-0">
-            <LiveRadioStudioPlayer />
           </div>
         </div>
 

@@ -3,7 +3,6 @@
 import { ChevronDown, Store, User } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { RadioPlayerButton } from "@/components/radio-player-button";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -23,15 +22,11 @@ interface HomeHeaderProps {
 const headerVariants = {
   white: {
     bar: "border-b border-sky-300/10 bg-[linear-gradient(135deg,#063860_0%,#01233f_54%,#04131f_100%)] shadow-sm",
-    radio:
-      "border border-sky-200/25 bg-white/10 px-3 font-semibold text-white shadow-sm hover:bg-white/15 sm:px-4",
     login:
       "bg-[#ff6a00] font-bold text-white shadow-[0_8px_18px_rgba(255,106,0,0.22)] ring-1 ring-orange-300/25 hover:bg-[#f46200] hover:shadow-[0_10px_22px_rgba(255,106,0,0.28)]",
   },
   transparent: {
     bar: "border-b border-white/10 bg-transparent shadow-none",
-    radio:
-      "border border-sky-200/25 bg-white/10 px-3 font-semibold text-white shadow-sm hover:bg-white/15 sm:px-4",
     login:
       "bg-[#ff6a00] font-bold text-white shadow-[0_8px_18px_rgba(255,106,0,0.22)] ring-1 ring-orange-300/25 hover:bg-[#f46200] hover:shadow-[0_10px_22px_rgba(255,106,0,0.28)]",
   },
@@ -106,9 +101,6 @@ export function HomeHeader({ variant = "white" }: HomeHeaderProps) {
               gap: "clamp(0.25rem, 1.2vw, 0.5rem)",
             }}
           >
-            <div>
-              <RadioPlayerButton className={styles.radio} variant="header" />
-            </div>
             {isAuthenticated ? (
               <Button
                 asChild
